@@ -16,30 +16,37 @@ import {useHealthCheckupStore} from '../../store/healthCheckup';
 import {colors} from '../../theme/colors';
 import AISummaryCard from '../../components/health-checkup/AISummaryCard';
 
+// Maps Infermedica triage_level values to display config
 const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; description: string}> = {
+  emergency_ambulance: {
+    label: 'Emergency',
+    color: colors.destructive,
+    icon: AlertTriangle,
+    description: 'Your symptoms indicate a medical emergency. Please call emergency services immediately.',
+  },
   emergency: {
     label: 'Emergency',
     color: colors.destructive,
     icon: AlertTriangle,
-    description: 'Seek emergency medical attention immediately.',
+    description: 'Your symptoms suggest a potentially serious condition that requires immediate medical attention.',
   },
-  severe: {
-    label: 'Severe',
-    color: colors.destructive,
-    icon: AlertTriangle,
-    description: 'You should see a doctor as soon as possible.',
-  },
-  moderate: {
-    label: 'Moderate',
+  consultation_24: {
+    label: 'Urgent',
     color: colors.secondary,
-    icon: Shield,
-    description: 'We recommend scheduling an appointment with a specialist.',
+    icon: AlertTriangle,
+    description: 'Your symptoms require prompt medical attention. See a doctor within 24 hours.',
   },
-  non_urgent: {
-    label: 'Non-Urgent',
+  consultation: {
+    label: 'See a Doctor',
+    color: colors.primary,
+    icon: Stethoscope,
+    description: 'Your symptoms suggest you should schedule a doctor visit within the next few days.',
+  },
+  self_care: {
+    label: 'Self-Care',
     color: colors.success,
     icon: Check,
-    description: 'Your symptoms appear mild. Monitor and consult a doctor if they persist.',
+    description: 'Your symptoms appear manageable with self-care. Monitor and consult a doctor if they worsen.',
   },
 };
 
@@ -100,7 +107,9 @@ export default function ResultsScreen() {
     }
   };
 
-  const triage = TRIAGE_CONFIG[triageLevel || 'non_urgent'] || TRIAGE_CONFIG.non_urgent;
+  // If emergency evidence is detected, always show Emergency regardless of triage_level
+  const effectiveTriageLevel = hasEmergency ? 'emergency' : (triageLevel || 'self_care');
+  const triage = TRIAGE_CONFIG[effectiveTriageLevel] || TRIAGE_CONFIG.self_care;
   const TriageIcon = triage.icon;
 
   const handleBookAppointment = () => {
@@ -156,9 +165,9 @@ export default function ResultsScreen() {
               <Text style={{color: triage.color, fontWeight: 'bold', fontSize: 18}}>
                 {triage.label}
               </Text>
-              {hasEmergency && (
+              {hasEmergency && effectiveTriageLevel === 'emergency' && (
                 <Text style={{color: colors.destructive, fontSize: 12, fontWeight: '600', marginTop: 2}}>
-                  Emergency evidence detected
+                  Immediate attention recommended
                 </Text>
               )}
             </View>

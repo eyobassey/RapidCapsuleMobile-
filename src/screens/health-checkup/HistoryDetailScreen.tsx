@@ -16,30 +16,37 @@ import {colors} from '../../theme/colors';
 import {formatDate} from '../../utils/formatters';
 import AISummaryCard from '../../components/health-checkup/AISummaryCard';
 
+// Maps Infermedica triage_level values to display config
 const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; description: string}> = {
+  emergency_ambulance: {
+    label: 'Emergency',
+    color: colors.destructive,
+    icon: AlertTriangle,
+    description: 'A medical emergency was detected. Emergency services were recommended.',
+  },
   emergency: {
     label: 'Emergency',
     color: colors.destructive,
     icon: AlertTriangle,
-    description: 'Emergency medical attention was recommended.',
+    description: 'A potentially serious condition was detected requiring immediate medical attention.',
   },
-  severe: {
-    label: 'Severe',
-    color: colors.destructive,
-    icon: AlertTriangle,
-    description: 'Prompt medical attention was recommended.',
-  },
-  moderate: {
-    label: 'Moderate',
+  consultation_24: {
+    label: 'Urgent',
     color: colors.secondary,
-    icon: Shield,
-    description: 'A specialist appointment was recommended.',
+    icon: AlertTriangle,
+    description: 'Prompt medical attention was recommended within 24 hours.',
   },
-  non_urgent: {
-    label: 'Non-Urgent',
+  consultation: {
+    label: 'See a Doctor',
+    color: colors.primary,
+    icon: Stethoscope,
+    description: 'A doctor visit within the next few days was recommended.',
+  },
+  self_care: {
+    label: 'Self-Care',
     color: colors.success,
     icon: Check,
-    description: 'Symptoms appeared mild at the time of assessment.',
+    description: 'Symptoms appeared manageable with self-care at the time of assessment.',
   },
 };
 
@@ -114,12 +121,14 @@ export default function HistoryDetailScreen() {
 
   const responseData = currentDetail.response?.data;
   const conditions = responseData?.conditions || [];
-  const triageLevel = responseData?.triage_level || 'non_urgent';
+  const rawTriageLevel = responseData?.triage_level || 'self_care';
   const hasEmergency = responseData?.has_emergency_evidence;
   const patientInfo = currentDetail.patient_info;
   const symptoms = currentDetail.request?.symptoms || [];
 
-  const triage = TRIAGE_CONFIG[triageLevel] || TRIAGE_CONFIG.non_urgent;
+  // If emergency evidence is detected, always show Emergency
+  const effectiveTriageLevel = hasEmergency ? 'emergency' : rawTriageLevel;
+  const triage = TRIAGE_CONFIG[effectiveTriageLevel] || TRIAGE_CONFIG.self_care;
   const TriageIcon = triage.icon;
 
   return (
