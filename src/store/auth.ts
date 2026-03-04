@@ -47,10 +47,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (data.requires_2fa) {
       return {requires2FA: true};
     }
-    const token = data.result || data.token || data.access_token;
+    const token = data.data || data.result || data.token;
     if (!token || typeof token !== 'string') {
       throw new Error(
-        `Login succeeded but no token found. Response keys: ${Object.keys(data).join(', ')}. Data: ${JSON.stringify(data).slice(0, 200)}`,
+        `Login succeeded but no token found. Response keys: ${Object.keys(data).join(', ')}`,
       );
     }
     await get().setToken(token);
@@ -60,7 +60,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   verify2FA: async (code, _method) => {
     const res = await api.post('/auth/2fa/verify', {code});
-    await get().setToken(res.data.result);
+    await get().setToken(res.data.data || res.data.result);
     await get().fetchUser();
   },
 
@@ -71,7 +71,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchUser: async () => {
     try {
       const res = await api.get('/users/me');
-      const user = res.data.result;
+      const user = res.data.data || res.data.result;
       const needsOnboarding = false; // TODO: restore !user?.profile?.emergency_contacts?.length
       await storage.setUser(user);
       set({user, isAuthenticated: true, needsOnboarding, isLoading: false});
