@@ -1,6 +1,12 @@
-import {MMKV} from 'react-native-mmkv';
+import {createMMKV} from 'react-native-mmkv';
 
-const mmkv = new MMKV({id: 'rc-storage'});
+let mmkv: ReturnType<typeof createMMKV>;
+function getStore() {
+  if (!mmkv) {
+    mmkv = createMMKV({id: 'rc-storage'});
+  }
+  return mmkv;
+}
 
 const KEYS = {
   TOKEN: 'rc_token',
@@ -10,29 +16,29 @@ const KEYS = {
 
 export const storage = {
   async getToken(): Promise<string | null> {
-    return mmkv.getString(KEYS.TOKEN) ?? null;
+    return getStore().getString(KEYS.TOKEN) ?? null;
   },
 
   async setToken(token: string): Promise<void> {
-    mmkv.set(KEYS.TOKEN, token);
+    getStore().set(KEYS.TOKEN, token);
   },
 
   async removeToken(): Promise<void> {
-    mmkv.delete(KEYS.TOKEN);
+    getStore().remove(KEYS.TOKEN);
   },
 
   async getUser(): Promise<any | null> {
-    const data = mmkv.getString(KEYS.USER);
+    const data = getStore().getString(KEYS.USER);
     return data ? JSON.parse(data) : null;
   },
 
   async setUser(user: any): Promise<void> {
-    mmkv.set(KEYS.USER, JSON.stringify(user));
+    getStore().set(KEYS.USER, JSON.stringify(user));
   },
 
   async clear(): Promise<void> {
-    mmkv.delete(KEYS.TOKEN);
-    mmkv.delete(KEYS.USER);
-    mmkv.delete(KEYS.REMEMBER_ME);
+    getStore().remove(KEYS.TOKEN);
+    getStore().remove(KEYS.USER);
+    getStore().remove(KEYS.REMEMBER_ME);
   },
 };
