@@ -7,14 +7,17 @@ import {
   Calendar,
   Check,
   ChevronRight,
+  Download,
   Home,
   Shield,
   Stethoscope,
 } from 'lucide-react-native';
 import {Header, Button} from '../../components/ui';
 import {useHealthCheckupStore} from '../../store/healthCheckup';
+import {useAuthStore} from '../../store/auth';
 import {colors} from '../../theme/colors';
 import AISummaryCard from '../../components/health-checkup/AISummaryCard';
+import {generateHealthCheckupPDF} from '../../utils/healthCheckupPdf';
 
 // Maps Infermedica triage_level values to display config
 const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; description: string}> = {
@@ -85,10 +88,14 @@ export default function ResultsScreen() {
     fetchClaudeSummary,
     generateClaudeSummary,
     fetchSummaryStatus,
+    sex,
+    age,
     reset,
   } = useHealthCheckupStore();
+  const user = useAuthStore(s => s.user);
 
   const [summaryExpanded, setSummaryExpanded] = useState(true);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   // Auto-fetch summary if checkup has one, and check credits
   useEffect(() => {
@@ -111,6 +118,25 @@ export default function ResultsScreen() {
   const effectiveTriageLevel = hasEmergency ? 'emergency' : (triageLevel || 'self_care');
   const triage = TRIAGE_CONFIG[effectiveTriageLevel] || TRIAGE_CONFIG.self_care;
   const TriageIcon = triage.icon;
+
+  const handleDownloadReport = async () => {
+    setPdfLoading(true);
+    try {
+      const patientName = `${user?.profile?.first_name || ''} ${user?.profile?.last_name || ''}`.trim() || 'Patient';
+      await generateHealthCheckupPDF({
+        patientName,
+        age,
+        sex,
+        date: new Date().toISOString(),
+        triageLevel: triageLevel || 'self_care',
+        hasEmergency,
+        conditions,
+        claudeSummary: claudeSummary?.content || null,
+      });
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   const handleBookAppointment = () => {
     reset();
@@ -226,6 +252,14 @@ export default function ResultsScreen() {
 
         {/* Actions */}
         <View className="mt-6 gap-3">
+          <Button
+            variant="outline"
+            onPress={handleDownloadReport}
+            loading={pdfLoading}
+            icon={<Download size={18} color={colors.foreground} />}>
+            Download Report
+          </Button>
+
           <Button
             variant="primary"
             onPress={handleBookAppointment}

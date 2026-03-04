@@ -6,15 +6,18 @@ import {
   AlertTriangle,
   Calendar,
   Check,
+  Download,
   Shield,
   Stethoscope,
   User,
 } from 'lucide-react-native';
 import {Header, Button} from '../../components/ui';
 import {useHealthCheckupStore} from '../../store/healthCheckup';
+import {useAuthStore} from '../../store/auth';
 import {colors} from '../../theme/colors';
 import {formatDate} from '../../utils/formatters';
 import AISummaryCard from '../../components/health-checkup/AISummaryCard';
+import {generateHealthCheckupPDF} from '../../utils/healthCheckupPdf';
 
 // Maps Infermedica triage_level values to display config
 const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; description: string}> = {
@@ -86,8 +89,10 @@ export default function HistoryDetailScreen() {
     generateClaudeSummary,
     fetchSummaryStatus,
   } = useHealthCheckupStore();
+  const authUser = useAuthStore(s => s.user);
 
   const [summaryExpanded, setSummaryExpanded] = useState(true);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const checkupId = route.params?.id;
 
   useEffect(() => {
@@ -104,6 +109,27 @@ export default function HistoryDetailScreen() {
       await generateClaudeSummary(checkupId);
     } catch {
       Alert.alert('Unable to Generate', 'Could not generate AI summary. Please try again later.');
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    if (!currentDetail) return;
+    setPdfLoading(true);
+    try {
+      const responseData = currentDetail.response?.data;
+      const patientName = `${authUser?.profile?.first_name || ''} ${authUser?.profile?.last_name || ''}`.trim() || 'Patient';
+      await generateHealthCheckupPDF({
+        patientName,
+        age: currentDetail.patient_info?.age || 0,
+        sex: currentDetail.patient_info?.gender || '',
+        date: currentDetail.created_at || currentDetail.createdAt || new Date().toISOString(),
+        triageLevel: responseData?.triage_level || 'self_care',
+        hasEmergency: responseData?.has_emergency_evidence || false,
+        conditions: responseData?.conditions || [],
+        claudeSummary: claudeSummary?.content || null,
+      });
+    } finally {
+      setPdfLoading(false);
     }
   };
 
@@ -275,6 +301,14 @@ export default function HistoryDetailScreen() {
 
         {/* Actions */}
         <View className="mt-6 gap-3">
+          <Button
+            variant="outline"
+            onPress={handleDownloadReport}
+            loading={pdfLoading}
+            icon={<Download size={18} color={colors.foreground} />}>
+            Download Report
+          </Button>
+
           <Button
             variant="primary"
             onPress={() => {
