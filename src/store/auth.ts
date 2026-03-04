@@ -43,17 +43,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   login: async (email, password, user_type = 'Patient') => {
     const res = await api.post('/auth/login', {email, password, user_type});
-    if (res.data.requires_2fa) {
+    const data = res.data;
+    if (data.requires_2fa) {
       return {requires2FA: true};
     }
-    await get().setToken(res.data.token);
+    await get().setToken(data.result);
     await get().fetchUser();
     return {requires2FA: false};
   },
 
   verify2FA: async (code, _method) => {
     const res = await api.post('/auth/2fa/verify', {code});
-    await get().setToken(res.data.token);
+    await get().setToken(res.data.result);
     await get().fetchUser();
   },
 
@@ -64,8 +65,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchUser: async () => {
     try {
       const res = await api.get('/users/me');
-      const user = res.data;
-      const needsOnboarding = !user.emergency_contacts?.length;
+      const user = res.data.result;
+      const needsOnboarding = !user.profile?.emergency_contacts?.length;
       await storage.setUser(user);
       set({user, isAuthenticated: true, needsOnboarding, isLoading: false});
     } catch {
