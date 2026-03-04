@@ -23,25 +23,23 @@ export default function RootNavigator() {
     hydrate();
   }, []);
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown: false}}>
-        {!isAuthenticated ? (
-          <Stack.Screen name="Auth" component={AuthStack} />
-        ) : needsOnboarding ? (
-          <Stack.Screen name="Onboarding" component={OnboardingStack} />
-        ) : (
-          <Stack.Screen name="Main" component={MainTabs} />
-        )}
-      </Stack.Navigator>
+      {isLoading ? (
+        <View className="flex-1 bg-background items-center justify-center">
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <Stack.Navigator screenOptions={{headerShown: false}}>
+          {!isAuthenticated ? (
+            <Stack.Screen name="Auth" component={AuthStack} />
+          ) : needsOnboarding ? (
+            <Stack.Screen name="Onboarding" component={OnboardingStack} />
+          ) : (
+            <Stack.Screen name="Main" component={MainTabs} />
+          )}
+        </Stack.Navigator>
+      )}
     </NavigationContainer>
   );
 }
