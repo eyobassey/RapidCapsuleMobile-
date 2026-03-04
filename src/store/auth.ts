@@ -13,6 +13,7 @@ interface User {
     date_of_birth?: string;
     gender?: string;
     profile_image?: string;
+    profile_photo?: string;
   };
   emergency_contacts?: any[];
   is_email_verified: boolean;

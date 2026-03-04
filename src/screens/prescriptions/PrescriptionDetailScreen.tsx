@@ -183,7 +183,7 @@ export default function PrescriptionDetailScreen() {
       : '';
   const specialistImage =
     typeof specialist === 'object'
-      ? specialist.profile?.profile_image
+      ? specialist.profile?.profile_photo || specialist.profile?.profile_image
       : null;
 
   const bannerConfig = STATUS_BANNER_CONFIG[rx.status] || STATUS_BANNER_CONFIG.draft;

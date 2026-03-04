@@ -99,7 +99,7 @@ export default function RateAppointmentScreen() {
         {/* Specialist info */}
         <View className="bg-card border border-border rounded-2xl p-5 items-center mb-6">
           <Avatar
-            uri={profile.profile_image}
+            uri={profile.profile_photo || profile.profile_image}
             firstName={profile.first_name}
             lastName={profile.last_name}
             size="lg"

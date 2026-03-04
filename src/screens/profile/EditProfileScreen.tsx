@@ -40,7 +40,7 @@ export default function EditProfileScreen() {
   const [ecRelationship, setEcRelationship] = useState(emergencyContact?.relationship || '');
   const [ecPhone, setEcPhone] = useState(emergencyContact?.phone_number || '');
 
-  const profileImage = user?.profile?.profile_image;
+  const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
 
   const hasChanges = useMemo(() => {
     const original = user?.profile;

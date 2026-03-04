@@ -29,7 +29,7 @@ export default function SpecialistCard({specialist, onSelect}: SpecialistCardPro
       {/* Top section: Avatar + Info */}
       <View className="flex-row items-start gap-3 mb-3">
         <Avatar
-          uri={profile.profile_image}
+          uri={profile.profile_photo || profile.profile_image}
           firstName={profile.first_name}
           lastName={profile.last_name}
           size="lg"

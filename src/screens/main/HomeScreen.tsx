@@ -84,7 +84,7 @@ export default function HomeScreen() {
   // ---------- derived ----------
   const firstName = user?.profile?.first_name || 'User';
   const lastName = user?.profile?.last_name || '';
-  const profileImage = user?.profile?.profile_image;
+  const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
   const greeting = getGreeting();
 
   const upcomingAppointments = useMemo(
@@ -378,10 +378,10 @@ export default function HomeScreen() {
                 {/* Date block */}
                 <View className="w-14 h-14 rounded-2xl bg-background border border-border items-center justify-center">
                   <Text className="text-[10px] font-bold uppercase" style={{color: colors.accent}}>
-                    {new Date(nextAppointment.date || nextAppointment.appointment_date).toLocaleDateString('en-US', {month: 'short'})}
+                    {new Date(nextAppointment.start_time || nextAppointment.date || nextAppointment.appointment_date).toLocaleDateString('en-US', {month: 'short'})}
                   </Text>
                   <Text className="text-lg font-bold leading-none" style={{color: colors.accent}}>
-                    {new Date(nextAppointment.date || nextAppointment.appointment_date).getDate()}
+                    {new Date(nextAppointment.start_time || nextAppointment.date || nextAppointment.appointment_date).getDate()}
                   </Text>
                 </View>
 
@@ -398,8 +398,8 @@ export default function HomeScreen() {
 
                   <View className="flex-row items-center gap-2 mt-1.5">
                     <Text className="text-xs font-medium" style={{color: colors.accent}}>
-                      {formatRelativeDate(nextAppointment.date || nextAppointment.appointment_date)}
-                      {nextAppointment.time ? `, ${formatTime(nextAppointment.time)}` : ''}
+                      {formatRelativeDate(nextAppointment.start_time || nextAppointment.date || nextAppointment.appointment_date)}
+                      {(nextAppointment.start_time || nextAppointment.time) ? `, ${formatTime(nextAppointment.start_time || nextAppointment.time)}` : ''}
                     </Text>
 
                     {nextAppointment.meeting_channel && (

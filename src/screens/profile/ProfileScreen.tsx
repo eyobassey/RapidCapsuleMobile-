@@ -41,7 +41,7 @@ export default function ProfileScreen() {
   const firstName = user?.profile?.first_name || 'User';
   const lastName = user?.profile?.last_name || '';
   const email = user?.email || '';
-  const profileImage = user?.profile?.profile_image;
+  const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
   const memberSince = (user as any)?.created_at
     ? formatDate((user as any).created_at)
     : '';

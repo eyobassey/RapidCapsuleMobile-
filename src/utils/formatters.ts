@@ -15,6 +15,18 @@ export function formatDate(date: string | Date): string {
 }
 
 export function formatTime(time: string): string {
+  // Handle ISO date strings (e.g. "2025-10-24T08:30:00.000Z")
+  if (time.includes('T') || time.length > 8) {
+    const d = new Date(time);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+    }
+  }
+  // Handle HH:MM strings
   const [hours, minutes] = time.split(':').map(Number);
   if (isNaN(hours) || isNaN(minutes)) return time;
   const period = hours >= 12 ? 'PM' : 'AM';

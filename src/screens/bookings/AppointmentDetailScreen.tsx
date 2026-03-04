@@ -82,7 +82,7 @@ export default function AppointmentDetailScreen() {
     appointment?.specialty ||
     'General Practice';
   const channel = appointment?.meeting_channel || 'zoom';
-  const fee = appointment?.consultation_fee || appointment?.fee || 0;
+  const fee = appointment?.appointment_fee || appointment?.consultation_fee || appointment?.fee || 0;
   const status = appointment?.status || 'OPEN';
   const duration = appointment?.duration || 30;
   const rating = specialist.average_rating || specialist.rating || 0;
@@ -92,7 +92,7 @@ export default function AppointmentDetailScreen() {
   const isCancelled = status === 'CANCELLED';
 
   const handleJoinMeeting = useCallback(() => {
-    const link = appointment?.meeting_link || appointment?.zoom_link;
+    const link = appointment?.zoom_meeting_url || appointment?.meeting_link || appointment?.zoom_link;
     if (link) {
       Linking.openURL(link);
     } else {
@@ -140,7 +140,7 @@ export default function AppointmentDetailScreen() {
           {/* Section 1: Specialist Card */}
           <View className="bg-card border border-border rounded-2xl p-6 items-center mb-4">
             <Avatar
-              uri={profile.profile_image}
+              uri={profile.profile_photo || profile.profile_image}
               firstName={profile.first_name}
               lastName={profile.last_name}
               size="lg"
@@ -182,7 +182,7 @@ export default function AppointmentDetailScreen() {
                 <View>
                   <Text className="text-muted-foreground text-xs">Date</Text>
                   <Text className="text-foreground text-sm font-medium">
-                    {formatDate(appointment.date || appointment.appointment_date || appointment.createdAt)}
+                    {formatDate(appointment.start_time || appointment.date || appointment.appointment_date || appointment.createdAt)}
                   </Text>
                 </View>
               </View>
@@ -194,7 +194,7 @@ export default function AppointmentDetailScreen() {
                 <View>
                   <Text className="text-muted-foreground text-xs">Time</Text>
                   <Text className="text-foreground text-sm font-medium">
-                    {formatTime(appointment.time || appointment.appointment_time || '00:00')}
+                    {formatTime(appointment.start_time || appointment.time || appointment.appointment_time || '00:00')}
                   </Text>
                 </View>
               </View>

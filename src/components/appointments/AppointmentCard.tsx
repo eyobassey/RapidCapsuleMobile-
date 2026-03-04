@@ -47,10 +47,11 @@ export default function AppointmentCard({
     appointment.specialty ||
     'General Practice';
   const channel = appointment.meeting_channel || 'zoom';
-  const fee = appointment.consultation_fee || appointment.fee || 0;
+  const fee = appointment.appointment_fee || appointment.consultation_fee || appointment.fee || 0;
   const status = appointment.status || 'OPEN';
   const isUpcoming = status === 'OPEN' || status === 'ONGOING' || status === 'RESCHEDULED';
-  const showJoin = isUpcoming && isToday(appointment.date || appointment.appointment_date);
+  const dateStr = appointment.start_time || appointment.date || appointment.appointment_date;
+  const showJoin = isUpcoming && dateStr && isToday(dateStr);
 
   return (
     <TouchableOpacity
@@ -61,7 +62,7 @@ export default function AppointmentCard({
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center flex-1 gap-3">
           <Avatar
-            uri={profile.profile_image}
+            uri={profile.profile_photo || profile.profile_image}
             firstName={profile.first_name}
             lastName={profile.last_name}
             size="md"
@@ -91,13 +92,13 @@ export default function AppointmentCard({
         <View className="flex-row items-center gap-1.5">
           <Calendar size={14} color={colors.mutedForeground} />
           <Text className="text-foreground text-xs">
-            {formatDate(appointment.date || appointment.appointment_date || appointment.createdAt)}
+            {formatDate(appointment.start_time || appointment.date || appointment.appointment_date || appointment.createdAt)}
           </Text>
         </View>
         <View className="flex-row items-center gap-1.5">
           <Clock size={14} color={colors.mutedForeground} />
           <Text className="text-foreground text-xs">
-            {formatTime(appointment.time || appointment.appointment_time || '00:00')}
+            {formatTime(appointment.start_time || appointment.time || appointment.appointment_time || '00:00')}
           </Text>
         </View>
       </View>

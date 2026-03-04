@@ -103,7 +103,7 @@ export default function ConfirmBookingScreen() {
         <View className="bg-card border border-border rounded-2xl p-5 mb-4">
           <View className="flex-row items-center gap-3 mb-4 pb-4 border-b border-border">
             <Avatar
-              uri={profile.profile_image}
+              uri={profile.profile_photo || profile.profile_image}
               firstName={profile.first_name}
               lastName={profile.last_name}
               size="lg"
