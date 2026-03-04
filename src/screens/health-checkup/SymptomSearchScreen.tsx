@@ -93,10 +93,10 @@ export default function SymptomSearchScreen() {
   const avatarSex = (sex === 'male' || sex === 'female') ? sex : 'male';
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
       <Header title="Symptoms" onBack={() => navigation.goBack()} />
 
-      <View className="flex-1">
+      <View style={{flex: 1}}>
         {/* Step indicator */}
         <View className="flex-row items-center gap-2 px-5 pt-4 mb-4">
           <View className="h-1.5 flex-1 bg-primary rounded-full" />
@@ -325,7 +325,15 @@ export default function SymptomSearchScreen() {
         )}
       </View>
 
-      <View className="bg-background border-t border-border px-5 pt-3 pb-8">
+      <View
+        style={{
+          backgroundColor: colors.background,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          paddingBottom: 32,
+        }}>
         <Button variant="primary" onPress={handleNext} loading={isLoading}>
           {selected.size > 0
             ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`

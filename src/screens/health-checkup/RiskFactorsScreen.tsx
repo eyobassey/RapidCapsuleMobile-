@@ -38,12 +38,12 @@ export default function RiskFactorsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
       <Header title="Risk Factors" onBack={() => navigation.goBack()} />
 
       <ScrollView
-        className="flex-1"
-        contentContainerClassName="px-5 pt-6 pb-6"
+        style={{flex: 1}}
+        contentContainerStyle={{paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24}}
         showsVerticalScrollIndicator={false}>
         {/* Step indicator */}
         <View className="flex-row items-center gap-2 mb-6">
@@ -103,7 +103,15 @@ export default function RiskFactorsScreen() {
         )}
       </ScrollView>
 
-      <View className="bg-background border-t border-border px-5 pt-3 pb-8">
+      <View
+        style={{
+          backgroundColor: colors.background,
+          borderTopWidth: 1,
+          borderTopColor: colors.border,
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          paddingBottom: 32,
+        }}>
         <Button variant="primary" onPress={handleNext}>
           {selected.size > 0
             ? `Continue with ${selected.size} factor${selected.size > 1 ? 's' : ''}`
