@@ -51,8 +51,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return {requires2FA: false};
   },
 
-  verify2FA: async (code, method) => {
-    const res = await api.post('/auth/otp/verify', {otp: code, method});
+  verify2FA: async (code, _method) => {
+    const res = await api.post('/auth/2fa/verify', {code});
     await get().setToken(res.data.token);
     await get().fetchUser();
   },

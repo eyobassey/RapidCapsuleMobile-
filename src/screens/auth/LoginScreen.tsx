@@ -4,6 +4,7 @@ import {
   Text,
   TouchableOpacity,
   Switch,
+  Alert,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {ArrowLeft, EyeOff, Eye, Shield} from 'lucide-react-native';
@@ -33,7 +34,8 @@ export default function LoginScreen({navigation}: Props) {
       }
       // If no 2FA, the auth store automatically routes via RootNavigator
     } catch (err: any) {
-      // TODO: show error toast
+      const msg = err?.response?.data?.message || err?.message || 'Login failed';
+      Alert.alert('Login Error', msg);
     } finally {
       setLoading(false);
     }
