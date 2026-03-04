@@ -59,23 +59,16 @@ export default function AddressEmergencyScreen({navigation}: Props) {
   const [loading, setLoading] = useState(false);
 
   // Pre-fill
+  // Backend stores home address under profile.contact, NOT delivery_addresses
   useEffect(() => {
     if (user) {
-      // Address from delivery_addresses or profile
-      const addr = user.delivery_addresses?.[0];
-      if (addr) {
-        setStreet(addr.street || addr.street_address || '');
-        setCity(addr.city || '');
-        setState(addr.state || '');
-        setCountry(addr.country || 'Nigeria');
-        setPostalCode(addr.postal_code || '');
-      } else {
-        const p = user.profile;
-        setStreet(p?.address1 || '');
-        setCity(p?.city || '');
-        setState(p?.state || '');
-        setCountry(p?.country || 'Nigeria');
-        setPostalCode(p?.zip_code || '');
+      const contact = (user.profile as any)?.contact;
+      if (contact) {
+        setStreet(contact.address1 || '');
+        setCity(contact.city || '');
+        setState(contact.state || '');
+        setCountry(contact.country || 'Nigeria');
+        setPostalCode(contact.zip_code || '');
       }
 
       // Emergency contacts

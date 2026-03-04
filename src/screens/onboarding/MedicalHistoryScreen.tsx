@@ -54,25 +54,45 @@ export default function MedicalHistoryScreen({navigation}: Props) {
   });
   const [loading, setLoading] = useState(false);
 
+  // Pre-fill: preserve original structured data for re-save
+  const [rawMedications, setRawMedications] = useState<any[]>([]);
+  const [rawSurgeries, setRawSurgeries] = useState<any[]>([]);
+  const [rawFamilyHistory, setRawFamilyHistory] = useState<any[]>([]);
+
   useEffect(() => {
     const h = user?.medical_history || (user?.profile as any)?.medical_history;
     if (h) {
       setConditions(h.chronic_conditions || []);
+
+      // Keep full objects for re-save, display as strings
+      const meds = h.current_medications || [];
+      setRawMedications(meds);
       setMedications(
-        (h.current_medications || []).map((m: any) =>
-          typeof m === 'string' ? m : m.name || '',
-        ),
+        meds.map((m: any) => {
+          if (typeof m === 'string') return m;
+          const parts = [m.name, m.strength, m.form].filter(Boolean);
+          return parts.join(' ') || '';
+        }),
       );
+
+      const surgs = h.past_surgeries || [];
+      setRawSurgeries(surgs);
       setSurgeries(
-        (h.past_surgeries || []).map((s: any) =>
-          typeof s === 'string' ? s : s.procedure || '',
-        ),
+        surgs.map((s: any) => {
+          if (typeof s === 'string') return s;
+          return s.year ? `${s.procedure} (${s.year})` : s.procedure || '';
+        }),
       );
+
+      const fh = h.family_history || [];
+      setRawFamilyHistory(fh);
       setFamilyHistory(
-        (h.family_history || []).map((f: any) =>
-          typeof f === 'string' ? f : `${f.condition}${f.relation ? ` (${f.relation})` : ''}`,
-        ),
+        fh.map((f: any) => {
+          if (typeof f === 'string') return f;
+          return f.relation ? `${f.condition} (${f.relation})` : f.condition || '';
+        }),
       );
+
       if (h.lifestyle) {
         setLifestyle({
           smoking: h.lifestyle.smoking || '',
@@ -97,12 +117,40 @@ export default function MedicalHistoryScreen({navigation}: Props) {
   const handleSave = async () => {
     setLoading(true);
     try {
+      // Merge: keep original structured items for existing entries, add new as simple
+      const existingMedNames = rawMedications.map((m: any) =>
+        typeof m === 'string' ? m : [m.name, m.strength, m.form].filter(Boolean).join(' '),
+      );
+      const mergedMeds = medications.filter(Boolean).map(displayStr => {
+        const idx = existingMedNames.indexOf(displayStr);
+        if (idx >= 0) return rawMedications[idx]; // preserve full object
+        return {name: displayStr};
+      });
+
+      const existingSurgNames = rawSurgeries.map((s: any) =>
+        typeof s === 'string' ? s : s.year ? `${s.procedure} (${s.year})` : s.procedure || '',
+      );
+      const mergedSurgs = surgeries.filter(Boolean).map(displayStr => {
+        const idx = existingSurgNames.indexOf(displayStr);
+        if (idx >= 0) return rawSurgeries[idx];
+        return {procedure: displayStr};
+      });
+
+      const existingFhNames = rawFamilyHistory.map((f: any) =>
+        typeof f === 'string' ? f : f.relation ? `${f.condition} (${f.relation})` : f.condition || '',
+      );
+      const mergedFh = familyHistory.filter(Boolean).map(displayStr => {
+        const idx = existingFhNames.indexOf(displayStr);
+        if (idx >= 0) return rawFamilyHistory[idx];
+        return {condition: displayStr};
+      });
+
       await usersService.updateProfile({
         medical_history: {
           chronic_conditions: conditions.filter(Boolean),
-          current_medications: medications.filter(Boolean).map(name => ({name})),
-          past_surgeries: surgeries.filter(Boolean).map(procedure => ({procedure})),
-          family_history: familyHistory.filter(Boolean).map(condition => ({condition})),
+          current_medications: mergedMeds,
+          past_surgeries: mergedSurgs,
+          family_history: mergedFh,
           lifestyle: {
             smoking: lifestyle.smoking || undefined,
             alcohol: lifestyle.alcohol || undefined,

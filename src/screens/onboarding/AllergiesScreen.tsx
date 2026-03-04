@@ -17,6 +17,7 @@ const SEVERITY_OPTIONS = [
   {label: 'Mild', value: 'mild'},
   {label: 'Moderate', value: 'moderate'},
   {label: 'Severe', value: 'severe'},
+  {label: 'Life Threatening', value: 'life_threatening'},
 ];
 
 type AllergyCategory = 'drug' | 'food' | 'environmental' | 'other';

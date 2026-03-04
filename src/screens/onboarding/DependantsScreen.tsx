@@ -21,12 +21,13 @@ const RELATIONSHIP_OPTIONS = [
 ];
 
 const GENDER_OPTIONS = [
-  {label: 'Male', value: 'MALE'},
-  {label: 'Female', value: 'FEMALE'},
+  {label: 'Male', value: 'Male'},
+  {label: 'Female', value: 'Female'},
 ];
 
 interface DependantForm {
-  name: string;
+  firstName: string;
+  lastName: string;
   dateOfBirth: string;
   relationship: string;
   gender: string;
@@ -44,8 +45,9 @@ export default function DependantsScreen({navigation}: Props) {
     if (user?.dependants?.length) {
       setDependants(
         user.dependants.map((d: any) => ({
-          name: d.name || '',
-          dateOfBirth: d.date_of_birth || '',
+          firstName: d.first_name || d.name?.split(' ')[0] || '',
+          lastName: d.last_name || d.name?.split(' ').slice(1).join(' ') || '',
+          dateOfBirth: d.date_of_birth ? d.date_of_birth.split('T')[0] : '',
           relationship: d.relationship || '',
           gender: d.gender || '',
         })),
@@ -66,9 +68,10 @@ export default function DependantsScreen({navigation}: Props) {
     try {
       await usersService.updateProfile({
         dependants: dependants
-          .filter(d => d.name.trim())
+          .filter(d => d.firstName.trim())
           .map(d => ({
-            name: d.name.trim(),
+            first_name: d.firstName.trim(),
+            last_name: d.lastName.trim(),
             date_of_birth: d.dateOfBirth || undefined,
             relationship: d.relationship || undefined,
             gender: d.gender || undefined,
@@ -97,7 +100,7 @@ export default function DependantsScreen({navigation}: Props) {
         onAdd={() =>
           setDependants(prev => [
             ...prev,
-            {name: '', dateOfBirth: '', relationship: '', gender: ''},
+            {firstName: '', lastName: '', dateOfBirth: '', relationship: '', gender: ''},
           ])
         }
         onRemove={index => setDependants(prev => prev.filter((_, i) => i !== index))}
@@ -106,13 +109,26 @@ export default function DependantsScreen({navigation}: Props) {
         emptyText="No dependants added yet. Tap below to add a family member or dependant."
         renderItem={(dep, index) => (
           <View style={{gap: 12}}>
-            <Input
-              label="Full Name"
-              placeholder="Enter name"
-              value={dep.name}
-              onChangeText={v => updateDependant(index, 'name', v)}
-              autoCapitalize="words"
-            />
+            <View style={{flexDirection: 'row', gap: 12}}>
+              <View style={{flex: 1}}>
+                <Input
+                  label="First Name"
+                  placeholder="First name"
+                  value={dep.firstName}
+                  onChangeText={v => updateDependant(index, 'firstName', v)}
+                  autoCapitalize="words"
+                />
+              </View>
+              <View style={{flex: 1}}>
+                <Input
+                  label="Last Name"
+                  placeholder="Last name"
+                  value={dep.lastName}
+                  onChangeText={v => updateDependant(index, 'lastName', v)}
+                  autoCapitalize="words"
+                />
+              </View>
+            </View>
             <Input
               label="Date of Birth"
               placeholder="YYYY-MM-DD"

@@ -22,6 +22,16 @@ interface UserProfile {
     height?: {value?: number; unit?: string};
     weight?: {value?: number; unit?: string};
   };
+  contact?: {
+    phone?: {country_code?: string; number?: string};
+    email?: string;
+    address1?: string;
+    address2?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    zip_code?: string;
+  };
   address1?: string;
   city?: string;
   state?: string;

@@ -12,15 +12,15 @@ import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'PersonalDetails'>;
 
 const GENDER_OPTIONS = [
-  {label: 'Male', value: 'MALE'},
-  {label: 'Female', value: 'FEMALE'},
+  {label: 'Male', value: 'Male'},
+  {label: 'Female', value: 'Female'},
 ];
 
 const MARITAL_OPTIONS = [
-  {label: 'Single', value: 'SINGLE'},
-  {label: 'Married', value: 'MARRIED'},
-  {label: 'Divorced', value: 'DIVORCED'},
-  {label: 'Widowed', value: 'WIDOWED'},
+  {label: 'Single', value: 'Single'},
+  {label: 'Married', value: 'Married'},
+  {label: 'Divorced', value: 'Divorced'},
+  {label: 'Widowed', value: 'Widowed'},
 ];
 
 export default function PersonalDetailsScreen({navigation}: Props) {
@@ -38,16 +38,20 @@ export default function PersonalDetailsScreen({navigation}: Props) {
   const [loading, setLoading] = useState(false);
 
   // Pre-fill from user data
+  // Backend nests phone under profile.contact.phone, address under profile.contact
   useEffect(() => {
     if (user?.profile) {
-      const p = user.profile;
+      const p = user.profile as any;
       setFirstName(p.first_name || '');
       setLastName(p.last_name || '');
       setDob(p.date_of_birth || '');
       setGender(p.gender || '');
-      setPhone(p.phone_number || p.phone?.number || '');
-      setMaritalStatus((p as any).marital_status || '');
-      setOccupation((p as any).occupation || '');
+      // Phone: profile.contact.phone.number → profile.phone.number → profile.phone_number
+      setPhone(
+        p.contact?.phone?.number || p.phone?.number || p.phone_number || '',
+      );
+      setMaritalStatus(p.marital_status || '');
+      setOccupation(p.occupation || '');
     }
   }, [user]);
 
