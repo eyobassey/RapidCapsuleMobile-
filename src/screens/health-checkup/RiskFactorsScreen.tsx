@@ -101,23 +101,16 @@ export default function RiskFactorsScreen() {
             })}
           </View>
         )}
-      </ScrollView>
 
-      <View
-        style={{
-          backgroundColor: colors.background,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          paddingHorizontal: 20,
-          paddingTop: 12,
-          paddingBottom: 32,
-        }}>
-        <Button variant="primary" onPress={handleNext}>
-          {selected.size > 0
-            ? `Continue with ${selected.size} factor${selected.size > 1 ? 's' : ''}`
-            : 'Skip & Continue'}
-        </Button>
-      </View>
+        {/* Continue button */}
+        <View style={{marginTop: 24}}>
+          <Button variant="primary" onPress={handleNext}>
+            {selected.size > 0
+              ? `Continue with ${selected.size} factor${selected.size > 1 ? 's' : ''}`
+              : 'Skip & Continue'}
+          </Button>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

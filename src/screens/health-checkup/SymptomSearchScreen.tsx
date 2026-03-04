@@ -92,13 +92,27 @@ export default function SymptomSearchScreen() {
 
   const avatarSex = (sex === 'male' || sex === 'female') ? sex : 'male';
 
+  const continueButton = (
+    <View style={{marginTop: 24, paddingBottom: 40}}>
+      <Button variant="primary" onPress={handleNext} loading={isLoading}>
+        {selected.size > 0
+          ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
+          : 'Select Symptoms'}
+      </Button>
+    </View>
+  );
+
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
       <Header title="Symptoms" onBack={() => navigation.goBack()} />
 
-      <View style={{flex: 1}}>
+      <ScrollView
+        style={{flex: 1}}
+        contentContainerStyle={{paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24}}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
         {/* Step indicator */}
-        <View className="flex-row items-center gap-2 px-5 pt-4 mb-4">
+        <View className="flex-row items-center gap-2 mb-4">
           <View className="h-1.5 flex-1 bg-primary rounded-full" />
           <View className="h-1.5 flex-1 bg-primary rounded-full" />
           <View className="h-1.5 flex-1 bg-primary rounded-full" />
@@ -106,72 +120,66 @@ export default function SymptomSearchScreen() {
           <View className="h-1.5 flex-1 bg-border rounded-full" />
         </View>
 
-        <View className="px-5 mb-2">
-          <Text className="text-lg font-bold text-foreground mb-1">
-            What are your symptoms?
-          </Text>
-          <Text className="text-sm text-muted-foreground mb-3">
-            Search for symptoms or tap body parts to add them.
-          </Text>
+        <Text className="text-lg font-bold text-foreground mb-1">
+          What are your symptoms?
+        </Text>
+        <Text className="text-sm text-muted-foreground mb-3">
+          Search for symptoms or tap body parts to add them.
+        </Text>
 
-          {/* Tab switcher */}
-          <View className="flex-row bg-muted rounded-2xl p-1 mb-3">
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => setTab('search')}
+        {/* Tab switcher */}
+        <View className="flex-row bg-muted rounded-2xl p-1 mb-3">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setTab('search')}
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              paddingVertical: 8,
+              borderRadius: 14,
+              backgroundColor: tab === 'search' ? colors.card : 'transparent',
+            }}>
+            <Search size={14} color={tab === 'search' ? colors.primary : colors.mutedForeground} />
+            <Text
               style={{
-                flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                paddingVertical: 8,
-                borderRadius: 14,
-                backgroundColor: tab === 'search' ? colors.card : 'transparent',
+                fontSize: 13,
+                fontWeight: '600',
+                color: tab === 'search' ? colors.primary : colors.mutedForeground,
               }}>
-              <Search size={14} color={tab === 'search' ? colors.primary : colors.mutedForeground} />
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: '600',
-                  color: tab === 'search' ? colors.primary : colors.mutedForeground,
-                }}>
-                Search
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => setTab('body')}
+              Search
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setTab('body')}
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              paddingVertical: 8,
+              borderRadius: 14,
+              backgroundColor: tab === 'body' ? colors.card : 'transparent',
+            }}>
+            <User size={14} color={tab === 'body' ? colors.primary : colors.mutedForeground} />
+            <Text
               style={{
-                flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                paddingVertical: 8,
-                borderRadius: 14,
-                backgroundColor: tab === 'body' ? colors.card : 'transparent',
+                fontSize: 13,
+                fontWeight: '600',
+                color: tab === 'body' ? colors.primary : colors.mutedForeground,
               }}>
-              <User size={14} color={tab === 'body' ? colors.primary : colors.mutedForeground} />
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: '600',
-                  color: tab === 'body' ? colors.primary : colors.mutedForeground,
-                }}>
-                Body Map
-              </Text>
-            </TouchableOpacity>
-          </View>
+              Body Map
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Selected symptoms chips */}
         {selected.size > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerClassName="px-5 py-2 gap-2"
-            className="max-h-12">
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12}}>
             {Array.from(selected.values()).map((s: any) => (
               <TouchableOpacity
                 key={s.id}
@@ -184,13 +192,13 @@ export default function SymptomSearchScreen() {
                 <X size={12} color={colors.primary} />
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
         )}
 
         {/* ── Search Tab ── */}
         {tab === 'search' && (
           <>
-            <View className="px-5 mb-2">
+            <View style={{marginBottom: 8}}>
               <View className="flex-row items-center bg-card border border-border rounded-2xl px-4 h-12">
                 <Search size={18} color={colors.mutedForeground} />
                 <TextInput
@@ -210,53 +218,46 @@ export default function SymptomSearchScreen() {
               </View>
             </View>
 
-            <ScrollView
-              className="flex-1"
-              contentContainerClassName="px-5 pb-6"
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled">
-              {results.map((symptom: any) => {
-                const isSelected = selected.has(symptom.id);
-                return (
-                  <TouchableOpacity
-                    key={symptom.id}
-                    activeOpacity={0.7}
-                    onPress={() => toggleSymptom(symptom)}
-                    className={`flex-row items-center gap-3 p-4 rounded-2xl border mb-2 ${
-                      isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
+            {results.map((symptom: any) => {
+              const isSelected = selected.has(symptom.id);
+              return (
+                <TouchableOpacity
+                  key={symptom.id}
+                  activeOpacity={0.7}
+                  onPress={() => toggleSymptom(symptom)}
+                  className={`flex-row items-center gap-3 p-4 rounded-2xl border mb-2 ${
+                    isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
+                  }`}>
+                  <View
+                    className={`w-6 h-6 rounded-full items-center justify-center ${
+                      isSelected ? 'bg-primary' : 'bg-muted'
                     }`}>
-                    <View
-                      className={`w-6 h-6 rounded-full items-center justify-center ${
-                        isSelected ? 'bg-primary' : 'bg-muted'
-                      }`}>
-                      {isSelected ? (
-                        <Check size={14} color={colors.white} />
-                      ) : (
-                        <Plus size={14} color={colors.mutedForeground} />
-                      )}
-                    </View>
-                    <Text className="text-sm text-foreground flex-1">
-                      {symptom.common_name || symptom.name || symptom.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+                    {isSelected ? (
+                      <Check size={14} color={colors.white} />
+                    ) : (
+                      <Plus size={14} color={colors.mutedForeground} />
+                    )}
+                  </View>
+                  <Text className="text-sm text-foreground flex-1">
+                    {symptom.common_name || symptom.name || symptom.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
 
-              {query.length >= 2 && results.length === 0 && !searching && (
-                <View className="items-center py-12">
-                  <Text className="text-sm text-muted-foreground">No symptoms found</Text>
-                </View>
-              )}
-            </ScrollView>
+            {query.length >= 2 && results.length === 0 && !searching && (
+              <View className="items-center py-12">
+                <Text className="text-sm text-muted-foreground">No symptoms found</Text>
+              </View>
+            )}
+
+            {continueButton}
           </>
         )}
 
         {/* ── Body Map Tab ── */}
         {tab === 'body' && (
-          <ScrollView
-            className="flex-1"
-            contentContainerClassName="px-5 pb-6"
-            showsVerticalScrollIndicator={false}>
+          <>
             <View className="bg-card border border-border rounded-2xl p-4">
               <BodyAvatar
                 sex={avatarSex}
@@ -267,7 +268,7 @@ export default function SymptomSearchScreen() {
 
             {/* Region symptoms */}
             {selectedRegion && (
-              <View className="mt-4">
+              <View style={{marginTop: 16}}>
                 <Text className="text-sm font-bold text-foreground mb-2 px-1 capitalize">
                   Symptoms for "{selectedRegion}"
                 </Text>
@@ -321,25 +322,11 @@ export default function SymptomSearchScreen() {
                 </Text>
               </View>
             )}
-          </ScrollView>
-        )}
-      </View>
 
-      <View
-        style={{
-          backgroundColor: colors.background,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
-          paddingHorizontal: 20,
-          paddingTop: 12,
-          paddingBottom: 32,
-        }}>
-        <Button variant="primary" onPress={handleNext} loading={isLoading}>
-          {selected.size > 0
-            ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
-            : 'Select Symptoms'}
-        </Button>
-      </View>
+            {continueButton}
+          </>
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }

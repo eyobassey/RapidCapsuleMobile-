@@ -264,13 +264,22 @@ export default function InterviewScreen() {
           </View>
         )}
 
+        {/* Submit button for group_multiple */}
+        {questionType === 'group_multiple' && (
+          <View style={{marginTop: 24}}>
+            <Button variant="primary" onPress={handleGroupMultipleSubmit} loading={isLoading}>
+              Continue
+            </Button>
+          </View>
+        )}
+
         {/* Stop early option */}
         {questionCount > 3 && (
           <TouchableOpacity
             onPress={handleStopEarly}
             activeOpacity={0.7}
             disabled={isLoading}
-            className="mt-6 items-center">
+            style={{marginTop: 24, alignItems: 'center'}}>
             <Text className="text-xs text-muted-foreground">
               Answered enough?{' '}
               <Text className="text-primary font-semibold">Get results now</Text>
@@ -278,23 +287,6 @@ export default function InterviewScreen() {
           </TouchableOpacity>
         )}
       </ScrollView>
-
-      {/* Submit button for group_multiple */}
-      {questionType === 'group_multiple' && (
-        <View
-          style={{
-            backgroundColor: colors.background,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-            paddingHorizontal: 20,
-            paddingTop: 12,
-            paddingBottom: 32,
-          }}>
-          <Button variant="primary" onPress={handleGroupMultipleSubmit} loading={isLoading}>
-            Continue
-          </Button>
-        </View>
-      )}
 
       {/* Loading overlay */}
       {isLoading && currentQuestion && (
