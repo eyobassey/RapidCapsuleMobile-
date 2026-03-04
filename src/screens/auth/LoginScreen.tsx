@@ -28,7 +28,7 @@ export default function LoginScreen({navigation}: Props) {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const {requires2FA} = await login(email, password);
+      const {requires2FA} = await login(email, password, activeTab);
       if (requires2FA) {
         navigation.navigate('Otp', {email});
       }

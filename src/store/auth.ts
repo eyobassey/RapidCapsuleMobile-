@@ -25,7 +25,7 @@ interface AuthState {
   isAuthenticated: boolean;
   needsOnboarding: boolean;
 
-  login: (email: string, password: string) => Promise<{requires2FA: boolean}>;
+  login: (email: string, password: string, user_type?: string) => Promise<{requires2FA: boolean}>;
   verify2FA: (code: string, method: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -41,8 +41,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   needsOnboarding: false,
 
-  login: async (email, password) => {
-    const res = await api.post('/auth/login', {email, password});
+  login: async (email, password, user_type = 'Patient') => {
+    const res = await api.post('/auth/login', {email, password, user_type});
     if (res.data.requires_2fa) {
       return {requires2FA: true};
     }
