@@ -66,10 +66,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const res = await api.get('/users/me');
       const user = res.data.result;
-      const needsOnboarding = !user.profile?.emergency_contacts?.length;
+      const needsOnboarding = false; // TODO: restore !user?.profile?.emergency_contacts?.length
       await storage.setUser(user);
       set({user, isAuthenticated: true, needsOnboarding, isLoading: false});
-    } catch {
+    } catch (err: any) {
+      const msg = err?.response?.data
+        ? JSON.stringify(err.response.data)
+        : err?.message || 'Unknown';
+      console.warn('fetchUser failed:', msg);
       set({isLoading: false});
     }
   },
