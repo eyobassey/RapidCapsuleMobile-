@@ -30,5 +30,20 @@ target 'RapidCapsuleMobile' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Fix: RNReanimated inherits HERMES_ENABLE_DEBUGGER=1 but not HERMES_V1_ENABLED,
+    # causing it to include removed Hermes inspector headers on RN 0.84+ (Hermes V1).
+    if ENV['RCT_HERMES_V1_ENABLED'] != '0'
+      installer.pods_project.targets.each do |target|
+        if target.name == 'RNReanimated'
+          target.build_configurations.each do |config|
+            defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+            unless defs.include?('HERMES_V1_ENABLED=1')
+              defs << 'HERMES_V1_ENABLED=1'
+            end
+          end
+        end
+      end
+    end
   end
 end
