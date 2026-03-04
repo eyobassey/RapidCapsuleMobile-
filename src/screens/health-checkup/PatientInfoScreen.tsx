@@ -101,13 +101,22 @@ export default function PatientInfoScreen() {
                 key={option}
                 activeOpacity={0.7}
                 onPress={() => setGender(option.toLowerCase())}
-                className={`flex-1 h-12 rounded-2xl items-center justify-center border ${
-                  isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
-                }`}>
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 16,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 1.5,
+                  backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
+                  borderColor: isSelected ? colors.primary : colors.mutedForeground,
+                }}>
                 <Text
-                  className={`text-sm font-medium ${
-                    isSelected ? 'text-primary' : 'text-muted-foreground'
-                  }`}>
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '500',
+                    color: isSelected ? colors.primary : colors.mutedForeground,
+                  }}>
                   {option}
                 </Text>
               </TouchableOpacity>

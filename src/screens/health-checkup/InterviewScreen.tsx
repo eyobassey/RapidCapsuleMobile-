@@ -182,7 +182,16 @@ export default function InterviewScreen() {
                 activeOpacity={0.7}
                 disabled={isLoading}
                 onPress={() => handleSingleAnswer(opt.value)}
-                className="bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3">
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: 1.5,
+                  borderColor: colors.mutedForeground,
+                  borderRadius: 16,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                }}>
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center"
                   style={{backgroundColor: `${opt.color}20`} as any}>
@@ -204,8 +213,14 @@ export default function InterviewScreen() {
                 activeOpacity={0.7}
                 disabled={isLoading}
                 onPress={() => handleGroupSingleAnswer(item.id)}
-                className="bg-card border border-border rounded-2xl p-4">
-                <Text className="text-sm font-medium text-foreground">
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: 1.5,
+                  borderColor: colors.mutedForeground,
+                  borderRadius: 16,
+                  padding: 16,
+                }}>
+                <Text style={{fontSize: 14, fontWeight: '500', color: colors.foreground}}>
                   {item.name || item.common_name}
                 </Text>
               </TouchableOpacity>
@@ -224,8 +239,14 @@ export default function InterviewScreen() {
                 setQuestionCount(prev => prev + 1);
                 submitDiagnosis(false);
               }}
-              className="bg-muted border border-border rounded-2xl p-4">
-              <Text className="text-sm font-medium text-muted-foreground">None of the above</Text>
+              style={{
+                backgroundColor: colors.muted,
+                borderWidth: 1.5,
+                borderColor: colors.mutedForeground,
+                borderRadius: 16,
+                padding: 16,
+              }}>
+              <Text style={{fontSize: 14, fontWeight: '500', color: colors.mutedForeground}}>None of the above</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -246,13 +267,27 @@ export default function InterviewScreen() {
                       return next;
                     });
                   }}
-                  className={`flex-row items-center gap-3 p-4 rounded-2xl border ${
-                    isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
-                  }`}>
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: 16,
+                    borderRadius: 16,
+                    borderWidth: 1.5,
+                    backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
+                    borderColor: isSelected ? colors.primary : colors.mutedForeground,
+                  }}>
                   <View
-                    className={`w-6 h-6 rounded-lg items-center justify-center border ${
-                      isSelected ? 'bg-primary border-primary' : 'border-border'
-                    }`}>
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 8,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: 2,
+                      backgroundColor: isSelected ? colors.primary : 'transparent',
+                      borderColor: isSelected ? colors.primary : colors.mutedForeground,
+                    }}>
                     {isSelected && <Check size={14} color={colors.white} />}
                   </View>
                   <Text className="text-sm font-medium text-foreground flex-1">

@@ -22,13 +22,27 @@ function FactorItem({
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onToggle}
-      className={`flex-row items-center gap-3 p-4 rounded-2xl border ${
-        isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
-      }`}>
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        padding: 16,
+        borderRadius: 16,
+        borderWidth: 1.5,
+        backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
+        borderColor: isSelected ? colors.primary : colors.mutedForeground,
+      }}>
       <View
-        className={`w-6 h-6 rounded-lg items-center justify-center border ${
-          isSelected ? 'bg-primary border-primary' : 'border-border'
-        }`}>
+        style={{
+          width: 24,
+          height: 24,
+          borderRadius: 8,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 2,
+          backgroundColor: isSelected ? colors.primary : 'transparent',
+          borderColor: isSelected ? colors.primary : colors.mutedForeground,
+        }}>
         {isSelected && <Check size={14} color={colors.white} />}
       </View>
       <View style={{flex: 1}}>

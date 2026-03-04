@@ -231,7 +231,16 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
   fetchSummaryStatus: async () => {
     try {
       const data = await healthCheckupService.getClaudeSummaryStatus();
-      set({summaryCredits: data});
+      // Backend returns { enabled, can_generate, credits: { total_available, has_unlimited_subscription, ... } }
+      const credits = data?.credits;
+      set({
+        summaryCredits: {
+          available: data?.can_generate ?? true,
+          remaining_credits:
+            typeof credits?.total_available === 'number' ? credits.total_available : undefined,
+          has_unlimited: credits?.has_unlimited_subscription ?? false,
+        },
+      });
     } catch {
       // Silently fail - credits check is non-critical
     }
@@ -245,8 +254,10 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
     }
     try {
       const data = await healthCheckupService.getClaudeSummary(checkupId);
-      if (data?.content) {
-        set({claudeSummary: data, summaryLoading: false});
+      // Backend returns { checkup_id, has_summary, claude_summary: { content, ... }, credits }
+      const summary = data?.claude_summary;
+      if (summary?.content) {
+        set({claudeSummary: summary, summaryLoading: false});
       } else {
         set({summaryLoading: false});
       }
@@ -259,7 +270,18 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
     set({summaryLoading: true});
     try {
       const data = await healthCheckupService.generateClaudeSummary(checkupId);
-      set({claudeSummary: data, summaryLoading: false});
+      // Backend returns { enabled, generated, claude_summary: { content, ... }, credit_used, credits }
+      const summary = data?.claude_summary;
+      if (summary) {
+        set({claudeSummary: summary, summaryLoading: false});
+      } else if (data?.purchase_required) {
+        set({
+          summaryLoading: false,
+          claudeSummary: {error: data.message || 'No credits available'},
+        });
+      } else {
+        set({summaryLoading: false});
+      }
     } catch (err: any) {
       set({
         summaryLoading: false,
