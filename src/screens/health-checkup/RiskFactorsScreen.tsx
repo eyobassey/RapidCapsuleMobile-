@@ -1,16 +1,56 @@
-import React, {useState} from 'react';
-import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
+import React, {useState, useMemo} from 'react';
+import {View, Text, ScrollView, TouchableOpacity, TextInput} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
-import {Check, Shield} from 'lucide-react-native';
+import {Check, Shield, Search, X, ChevronDown, ChevronUp} from 'lucide-react-native';
 import {Header, Button} from '../../components/ui';
 import {useHealthCheckupStore} from '../../store/healthCheckup';
 import {colors} from '../../theme/colors';
+
+const INITIAL_VISIBLE = 8;
+
+function FactorItem({
+  factor,
+  isSelected,
+  onToggle,
+}: {
+  factor: any;
+  isSelected: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onToggle}
+      className={`flex-row items-center gap-3 p-4 rounded-2xl border ${
+        isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
+      }`}>
+      <View
+        className={`w-6 h-6 rounded-lg items-center justify-center border ${
+          isSelected ? 'bg-primary border-primary' : 'border-border'
+        }`}>
+        {isSelected && <Check size={14} color={colors.white} />}
+      </View>
+      <View style={{flex: 1}}>
+        <Text className="text-sm font-medium text-foreground">
+          {factor.common_name || factor.name}
+        </Text>
+        {factor.question && (
+          <Text className="text-xs text-muted-foreground mt-0.5">
+            {factor.question}
+          </Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
 
 export default function RiskFactorsScreen() {
   const navigation = useNavigation<any>();
   const {riskFactors, addEvidence} = useHealthCheckupStore();
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState('');
+  const [showAll, setShowAll] = useState(false);
 
   const toggleFactor = (id: string) => {
     setSelected(prev => {
@@ -24,8 +64,28 @@ export default function RiskFactorsScreen() {
     });
   };
 
+  // Split factors: selected ones from search that aren't in top 8, visible common ones, search results
+  const topFactors = useMemo(() => riskFactors.slice(0, INITIAL_VISIBLE), [riskFactors]);
+  const remainingFactors = useMemo(() => riskFactors.slice(INITIAL_VISIBLE), [riskFactors]);
+
+  // Factors selected from search that aren't in the visible top list
+  const extraSelected = useMemo(() => {
+    const topIds = new Set(topFactors.map((f: any) => f.id));
+    return riskFactors.filter((f: any) => selected.has(f.id) && !topIds.has(f.id));
+  }, [riskFactors, selected, topFactors]);
+
+  // Search results from remaining factors
+  const searchResults = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return remainingFactors.filter((f: any) => {
+      const name = (f.common_name || f.name || '').toLowerCase();
+      const question = (f.question || '').toLowerCase();
+      return name.includes(q) || question.includes(q);
+    });
+  }, [query, remainingFactors]);
+
   const handleNext = () => {
-    // Add selected risk factors as evidence
     const evidence = Array.from(selected).map(id => ({
       id,
       choice_id: 'present' as const,
@@ -37,14 +97,17 @@ export default function RiskFactorsScreen() {
     navigation.navigate('HealthCheckupSymptomSearch');
   };
 
+  const hasMore = remainingFactors.length > 0;
+
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
       <Header title="Risk Factors" onBack={() => navigation.goBack()} />
 
       <ScrollView
         style={{flex: 1}}
-        contentContainerStyle={{paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24}}
-        showsVerticalScrollIndicator={false}>
+        contentContainerStyle={{paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40}}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
         {/* Step indicator */}
         <View className="flex-row items-center gap-2 mb-6">
           <View className="h-1.5 flex-1 bg-primary rounded-full" />
@@ -54,12 +117,12 @@ export default function RiskFactorsScreen() {
           <View className="h-1.5 flex-1 bg-border rounded-full" />
         </View>
 
-        <View className="flex-row items-center gap-2 mb-1">
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4}}>
           <Shield size={20} color={colors.primary} />
           <Text className="text-lg font-bold text-foreground">Risk Factors</Text>
         </View>
         <Text className="text-sm text-muted-foreground mb-6">
-          Select any risk factors that apply to you. These help us provide a more accurate assessment.
+          Select any that apply. You can search for more below.
         </Text>
 
         {riskFactors.length === 0 ? (
@@ -69,37 +132,116 @@ export default function RiskFactorsScreen() {
             </Text>
           </View>
         ) : (
-          <View className="gap-2">
-            {riskFactors.map((factor: any) => {
-              const isSelected = selected.has(factor.id);
-              return (
-                <TouchableOpacity
+          <>
+            {/* Extra selected (from search, not in top 8) — pinned at top */}
+            {extraSelected.length > 0 && (
+              <View style={{gap: 8, marginBottom: 8}}>
+                {extraSelected.map((factor: any) => (
+                  <FactorItem
+                    key={factor.id}
+                    factor={factor}
+                    isSelected={true}
+                    onToggle={() => toggleFactor(factor.id)}
+                  />
+                ))}
+              </View>
+            )}
+
+            {/* Common risk factors (top 8) */}
+            <View style={{gap: 8}}>
+              {topFactors.map((factor: any) => (
+                <FactorItem
                   key={factor.id}
-                  activeOpacity={0.7}
-                  onPress={() => toggleFactor(factor.id)}
-                  className={`flex-row items-center gap-3 p-4 rounded-2xl border ${
-                    isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
-                  }`}>
-                  <View
-                    className={`w-6 h-6 rounded-lg items-center justify-center border ${
-                      isSelected ? 'bg-primary border-primary' : 'border-border'
-                    }`}>
-                    {isSelected && <Check size={14} color={colors.white} />}
+                  factor={factor}
+                  isSelected={selected.has(factor.id)}
+                  onToggle={() => toggleFactor(factor.id)}
+                />
+              ))}
+            </View>
+
+            {/* Show All toggle for remaining factors without search */}
+            {hasMore && !query && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setShowAll(v => !v)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  marginTop: 12,
+                  paddingVertical: 8,
+                }}>
+                {showAll ? (
+                  <ChevronUp size={16} color={colors.primary} />
+                ) : (
+                  <ChevronDown size={16} color={colors.primary} />
+                )}
+                <Text style={{fontSize: 13, fontWeight: '600', color: colors.primary}}>
+                  {showAll ? 'Show Less' : `Show All (${riskFactors.length} total)`}
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Expanded full list */}
+            {showAll && !query && (
+              <View style={{gap: 8, marginTop: 8}}>
+                {remainingFactors.map((factor: any) => (
+                  <FactorItem
+                    key={factor.id}
+                    factor={factor}
+                    isSelected={selected.has(factor.id)}
+                    onToggle={() => toggleFactor(factor.id)}
+                  />
+                ))}
+              </View>
+            )}
+
+            {/* Search bar */}
+            {hasMore && (
+              <View style={{marginTop: 16}}>
+                <Text style={{fontSize: 12, fontWeight: 'bold', color: colors.mutedForeground, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, marginLeft: 4}}>
+                  Search Risk Factors
+                </Text>
+                <View className="flex-row items-center bg-card border border-border rounded-2xl px-4 h-12">
+                  <Search size={18} color={colors.mutedForeground} />
+                  <TextInput
+                    style={{flex: 1, fontSize: 14, color: colors.foreground, marginLeft: 12}}
+                    placeholder="Type to search..."
+                    placeholderTextColor={colors.mutedForeground}
+                    value={query}
+                    onChangeText={setQuery}
+                    autoCapitalize="none"
+                  />
+                  {query.length > 0 && (
+                    <TouchableOpacity onPress={() => setQuery('')}>
+                      <X size={18} color={colors.mutedForeground} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+
+                {/* Search results */}
+                {query.length > 0 && searchResults.length > 0 && (
+                  <View style={{gap: 8, marginTop: 12}}>
+                    {searchResults.map((factor: any) => (
+                      <FactorItem
+                        key={factor.id}
+                        factor={factor}
+                        isSelected={selected.has(factor.id)}
+                        onToggle={() => toggleFactor(factor.id)}
+                      />
+                    ))}
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-sm font-medium text-foreground">
-                      {factor.common_name || factor.name}
-                    </Text>
-                    {factor.question && (
-                      <Text className="text-xs text-muted-foreground mt-0.5">
-                        {factor.question}
-                      </Text>
-                    )}
+                )}
+
+                {query.length >= 2 && searchResults.length === 0 && (
+                  <View style={{alignItems: 'center', paddingVertical: 16}}>
+                    <Text className="text-sm text-muted-foreground">No matching risk factors</Text>
                   </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+                )}
+              </View>
+            )}
+          </>
         )}
 
         {/* Continue button */}
