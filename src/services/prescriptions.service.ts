@@ -22,7 +22,7 @@ export const prescriptionsService = {
   },
 
   async requestRefill(id: string) {
-    const res = await api.post(`/prescriptions/${id}/refill`);
+    const res = await api.post(`/patient/prescriptions/${id}/refill`);
     return res.data.data || res.data.result;
   },
 };

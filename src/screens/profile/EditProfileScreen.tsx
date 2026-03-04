@@ -87,7 +87,7 @@ export default function EditProfileScreen() {
         ];
       }
 
-      await usersService.updateProfile(user!._id, updateData);
+      await usersService.updateProfile(updateData);
       await fetchUser();
 
       Alert.alert('Success', 'Your profile has been updated.', [

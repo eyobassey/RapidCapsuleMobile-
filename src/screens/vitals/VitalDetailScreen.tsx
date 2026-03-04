@@ -3,7 +3,6 @@ import {
   View,
   Text,
   ScrollView,
-  FlatList,
   RefreshControl,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -177,7 +176,7 @@ export default function VitalDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [chartWidth, setChartWidth] = useState(340);
 
-  const {vitals, chartData, isLoading, fetchVitals, fetchChartData} = useVitalsStore();
+  const {vitalsData, chartData, isLoading, fetchVitals, fetchChartData} = useVitalsStore();
 
   const config = useMemo(
     () => VITAL_TYPES.find(v => v.key === vitalType),
@@ -205,48 +204,44 @@ export default function VitalDetailScreen() {
     setRefreshing(false);
   }, [fetchVitals, fetchChartData, vitalType, period]);
 
-  // Extract history entries for this vital type
+  // Extract history entries for this vital from the merged vitals object
   const history = useMemo(() => {
     const entries: {value: string; unit: string; date: string; status: VitalStatus}[] = [];
+    const readings = vitalsData[vitalType];
 
-    for (const record of vitals) {
-      // Shape 1: nested arrays
-      const readings = record[vitalType];
-      if (readings && Array.isArray(readings)) {
-        for (const r of readings) {
-          const numVal = parseFloat(
-            vitalType === 'blood_pressure'
-              ? String(r.value).split('/')[0]
-              : String(r.value),
-          );
-          entries.push({
-            value: String(r.value),
-            unit: r.unit || config?.unit || '',
-            date: r.updatedAt || record.updated_at || record.created_at,
-            status: !isNaN(numVal) && config ? getVitalStatus(numVal, config) : 'Normal',
-          });
-        }
-      }
-      // Shape 2: flat vital entries
-      if (record.vital_type === vitalType && record.value != null) {
+    if (Array.isArray(readings)) {
+      for (const r of readings) {
         const numVal = parseFloat(
           vitalType === 'blood_pressure'
-            ? String(record.value).split('/')[0]
-            : String(record.value),
+            ? String(r.value).split('/')[0]
+            : String(r.value),
         );
         entries.push({
-          value: String(record.value),
-          unit: record.unit || config?.unit || '',
-          date: record.updated_at || record.created_at,
+          value: String(r.value),
+          unit: r.unit || config?.unit || '',
+          date: r.updatedAt || r.created_at,
           status: !isNaN(numVal) && config ? getVitalStatus(numVal, config) : 'Normal',
         });
       }
+    } else if (readings && readings.value != null) {
+      // Single flat reading
+      const numVal = parseFloat(
+        vitalType === 'blood_pressure'
+          ? String(readings.value).split('/')[0]
+          : String(readings.value),
+      );
+      entries.push({
+        value: String(readings.value),
+        unit: readings.unit || config?.unit || '',
+        date: readings.updatedAt || readings.created_at,
+        status: !isNaN(numVal) && config ? getVitalStatus(numVal, config) : 'Normal',
+      });
     }
 
     // Sort newest first
     entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return entries;
-  }, [vitals, vitalType, config]);
+  }, [vitalsData, vitalType, config]);
 
   // Latest reading
   const latest = history[0] || null;
@@ -255,6 +250,12 @@ export default function VitalDetailScreen() {
   const chartPoints = useMemo(() => {
     if (chartData && Array.isArray(chartData.data)) {
       return chartData.data.map((d: any) => ({
+        value: parseFloat(d.value) || 0,
+        date: d.date || d.createdAt || d.updatedAt,
+      }));
+    }
+    if (chartData && Array.isArray(chartData)) {
+      return chartData.map((d: any) => ({
         value: parseFloat(d.value) || 0,
         date: d.date || d.createdAt || d.updatedAt,
       }));

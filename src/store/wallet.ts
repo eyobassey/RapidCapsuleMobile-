@@ -24,7 +24,7 @@ export const useWalletStore = create<WalletState>((set) => ({
     try {
       const data = await walletService.getBalance();
       set({
-        balance: data?.balance || 0,
+        balance: data?.currentBalance ?? data?.balance ?? 0,
         currency: data?.currency || 'NGN',
         isLoading: false,
       });
@@ -40,7 +40,8 @@ export const useWalletStore = create<WalletState>((set) => ({
     set({isLoading: true, error: null});
     try {
       const data = await walletService.getTransactions(params);
-      set({transactions: data || [], isLoading: false});
+      const txList = Array.isArray(data) ? data : data?.data || data?.transactions || [];
+      set({transactions: Array.isArray(txList) ? txList : [], isLoading: false});
     } catch (err: any) {
       set({
         error: err?.response?.data?.message || err?.message || 'Failed to fetch transactions',

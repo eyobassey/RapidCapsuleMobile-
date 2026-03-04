@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
@@ -70,23 +69,24 @@ function getVitalStatus(
   return 'Normal';
 }
 
-function getLatestReading(vitals: any[], vitalKey: string) {
-  // Vitals data can come in different shapes. We look for the vital key
-  // in each record and find the most recent reading.
-  for (const record of vitals) {
-    const readings = record[vitalKey];
-    if (readings && Array.isArray(readings) && readings.length > 0) {
-      return readings[readings.length - 1];
-    }
-    // Or if the record itself is a flat vital entry
-    if (record.vital_type === vitalKey && record.value != null) {
-      return {
-        value: record.value,
-        unit: record.unit,
-        updatedAt: record.updated_at || record.created_at,
-      };
-    }
+/**
+ * Get the latest reading for a vital key from the merged vitals object.
+ * The backend returns { blood_pressure: [{value, unit, updatedAt}], ... }
+ */
+function getLatestReading(vitalsData: Record<string, any>, vitalKey: string) {
+  const readings = vitalsData[vitalKey];
+  if (!readings) return null;
+
+  // If it's an array of readings, return the last one
+  if (Array.isArray(readings) && readings.length > 0) {
+    return readings[readings.length - 1];
   }
+
+  // If it's a single object with value (some endpoints return flat object)
+  if (readings.value != null) {
+    return readings;
+  }
+
   return null;
 }
 
@@ -94,7 +94,7 @@ export default function VitalsScreen() {
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
 
-  const {vitals, isLoading, fetchVitals} = useVitalsStore();
+  const {vitalsData, isLoading, fetchVitals} = useVitalsStore();
 
   useEffect(() => {
     fetchVitals();
@@ -106,6 +106,8 @@ export default function VitalsScreen() {
     setRefreshing(false);
   }, [fetchVitals]);
 
+  const hasData = Object.keys(vitalsData).length > 0;
+
   // Compute stats
   const stats = useMemo(() => {
     let totalTracked = 0;
@@ -113,7 +115,7 @@ export default function VitalsScreen() {
     let alertCount = 0;
 
     VITAL_TYPES.forEach(config => {
-      const reading = getLatestReading(vitals, config.key);
+      const reading = getLatestReading(vitalsData, config.key);
       if (reading) {
         totalTracked++;
         const numValue = parseFloat(
@@ -130,9 +132,9 @@ export default function VitalsScreen() {
     });
 
     return {totalTracked, normalCount, alertCount};
-  }, [vitals]);
+  }, [vitalsData]);
 
-  if (isLoading && vitals.length === 0) {
+  if (isLoading && !hasData) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top']}>
         <Header title="Health Vitals" onBack={() => navigation.goBack()} />
@@ -221,7 +223,7 @@ export default function VitalsScreen() {
         {/* Vital Type Cards */}
         {VITAL_TYPES.map(config => {
           const IconComponent = getIconComponent(config.icon);
-          const reading = getLatestReading(vitals, config.key);
+          const reading = getLatestReading(vitalsData, config.key);
           const displayValue = reading
             ? formatVitalValue(String(reading.value), config.key)
             : null;

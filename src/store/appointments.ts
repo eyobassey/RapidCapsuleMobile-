@@ -48,8 +48,16 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
   fetchAppointments: async () => {
     set({isLoading: true, error: null});
     try {
-      const data = await appointmentsService.list({status: get().filter});
-      set({appointments: data || [], isLoading: false});
+      // Map frontend filter names to backend status values
+      const statusMap: Record<string, string> = {
+        upcoming: 'OPEN',
+        past: 'COMPLETED',
+        cancelled: 'CANCELLED',
+      };
+      const status = statusMap[get().filter] || get().filter;
+      const data = await appointmentsService.list({status});
+      const list = Array.isArray(data) ? data : data?.data || data?.result || [];
+      set({appointments: Array.isArray(list) ? list : [], isLoading: false});
     } catch (err: any) {
       set({
         error: err?.response?.data?.message || err?.message || 'Failed to fetch appointments',
@@ -79,7 +87,9 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
     set({isLoading: true, error: null});
     try {
       const data = await appointmentsService.getSpecialistCategories();
-      set({categories: data || [], isLoading: false});
+      // API returns { all: [...], popular: [...], others: [...] } or a flat array
+      const cats = Array.isArray(data) ? data : data?.all || data?.popular || [];
+      set({categories: Array.isArray(cats) ? cats : [], isLoading: false});
     } catch (err: any) {
       set({
         error: err?.response?.data?.message || err?.message || 'Failed to fetch categories',

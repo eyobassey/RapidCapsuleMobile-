@@ -31,7 +31,9 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
         params.status = get().filter;
       }
       const data = await prescriptionsService.list(params);
-      set({prescriptions: data || [], isLoading: false});
+      // API may return array directly or paginated { data: [...], total: ... }
+      const list = Array.isArray(data) ? data : data?.data || data?.prescriptions || [];
+      set({prescriptions: Array.isArray(list) ? list : [], isLoading: false});
     } catch (err: any) {
       set({
         error: err?.response?.data?.message || err?.message || 'Failed to fetch prescriptions',

@@ -7,7 +7,7 @@ export const walletService = {
   },
 
   async getTransactions(params?: { page?: number; limit?: number; type?: string }) {
-    const res = await api.get('/wallets/transactions', { params });
+    const res = await api.get('/wallets', { params });
     return res.data.data || res.data.result;
   },
 

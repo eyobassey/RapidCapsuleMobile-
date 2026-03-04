@@ -58,47 +58,42 @@ export default function LogVitalsScreen() {
   };
 
   const handleSave = async () => {
-    // Collect all vitals that have values
-    const vitalsToLog: {vital_type: string; value: string; unit: string}[] = [];
+    // Build a single payload object: { blood_pressure: {value, unit}, pulse_rate: {value, unit}, ... }
+    const payload: Record<string, {value: string; unit: string}> = {};
+    let count = 0;
 
     for (const config of VITAL_TYPES) {
       if (config.key === 'blood_pressure') {
         if (bpSystolic && bpDiastolic) {
-          vitalsToLog.push({
-            vital_type: 'blood_pressure',
+          payload.blood_pressure = {
             value: `${bpSystolic}/${bpDiastolic}`,
             unit: config.unit,
-          });
+          };
+          count++;
         }
       } else {
         const val = values[config.key];
         if (val && val.trim()) {
-          vitalsToLog.push({
-            vital_type: config.key,
+          payload[config.key] = {
             value: val.trim(),
             unit: config.unit,
-          });
+          };
+          count++;
         }
       }
     }
 
-    if (vitalsToLog.length === 0) {
+    if (count === 0) {
       Alert.alert('No Data', 'Please enter at least one vital reading before saving.');
       return;
     }
 
     setSaving(true);
     try {
-      // Log each vital
-      for (const vital of vitalsToLog) {
-        await logVital({
-          ...vital,
-          notes: notes.trim() || undefined,
-        });
-      }
+      await logVital(payload);
       Alert.alert(
         'Vitals Logged',
-        `Successfully recorded ${vitalsToLog.length} vital${vitalsToLog.length > 1 ? 's' : ''}.`,
+        `Successfully recorded ${count} vital${count > 1 ? 's' : ''}.`,
         [{text: 'OK', onPress: () => navigation.goBack()}],
       );
     } catch (err: any) {

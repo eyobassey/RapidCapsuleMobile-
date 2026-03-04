@@ -163,11 +163,11 @@ function NotificationItem({
           )}
         </View>
 
-        {notification.body ? (
+        {(notification.message || notification.body) ? (
           <Text
             className="text-xs text-muted-foreground mt-1 leading-relaxed"
             numberOfLines={2}>
-            {notification.body}
+            {notification.message || notification.body}
           </Text>
         ) : null}
 

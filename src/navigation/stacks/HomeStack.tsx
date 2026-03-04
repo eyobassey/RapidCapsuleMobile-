@@ -7,7 +7,7 @@ import VitalDetailScreen from '../../screens/vitals/VitalDetailScreen';
 import LogVitalsScreen from '../../screens/vitals/LogVitalsScreen';
 
 export type HomeStackParamList = {
-  Home: undefined;
+  HomeScreen: undefined;
   Notifications: undefined;
   Vitals: undefined;
   VitalDetail: {vitalType: string};
@@ -19,7 +19,7 @@ const Stack = createNativeStackNavigator<HomeStackParamList>();
 export default function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="HomeScreen" component={HomeScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Vitals" component={VitalsScreen} />
       <Stack.Screen name="VitalDetail" component={VitalDetailScreen} />

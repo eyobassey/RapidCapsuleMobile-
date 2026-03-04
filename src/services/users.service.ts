@@ -6,8 +6,9 @@ export const usersService = {
     return res.data.data || res.data.result;
   },
 
-  async updateProfile(userId: string, data: any) {
-    const res = await api.patch(`/users/${userId}`, data);
+  async updateProfile(data: any) {
+    // Uses PATCH /users/ which updates the current authenticated user via JWT
+    const res = await api.patch('/users', data);
     return res.data.data || res.data.result;
   },
 };
