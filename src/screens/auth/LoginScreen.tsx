@@ -34,11 +34,10 @@ export default function LoginScreen({navigation}: Props) {
       }
       // If no 2FA, the auth store automatically routes via RootNavigator
     } catch (err: any) {
-      const data = err?.response?.data;
-      const msg = Array.isArray(data?.message)
-        ? data.message.join('\n')
-        : data?.message || err?.message || 'Login failed';
-      Alert.alert('Login Error', `${msg}\n\nStatus: ${err?.response?.status}`);
+      const detail = err?.response?.data
+        ? JSON.stringify(err.response.data, null, 2)
+        : err?.message || 'Unknown error';
+      Alert.alert('Login Error', detail);
     } finally {
       setLoading(false);
     }
