@@ -1,0 +1,80 @@
+import React, {useState, useEffect} from 'react';
+import {View, Text, TouchableOpacity} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {ArrowLeft, Shield} from 'lucide-react-native';
+import {Button, OtpInput} from '../../components/ui';
+import {useAuthStore} from '../../store/auth';
+import {colors} from '../../theme/colors';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import type {AuthStackParamList} from '../../navigation/AuthStack';
+
+type Props = NativeStackScreenProps<AuthStackParamList, 'Otp'>;
+
+export default function OtpScreen({navigation, route}: Props) {
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [timer, setTimer] = useState(45);
+  const verify2FA = useAuthStore(s => s.verify2FA);
+  const maskedEmail = route.params?.email
+    ? route.params.email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
+    : 's***h@example.com';
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimer(t => (t > 0 ? t - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleVerify = async () => {
+    setLoading(true);
+    try {
+      await verify2FA(code, route.params?.method || 'email');
+      // Auth store will route via RootNavigator
+    } catch (err: any) {
+      // TODO: show error toast
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-background items-center px-6 pt-12">
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        className="absolute top-14 left-6 w-10 h-10 rounded-full bg-card border border-border items-center justify-center z-10">
+        <ArrowLeft size={20} color={colors.foreground} />
+      </TouchableOpacity>
+
+      <View className="w-16 h-16 bg-primary/10 rounded-2xl items-center justify-center mb-6 mt-12">
+        <Shield size={32} color={colors.primary} />
+      </View>
+
+      <Text className="font-bold text-2xl text-foreground mb-2">Two-Factor Auth</Text>
+      <Text className="text-foreground/70 text-sm text-center mb-8 max-w-[280px]">
+        Enter the 6-digit code sent to your email {maskedEmail}
+      </Text>
+
+      <View className="mb-8 w-full">
+        <OtpInput onComplete={setCode} />
+      </View>
+
+      <Button onPress={handleVerify} loading={loading} disabled={code.length < 6}>
+        Verify Code
+      </Button>
+
+      <Text className="mt-8 text-sm text-muted-foreground text-center">
+        Didn't receive a code?{'\n'}
+        {timer > 0 ? (
+          <Text className="text-primary font-medium">
+            Resend in 0:{timer.toString().padStart(2, '0')}
+          </Text>
+        ) : (
+          <TouchableOpacity onPress={() => setTimer(45)}>
+            <Text className="text-primary font-medium">Resend Code</Text>
+          </TouchableOpacity>
+        )}
+      </Text>
+    </SafeAreaView>
+  );
+}

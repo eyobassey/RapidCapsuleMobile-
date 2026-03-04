@@ -1,0 +1,54 @@
+import React, {useState} from 'react';
+import {View, TextInput, Text, TouchableOpacity, type TextInputProps} from 'react-native';
+
+interface InputProps extends TextInputProps {
+  label?: string;
+  required?: boolean;
+  icon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  error?: string;
+  containerClassName?: string;
+}
+
+export default function Input({
+  label,
+  required,
+  icon,
+  rightIcon,
+  error,
+  containerClassName,
+  className,
+  ...props
+}: InputProps) {
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <View className={containerClassName}>
+      {label && (
+        <Text className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-2 ml-1">
+          {label}
+          {required && <Text className="text-destructive"> *</Text>}
+        </Text>
+      )}
+      <View
+        className={`flex-row items-center h-14 rounded-2xl bg-card border ${
+          error ? 'border-destructive' : focused ? 'border-primary' : 'border-border'
+        } ${className || ''}`}>
+        {icon && <View className="pl-4">{icon}</View>}
+        <TextInput
+          className={`flex-1 text-foreground text-base px-4 h-full ${icon ? 'pl-3' : ''}`}
+          placeholderTextColor="#7c8ba3"
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          {...props}
+        />
+        {rightIcon && (
+          <TouchableOpacity className="pr-4">{rightIcon}</TouchableOpacity>
+        )}
+      </View>
+      {error && (
+        <Text className="text-xs text-destructive mt-1 ml-1">{error}</Text>
+      )}
+    </View>
+  );
+}

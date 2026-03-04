@@ -1,0 +1,47 @@
+import React, {useEffect} from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {View, ActivityIndicator} from 'react-native';
+import {useAuthStore} from '../store/auth';
+import AuthStack from './AuthStack';
+import OnboardingStack from './OnboardingStack';
+import MainTabs from './MainTabs';
+import {colors} from '../theme/colors';
+
+export type RootStackParamList = {
+  Auth: undefined;
+  Onboarding: undefined;
+  Main: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+export default function RootNavigator() {
+  const {isLoading, isAuthenticated, needsOnboarding, hydrate} = useAuthStore();
+
+  useEffect(() => {
+    hydrate();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-background items-center justify-center">
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{headerShown: false}}>
+        {!isAuthenticated ? (
+          <Stack.Screen name="Auth" component={AuthStack} />
+        ) : needsOnboarding ? (
+          <Stack.Screen name="Onboarding" component={OnboardingStack} />
+        ) : (
+          <Stack.Screen name="Main" component={MainTabs} />
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}

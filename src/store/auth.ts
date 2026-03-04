@@ -1,0 +1,95 @@
+import {create} from 'zustand';
+import api from '../services/api';
+import {storage} from '../utils/storage';
+
+interface User {
+  _id: string;
+  email: string;
+  user_type: string;
+  profile: {
+    first_name: string;
+    last_name: string;
+    phone_number?: string;
+    date_of_birth?: string;
+    gender?: string;
+    profile_image?: string;
+  };
+  emergency_contacts?: any[];
+  is_email_verified: boolean;
+}
+
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  needsOnboarding: boolean;
+
+  login: (email: string, password: string) => Promise<{requires2FA: boolean}>;
+  verify2FA: (code: string, method: string) => Promise<void>;
+  signup: (data: any) => Promise<void>;
+  fetchUser: () => Promise<void>;
+  logout: () => Promise<void>;
+  setToken: (token: string) => Promise<void>;
+  hydrate: () => Promise<void>;
+}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  user: null,
+  token: null,
+  isLoading: true,
+  isAuthenticated: false,
+  needsOnboarding: false,
+
+  login: async (email, password) => {
+    const res = await api.post('/auth/login', {email, password});
+    if (res.data.requires_2fa) {
+      return {requires2FA: true};
+    }
+    await get().setToken(res.data.token);
+    await get().fetchUser();
+    return {requires2FA: false};
+  },
+
+  verify2FA: async (code, method) => {
+    const res = await api.post('/auth/otp/verify', {otp: code, method});
+    await get().setToken(res.data.token);
+    await get().fetchUser();
+  },
+
+  signup: async data => {
+    await api.post('/users', data);
+  },
+
+  fetchUser: async () => {
+    try {
+      const res = await api.get('/users/me');
+      const user = res.data;
+      const needsOnboarding = !user.emergency_contacts?.length;
+      await storage.setUser(user);
+      set({user, isAuthenticated: true, needsOnboarding, isLoading: false});
+    } catch {
+      set({isLoading: false});
+    }
+  },
+
+  logout: async () => {
+    await storage.clear();
+    set({user: null, token: null, isAuthenticated: false, needsOnboarding: false});
+  },
+
+  setToken: async token => {
+    await storage.setToken(token);
+    set({token});
+  },
+
+  hydrate: async () => {
+    const token = await storage.getToken();
+    if (token) {
+      set({token});
+      await get().fetchUser();
+    } else {
+      set({isLoading: false});
+    }
+  },
+}));
