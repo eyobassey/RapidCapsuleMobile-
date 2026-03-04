@@ -1,0 +1,413 @@
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  FlatList,
+  RefreshControl,
+} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
+import {
+  Heart,
+  HeartPulse,
+  Thermometer,
+  Droplets,
+  Wind,
+  Activity,
+  Scale,
+  Footprints,
+  Moon,
+  Flame,
+  Brain,
+  Percent,
+  GlassWater,
+  Zap,
+  TrendingUp,
+  Clock,
+  Info,
+} from 'lucide-react-native';
+import Svg, {Path, Circle as SvgCircle, Line, Text as SvgText} from 'react-native-svg';
+
+import {useVitalsStore} from '../../store/vitals';
+import {Header, TabBar, StatusBadge, Skeleton, EmptyState} from '../../components/ui';
+import {colors} from '../../theme/colors';
+import {VITAL_TYPES} from '../../utils/constants';
+import {formatVitalValue, formatDate, formatDateTime, timeAgo} from '../../utils/formatters';
+import type {HomeStackParamList} from '../../navigation/stacks/HomeStack';
+import type {VitalStatus, VitalTypeConfig} from '../../types/vital.types';
+
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+  Heart, HeartPulse, Thermometer, Droplets, Wind, Activity,
+  Scale, Footprints, Moon, Flame, Brain, Percent, GlassWater, Zap,
+};
+
+const PERIOD_TABS = [
+  {label: '7 Days', value: '7d'},
+  {label: '30 Days', value: '30d'},
+  {label: '90 Days', value: '90d'},
+];
+
+function getVitalStatus(value: number, config: VitalTypeConfig): VitalStatus {
+  const {min, max} = config.normalRange;
+  if (value < min * 0.8 || value > max * 1.3) return 'Critical';
+  if (value < min) return 'Low';
+  if (value > max) return 'High';
+  return 'Normal';
+}
+
+// Simple line chart component using react-native-svg
+function SimpleLineChart({
+  data,
+  config,
+  width,
+}: {
+  data: {value: number; date: string}[];
+  config: VitalTypeConfig;
+  width: number;
+}) {
+  if (!data || data.length === 0) {
+    return (
+      <View className="h-48 items-center justify-center bg-muted/30 rounded-2xl">
+        <TrendingUp size={32} color={colors.mutedForeground} />
+        <Text className="text-sm text-muted-foreground mt-2">
+          No chart data available
+        </Text>
+      </View>
+    );
+  }
+
+  const chartHeight = 180;
+  const paddingX = 40;
+  const paddingY = 30;
+  const chartWidth = width - paddingX * 2;
+  const chartInnerHeight = chartHeight - paddingY * 2;
+
+  const values = data.map(d => d.value);
+  const minVal = Math.min(...values, config.normalRange.min);
+  const maxVal = Math.max(...values, config.normalRange.max);
+  const range = maxVal - minVal || 1;
+
+  const points = data.map((d, i) => ({
+    x: paddingX + (i / Math.max(data.length - 1, 1)) * chartWidth,
+    y: paddingY + chartInnerHeight - ((d.value - minVal) / range) * chartInnerHeight,
+  }));
+
+  // Build SVG path
+  let pathD = '';
+  points.forEach((p, i) => {
+    if (i === 0) pathD += `M ${p.x} ${p.y}`;
+    else pathD += ` L ${p.x} ${p.y}`;
+  });
+
+  // Normal range band
+  const normalMinY = paddingY + chartInnerHeight - ((config.normalRange.min - minVal) / range) * chartInnerHeight;
+  const normalMaxY = paddingY + chartInnerHeight - ((config.normalRange.max - minVal) / range) * chartInnerHeight;
+
+  return (
+    <View className="bg-card border border-border rounded-2xl p-3 overflow-hidden">
+      <Svg width={width - 32} height={chartHeight}>
+        {/* Normal range band */}
+        <Path
+          d={`M ${paddingX} ${normalMaxY} L ${paddingX + chartWidth} ${normalMaxY} L ${paddingX + chartWidth} ${normalMinY} L ${paddingX} ${normalMinY} Z`}
+          fill={`${colors.success}15`}
+        />
+        {/* Normal range lines */}
+        <Line
+          x1={paddingX} y1={normalMaxY}
+          x2={paddingX + chartWidth} y2={normalMaxY}
+          stroke={`${colors.success}40`}
+          strokeDasharray="4,4"
+        />
+        <Line
+          x1={paddingX} y1={normalMinY}
+          x2={paddingX + chartWidth} y2={normalMinY}
+          stroke={`${colors.success}40`}
+          strokeDasharray="4,4"
+        />
+
+        {/* Y-axis labels */}
+        <SvgText x={paddingX - 6} y={normalMaxY + 4} fontSize={9} fill={colors.mutedForeground} textAnchor="end">
+          {config.normalRange.max}
+        </SvgText>
+        <SvgText x={paddingX - 6} y={normalMinY + 4} fontSize={9} fill={colors.mutedForeground} textAnchor="end">
+          {config.normalRange.min}
+        </SvgText>
+
+        {/* Data line */}
+        <Path d={pathD} fill="none" stroke={config.color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+
+        {/* Data points */}
+        {points.map((p, i) => (
+          <SvgCircle key={i} cx={p.x} cy={p.y} r={4} fill={config.color} stroke={colors.card} strokeWidth={2} />
+        ))}
+
+        {/* X-axis labels (show first, middle, last) */}
+        {data.length > 0 && (
+          <>
+            <SvgText x={paddingX} y={chartHeight - 6} fontSize={9} fill={colors.mutedForeground} textAnchor="start">
+              {formatDate(data[0].date).split(',')[0]}
+            </SvgText>
+            {data.length > 2 && (
+              <SvgText
+                x={paddingX + chartWidth / 2}
+                y={chartHeight - 6}
+                fontSize={9}
+                fill={colors.mutedForeground}
+                textAnchor="middle">
+                {formatDate(data[Math.floor(data.length / 2)].date).split(',')[0]}
+              </SvgText>
+            )}
+            <SvgText x={paddingX + chartWidth} y={chartHeight - 6} fontSize={9} fill={colors.mutedForeground} textAnchor="end">
+              {formatDate(data[data.length - 1].date).split(',')[0]}
+            </SvgText>
+          </>
+        )}
+      </Svg>
+    </View>
+  );
+}
+
+export default function VitalDetailScreen() {
+  const navigation = useNavigation<any>();
+  const route = useRoute<RouteProp<HomeStackParamList, 'VitalDetail'>>();
+  const vitalType = route.params.vitalType;
+
+  const [period, setPeriod] = useState('7d');
+  const [refreshing, setRefreshing] = useState(false);
+  const [chartWidth, setChartWidth] = useState(340);
+
+  const {vitals, chartData, isLoading, fetchVitals, fetchChartData} = useVitalsStore();
+
+  const config = useMemo(
+    () => VITAL_TYPES.find(v => v.key === vitalType),
+    [vitalType],
+  );
+
+  const IconComponent = config ? (ICON_MAP[config.icon] || Activity) : Activity;
+
+  useEffect(() => {
+    fetchVitals();
+  }, [fetchVitals]);
+
+  useEffect(() => {
+    if (vitalType) {
+      fetchChartData({vitalToSelect: vitalType, duration: period});
+    }
+  }, [vitalType, period, fetchChartData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.allSettled([
+      fetchVitals(),
+      fetchChartData({vitalToSelect: vitalType, duration: period}),
+    ]);
+    setRefreshing(false);
+  }, [fetchVitals, fetchChartData, vitalType, period]);
+
+  // Extract history entries for this vital type
+  const history = useMemo(() => {
+    const entries: {value: string; unit: string; date: string; status: VitalStatus}[] = [];
+
+    for (const record of vitals) {
+      // Shape 1: nested arrays
+      const readings = record[vitalType];
+      if (readings && Array.isArray(readings)) {
+        for (const r of readings) {
+          const numVal = parseFloat(
+            vitalType === 'blood_pressure'
+              ? String(r.value).split('/')[0]
+              : String(r.value),
+          );
+          entries.push({
+            value: String(r.value),
+            unit: r.unit || config?.unit || '',
+            date: r.updatedAt || record.updated_at || record.created_at,
+            status: !isNaN(numVal) && config ? getVitalStatus(numVal, config) : 'Normal',
+          });
+        }
+      }
+      // Shape 2: flat vital entries
+      if (record.vital_type === vitalType && record.value != null) {
+        const numVal = parseFloat(
+          vitalType === 'blood_pressure'
+            ? String(record.value).split('/')[0]
+            : String(record.value),
+        );
+        entries.push({
+          value: String(record.value),
+          unit: record.unit || config?.unit || '',
+          date: record.updated_at || record.created_at,
+          status: !isNaN(numVal) && config ? getVitalStatus(numVal, config) : 'Normal',
+        });
+      }
+    }
+
+    // Sort newest first
+    entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return entries;
+  }, [vitals, vitalType, config]);
+
+  // Latest reading
+  const latest = history[0] || null;
+
+  // Chart data points
+  const chartPoints = useMemo(() => {
+    if (chartData && Array.isArray(chartData.data)) {
+      return chartData.data.map((d: any) => ({
+        value: parseFloat(d.value) || 0,
+        date: d.date || d.createdAt || d.updatedAt,
+      }));
+    }
+    // Fallback: use history for chart
+    return history
+      .slice()
+      .reverse()
+      .map(h => ({
+        value: parseFloat(
+          vitalType === 'blood_pressure'
+            ? h.value.split('/')[0]
+            : h.value,
+        ) || 0,
+        date: h.date,
+      }));
+  }, [chartData, history, vitalType]);
+
+  if (!config) {
+    return (
+      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+        <Header title="Vital Detail" onBack={() => navigation.goBack()} />
+        <EmptyState
+          icon={<Activity size={32} color={colors.mutedForeground} />}
+          title="Unknown vital type"
+          subtitle="This vital type is not recognized."
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <Header title={config.name} onBack={() => navigation.goBack()} />
+
+      <ScrollView
+        className="flex-1"
+        contentContainerClassName="px-5 pt-4 pb-12"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }>
+        {/* Current Value Card */}
+        <View className="bg-card border border-border rounded-2xl p-5 mb-4">
+          <View className="flex-row items-center gap-4">
+            <View
+              style={{backgroundColor: `${config.color}20`}}
+              className="w-14 h-14 rounded-full items-center justify-center">
+              <IconComponent size={28} color={config.color} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                Current Reading
+              </Text>
+              {latest ? (
+                <>
+                  <View className="flex-row items-baseline gap-2">
+                    <Text className="text-3xl font-bold text-foreground">
+                      {formatVitalValue(latest.value, config.key)}
+                    </Text>
+                    <Text className="text-sm text-muted-foreground">
+                      {config.unit}
+                    </Text>
+                  </View>
+                  <Text className="text-xs text-muted-foreground mt-1">
+                    Last updated {timeAgo(latest.date)}
+                  </Text>
+                </>
+              ) : (
+                <Text className="text-lg text-muted-foreground">
+                  No readings yet
+                </Text>
+              )}
+            </View>
+            {latest && <StatusBadge status={latest.status} size="md" />}
+          </View>
+        </View>
+
+        {/* Period Selector */}
+        <View className="mb-4">
+          <TabBar tabs={PERIOD_TABS} activeTab={period} onChange={setPeriod} />
+        </View>
+
+        {/* Chart Area */}
+        <View
+          className="mb-6"
+          onLayout={e => setChartWidth(e.nativeEvent.layout.width)}>
+          {isLoading && chartPoints.length === 0 ? (
+            <View className="bg-card border border-border rounded-2xl p-3">
+              <Skeleton height={180} borderRadius={16} />
+            </View>
+          ) : (
+            <SimpleLineChart data={chartPoints} config={config} width={chartWidth} />
+          )}
+        </View>
+
+        {/* Normal Range Reference */}
+        <View className="flex-row items-center gap-2 bg-card border border-border rounded-2xl p-3 mb-6">
+          <View className="w-8 h-8 rounded-full bg-success/10 items-center justify-center">
+            <Info size={16} color={colors.success} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-xs font-semibold text-foreground">
+              Normal Range
+            </Text>
+            <Text className="text-xs text-muted-foreground">
+              {config.normalRange.min} - {config.normalRange.max} {config.unit}
+            </Text>
+          </View>
+        </View>
+
+        {/* History */}
+        <Text className="text-sm font-bold text-foreground mb-3 px-1">
+          Reading History
+        </Text>
+
+        {history.length === 0 ? (
+          <View className="bg-card border border-border rounded-2xl p-8 items-center">
+            <Clock size={32} color={colors.mutedForeground} />
+            <Text className="text-sm text-muted-foreground mt-2">
+              No readings recorded yet
+            </Text>
+          </View>
+        ) : (
+          history.map((entry, index) => (
+            <View
+              key={`${entry.date}-${index}`}
+              className="bg-card border border-border rounded-2xl p-4 mb-2">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1">
+                  <Text className="text-xs text-muted-foreground mb-0.5">
+                    {formatDateTime(entry.date)}
+                  </Text>
+                  <View className="flex-row items-baseline gap-1.5">
+                    <Text className="text-lg font-bold text-foreground">
+                      {formatVitalValue(entry.value, config.key)}
+                    </Text>
+                    <Text className="text-xs text-muted-foreground">
+                      {entry.unit || config.unit}
+                    </Text>
+                  </View>
+                </View>
+                <StatusBadge status={entry.status} />
+              </View>
+            </View>
+          ))
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
