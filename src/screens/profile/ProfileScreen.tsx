@@ -75,7 +75,7 @@ export default function ProfileScreen() {
           icon: <FileText size={20} color={colors.accent} />,
           title: 'Health Records',
           subtitle: 'Medical history & reports',
-          onPress: () => {}, // placeholder
+          onPress: () => navigation.navigate('HealthRecords'),
         },
       ],
     },

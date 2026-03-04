@@ -13,11 +13,14 @@ import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'Dependants'>;
 
 const RELATIONSHIP_OPTIONS = [
-  {label: 'Child', value: 'child'},
-  {label: 'Spouse', value: 'spouse'},
-  {label: 'Parent', value: 'parent'},
-  {label: 'Sibling', value: 'sibling'},
-  {label: 'Other', value: 'other'},
+  {label: 'Child', value: 'Child'},
+  {label: 'Spouse', value: 'Spouse'},
+  {label: 'Wife', value: 'Wife'},
+  {label: 'Husband', value: 'Husband'},
+  {label: 'Parent', value: 'Parent'},
+  {label: 'Sibling', value: 'Sibling'},
+  {label: 'Guardian', value: 'Guardian'},
+  {label: 'Other', value: 'Other'},
 ];
 
 const GENDER_OPTIONS = [

@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {View, Text, ActivityIndicator} from 'react-native';
-import {Wallet, Sparkles, CreditCard, ArrowRight} from 'lucide-react-native';
+import {Wallet, Sparkles, CreditCard} from 'lucide-react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Header, Button} from '../../components/ui';
 import {colors} from '../../theme/colors';
@@ -14,31 +14,59 @@ type Props = NativeStackScreenProps<OnboardingStackParamList, 'WalletCredits'>;
 export default function WalletCreditsScreen({navigation}: Props) {
   const user = useAuthStore(s => s.user);
   const [walletData, setWalletData] = useState<any>(null);
+  const [creditsData, setCreditsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadWalletData();
+    loadData();
   }, []);
 
-  const loadWalletData = async () => {
+  const loadData = async () => {
     try {
-      const res = await api.get('/wallets/balance');
-      setWalletData(res.data.data || res.data.result || res.data);
-    } catch {
-      // Use user.wallet as fallback
-      if (user?.wallet) {
-        setWalletData(user.wallet);
+      // Fetch wallet balance and AI credits in parallel
+      const [walletRes, creditsRes] = await Promise.allSettled([
+        api.get('/wallets/balance'),
+        api.get('/claude-summary/credits'),
+      ]);
+
+      if (walletRes.status === 'fulfilled') {
+        const wd = walletRes.value.data.data || walletRes.value.data.result || walletRes.value.data;
+        setWalletData(wd);
       }
+
+      if (creditsRes.status === 'fulfilled') {
+        const cd = creditsRes.value.data.data || creditsRes.value.data.result || creditsRes.value.data;
+        setCreditsData(cd);
+      }
+    } catch {
+      // Silently fail — screen will show zeros
     } finally {
       setLoading(false);
     }
   };
 
-  const balance = walletData?.balance || 0;
-  const currency = walletData?.currency || 'NGN';
+  // Wallet: GET /wallets/balance returns {totalEarnings, totalWithdrawals, currentBalance}
+  const balance = walletData?.currentBalance ?? walletData?.balance ?? 0;
+  // Currency from user's preferred_currency or default NGN
+  const currency = (user as any)?.preferred_currency || 'NGN';
+
+  // Credits: GET /claude-summary/credits returns
+  // {free_credits_remaining, purchased_credits, gifted_credits, has_unlimited_subscription, total_available, total_summaries_generated}
+  const freeCredits = creditsData?.free_credits_remaining ?? 0;
+  const purchasedCredits = creditsData?.purchased_credits ?? 0;
+  const giftedCredits = creditsData?.gifted_credits ?? 0;
+  const totalCredits = creditsData?.total_available ?? (freeCredits + purchasedCredits + giftedCredits);
+  const summariesGenerated = creditsData?.total_summaries_generated ?? 0;
+  const hasUnlimited = creditsData?.has_unlimited_subscription ?? false;
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount / 100); // Amount in kobo/pence, convert to major unit
+  };
 
   const handleFundWallet = () => {
-    // Navigate to payment flow in main app
     (navigation as any).navigate('Main', {screen: 'Wallet'});
   };
 
@@ -78,7 +106,7 @@ export default function WalletCreditsScreen({navigation}: Props) {
                   Wallet Balance
                 </Text>
                 <Text style={{fontSize: 28, fontWeight: '700', color: colors.foreground}}>
-                  {currency} {balance.toLocaleString()}
+                  {currency} {formatCurrency(balance)}
                 </Text>
               </View>
             </View>
@@ -96,7 +124,7 @@ export default function WalletCreditsScreen({navigation}: Props) {
               borderRadius: 20,
               padding: 24,
             }}>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12}}>
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16}}>
               <View
                 style={{
                   width: 48,
@@ -112,15 +140,41 @@ export default function WalletCreditsScreen({navigation}: Props) {
                 <Text style={{fontSize: 12, color: colors.mutedForeground, fontWeight: '600'}}>
                   AI Health Credits
                 </Text>
-                <Text style={{fontSize: 13, color: colors.foreground, marginTop: 2}}>
-                  Used for AI-powered health summaries
+                <Text style={{fontSize: 28, fontWeight: '700', color: colors.foreground}}>
+                  {hasUnlimited ? 'Unlimited' : totalCredits}
                 </Text>
               </View>
             </View>
 
-            <Text style={{fontSize: 12, color: colors.mutedForeground, lineHeight: 18}}>
-              AI credits are used to generate personalized health summaries from your checkup results. Credits can be purchased or earned through subscriptions.
-            </Text>
+            {/* Credit breakdown */}
+            <View style={{gap: 8}}>
+              <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                <Text style={{fontSize: 13, color: colors.mutedForeground}}>Free Credits</Text>
+                <Text style={{fontSize: 13, color: colors.foreground, fontWeight: '600'}}>{freeCredits}</Text>
+              </View>
+              <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                <Text style={{fontSize: 13, color: colors.mutedForeground}}>Purchased Credits</Text>
+                <Text style={{fontSize: 13, color: colors.foreground, fontWeight: '600'}}>{purchasedCredits}</Text>
+              </View>
+              {giftedCredits > 0 && (
+                <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                  <Text style={{fontSize: 13, color: colors.mutedForeground}}>Gifted Credits</Text>
+                  <Text style={{fontSize: 13, color: colors.foreground, fontWeight: '600'}}>{giftedCredits}</Text>
+                </View>
+              )}
+              <View
+                style={{
+                  borderTopWidth: 1,
+                  borderTopColor: colors.border,
+                  paddingTop: 8,
+                  marginTop: 4,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                }}>
+                <Text style={{fontSize: 13, color: colors.mutedForeground}}>Summaries Generated</Text>
+                <Text style={{fontSize: 13, color: colors.foreground, fontWeight: '600'}}>{summariesGenerated}</Text>
+              </View>
+            </View>
           </View>
 
           {/* Info card */}

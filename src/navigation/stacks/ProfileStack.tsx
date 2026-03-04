@@ -4,6 +4,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import ProfileScreen from '../../screens/profile/ProfileScreen';
 import EditProfileScreen from '../../screens/profile/EditProfileScreen';
 import WalletScreen from '../../screens/profile/WalletScreen';
+import HealthRecordsScreen from '../../screens/profile/HealthRecordsScreen';
 import PrescriptionsListScreen from '../../screens/prescriptions/PrescriptionsListScreen';
 import PrescriptionDetailScreen from '../../screens/prescriptions/PrescriptionDetailScreen';
 // Onboarding screens accessible from profile
@@ -21,6 +22,7 @@ export type ProfileStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
   Wallet: undefined;
+  HealthRecords: undefined;
   PrescriptionsList: undefined;
   PrescriptionDetail: {id: string};
   Settings: undefined;
@@ -52,6 +54,7 @@ export default function ProfileStack() {
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
+      <Stack.Screen name="HealthRecords" component={HealthRecordsScreen} />
       <Stack.Screen name="PrescriptionsList" component={PrescriptionsListScreen} />
       <Stack.Screen name="PrescriptionDetail" component={PrescriptionDetailScreen} />
       <Stack.Screen name="Settings" component={PlaceholderScreen} />

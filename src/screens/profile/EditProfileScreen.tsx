@@ -35,26 +35,42 @@ export default function EditProfileScreen() {
   // Form state
   const [firstName, setFirstName] = useState(user?.profile?.first_name || '');
   const [lastName, setLastName] = useState(user?.profile?.last_name || '');
-  const [phoneNumber, setPhoneNumber] = useState(user?.profile?.phone_number || '');
-  const [dateOfBirth, setDateOfBirth] = useState(user?.profile?.date_of_birth || '');
+  // Phone: profile.contact.phone.number → profile.phone.number → profile.phone_number
+  const [phoneNumber, setPhoneNumber] = useState(
+    (user?.profile as any)?.contact?.phone?.number ||
+    user?.profile?.phone?.number ||
+    user?.profile?.phone_number || '',
+  );
+  // Strip ISO date format for DOB
+  const rawDob = user?.profile?.date_of_birth || '';
+  const [dateOfBirth, setDateOfBirth] = useState(rawDob ? rawDob.split('T')[0] : '');
   const [gender, setGender] = useState<string>(user?.profile?.gender || '');
 
   // Emergency contact (first one if exists)
+  // Backend stores: {first_name, last_name, relationship, phone: {country_code, number}}
   const emergencyContact = user?.emergency_contacts?.[0] || null;
-  const [ecName, setEcName] = useState(emergencyContact?.name || '');
+  const ecFullName = emergencyContact
+    ? [emergencyContact.first_name, emergencyContact.last_name].filter(Boolean).join(' ') ||
+      emergencyContact.name || ''
+    : '';
+  const [ecName, setEcName] = useState(ecFullName);
   const [ecRelationship, setEcRelationship] = useState(emergencyContact?.relationship || '');
-  const [ecPhone, setEcPhone] = useState(emergencyContact?.phone_number || '');
+  const [ecPhone, setEcPhone] = useState(
+    emergencyContact?.phone?.number || emergencyContact?.phone_number || '',
+  );
 
   const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
 
   const hasChanges = useMemo(() => {
-    const original = user?.profile;
+    const original = user?.profile as any;
     if (!original) return true;
+    const origPhone = original?.contact?.phone?.number || original?.phone?.number || original?.phone_number || '';
+    const origDob = original?.date_of_birth ? original.date_of_birth.split('T')[0] : '';
     return (
       firstName !== (original.first_name || '') ||
       lastName !== (original.last_name || '') ||
-      phoneNumber !== (original.phone_number || '') ||
-      dateOfBirth !== (original.date_of_birth || '') ||
+      phoneNumber !== origPhone ||
+      dateOfBirth !== origDob ||
       gender !== (original.gender || '')
     );
   }, [firstName, lastName, phoneNumber, dateOfBirth, gender, user]);
@@ -75,19 +91,26 @@ export default function EditProfileScreen() {
         profile: {
           first_name: firstName.trim(),
           last_name: lastName.trim(),
-          phone_number: phoneNumber.trim() || undefined,
           date_of_birth: dateOfBirth.trim() || undefined,
           gender: gender || undefined,
         },
       };
 
       // Include emergency contacts if filled
+      // Backend expects: {first_name, last_name, relationship, phone: {country_code, number}}
       if (ecName.trim() && ecPhone.trim()) {
+        const nameParts = ecName.trim().split(' ');
+        const ecFirstName = nameParts[0] || '';
+        const ecLastName = nameParts.slice(1).join(' ') || '';
         updateData.emergency_contacts = [
           {
-            name: ecName.trim(),
-            relationship: ecRelationship.trim() || undefined,
-            phone_number: ecPhone.trim(),
+            first_name: ecFirstName,
+            last_name: ecLastName,
+            relationship: ecRelationship.trim() || 'Other',
+            phone: {
+              country_code: '+234',
+              number: ecPhone.trim(),
+            },
           },
         ];
       }

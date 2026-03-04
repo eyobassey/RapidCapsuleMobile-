@@ -35,7 +35,9 @@ export default function SelectPicker({
   error,
 }: SelectPickerProps) {
   const [visible, setVisible] = useState(false);
-  const selected = options.find(o => o.value === value);
+  const selected = options.find(
+    o => o.value === value || o.value.toLowerCase() === value?.toLowerCase?.(),
+  );
 
   return (
     <View>
@@ -132,7 +134,9 @@ export default function SelectPicker({
               data={options}
               keyExtractor={item => item.value}
               renderItem={({item}) => {
-                const isSelected = item.value === value;
+                const isSelected =
+                  item.value === value ||
+                  item.value.toLowerCase() === value?.toLowerCase?.();
                 return (
                   <TouchableOpacity
                     activeOpacity={0.7}

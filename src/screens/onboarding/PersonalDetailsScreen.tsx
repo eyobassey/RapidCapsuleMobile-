@@ -44,7 +44,8 @@ export default function PersonalDetailsScreen({navigation}: Props) {
       const p = user.profile as any;
       setFirstName(p.first_name || '');
       setLastName(p.last_name || '');
-      setDob(p.date_of_birth || '');
+      // Strip ISO datetime to just date (e.g. "1990-05-15T00:00:00.000Z" → "1990-05-15")
+      setDob(p.date_of_birth ? p.date_of_birth.split('T')[0] : '');
       setGender(p.gender || '');
       // Phone: profile.contact.phone.number → profile.phone.number → profile.phone_number
       setPhone(

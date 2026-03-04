@@ -113,7 +113,8 @@ export interface EmergencyContact {
 }
 
 export interface Dependant {
-  name: string;
+  first_name: string;
+  last_name: string;
   date_of_birth: string;
   relationship: string;
   gender: string;

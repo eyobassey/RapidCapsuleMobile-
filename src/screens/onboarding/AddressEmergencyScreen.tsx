@@ -21,15 +21,20 @@ const COUNTRY_OPTIONS = [
   {label: 'United Kingdom', value: 'United Kingdom'},
   {label: 'United States', value: 'United States'},
   {label: 'Canada', value: 'Canada'},
+  {label: 'India', value: 'India'},
+  {label: 'Australia', value: 'Australia'},
+  {label: 'Germany', value: 'Germany'},
 ];
 
 const RELATIONSHIP_OPTIONS = [
-  {label: 'Spouse', value: 'spouse'},
-  {label: 'Parent', value: 'parent'},
-  {label: 'Sibling', value: 'sibling'},
-  {label: 'Child', value: 'child'},
-  {label: 'Friend', value: 'friend'},
-  {label: 'Other', value: 'other'},
+  {label: 'Spouse', value: 'Spouse'},
+  {label: 'Wife', value: 'Wife'},
+  {label: 'Husband', value: 'Husband'},
+  {label: 'Parent', value: 'Parent'},
+  {label: 'Sibling', value: 'Sibling'},
+  {label: 'Child', value: 'Child'},
+  {label: 'Friend', value: 'Friend'},
+  {label: 'Other', value: 'Other'},
 ];
 
 interface ContactForm {
@@ -126,7 +131,7 @@ export default function AddressEmergencyScreen({navigation}: Props) {
         .map(c => ({
           first_name: c.firstName.trim(),
           last_name: c.lastName.trim(),
-          relationship: c.relationship || 'other',
+          relationship: c.relationship || 'Other',
           phone: {
             country_code: '+234',
             number: c.phone.trim(),

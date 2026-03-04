@@ -2,7 +2,11 @@ import {create} from 'zustand';
 import {createMMKV} from 'react-native-mmkv';
 import {SECTION_WEIGHTS, type OnboardingSection} from '../types/onboarding.types';
 
-const mmkv = createMMKV({id: 'rc-onboarding'});
+let mmkv: ReturnType<typeof createMMKV>;
+function getMMKV() {
+  if (!mmkv) mmkv = createMMKV({id: 'rc-onboarding'});
+  return mmkv;
+}
 const DRAFT_PREFIX = 'onboarding_draft_';
 
 interface OnboardingState {
@@ -171,19 +175,15 @@ function deriveCompletion(user: any): {
   }
 
   // ── Wallet & Credits ──
-  // Wallet data may be at user.wallet or populated separately
-  const wallet = user.wallet;
-  if (wallet) {
-    const hasBalance = (wallet.balance || 0) > 0;
-    const hasCredits =
-      (wallet.ai_credits?.free_remaining || 0) +
-      (wallet.ai_credits?.purchased || 0) > 0;
-    if (hasBalance || hasCredits) {
-      completed.walletCredits = true;
-    }
+  // Wallet data is NOT on the user object — it comes from GET /wallets/balance
+  // and GET /claude-summary/credits. We mark this as complete if the user
+  // has viewed the section (tracked via onboarding_completed or patient_preferences),
+  // or we check asynchronously. For now, mark complete if user has a preferred_currency
+  // set (indicates they've interacted with wallet) or if explicitly marked.
+  if (user.preferred_currency || user.onboarding_completed) {
+    completed.walletCredits = true;
     summary.walletCredits = {
-      balance: wallet.balance || 0,
-      currency: wallet.currency || 'NGN',
+      currency: user.preferred_currency || 'NGN',
     };
   }
 
@@ -213,13 +213,13 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   saveDraft: (section: string, data: any) => {
     try {
-      mmkv.set(`${DRAFT_PREFIX}${section}`, JSON.stringify(data));
+      getMMKV().set(`${DRAFT_PREFIX}${section}`, JSON.stringify(data));
     } catch {}
   },
 
   loadDraft: (section: string) => {
     try {
-      const raw = mmkv.getString(`${DRAFT_PREFIX}${section}`);
+      const raw = getMMKV().getString(`${DRAFT_PREFIX}${section}`);
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
@@ -228,7 +228,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
   clearDraft: (section: string) => {
     try {
-      mmkv.remove(`${DRAFT_PREFIX}${section}`);
+      getMMKV().remove(`${DRAFT_PREFIX}${section}`);
     } catch {}
   },
 
@@ -241,7 +241,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     // Clear all drafts
     for (const key of Object.keys(defaultCompletion)) {
       try {
-        mmkv.remove(`${DRAFT_PREFIX}${key}`);
+        getMMKV().remove(`${DRAFT_PREFIX}${key}`);
       } catch {}
     }
   },
