@@ -2,20 +2,29 @@ import React, {useState, useCallback, useRef} from 'react';
 import {View, Text, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
-import {Search, X, Plus, Check} from 'lucide-react-native';
+import {Search, X, Plus, Check, User} from 'lucide-react-native';
 import {Header, Button} from '../../components/ui';
 import {useHealthCheckupStore} from '../../store/healthCheckup';
 import {colors} from '../../theme/colors';
+import BodyAvatar from '../../components/health-checkup/BodyAvatar';
+
+type Tab = 'search' | 'body';
 
 export default function SymptomSearchScreen() {
   const navigation = useNavigation<any>();
-  const {addEvidence, submitDiagnosis, isLoading, searchSymptoms} = useHealthCheckupStore();
+  const {addEvidence, submitDiagnosis, isLoading, searchSymptoms, sex} = useHealthCheckupStore();
 
+  const [tab, setTab] = useState<Tab>('search');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [selected, setSelected] = useState<Map<string, any>>(new Map());
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<any>(null);
+
+  // Body map state
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [regionResults, setRegionResults] = useState<any[]>([]);
+  const [regionLoading, setRegionLoading] = useState(false);
 
   const handleSearch = useCallback(
     (text: string) => {
@@ -33,6 +42,17 @@ export default function SymptomSearchScreen() {
         setResults(data);
         setSearching(false);
       }, 400);
+    },
+    [searchSymptoms],
+  );
+
+  const handleSelectRegion = useCallback(
+    async (regionId: string) => {
+      setSelectedRegion(regionId);
+      setRegionLoading(true);
+      const data = await searchSymptoms(regionId);
+      setRegionResults(data);
+      setRegionLoading(false);
     },
     [searchSymptoms],
   );
@@ -55,7 +75,6 @@ export default function SymptomSearchScreen() {
       return;
     }
 
-    // Add selected symptoms as initial evidence
     const evidence = Array.from(selected.keys()).map(id => ({
       id,
       choice_id: 'present' as const,
@@ -63,7 +82,6 @@ export default function SymptomSearchScreen() {
     }));
     addEvidence(evidence);
 
-    // Submit first diagnosis to start the interview
     try {
       await submitDiagnosis(false);
       navigation.navigate('HealthCheckupInterview');
@@ -71,6 +89,8 @@ export default function SymptomSearchScreen() {
       // Error handled in store
     }
   };
+
+  const avatarSex = (sex === 'male' || sex === 'female') ? sex : 'male';
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -90,27 +110,58 @@ export default function SymptomSearchScreen() {
           <Text className="text-lg font-bold text-foreground mb-1">
             What are your symptoms?
           </Text>
-          <Text className="text-sm text-muted-foreground mb-4">
-            Search and select the symptoms you're experiencing.
+          <Text className="text-sm text-muted-foreground mb-3">
+            Search for symptoms or tap body parts to add them.
           </Text>
 
-          {/* Search input */}
-          <View className="flex-row items-center bg-card border border-border rounded-2xl px-4 h-12">
-            <Search size={18} color={colors.mutedForeground} />
-            <TextInput
-              className="flex-1 text-sm text-foreground ml-3"
-              placeholder="Search symptoms (e.g. headache, fever)"
-              placeholderTextColor={colors.mutedForeground}
-              value={query}
-              onChangeText={handleSearch}
-              autoCapitalize="none"
-            />
-            {query.length > 0 && (
-              <TouchableOpacity onPress={() => {setQuery(''); setResults([]);}}>
-                <X size={18} color={colors.mutedForeground} />
-              </TouchableOpacity>
-            )}
-            {searching && <ActivityIndicator size="small" color={colors.primary} />}
+          {/* Tab switcher */}
+          <View className="flex-row bg-muted rounded-2xl p-1 mb-3">
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setTab('search')}
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                paddingVertical: 8,
+                borderRadius: 14,
+                backgroundColor: tab === 'search' ? colors.card : 'transparent',
+              }}>
+              <Search size={14} color={tab === 'search' ? colors.primary : colors.mutedForeground} />
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '600',
+                  color: tab === 'search' ? colors.primary : colors.mutedForeground,
+                }}>
+                Search
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setTab('body')}
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                paddingVertical: 8,
+                borderRadius: 14,
+                backgroundColor: tab === 'body' ? colors.card : 'transparent',
+              }}>
+              <User size={14} color={tab === 'body' ? colors.primary : colors.mutedForeground} />
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '600',
+                  color: tab === 'body' ? colors.primary : colors.mutedForeground,
+                }}>
+                Body Map
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -128,7 +179,7 @@ export default function SymptomSearchScreen() {
                 activeOpacity={0.7}
                 className="flex-row items-center gap-1 bg-primary/10 border border-primary/30 rounded-full px-3 py-1.5">
                 <Text className="text-xs font-medium text-primary">
-                  {s.common_name || s.name}
+                  {s.common_name || s.name || s.label}
                 </Text>
                 <X size={12} color={colors.primary} />
               </TouchableOpacity>
@@ -136,45 +187,142 @@ export default function SymptomSearchScreen() {
           </ScrollView>
         )}
 
-        {/* Results */}
-        <ScrollView
-          className="flex-1"
-          contentContainerClassName="px-5 pb-32"
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-          {results.map((symptom: any) => {
-            const isSelected = selected.has(symptom.id);
-            return (
-              <TouchableOpacity
-                key={symptom.id}
-                activeOpacity={0.7}
-                onPress={() => toggleSymptom(symptom)}
-                className={`flex-row items-center gap-3 p-4 rounded-2xl border mb-2 ${
-                  isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
-                }`}>
-                <View
-                  className={`w-6 h-6 rounded-full items-center justify-center ${
-                    isSelected ? 'bg-primary' : 'bg-muted'
-                  }`}>
-                  {isSelected ? (
-                    <Check size={14} color={colors.white} />
-                  ) : (
-                    <Plus size={14} color={colors.mutedForeground} />
-                  )}
-                </View>
-                <Text className="text-sm text-foreground flex-1">
-                  {symptom.common_name || symptom.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-
-          {query.length >= 2 && results.length === 0 && !searching && (
-            <View className="items-center py-12">
-              <Text className="text-sm text-muted-foreground">No symptoms found</Text>
+        {/* ── Search Tab ── */}
+        {tab === 'search' && (
+          <>
+            <View className="px-5 mb-2">
+              <View className="flex-row items-center bg-card border border-border rounded-2xl px-4 h-12">
+                <Search size={18} color={colors.mutedForeground} />
+                <TextInput
+                  className="flex-1 text-sm text-foreground ml-3"
+                  placeholder="Search symptoms (e.g. headache, fever)"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={query}
+                  onChangeText={handleSearch}
+                  autoCapitalize="none"
+                />
+                {query.length > 0 && (
+                  <TouchableOpacity onPress={() => {setQuery(''); setResults([]);}}>
+                    <X size={18} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                )}
+                {searching && <ActivityIndicator size="small" color={colors.primary} />}
+              </View>
             </View>
-          )}
-        </ScrollView>
+
+            <ScrollView
+              className="flex-1"
+              contentContainerClassName="px-5 pb-32"
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled">
+              {results.map((symptom: any) => {
+                const isSelected = selected.has(symptom.id);
+                return (
+                  <TouchableOpacity
+                    key={symptom.id}
+                    activeOpacity={0.7}
+                    onPress={() => toggleSymptom(symptom)}
+                    className={`flex-row items-center gap-3 p-4 rounded-2xl border mb-2 ${
+                      isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
+                    }`}>
+                    <View
+                      className={`w-6 h-6 rounded-full items-center justify-center ${
+                        isSelected ? 'bg-primary' : 'bg-muted'
+                      }`}>
+                      {isSelected ? (
+                        <Check size={14} color={colors.white} />
+                      ) : (
+                        <Plus size={14} color={colors.mutedForeground} />
+                      )}
+                    </View>
+                    <Text className="text-sm text-foreground flex-1">
+                      {symptom.common_name || symptom.name || symptom.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {query.length >= 2 && results.length === 0 && !searching && (
+                <View className="items-center py-12">
+                  <Text className="text-sm text-muted-foreground">No symptoms found</Text>
+                </View>
+              )}
+            </ScrollView>
+          </>
+        )}
+
+        {/* ── Body Map Tab ── */}
+        {tab === 'body' && (
+          <ScrollView
+            className="flex-1"
+            contentContainerClassName="px-5 pb-32"
+            showsVerticalScrollIndicator={false}>
+            <View className="bg-card border border-border rounded-2xl p-4">
+              <BodyAvatar
+                sex={avatarSex}
+                selectedRegion={selectedRegion}
+                onSelectRegion={handleSelectRegion}
+              />
+            </View>
+
+            {/* Region symptoms */}
+            {selectedRegion && (
+              <View className="mt-4">
+                <Text className="text-sm font-bold text-foreground mb-2 px-1 capitalize">
+                  Symptoms for "{selectedRegion}"
+                </Text>
+
+                {regionLoading ? (
+                  <View className="items-center py-6">
+                    <ActivityIndicator size="small" color={colors.primary} />
+                    <Text className="text-xs text-muted-foreground mt-2">Loading symptoms...</Text>
+                  </View>
+                ) : regionResults.length > 0 ? (
+                  regionResults.map((symptom: any) => {
+                    const isSelected = selected.has(symptom.id);
+                    return (
+                      <TouchableOpacity
+                        key={symptom.id}
+                        activeOpacity={0.7}
+                        onPress={() => toggleSymptom(symptom)}
+                        className={`flex-row items-center gap-3 p-4 rounded-2xl border mb-2 ${
+                          isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
+                        }`}>
+                        <View
+                          className={`w-6 h-6 rounded-full items-center justify-center ${
+                            isSelected ? 'bg-primary' : 'bg-muted'
+                          }`}>
+                          {isSelected ? (
+                            <Check size={14} color={colors.white} />
+                          ) : (
+                            <Plus size={14} color={colors.mutedForeground} />
+                          )}
+                        </View>
+                        <Text className="text-sm text-foreground flex-1">
+                          {symptom.common_name || symptom.name || symptom.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })
+                ) : (
+                  <View className="items-center py-6">
+                    <Text className="text-sm text-muted-foreground">
+                      No symptoms found for this area
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {!selectedRegion && (
+              <View className="items-center py-8">
+                <Text className="text-sm text-muted-foreground text-center">
+                  Tap a body part above to see related symptoms
+                </Text>
+              </View>
+            )}
+          </ScrollView>
+        )}
       </View>
 
       <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
