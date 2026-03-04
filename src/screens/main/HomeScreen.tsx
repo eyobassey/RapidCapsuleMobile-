@@ -370,17 +370,25 @@ export default function HomeScreen() {
               className="bg-card border border-border rounded-2xl p-4 overflow-hidden relative">
               {/* Decorative accent strip */}
               <View
-                className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-                style={{backgroundColor: colors.accent}}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 4,
+                  borderTopLeftRadius: 16,
+                  borderBottomLeftRadius: 16,
+                  backgroundColor: colors.accent,
+                }}
               />
 
               <View className="flex-row gap-4 items-center">
                 {/* Date block */}
                 <View className="w-14 h-14 rounded-2xl bg-background border border-border items-center justify-center">
-                  <Text className="text-[10px] font-bold uppercase" style={{color: colors.accent}}>
+                  <Text style={{fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase', color: colors.accent}}>
                     {new Date(nextAppointment.start_time || nextAppointment.date || nextAppointment.appointment_date).toLocaleDateString('en-US', {month: 'short'})}
                   </Text>
-                  <Text className="text-lg font-bold leading-none" style={{color: colors.accent}}>
+                  <Text style={{fontSize: 18, fontWeight: 'bold', lineHeight: 20, color: colors.accent}}>
                     {new Date(nextAppointment.start_time || nextAppointment.date || nextAppointment.appointment_date).getDate()}
                   </Text>
                 </View>
@@ -397,7 +405,7 @@ export default function HomeScreen() {
                   </Text>
 
                   <View className="flex-row items-center gap-2 mt-1.5">
-                    <Text className="text-xs font-medium" style={{color: colors.accent}}>
+                    <Text style={{fontSize: 12, fontWeight: '500', color: colors.accent}}>
                       {formatRelativeDate(nextAppointment.start_time || nextAppointment.date || nextAppointment.appointment_date)}
                       {(nextAppointment.start_time || nextAppointment.time) ? `, ${formatTime(nextAppointment.start_time || nextAppointment.time)}` : ''}
                     </Text>

@@ -26,7 +26,7 @@ export default function ProgressRing({
   const strokeDashoffset = circumference - (clampedProgress / 100) * circumference;
 
   return (
-    <View style={{width: size, height: size}} className="items-center justify-center">
+    <View style={{width: size, height: size, alignItems: 'center', justifyContent: 'center'}}>
       <Svg
         width={size}
         height={size}
@@ -56,8 +56,7 @@ export default function ProgressRing({
 
       {children ? (
         <View
-          style={{position: 'absolute'}}
-          className="items-center justify-center">
+          style={{position: 'absolute', alignItems: 'center', justifyContent: 'center'}}>
           {children}
         </View>
       ) : null}

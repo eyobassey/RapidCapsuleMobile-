@@ -38,16 +38,22 @@ export default function StatusBadge({status, size = 'sm'}: StatusBadgeProps) {
   const colorKey = STATUS_COLORS[status] ?? 'muted';
   const colorValues = colorValueMap[colorKey] ?? defaultColor;
 
-  const paddingClass = size === 'sm' ? 'px-2 py-0.5' : 'px-3 py-1';
-  const textSizeClass = size === 'sm' ? 'text-xs' : 'text-sm';
+  const isSmall = size === 'sm';
 
   return (
     <View
-      style={{backgroundColor: colorValues.bg}}
-      className={`${paddingClass} rounded-full`}>
+      style={{
+        backgroundColor: colorValues.bg,
+        paddingHorizontal: isSmall ? 8 : 12,
+        paddingVertical: isSmall ? 2 : 4,
+        borderRadius: 9999,
+      }}>
       <Text
-        style={{color: colorValues.text}}
-        className={`${textSizeClass} font-medium`}>
+        style={{
+          color: colorValues.text,
+          fontSize: isSmall ? 12 : 14,
+          fontWeight: '500',
+        }}>
         {capitalize(status)}
       </Text>
     </View>

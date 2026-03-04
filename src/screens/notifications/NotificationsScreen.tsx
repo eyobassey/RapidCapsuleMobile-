@@ -141,8 +141,15 @@ function NotificationItem({
       }`}>
       {/* Icon */}
       <View
-        className="w-10 h-10 rounded-full items-center justify-center mt-0.5"
-        style={{backgroundColor: `${iconColor}1A`}}>
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 20,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 2,
+          backgroundColor: `${iconColor}1A`,
+        }}>
         <IconComponent size={18} color={iconColor} />
       </View>
 

@@ -146,8 +146,17 @@ export default function AppointmentsListScreen() {
       <TouchableOpacity
         onPress={navigateToBook}
         activeOpacity={0.8}
-        className="absolute bottom-6 right-6 bg-primary rounded-2xl px-5 py-4 flex-row items-center gap-2 shadow-lg"
         style={{
+          position: 'absolute',
+          bottom: 24,
+          right: 24,
+          backgroundColor: colors.primary,
+          borderRadius: 16,
+          paddingHorizontal: 20,
+          paddingVertical: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
           shadowColor: colors.primary,
           shadowOffset: {width: 0, height: 4},
           shadowOpacity: 0.3,
@@ -155,9 +164,7 @@ export default function AppointmentsListScreen() {
           elevation: 8,
         }}>
         <CalendarPlus size={20} color={colors.white} />
-        <View>
-          <Text className="text-white font-bold text-sm">Book</Text>
-        </View>
+        <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 14}}>Book</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

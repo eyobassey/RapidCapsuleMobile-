@@ -50,8 +50,16 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
               key={route.key}
               onPress={onPress}
               activeOpacity={0.8}
-              className="relative -top-5 w-14 h-14 rounded-full items-center justify-center border-4 border-background"
               style={{
+                position: 'relative',
+                top: -20,
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 4,
+                borderColor: colors.background,
                 backgroundColor: colors.primary,
                 shadowColor: colors.primary,
                 shadowOffset: {width: 0, height: 4},

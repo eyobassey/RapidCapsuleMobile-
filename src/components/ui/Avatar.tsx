@@ -18,10 +18,10 @@ const sizeMap: Record<AvatarSize, number> = {
   lg: 56,
 };
 
-const fontSizeMap: Record<AvatarSize, string> = {
-  sm: 'text-xs',
-  md: 'text-sm',
-  lg: 'text-lg',
+const fontSizeMap: Record<AvatarSize, number> = {
+  sm: 12,
+  md: 14,
+  lg: 18,
 };
 
 export default function Avatar({
@@ -49,12 +49,16 @@ export default function Avatar({
         width: dimension,
         height: dimension,
         borderRadius: dimension / 2,
-        backgroundColor: `${colors.primary}33`, // ~20% opacity
-      }}
-      className="items-center justify-center">
+        backgroundColor: `${colors.primary}33`,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
       <Text
-        className={`${fontSizeMap[size]} font-bold`}
-        style={{color: colors.primary}}>
+        style={{
+          fontSize: fontSizeMap[size],
+          fontWeight: 'bold',
+          color: colors.primary,
+        }}>
         {initials || '?'}
       </Text>
     </View>
