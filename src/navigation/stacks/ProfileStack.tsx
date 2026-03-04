@@ -6,6 +6,16 @@ import EditProfileScreen from '../../screens/profile/EditProfileScreen';
 import WalletScreen from '../../screens/profile/WalletScreen';
 import PrescriptionsListScreen from '../../screens/prescriptions/PrescriptionsListScreen';
 import PrescriptionDetailScreen from '../../screens/prescriptions/PrescriptionDetailScreen';
+// Onboarding screens accessible from profile
+import OnboardingDashboardScreen from '../../screens/onboarding/OnboardingDashboardScreen';
+import PersonalDetailsScreen from '../../screens/onboarding/PersonalDetailsScreen';
+import AddressEmergencyScreen from '../../screens/onboarding/AddressEmergencyScreen';
+import DependantsScreen from '../../screens/onboarding/DependantsScreen';
+import VitalsMetricsScreen from '../../screens/onboarding/VitalsMetricsScreen';
+import AllergiesScreen from '../../screens/onboarding/AllergiesScreen';
+import MedicalHistoryScreen from '../../screens/onboarding/MedicalHistoryScreen';
+import DeviceIntegrationScreen from '../../screens/onboarding/DeviceIntegrationScreen';
+import WalletCreditsScreen from '../../screens/onboarding/WalletCreditsScreen';
 
 export type ProfileStackParamList = {
   Profile: undefined;
@@ -14,6 +24,16 @@ export type ProfileStackParamList = {
   PrescriptionsList: undefined;
   PrescriptionDetail: {id: string};
   Settings: undefined;
+  // Onboarding screens (reused from onboarding flow)
+  OnboardingDashboard: undefined;
+  PersonalDetails: undefined;
+  AddressEmergency: undefined;
+  Dependants: undefined;
+  VitalsMetrics: undefined;
+  Allergies: undefined;
+  MedicalHistory: undefined;
+  DeviceIntegration: undefined;
+  WalletCredits: undefined;
 };
 
 function PlaceholderScreen({route}: any) {
@@ -35,6 +55,16 @@ export default function ProfileStack() {
       <Stack.Screen name="PrescriptionsList" component={PrescriptionsListScreen} />
       <Stack.Screen name="PrescriptionDetail" component={PrescriptionDetailScreen} />
       <Stack.Screen name="Settings" component={PlaceholderScreen} />
+      {/* Onboarding screens */}
+      <Stack.Screen name="OnboardingDashboard" component={OnboardingDashboardScreen} />
+      <Stack.Screen name="PersonalDetails" component={PersonalDetailsScreen} />
+      <Stack.Screen name="AddressEmergency" component={AddressEmergencyScreen} />
+      <Stack.Screen name="Dependants" component={DependantsScreen} />
+      <Stack.Screen name="VitalsMetrics" component={VitalsMetricsScreen} />
+      <Stack.Screen name="Allergies" component={AllergiesScreen} />
+      <Stack.Screen name="MedicalHistory" component={MedicalHistoryScreen} />
+      <Stack.Screen name="DeviceIntegration" component={DeviceIntegrationScreen} />
+      <Stack.Screen name="WalletCredits" component={WalletCreditsScreen} />
     </Stack.Navigator>
   );
 }

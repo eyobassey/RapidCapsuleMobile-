@@ -14,9 +14,11 @@ import {useNavigation} from '@react-navigation/native';
 import {Camera, Check, User, Phone, Calendar, Users} from 'lucide-react-native';
 
 import {useAuthStore} from '../../store/auth';
+import {useOnboardingStore} from '../../store/onboarding';
 import {usersService} from '../../services/users.service';
-import {Header, Avatar, Input, Button} from '../../components/ui';
+import {Header, Avatar, Input, Button, ProgressRing} from '../../components/ui';
 import {colors} from '../../theme/colors';
+import {ChevronRight} from 'lucide-react-native';
 
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'] as const;
 
@@ -24,6 +26,9 @@ export default function EditProfileScreen() {
   const navigation = useNavigation<any>();
   const user = useAuthStore(s => s.user);
   const fetchUser = useAuthStore(s => s.fetchUser);
+  const {progress, completedSections} = useOnboardingStore();
+  const completedCount = Object.values(completedSections).filter(Boolean).length;
+  const totalSections = Object.keys(completedSections).length;
 
   const [saving, setSaving] = useState(false);
 
@@ -148,6 +153,39 @@ export default function EditProfileScreen() {
               Tap to change photo
             </Text>
           </View>
+
+          {/* Profile Completion Card */}
+          {progress < 100 && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('OnboardingDashboard')}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 20,
+                gap: 14,
+              }}>
+              <ProgressRing progress={progress} size={48} strokeWidth={4}>
+                <Text style={{fontSize: 11, fontWeight: '700', color: colors.foreground}}>
+                  {progress}%
+                </Text>
+              </ProgressRing>
+              <View style={{flex: 1}}>
+                <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>
+                  Profile Completion
+                </Text>
+                <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 2}}>
+                  {completedCount}/{totalSections} sections complete
+                </Text>
+              </View>
+              <ChevronRight size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          )}
 
           {/* Section: Basic Information */}
           <Text className="text-xs text-muted-foreground uppercase tracking-wider mb-4 font-semibold">

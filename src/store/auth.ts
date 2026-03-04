@@ -1,21 +1,49 @@
 import {create} from 'zustand';
 import api from '../services/api';
 import {storage} from '../utils/storage';
+import {useOnboardingStore} from './onboarding';
+
+interface UserProfile {
+  first_name: string;
+  last_name: string;
+  phone_number?: string;
+  phone?: {country_code?: string; number?: string};
+  date_of_birth?: string;
+  gender?: string;
+  profile_image?: string;
+  profile_photo?: string;
+  marital_status?: string;
+  occupation?: string;
+  blood_type?: string;
+  genotype?: string;
+  height?: {value?: number; unit?: string};
+  weight?: {value?: number; unit?: string};
+  basic_health_info?: {
+    height?: {value?: number; unit?: string};
+    weight?: {value?: number; unit?: string};
+  };
+  address1?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zip_code?: string;
+}
 
 interface User {
   _id: string;
   email: string;
   user_type: string;
-  profile: {
-    first_name: string;
-    last_name: string;
-    phone_number?: string;
-    date_of_birth?: string;
-    gender?: string;
-    profile_image?: string;
-    profile_photo?: string;
-  };
+  profile: UserProfile;
   emergency_contacts?: any[];
+  dependants?: any[];
+  delivery_addresses?: any[];
+  allergies?: any;
+  medical_history?: any;
+  pre_existing_conditions?: any[];
+  device_integration?: any;
+  wallet?: any;
+  patient_preferences?: any;
+  onboarding_completed?: boolean;
   is_email_verified: boolean;
 }
 
@@ -73,7 +101,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const res = await api.get('/users/me');
       const user = res.data.data || res.data.result;
-      const needsOnboarding = false; // TODO: restore !user?.profile?.emergency_contacts?.length
+
+      // Sync onboarding store with latest user data
+      useOnboardingStore.getState().refreshFromUser(user);
+
+      // Required sections: personalDetails + addressEmergency
+      const profile = user?.profile;
+      const hasPersonal = !!(profile?.first_name && profile?.last_name && profile?.date_of_birth);
+      const hasEmergency = !!(user?.emergency_contacts?.length > 0);
+      const needsOnboarding = !hasPersonal || !hasEmergency;
+
       await storage.setUser(user);
       set({user, isAuthenticated: true, needsOnboarding, isLoading: false});
     } catch (err: any) {

@@ -7,9 +7,7 @@ import {colors} from '../../theme/colors';
 import api from '../../services/api';
 import {useAuthStore} from '../../store/auth';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
-
-type Props = NativeStackScreenProps<OnboardingStackParamList, 'EmergencyContact'>;
+type Props = NativeStackScreenProps<any>;
 
 export default function EmergencyContactScreen({navigation}: Props) {
   const [street, setStreet] = useState('');
