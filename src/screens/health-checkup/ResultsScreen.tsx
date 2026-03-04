@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {
@@ -14,6 +14,7 @@ import {
 import {Header, Button} from '../../components/ui';
 import {useHealthCheckupStore} from '../../store/healthCheckup';
 import {colors} from '../../theme/colors';
+import AISummaryCard from '../../components/health-checkup/AISummaryCard';
 
 const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; description: string}> = {
   emergency: {
@@ -66,7 +67,38 @@ function ProbabilityBar({probability}: {probability: number}) {
 
 export default function ResultsScreen() {
   const navigation = useNavigation<any>();
-  const {conditions, triageLevel, hasEmergency, reset} = useHealthCheckupStore();
+  const {
+    checkupId,
+    conditions,
+    triageLevel,
+    hasEmergency,
+    claudeSummary,
+    summaryLoading,
+    summaryCredits,
+    fetchClaudeSummary,
+    generateClaudeSummary,
+    fetchSummaryStatus,
+    reset,
+  } = useHealthCheckupStore();
+
+  const [summaryExpanded, setSummaryExpanded] = useState(true);
+
+  // Auto-fetch summary if checkup has one, and check credits
+  useEffect(() => {
+    if (checkupId) {
+      fetchClaudeSummary(checkupId);
+      fetchSummaryStatus();
+    }
+  }, [checkupId, fetchClaudeSummary, fetchSummaryStatus]);
+
+  const handleGenerateSummary = async () => {
+    if (!checkupId) return;
+    try {
+      await generateClaudeSummary(checkupId);
+    } catch {
+      Alert.alert('Unable to Generate', 'Could not generate AI summary. Please try again later.');
+    }
+  };
 
   const triage = TRIAGE_CONFIG[triageLevel || 'non_urgent'] || TRIAGE_CONFIG.non_urgent;
   const TriageIcon = triage.icon;
@@ -170,6 +202,18 @@ export default function ResultsScreen() {
             </Text>
           </View>
         )}
+
+        {/* AI Summary */}
+        <View className="mt-4">
+          <AISummaryCard
+            summary={claudeSummary}
+            loading={summaryLoading}
+            onGenerate={handleGenerateSummary}
+            credits={summaryCredits}
+            expanded={summaryExpanded}
+            onToggleExpand={() => setSummaryExpanded(v => !v)}
+          />
+        </View>
 
         {/* Actions */}
         <View className="mt-6 gap-3">

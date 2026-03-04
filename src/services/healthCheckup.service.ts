@@ -56,4 +56,19 @@ export const healthCheckupService = {
     const res = await api.get(`/health-checkup/${checkupId}`);
     return res.data.data || res.data.result;
   },
+
+  async getClaudeSummaryStatus() {
+    const res = await api.get('/health-checkup/claude-summary/status');
+    return res.data.data || res.data.result || res.data;
+  },
+
+  async getClaudeSummary(checkupId: string) {
+    const res = await api.get(`/health-checkup/${checkupId}/claude-summary`);
+    return res.data.data || res.data.result;
+  },
+
+  async generateClaudeSummary(checkupId: string) {
+    const res = await api.post(`/health-checkup/${checkupId}/generate-claude-summary`);
+    return res.data.data || res.data.result;
+  },
 };

@@ -212,7 +212,7 @@ export default function SymptomSearchScreen() {
 
             <ScrollView
               className="flex-1"
-              contentContainerClassName="px-5 pb-32"
+              contentContainerClassName="px-5 pb-6"
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled">
               {results.map((symptom: any) => {
@@ -255,7 +255,7 @@ export default function SymptomSearchScreen() {
         {tab === 'body' && (
           <ScrollView
             className="flex-1"
-            contentContainerClassName="px-5 pb-32"
+            contentContainerClassName="px-5 pb-6"
             showsVerticalScrollIndicator={false}>
             <View className="bg-card border border-border rounded-2xl p-4">
               <BodyAvatar
@@ -325,7 +325,7 @@ export default function SymptomSearchScreen() {
         )}
       </View>
 
-      <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
+      <View className="bg-background border-t border-border px-5 pt-3 pb-8">
         <Button variant="primary" onPress={handleNext} loading={isLoading}>
           {selected.size > 0
             ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`

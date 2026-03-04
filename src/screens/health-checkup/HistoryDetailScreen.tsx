@@ -1,5 +1,5 @@
-import React, {useEffect} from 'react';
-import {View, Text, ScrollView, ActivityIndicator} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, ScrollView, ActivityIndicator, Alert} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {
@@ -14,6 +14,7 @@ import {Header, Button} from '../../components/ui';
 import {useHealthCheckupStore} from '../../store/healthCheckup';
 import {colors} from '../../theme/colors';
 import {formatDate} from '../../utils/formatters';
+import AISummaryCard from '../../components/health-checkup/AISummaryCard';
 
 const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; description: string}> = {
   emergency: {
@@ -67,15 +68,37 @@ function ProbabilityBar({probability}: {probability: number}) {
 export default function HistoryDetailScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const {currentDetail, isLoading, fetchDetail} = useHealthCheckupStore();
+  const {
+    currentDetail,
+    isLoading,
+    fetchDetail,
+    claudeSummary,
+    summaryLoading,
+    summaryCredits,
+    fetchClaudeSummary,
+    generateClaudeSummary,
+    fetchSummaryStatus,
+  } = useHealthCheckupStore();
 
+  const [summaryExpanded, setSummaryExpanded] = useState(true);
   const checkupId = route.params?.id;
 
   useEffect(() => {
     if (checkupId) {
       fetchDetail(checkupId);
+      fetchClaudeSummary(checkupId);
+      fetchSummaryStatus();
     }
-  }, [checkupId, fetchDetail]);
+  }, [checkupId, fetchDetail, fetchClaudeSummary, fetchSummaryStatus]);
+
+  const handleGenerateSummary = async () => {
+    if (!checkupId) return;
+    try {
+      await generateClaudeSummary(checkupId);
+    } catch {
+      Alert.alert('Unable to Generate', 'Could not generate AI summary. Please try again later.');
+    }
+  };
 
   if (isLoading || !currentDetail) {
     return (
@@ -228,6 +251,18 @@ export default function HistoryDetailScreen() {
             </Text>
           </View>
         )}
+
+        {/* AI Summary */}
+        <View className="mt-4">
+          <AISummaryCard
+            summary={claudeSummary}
+            loading={summaryLoading}
+            onGenerate={handleGenerateSummary}
+            credits={summaryCredits}
+            expanded={summaryExpanded}
+            onToggleExpand={() => setSummaryExpanded(v => !v)}
+          />
+        </View>
 
         {/* Actions */}
         <View className="mt-6 gap-3">

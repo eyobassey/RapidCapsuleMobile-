@@ -147,11 +147,11 @@ export default function HomeScreen() {
     },
     {
       icon: <HeartPulse size={22} color="#f43f5e" />,
-      title: 'Log Vitals',
+      title: 'Vitals',
       subtitle: 'Track health',
       bg: 'bg-rose-500/10',
       accentColor: '#f43f5e',
-      onPress: () => navigation.navigate('LogVitals'),
+      onPress: () => navigation.navigate('Vitals'),
     },
   ];
 

@@ -1,6 +1,32 @@
 import {create} from 'zustand';
 import {healthCheckupService, Evidence} from '../services/healthCheckup.service';
 
+interface ClaudeSummaryContent {
+  overview: string;
+  key_findings: string[];
+  possible_conditions_explained: Array<{
+    condition: string;
+    explanation: string;
+    urgency: string;
+  }>;
+  recommendations: string[];
+  when_to_seek_care: string;
+  lifestyle_tips?: string[];
+}
+
+interface ClaudeSummary {
+  generated_at?: string;
+  model?: string;
+  content?: ClaudeSummaryContent;
+  error?: string;
+}
+
+interface SummaryCredits {
+  available: boolean;
+  remaining_credits?: number;
+  has_unlimited?: boolean;
+}
+
 interface HealthCheckupState {
   // Session state
   checkupId: string | null;
@@ -19,6 +45,11 @@ interface HealthCheckupState {
   history: any[];
   currentDetail: any | null;
 
+  // AI Summary
+  claudeSummary: ClaudeSummary | null;
+  summaryLoading: boolean;
+  summaryCredits: SummaryCredits | null;
+
   // UI
   isLoading: boolean;
   error: string | null;
@@ -32,6 +63,9 @@ interface HealthCheckupState {
   fetchHistory: (params?: {page?: number; limit?: number}) => Promise<void>;
   fetchDetail: (id: string) => Promise<void>;
   setPatientInfo: (sex: string, age: number) => void;
+  fetchClaudeSummary: (checkupId: string) => Promise<void>;
+  generateClaudeSummary: (checkupId: string) => Promise<void>;
+  fetchSummaryStatus: () => Promise<void>;
   reset: () => void;
 }
 
@@ -49,6 +83,9 @@ const initialState = {
   hasEmergency: false,
   history: [],
   currentDetail: null,
+  claudeSummary: null,
+  summaryLoading: false,
+  summaryCredits: null,
   isLoading: false,
   error: null,
 };
@@ -173,7 +210,12 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
     set({isLoading: true, error: null});
     try {
       const data = await healthCheckupService.getById(id);
-      set({currentDetail: data, isLoading: false});
+      const updates: any = {currentDetail: data, isLoading: false};
+      // If the detail already has a claude_summary embedded, use it
+      if (data?.claude_summary?.content) {
+        updates.claudeSummary = data.claude_summary;
+      }
+      set(updates);
     } catch (err: any) {
       set({
         error: err?.response?.data?.message || err?.message || 'Failed to fetch checkup detail',
@@ -184,6 +226,47 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
 
   setPatientInfo: (sex: string, age: number) => {
     set({sex, age});
+  },
+
+  fetchSummaryStatus: async () => {
+    try {
+      const data = await healthCheckupService.getClaudeSummaryStatus();
+      set({summaryCredits: data});
+    } catch {
+      // Silently fail - credits check is non-critical
+    }
+  },
+
+  fetchClaudeSummary: async (checkupId: string) => {
+    // Don't clear existing summary (may have been set from fetchDetail)
+    const existing = get().claudeSummary;
+    if (!existing?.content) {
+      set({summaryLoading: true});
+    }
+    try {
+      const data = await healthCheckupService.getClaudeSummary(checkupId);
+      if (data?.content) {
+        set({claudeSummary: data, summaryLoading: false});
+      } else {
+        set({summaryLoading: false});
+      }
+    } catch {
+      set({summaryLoading: false});
+    }
+  },
+
+  generateClaudeSummary: async (checkupId: string) => {
+    set({summaryLoading: true});
+    try {
+      const data = await healthCheckupService.generateClaudeSummary(checkupId);
+      set({claudeSummary: data, summaryLoading: false});
+    } catch (err: any) {
+      set({
+        summaryLoading: false,
+        error: err?.response?.data?.message || 'Failed to generate AI summary',
+      });
+      throw err;
+    }
   },
 
   reset: () => {

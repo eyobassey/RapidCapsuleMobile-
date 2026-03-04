@@ -149,7 +149,7 @@ export default function InterviewScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-5 pt-6 pb-32"
+        contentContainerClassName="px-5 pt-6 pb-6"
         showsVerticalScrollIndicator={false}>
         {/* Step indicator */}
         <View className="flex-row items-center gap-2 mb-6">
@@ -281,7 +281,7 @@ export default function InterviewScreen() {
 
       {/* Submit button for group_multiple */}
       {questionType === 'group_multiple' && (
-        <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
+        <View className="bg-background border-t border-border px-5 pt-3 pb-8">
           <Button variant="primary" onPress={handleGroupMultipleSubmit} loading={isLoading}>
             Continue
           </Button>
