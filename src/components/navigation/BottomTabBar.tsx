@@ -24,6 +24,13 @@ const TAB_ICONS: Record<string, any> = {
 };
 
 export default function BottomTabBar({state, descriptors, navigation}: BottomTabBarProps) {
+  // Check if the focused tab wants to hide the tab bar
+  const focusedRoute = state.routes[state.index];
+  const focusedOptions = descriptors[focusedRoute.key]?.options;
+  if ((focusedOptions?.tabBarStyle as any)?.display === 'none') {
+    return null;
+  }
+
   return (
     <View className="absolute bottom-0 left-0 right-0 bg-card/95 border-t border-border px-4 pt-3 pb-8 flex-row justify-between items-center">
       {state.routes.map((route: any, index: number) => {
