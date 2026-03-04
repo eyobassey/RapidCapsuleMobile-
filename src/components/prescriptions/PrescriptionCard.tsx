@@ -67,7 +67,7 @@ export default function PrescriptionCard({prescription, onPress}: PrescriptionCa
       </View>
 
       {/* Chevron */}
-      <View className="absolute right-4 top-1/2" style={{marginTop: -8}}>
+      <View style={{position: 'absolute', right: 16, top: '50%', marginTop: -8}}>
         <ChevronRight size={16} color={colors.mutedForeground} />
       </View>
     </TouchableOpacity>

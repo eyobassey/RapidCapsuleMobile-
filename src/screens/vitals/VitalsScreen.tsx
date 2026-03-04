@@ -224,12 +224,12 @@ export default function VitalsScreen() {
         {VITAL_TYPES.map(config => {
           const IconComponent = getIconComponent(config.icon);
           const reading = getLatestReading(vitalsData, config.key);
-          const displayValue = reading
+          const displayValue = reading?.value != null
             ? formatVitalValue(String(reading.value), config.key)
             : null;
 
           let status: VitalStatus | null = null;
-          if (reading) {
+          if (reading?.value != null) {
             const numVal = parseFloat(
               config.key === 'blood_pressure'
                 ? String(reading.value).split('/')[0]
@@ -251,8 +251,7 @@ export default function VitalsScreen() {
               <View className="flex-row items-center gap-3">
                 {/* Colored icon circle */}
                 <View
-                  style={{backgroundColor: `${config.color}20`}}
-                  className="w-11 h-11 rounded-full items-center justify-center">
+                  style={{backgroundColor: `${config.color}20`, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center'}}>
                   <IconComponent size={22} color={config.color} />
                 </View>
 

@@ -212,8 +212,7 @@ export default function PrescriptionDetailScreen() {
         }>
         {/* Status Banner */}
         <View
-          style={{backgroundColor: bannerConfig.bg}}
-          className="mx-5 mt-4 rounded-2xl p-4 flex-row items-center gap-3">
+          style={{backgroundColor: bannerConfig.bg, marginHorizontal: 20, marginTop: 16, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12}}>
           <BannerIcon size={24} color={colors.foreground} />
           <View className="flex-1">
             <Text className="text-sm font-bold text-foreground">

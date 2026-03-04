@@ -96,7 +96,7 @@ export function truncateText(text: string, maxLength: number): string {
 }
 
 export function formatVitalValue(value: string | undefined, vitalKey: string): string {
-  if (value == null || value === '') return '--';
+  if (value == null || value === '' || value === 'undefined' || value === 'null') return '--';
 
   if (vitalKey === 'blood_pressure') {
     return value;

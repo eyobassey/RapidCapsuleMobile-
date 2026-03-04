@@ -127,7 +127,7 @@ export default function HomeScreen() {
       subtitle: 'AI diagnosis',
       bg: 'bg-sky-500/10',
       accentColor: '#0ea5e9',
-      onPress: () => navigation.navigate('Vitals'),
+      onPress: () => navigation.navigate('HealthCheckupStart'),
     },
     {
       icon: <Calendar size={22} color="#818cf8" />,

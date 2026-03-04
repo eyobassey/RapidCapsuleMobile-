@@ -3,7 +3,7 @@ import {View, Text, FlatList, TouchableOpacity, Linking} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {Plus, CalendarPlus, CalendarX, CalendarCheck, Clock} from 'lucide-react-native';
+import {Plus, CalendarPlus, CalendarX, CalendarCheck, Clock, AlertTriangle} from 'lucide-react-native';
 import {Header, TabBar, EmptyState, Skeleton} from '../../components/ui';
 import AppointmentCard from '../../components/appointments/AppointmentCard';
 import {useAppointmentsStore} from '../../store/appointments';
@@ -15,6 +15,7 @@ type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 const TABS = [
   {label: 'Upcoming', value: 'upcoming'},
   {label: 'Past', value: 'past'},
+  {label: 'Missed', value: 'missed'},
   {label: 'Cancelled', value: 'cancelled'},
 ];
 
@@ -48,6 +49,11 @@ const emptyConfig: Record<string, {icon: React.ReactNode; title: string; subtitl
     icon: <Clock size={32} color={colors.mutedForeground} />,
     title: 'No past appointments',
     subtitle: 'Your completed appointments will appear here.',
+  },
+  missed: {
+    icon: <AlertTriangle size={32} color={colors.mutedForeground} />,
+    title: 'No missed appointments',
+    subtitle: 'Missed appointments will appear here.',
   },
   cancelled: {
     icon: <CalendarX size={32} color={colors.mutedForeground} />,

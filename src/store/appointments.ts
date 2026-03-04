@@ -18,12 +18,12 @@ interface AppointmentsState {
   availableTimes: any[];
   isLoading: boolean;
   error: string | null;
-  filter: 'upcoming' | 'past' | 'cancelled';
+  filter: 'upcoming' | 'past' | 'missed' | 'cancelled';
   bookingData: BookingData;
 
   fetchAppointments: () => Promise<void>;
   fetchAppointmentById: (id: string) => Promise<void>;
-  setFilter: (filter: 'upcoming' | 'past' | 'cancelled') => void;
+  setFilter: (filter: 'upcoming' | 'past' | 'missed' | 'cancelled') => void;
   fetchCategories: () => Promise<void>;
   fetchSpecialists: (payload: any) => Promise<void>;
   fetchAvailableTimes: (payload: any) => Promise<void>;
@@ -52,6 +52,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
       const statusMap: Record<string, string> = {
         upcoming: 'OPEN',
         past: 'COMPLETED',
+        missed: 'MISSED',
         cancelled: 'CANCELLED',
       };
       const status = statusMap[get().filter] || get().filter;
@@ -79,7 +80,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
     }
   },
 
-  setFilter: (filter: 'upcoming' | 'past' | 'cancelled') => {
+  setFilter: (filter: 'upcoming' | 'past' | 'missed' | 'cancelled') => {
     set({filter});
   },
 

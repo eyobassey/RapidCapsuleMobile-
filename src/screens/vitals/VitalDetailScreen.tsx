@@ -307,8 +307,7 @@ export default function VitalDetailScreen() {
         <View className="bg-card border border-border rounded-2xl p-5 mb-4">
           <View className="flex-row items-center gap-4">
             <View
-              style={{backgroundColor: `${config.color}20`}}
-              className="w-14 h-14 rounded-full items-center justify-center">
+              style={{backgroundColor: `${config.color}20`, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center'}}>
               <IconComponent size={28} color={config.color} />
             </View>
             <View className="flex-1">

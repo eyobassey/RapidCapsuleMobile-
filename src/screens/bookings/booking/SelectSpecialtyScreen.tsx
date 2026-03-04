@@ -67,8 +67,7 @@ function LoadingSkeleton() {
       {[1, 2, 3, 4, 5, 6].map(i => (
         <View
           key={i}
-          className="bg-card border border-border rounded-2xl p-4 items-center gap-3"
-          style={{width: '47%'}}>
+          style={{width: '47%', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 16, alignItems: 'center', gap: 12}}>
           <Skeleton width={48} height={48} borderRadius={16} />
           <Skeleton width="70%" height={14} />
         </View>
@@ -170,7 +169,7 @@ export default function SelectSpecialtyScreen() {
           })}
 
           {categories.length === 0 && !isLoading && (
-            <View className="flex-1 items-center justify-center py-20" style={{width: '100%'}}>
+            <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80, width: '100%'}}>
               <Stethoscope size={32} color={colors.mutedForeground} />
               <Text className="text-muted-foreground text-base mt-3">
                 No specialties available
