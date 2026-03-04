@@ -47,7 +47,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (data.requires_2fa) {
       return {requires2FA: true};
     }
-    await get().setToken(data.result);
+    const token = data.result || data.token || data.access_token;
+    if (!token || typeof token !== 'string') {
+      throw new Error(
+        `Login succeeded but no token found. Response keys: ${Object.keys(data).join(', ')}. Data: ${JSON.stringify(data).slice(0, 200)}`,
+      );
+    }
+    await get().setToken(token);
     await get().fetchUser();
     return {requires2FA: false};
   },

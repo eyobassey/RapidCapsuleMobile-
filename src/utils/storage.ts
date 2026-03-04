@@ -20,7 +20,9 @@ export const storage = {
   },
 
   async setToken(token: string): Promise<void> {
-    getStore().set(KEYS.TOKEN, token);
+    if (token) {
+      getStore().set(KEYS.TOKEN, token);
+    }
   },
 
   async removeToken(): Promise<void> {
@@ -33,7 +35,9 @@ export const storage = {
   },
 
   async setUser(user: any): Promise<void> {
-    getStore().set(KEYS.USER, JSON.stringify(user));
+    if (user != null) {
+      getStore().set(KEYS.USER, JSON.stringify(user));
+    }
   },
 
   async clear(): Promise<void> {
