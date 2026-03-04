@@ -222,8 +222,7 @@ export default function SymptomSearchScreen() {
           )}
 
           {/* ── Search Tab ── */}
-          {tab === 'search' && (
-            <>
+          <View style={tab !== 'search' ? {display: 'none'} : undefined}>
               <View style={{marginBottom: 8}}>
                 <View className="flex-row items-center bg-card border border-border rounded-2xl px-4 h-12">
                   <Search size={18} color={colors.mutedForeground} />
@@ -300,12 +299,10 @@ export default function SymptomSearchScreen() {
                     : 'Select Symptoms'}
                 </Button>
               </View>
-            </>
-          )}
+          </View>
 
           {/* ── Body Map Tab ── */}
-          {tab === 'body' && (
-            <>
+          <View style={tab !== 'body' ? {display: 'none'} : undefined}>
               <View className="bg-card border border-border rounded-2xl p-4">
                 <BodyAvatar
                   sex={avatarSex}
@@ -336,8 +333,7 @@ export default function SymptomSearchScreen() {
                   </Button>
                 </View>
               )}
-            </>
-          )}
+          </View>
         </ScrollView>
 
         {/* ── Bottom Sheet for Body Map Symptoms ── */}

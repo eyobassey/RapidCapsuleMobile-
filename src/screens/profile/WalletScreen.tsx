@@ -176,8 +176,8 @@ export default function WalletScreen() {
       </View>
 
       <ScrollView
-        className="flex-1"
-        contentContainerClassName="pb-12"
+        style={{flex: 1}}
+        contentContainerStyle={{paddingBottom: 48}}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -188,7 +188,7 @@ export default function WalletScreen() {
           />
         }>
         {/* ═══════ WALLET TAB ═══════ */}
-        {activeTab === 'wallet' && (
+        <View style={activeTab !== 'wallet' ? {display: 'none'} : undefined}>
           <>
             {/* Balance Card */}
             <View className="mx-5 mt-4 bg-primary/10 border border-primary/20 rounded-3xl p-6 overflow-hidden relative">
@@ -300,10 +300,10 @@ export default function WalletScreen() {
               )}
             </View>
           </>
-        )}
+        </View>
 
         {/* ═══════ AI CREDITS TAB ═══════ */}
-        {activeTab === 'credits' && (
+        <View style={activeTab !== 'credits' ? {display: 'none'} : undefined}>
           <>
             {/* Credits Summary Card */}
             <View
@@ -477,11 +477,10 @@ export default function WalletScreen() {
               )}
             </View>
           </>
-        )}
+        </View>
 
         {/* ═══════ PLANS TAB ═══════ */}
-        {activeTab === 'plans' && (
-          <View style={{paddingHorizontal: 20, paddingTop: 16}}>
+        <View style={activeTab !== 'plans' ? {display: 'none'} : {paddingHorizontal: 20, paddingTop: 16}}>
             <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground, marginBottom: 4}}>
               Health Credit Plans
             </Text>
@@ -633,8 +632,7 @@ export default function WalletScreen() {
                 })}
               </View>
             )}
-          </View>
-        )}
+        </View>
       </ScrollView>
 
       {/* ═══════ PURCHASE CONFIRMATION MODAL ═══════ */}
