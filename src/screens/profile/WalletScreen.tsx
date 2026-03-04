@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,11 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import {usePaystack} from 'react-native-paystack-webview';
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -26,29 +28,59 @@ import {
   ShoppingCart,
   ChevronRight,
   Infinity,
+  Send,
+  AlertTriangle,
+  Check,
+  Search,
+  X,
+  Minus,
+  Plus,
 } from 'lucide-react-native';
 
+import {useAuthStore} from '../../store/auth';
 import {useWalletStore} from '../../store/wallet';
 import {useCreditsStore, type CreditPlan} from '../../store/credits';
+import {creditsService} from '../../services/credits.service';
 import {Header, Button, Skeleton, TabBar} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {formatCurrency, formatDate, formatDateTime} from '../../utils/formatters';
 
+const QUICK_AMOUNTS = [1000, 2000, 5000, 10000, 20000];
+const CURRENCY_SYMBOLS: Record<string, string> = {NGN: '₦', USD: '$', GBP: '£', EUR: '€'};
+
 export default function WalletScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const {popup} = usePaystack();
+  const user = useAuthStore(s => s.user);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState(route?.params?.initialTab || 'wallet');
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<CreditPlan | null>(null);
+
+  // Fund wallet state
+  const [showFundModal, setShowFundModal] = useState(false);
+  const [fundAmount, setFundAmount] = useState('');
+
+  // Share credits state
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareStep, setShareStep] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
+  const [creditsToSend, setCreditsToSend] = useState(1);
+  const searchDebounceRef = useRef<any>(null);
 
   const {
     balance,
     currency,
     transactions,
     isLoading: walletLoading,
+    funding,
     fetchBalance,
     fetchTransactions,
+    verifyFunding,
   } = useWalletStore();
 
   const {
@@ -64,10 +96,14 @@ export default function WalletScreen() {
     transactionsLoading,
     isLoading: creditsLoading,
     purchasing,
+    sharingSettings,
+    transferring,
     fetchCredits,
     fetchPlans,
     fetchTransactions: fetchCreditTransactions,
     purchasePlan,
+    fetchSharingSettings,
+    transferCredits,
   } = useCreditsStore();
 
   const tabs = [
@@ -82,6 +118,7 @@ export default function WalletScreen() {
     fetchCredits();
     fetchPlans();
     fetchCreditTransactions();
+    fetchSharingSettings();
   }, []);
 
   // Handle deep-link param for initial tab
@@ -143,6 +180,76 @@ export default function WalletScreen() {
       );
     }
   };
+
+  // ── Fund Wallet handler ──
+  const handleFundWallet = useCallback(() => {
+    const amount = parseFloat(fundAmount);
+    if (!amount || amount < 100) return;
+    setShowFundModal(false);
+    popup.checkout({
+      email: user?.email || '',
+      amount: amount * 100, // Paystack expects kobo/cents
+      onSuccess: async (res: any) => {
+        const reference = res?.reference || res?.trxref;
+        if (reference) {
+          const verified = await verifyFunding(reference);
+          if (verified) {
+            Alert.alert('Success', 'Wallet funded successfully!');
+            setFundAmount('');
+          } else {
+            Alert.alert('Verification Pending', 'Your payment is being processed. Balance will update shortly.');
+          }
+        }
+      },
+      onCancel: () => {
+        // User cancelled payment
+      },
+    });
+  }, [fundAmount, user?.email, popup, verifyFunding]);
+
+  // ── Recipient search (debounced) ──
+  const handleRecipientSearch = useCallback((text: string) => {
+    setSearchQuery(text);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    if (text.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    searchDebounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const results = await creditsService.searchPatients(text.trim());
+        setSearchResults(Array.isArray(results) ? results : []);
+      } catch {
+        setSearchResults([]);
+      }
+      setSearching(false);
+    }, 400);
+  }, []);
+
+  // ── Transfer credits handler ──
+  const handleTransfer = useCallback(async () => {
+    if (!selectedRecipient || !creditsToSend) return;
+    const recipientId = selectedRecipient.id || selectedRecipient._id;
+    const result = await transferCredits(recipientId, creditsToSend);
+    if (result?.success) {
+      setShareStep(3);
+    } else {
+      Alert.alert('Transfer Failed', result?.message || 'Something went wrong.');
+    }
+  }, [selectedRecipient, creditsToSend, transferCredits]);
+
+  const closeShareModal = useCallback(() => {
+    if (transferring) return;
+    setShowShareModal(false);
+    setShareStep(1);
+    setSearchQuery('');
+    setSearchResults([]);
+    setSelectedRecipient(null);
+    setCreditsToSend(sharingSettings?.min_amount || 1);
+  }, [transferring, sharingSettings]);
+
+  const maxTransfer = Math.min(sharingSettings?.max_amount || 50, purchasedCredits);
 
   const isLoading = walletLoading && creditsLoading && transactions.length === 0;
 
@@ -207,7 +314,7 @@ export default function WalletScreen() {
                 <Button
                   variant="primary"
                   icon={<CreditCard size={18} color={colors.white} />}
-                  onPress={() => {}}>
+                  onPress={() => setShowFundModal(true)}>
                   Fund Wallet
                 </Button>
               </View>
@@ -441,6 +548,37 @@ export default function WalletScreen() {
                   Buy More Credits
                 </Text>
               </TouchableOpacity>
+
+              {/* Share Credits */}
+              {sharingSettings?.enabled && purchasedCredits > 0 && (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setShareStep(1);
+                    setSearchQuery('');
+                    setSearchResults([]);
+                    setSelectedRecipient(null);
+                    setCreditsToSend(sharingSettings?.min_amount || 1);
+                    setShowShareModal(true);
+                  }}
+                  style={{
+                    marginTop: 8,
+                    backgroundColor: 'transparent',
+                    borderWidth: 1,
+                    borderColor: colors.accent,
+                    borderRadius: 14,
+                    paddingVertical: 14,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}>
+                  <Send size={16} color={colors.accent} />
+                  <Text style={{fontSize: 14, fontWeight: '700', color: colors.accent}}>
+                    Share Credits
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Credit Transaction History */}
@@ -824,6 +962,351 @@ export default function WalletScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* ═══════ FUND WALLET MODAL ═══════ */}
+      <Modal
+        visible={showFundModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowFundModal(false)}>
+        <Pressable
+          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}
+          onPress={() => !funding && setShowFundModal(false)}>
+          <Pressable
+            style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 34}}
+            onPress={() => {}}>
+            <View style={{alignItems: 'center', paddingTop: 12, paddingBottom: 8}}>
+              <View style={{width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border}} />
+            </View>
+            <View style={{padding: 24, gap: 20}}>
+              {/* Title */}
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+                <View style={{width: 48, height: 48, borderRadius: 24, backgroundColor: `${colors.primary}15`, alignItems: 'center', justifyContent: 'center'}}>
+                  <CreditCard size={24} color={colors.primary} />
+                </View>
+                <View>
+                  <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground}}>Fund Wallet</Text>
+                  <Text style={{fontSize: 12, color: colors.mutedForeground}}>Enter the amount you want to add</Text>
+                </View>
+              </View>
+
+              {/* Amount Input */}
+              <View style={{backgroundColor: colors.muted, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{fontSize: 24, fontWeight: '700', color: colors.mutedForeground, marginRight: 4}}>
+                  {CURRENCY_SYMBOLS[currency] || currency}
+                </Text>
+                <TextInput
+                  style={{flex: 1, fontSize: 24, fontWeight: '700', color: colors.foreground, padding: 0}}
+                  placeholder="0.00"
+                  placeholderTextColor={`${colors.mutedForeground}80`}
+                  keyboardType="numeric"
+                  value={fundAmount}
+                  onChangeText={setFundAmount}
+                />
+              </View>
+
+              {/* Quick Amounts */}
+              <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
+                {QUICK_AMOUNTS.map(amt => {
+                  const isActive = fundAmount === String(amt);
+                  return (
+                    <TouchableOpacity
+                      key={amt}
+                      activeOpacity={0.7}
+                      onPress={() => setFundAmount(String(amt))}
+                      style={{
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: isActive ? colors.primary : colors.border,
+                        backgroundColor: isActive ? `${colors.primary}15` : 'transparent',
+                      }}>
+                      <Text style={{fontSize: 13, fontWeight: '600', color: isActive ? colors.primary : colors.foreground}}>
+                        {formatCurrency(amt, currency)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={{fontSize: 11, color: colors.mutedForeground}}>
+                Minimum amount: {CURRENCY_SYMBOLS[currency] || currency}100
+              </Text>
+
+              {/* Actions */}
+              <View style={{flexDirection: 'row', gap: 12}}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {setShowFundModal(false); setFundAmount('');}}
+                  style={{flex: 1, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, alignItems: 'center'}}>
+                  <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={handleFundWallet}
+                  disabled={!fundAmount || parseFloat(fundAmount) < 100 || funding}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 14,
+                    borderRadius: 14,
+                    backgroundColor: (!fundAmount || parseFloat(fundAmount) < 100) ? `${colors.primary}50` : colors.primary,
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}>
+                  {funding && <ActivityIndicator size="small" color={colors.white} />}
+                  <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>
+                    {funding ? 'Processing...' : 'Continue to Payment'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* ═══════ SHARE CREDITS MODAL ═══════ */}
+      <Modal
+        visible={showShareModal}
+        transparent
+        animationType="slide"
+        onRequestClose={closeShareModal}>
+        <Pressable
+          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}
+          onPress={closeShareModal}>
+          <Pressable
+            style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 34, maxHeight: '85%'}}
+            onPress={() => {}}>
+            <View style={{alignItems: 'center', paddingTop: 12, paddingBottom: 8}}>
+              <View style={{width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border}} />
+            </View>
+
+            <ScrollView style={{maxHeight: 500}} contentContainerStyle={{padding: 24, gap: 20}} keyboardShouldPersistTaps="handled">
+              {/* ── STEP 1: Search & Select ── */}
+              {shareStep === 1 && (
+                <>
+                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+                    <View style={{width: 48, height: 48, borderRadius: 24, backgroundColor: `${colors.accent}15`, alignItems: 'center', justifyContent: 'center'}}>
+                      <Send size={24} color={colors.accent} />
+                    </View>
+                    <View>
+                      <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground}}>Share AI Credits</Text>
+                      <Text style={{fontSize: 12, color: colors.mutedForeground}}>Send credits to another patient</Text>
+                    </View>
+                  </View>
+
+                  {/* Search Input */}
+                  <View style={{backgroundColor: colors.muted, borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, height: 48}}>
+                    <Search size={18} color={colors.mutedForeground} />
+                    <TextInput
+                      style={{flex: 1, fontSize: 14, color: colors.foreground, marginLeft: 10, padding: 0}}
+                      placeholder="Search by name or email..."
+                      placeholderTextColor={`${colors.mutedForeground}80`}
+                      value={searchQuery}
+                      onChangeText={handleRecipientSearch}
+                      autoCapitalize="none"
+                    />
+                    {searchQuery.length > 0 && (
+                      <TouchableOpacity onPress={() => {setSearchQuery(''); setSearchResults([]);}}>
+                        <X size={18} color={colors.mutedForeground} />
+                      </TouchableOpacity>
+                    )}
+                    {searching && <ActivityIndicator size="small" color={colors.primary} style={{marginLeft: 8}} />}
+                  </View>
+
+                  {/* Search Results */}
+                  {searchResults.map((patient: any) => {
+                    const isSelected = selectedRecipient?.id === patient.id || selectedRecipient?._id === patient._id;
+                    const initial = (patient.name || patient.email || '?')[0].toUpperCase();
+                    return (
+                      <TouchableOpacity
+                        key={patient.id || patient._id}
+                        activeOpacity={0.7}
+                        onPress={() => setSelectedRecipient(isSelected ? null : patient)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 12,
+                          padding: 14,
+                          borderRadius: 14,
+                          borderWidth: 1.5,
+                          borderColor: isSelected ? colors.primary : colors.border,
+                          backgroundColor: isSelected ? `${colors.primary}10` : colors.card,
+                        }}>
+                        <View style={{width: 40, height: 40, borderRadius: 20, backgroundColor: `${colors.accent}20`, alignItems: 'center', justifyContent: 'center'}}>
+                          <Text style={{fontSize: 16, fontWeight: '700', color: colors.accent}}>{initial}</Text>
+                        </View>
+                        <View style={{flex: 1}}>
+                          <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>{patient.name}</Text>
+                          <Text style={{fontSize: 12, color: colors.mutedForeground}}>{patient.email}</Text>
+                        </View>
+                        {isSelected && <Check size={18} color={colors.primary} />}
+                      </TouchableOpacity>
+                    );
+                  })}
+
+                  {searchQuery.length >= 2 && searchResults.length === 0 && !searching && (
+                    <Text style={{fontSize: 13, color: colors.mutedForeground, textAlign: 'center', paddingVertical: 12}}>No patients found</Text>
+                  )}
+
+                  {/* Amount Stepper (only when recipient selected) */}
+                  {selectedRecipient && (
+                    <View style={{gap: 8}}>
+                      <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>Credits to Send</Text>
+                      <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+                        <TouchableOpacity
+                          onPress={() => setCreditsToSend(Math.max(sharingSettings?.min_amount || 1, creditsToSend - 1))}
+                          style={{width: 40, height: 40, borderRadius: 12, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center'}}>
+                          <Minus size={18} color={colors.foreground} />
+                        </TouchableOpacity>
+                        <View style={{flex: 1, backgroundColor: colors.muted, borderRadius: 12, height: 48, alignItems: 'center', justifyContent: 'center'}}>
+                          <Text style={{fontSize: 24, fontWeight: '700', color: colors.foreground}}>{creditsToSend}</Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => setCreditsToSend(Math.min(maxTransfer, creditsToSend + 1))}
+                          style={{width: 40, height: 40, borderRadius: 12, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center'}}>
+                          <Plus size={18} color={colors.foreground} />
+                        </TouchableOpacity>
+                      </View>
+                      <Text style={{fontSize: 11, color: colors.mutedForeground}}>
+                        Available: {purchasedCredits} purchased credits (max {maxTransfer} per transfer)
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Actions */}
+                  <View style={{flexDirection: 'row', gap: 12}}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={closeShareModal}
+                      style={{flex: 1, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, alignItems: 'center'}}>
+                      <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setShareStep(2)}
+                      disabled={!selectedRecipient || creditsToSend < (sharingSettings?.min_amount || 1) || creditsToSend > maxTransfer}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 14,
+                        borderRadius: 14,
+                        backgroundColor: !selectedRecipient ? `${colors.primary}50` : colors.primary,
+                        alignItems: 'center',
+                      }}>
+                      <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>Continue</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+
+              {/* ── STEP 2: Confirmation ── */}
+              {shareStep === 2 && (
+                <>
+                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+                    <View style={{width: 48, height: 48, borderRadius: 24, backgroundColor: `${colors.accent}15`, alignItems: 'center', justifyContent: 'center'}}>
+                      <Send size={24} color={colors.accent} />
+                    </View>
+                    <View>
+                      <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground}}>Confirm Transfer</Text>
+                      <Text style={{fontSize: 12, color: colors.mutedForeground}}>Review your credit transfer</Text>
+                    </View>
+                  </View>
+
+                  {/* Transfer summary */}
+                  <View style={{alignItems: 'center', paddingVertical: 12}}>
+                    <Text style={{fontSize: 13, color: colors.mutedForeground}}>You're about to send</Text>
+                    <Text style={{fontSize: 40, fontWeight: '700', color: colors.accent, marginVertical: 4}}>{creditsToSend}</Text>
+                    <Text style={{fontSize: 15, fontWeight: '600', color: colors.foreground}}>AI Credits to {selectedRecipient?.name}</Text>
+                  </View>
+
+                  {/* Balance breakdown */}
+                  <View style={{backgroundColor: colors.muted, borderRadius: 16, padding: 16, gap: 12}}>
+                    <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                      <Text style={{fontSize: 13, color: colors.mutedForeground}}>Your Balance</Text>
+                      <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>{purchasedCredits} credits</Text>
+                    </View>
+                    <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                      <Text style={{fontSize: 13, color: colors.destructive}}>Credits to Send</Text>
+                      <Text style={{fontSize: 13, fontWeight: '600', color: colors.destructive}}>-{creditsToSend} credits</Text>
+                    </View>
+                    <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, flexDirection: 'row', justifyContent: 'space-between'}}>
+                      <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>Remaining</Text>
+                      <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>{purchasedCredits - creditsToSend} credits</Text>
+                    </View>
+                  </View>
+
+                  {/* Warning */}
+                  <View style={{backgroundColor: `${colors.destructive}15`, borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                    <AlertTriangle size={18} color={colors.destructive} />
+                    <Text style={{flex: 1, fontSize: 12, color: colors.destructive}}>This action cannot be undone.</Text>
+                  </View>
+
+                  {/* Actions */}
+                  <View style={{flexDirection: 'row', gap: 12}}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setShareStep(1)}
+                      disabled={transferring}
+                      style={{flex: 1, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, alignItems: 'center'}}>
+                      <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>Back</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={handleTransfer}
+                      disabled={transferring}
+                      style={{
+                        flex: 1,
+                        paddingVertical: 14,
+                        borderRadius: 14,
+                        backgroundColor: transferring ? `${colors.primary}50` : colors.primary,
+                        alignItems: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        gap: 8,
+                      }}>
+                      {transferring && <ActivityIndicator size="small" color={colors.white} />}
+                      <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>
+                        {transferring ? 'Sending...' : 'Confirm & Send'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+
+              {/* ── STEP 3: Success ── */}
+              {shareStep === 3 && (
+                <View style={{alignItems: 'center', paddingVertical: 20, gap: 16}}>
+                  <View style={{width: 72, height: 72, borderRadius: 36, backgroundColor: `${colors.success}15`, alignItems: 'center', justifyContent: 'center'}}>
+                    <Check size={36} color={colors.success} />
+                  </View>
+                  <Text style={{fontSize: 20, fontWeight: '700', color: colors.foreground}}>Transfer Successful</Text>
+                  <Text style={{fontSize: 14, color: colors.mutedForeground, textAlign: 'center'}}>
+                    {creditsToSend} credit{creditsToSend !== 1 ? 's' : ''} sent to {selectedRecipient?.name}
+                  </Text>
+                  <Text style={{fontSize: 12, color: colors.mutedForeground, textAlign: 'center'}}>
+                    Both you and the recipient will receive email confirmations.
+                  </Text>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={closeShareModal}
+                    style={{
+                      marginTop: 8,
+                      width: '100%',
+                      paddingVertical: 14,
+                      borderRadius: 14,
+                      backgroundColor: colors.primary,
+                      alignItems: 'center',
+                    }}>
+                    <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>

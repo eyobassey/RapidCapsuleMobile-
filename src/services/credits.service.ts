@@ -25,4 +25,19 @@ export const creditsService = {
     const res = await api.get('/claude-summary/can-generate');
     return res.data.data || res.data.result || res.data;
   },
+
+  async getSharingSettings() {
+    const res = await api.get('/claude-summary/sharing/settings');
+    return res.data.data || res.data.result || res.data;
+  },
+
+  async searchPatients(query: string) {
+    const res = await api.get('/claude-summary/sharing/search', {params: {query}});
+    return res.data.data || res.data.result || res.data;
+  },
+
+  async transferCredits(recipient_id: string, credits: number) {
+    const res = await api.post('/claude-summary/sharing/transfer', {recipient_id, credits});
+    return res.data.data || res.data.result || res.data;
+  },
 };

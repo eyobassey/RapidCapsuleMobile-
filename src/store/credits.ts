@@ -53,10 +53,16 @@ interface CreditsState {
   purchasing: boolean;
   purchaseError: string | null;
 
+  sharingSettings: {enabled: boolean; min_amount: number; max_amount: number} | null;
+  transferring: boolean;
+  transferError: string | null;
+
   fetchCredits: () => Promise<void>;
   fetchPlans: () => Promise<void>;
   fetchTransactions: (params?: {page?: number; limit?: number}) => Promise<void>;
   purchasePlan: (planId: string) => Promise<boolean>;
+  fetchSharingSettings: () => Promise<void>;
+  transferCredits: (recipientId: string, credits: number) => Promise<{success: boolean; sender_remaining?: number; message?: string}>;
 }
 
 export const useCreditsStore = create<CreditsState>((set, get) => ({
@@ -78,6 +84,10 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
 
   purchasing: false,
   purchaseError: null,
+
+  sharingSettings: null,
+  transferring: false,
+  transferError: null,
 
   fetchCredits: async () => {
     set({isLoading: true, error: null});
@@ -134,7 +144,6 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
     set({purchasing: true, purchaseError: null});
     try {
       await creditsService.purchasePlan(planId);
-      // Re-fetch both credits and wallet balance since wallet is debited
       await get().fetchCredits();
       await useWalletStore.getState().fetchBalance();
       set({purchasing: false});
@@ -144,6 +153,30 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
         err?.response?.data?.message || err?.message || 'Purchase failed';
       set({purchasing: false, purchaseError: msg});
       return false;
+    }
+  },
+
+  fetchSharingSettings: async () => {
+    try {
+      const data = await creditsService.getSharingSettings();
+      set({sharingSettings: data});
+    } catch {
+      // Settings fetch failed — sharing will be hidden
+    }
+  },
+
+  transferCredits: async (recipientId: string, credits: number) => {
+    set({transferring: true, transferError: null});
+    try {
+      const data = await creditsService.transferCredits(recipientId, credits);
+      await get().fetchCredits();
+      await get().fetchTransactions();
+      set({transferring: false});
+      return {success: true, sender_remaining: data?.sender_remaining, message: data?.message};
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Transfer failed';
+      set({transferring: false, transferError: msg});
+      return {success: false, message: msg};
     }
   },
 }));
