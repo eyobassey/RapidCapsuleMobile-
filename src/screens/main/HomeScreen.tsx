@@ -17,6 +17,7 @@ import {
   BrainCircuit,
   CalendarDays,
   Wallet,
+  Sparkles,
   ChevronRight,
   Video,
   Phone,
@@ -27,6 +28,7 @@ import {useAuthStore} from '../../store/auth';
 import {useHealthScoreStore} from '../../store/healthScore';
 import {useAppointmentsStore} from '../../store/appointments';
 import {useWalletStore} from '../../store/wallet';
+import {useCreditsStore} from '../../store/credits';
 import {useNotificationsStore} from '../../store/notifications';
 
 import {Avatar, ProgressRing, StatusBadge, Skeleton} from '../../components/ui';
@@ -79,6 +81,7 @@ export default function HomeScreen() {
     setFilter,
   } = useAppointmentsStore();
   const {balance, currency, fetchBalance} = useWalletStore();
+  const {totalAvailable, hasUnlimited, isLoading: creditsLoading, fetchCredits} = useCreditsStore();
   const {unreadCount, fetchUnreadCount} = useNotificationsStore();
 
   // ---------- derived ----------
@@ -105,9 +108,10 @@ export default function HomeScreen() {
       fetchScore(),
       fetchAppointments(),
       fetchBalance(),
+      fetchCredits(),
       fetchUnreadCount(),
     ]);
-  }, [fetchScore, fetchAppointments, fetchBalance, fetchUnreadCount, setFilter]);
+  }, [fetchScore, fetchAppointments, fetchBalance, fetchCredits, fetchUnreadCount, setFilter]);
 
   useEffect(() => {
     loadData();
@@ -303,6 +307,56 @@ export default function HomeScreen() {
             </Text>
           </View>
         </View>
+
+        {/* ---- AI Credits Card ---- */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() =>
+            navigation
+              .getParent()
+              ?.navigate('Profile', {screen: 'Wallet', params: {initialTab: 'credits'}})
+          }
+          style={{
+            marginHorizontal: 20,
+            marginTop: 12,
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: `${colors.accent}30`,
+            borderRadius: 16,
+            padding: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+          }}>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: `${colors.accent}15`,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Sparkles size={18} color={colors.accent} />
+          </View>
+          <View style={{flex: 1}}>
+            <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+              AI Health Credits
+            </Text>
+            <Text style={{fontSize: 10, color: colors.mutedForeground, marginTop: 1}}>
+              Generate detailed health reports
+            </Text>
+          </View>
+          <View style={{alignItems: 'flex-end'}}>
+            <Text style={{fontSize: 20, fontWeight: '700', color: colors.foreground}}>
+              {creditsLoading ? '--' : hasUnlimited ? '\u221E' : totalAvailable}
+            </Text>
+            <Text style={{fontSize: 10, color: colors.mutedForeground}}>
+              {hasUnlimited ? 'Unlimited' : 'credits'}
+            </Text>
+          </View>
+          <ChevronRight size={16} color={colors.mutedForeground} />
+        </TouchableOpacity>
 
         {/* ---- Quick Actions Grid ---- */}
         <View className="mx-5 mt-6">

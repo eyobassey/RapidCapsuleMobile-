@@ -21,7 +21,7 @@ import WalletCreditsScreen from '../../screens/onboarding/WalletCreditsScreen';
 export type ProfileStackParamList = {
   Profile: undefined;
   EditProfile: undefined;
-  Wallet: undefined;
+  Wallet: {initialTab?: string} | undefined;
   HealthRecords: undefined;
   PrescriptionsList: undefined;
   PrescriptionDetail: {id: string};
