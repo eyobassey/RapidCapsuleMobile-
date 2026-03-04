@@ -118,10 +118,23 @@ export default function HistoryDetailScreen() {
     try {
       const responseData = currentDetail.response?.data;
       const patientName = `${authUser?.profile?.first_name || ''} ${authUser?.profile?.last_name || ''}`.trim() || 'Patient';
+      // Age: try patient_info.age → request.age.value → derive from user DOB
+      const detailAge =
+        currentDetail.patient_info?.age ||
+        currentDetail.request?.age?.value ||
+        (authUser?.profile?.date_of_birth
+          ? Math.floor((Date.now() - new Date(authUser.profile.date_of_birth).getTime()) / 31557600000)
+          : 0);
+      // Sex: try patient_info.gender → request.sex → user profile gender
+      const detailSex =
+        currentDetail.patient_info?.gender ||
+        currentDetail.request?.sex ||
+        authUser?.profile?.gender ||
+        '';
       await generateHealthCheckupPDF({
         patientName,
-        age: currentDetail.patient_info?.age || 0,
-        sex: currentDetail.patient_info?.gender || '',
+        age: detailAge,
+        sex: detailSex,
         date: currentDetail.created_at || currentDetail.createdAt || new Date().toISOString(),
         triageLevel: responseData?.triage_level || 'self_care',
         hasEmergency: responseData?.has_emergency_evidence || false,

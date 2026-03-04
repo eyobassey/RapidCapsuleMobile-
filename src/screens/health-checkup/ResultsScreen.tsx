@@ -123,10 +123,15 @@ export default function ResultsScreen() {
     setPdfLoading(true);
     try {
       const patientName = `${user?.profile?.first_name || ''} ${user?.profile?.last_name || ''}`.trim() || 'Patient';
+      // Fallback to user profile if store values are empty
+      const reportAge = age || (user?.profile?.date_of_birth
+        ? Math.floor((Date.now() - new Date(user.profile.date_of_birth).getTime()) / 31557600000)
+        : 0);
+      const reportSex = sex || user?.profile?.gender || '';
       await generateHealthCheckupPDF({
         patientName,
-        age,
-        sex,
+        age: reportAge,
+        sex: reportSex,
         date: new Date().toISOString(),
         triageLevel: triageLevel || 'self_care',
         hasEmergency,
