@@ -170,9 +170,9 @@ export default function HistoryDetailScreen() {
               <Text style={{color: triage.color, fontWeight: 'bold', fontSize: 18}}>
                 {triage.label}
               </Text>
-              {hasEmergency && (
+              {hasEmergency && effectiveTriageLevel === 'emergency' && (
                 <Text style={{color: colors.destructive, fontSize: 12, fontWeight: '600', marginTop: 2}}>
-                  Emergency evidence detected
+                  Immediate attention recommended
                 </Text>
               )}
             </View>
