@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {View, Text, TouchableOpacity, Image, Linking} from 'react-native';
 import {
   Check,
@@ -8,10 +8,43 @@ import {
   Mic,
   Reply,
   Trash2,
+  Image as ImageIcon,
 } from 'lucide-react-native';
 import {colors} from '../../theme/colors';
 import {formatTime} from '../../utils/formatters';
 import type {Message, UserSnippet} from '../../types/messaging.types';
+
+// Image with error fallback
+function ImageAttachment({url, name, isMine, hasContent, onPress}: {
+  url: string; name?: string; isMine: boolean; hasContent: boolean; onPress: () => void;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !url) {
+    return (
+      <TouchableOpacity onPress={onPress} style={{
+        width: 220, height: 80, borderRadius: 12, backgroundColor: colors.muted,
+        alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8,
+        marginBottom: hasContent ? 6 : 0,
+      }}>
+        <ImageIcon size={20} color={isMine ? 'rgba(255,255,255,0.6)' : colors.mutedForeground} />
+        <Text style={{fontSize: 12, color: isMine ? 'rgba(255,255,255,0.6)' : colors.mutedForeground}}>
+          {name || 'Image'}
+        </Text>
+      </TouchableOpacity>
+    );
+  }
+  return (
+    <TouchableOpacity activeOpacity={0.8} onPress={onPress}
+      style={{marginBottom: hasContent ? 6 : 0}}>
+      <Image
+        source={{uri: url}}
+        style={{width: 220, height: 160, borderRadius: 12, backgroundColor: colors.muted}}
+        resizeMode="cover"
+        onError={() => setFailed(true)}
+      />
+    </TouchableOpacity>
+  );
+}
 
 interface Props {
   message: Message;
@@ -78,21 +111,13 @@ export default function MessageBubble({
 
     if (message.type === 'image') {
       return (
-        <TouchableOpacity
-          activeOpacity={0.8}
+        <ImageAttachment
+          url={att.url}
+          name={att.original_name}
+          isMine={isMine}
+          hasContent={!!message.content}
           onPress={() => onImagePress?.(att.url)}
-          style={{marginBottom: message.content ? 6 : 0}}>
-          <Image
-            source={{uri: att.url}}
-            style={{
-              width: 220,
-              height: 160,
-              borderRadius: 12,
-              backgroundColor: colors.muted,
-            }}
-            resizeMode="cover"
-          />
-        </TouchableOpacity>
+        />
       );
     }
 

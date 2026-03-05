@@ -117,15 +117,18 @@ export const useMessagingStore = create<MessagingState>((set, get) => ({
         limit: 50,
       });
       const msgs: Message[] = res.data || [];
+      // API returns oldest→newest; inverted FlatList needs newest→oldest (index 0 = bottom)
+      const reversed = [...msgs].reverse();
       set(s => {
         let merged: Message[];
         if (loadMore) {
           const existing = s.messages[conversationId] || [];
           const existingIds = new Set(existing.map(m => m._id));
-          const newMsgs = msgs.filter(m => !existingIds.has(m._id));
+          const newMsgs = reversed.filter(m => !existingIds.has(m._id));
+          // Append older messages after existing (shows at top of inverted list)
           merged = [...existing, ...newMsgs];
         } else {
-          merged = msgs;
+          merged = reversed;
         }
         return {
           messages: {
