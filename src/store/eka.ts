@@ -22,7 +22,7 @@ interface EkaState {
   language: string;
 
   // Internal
-  _abortController: AbortController | null;
+  _abortHandle: {abort: () => void} | null;
 
   // Actions
   initLanguage: () => Promise<void>;
@@ -48,7 +48,7 @@ export const useEkaStore = create<EkaState>((set, get) => ({
   suggestions: [],
   loadingTool: null,
   language: 'English',
-  _abortController: null,
+  _abortHandle: null,
 
   initLanguage: async () => {
     const lang = await storage.getEkaLanguage();
@@ -91,8 +91,8 @@ export const useEkaStore = create<EkaState>((set, get) => ({
     const state = get();
 
     // Cancel any existing stream
-    if (state._abortController) {
-      state._abortController.abort();
+    if (state._abortHandle) {
+      state._abortHandle.abort();
     }
 
     // Clear interactive UI
@@ -183,7 +183,7 @@ export const useEkaStore = create<EkaState>((set, get) => ({
           if (chunk.conversation_id) {
             set({currentConversationId: chunk.conversation_id});
           }
-          set({isStreaming: false, loadingTool: null, _abortController: null});
+          set({isStreaming: false, loadingTool: null, _abortHandle: null});
           // Refresh conversation list
           get().fetchConversations();
 
@@ -205,12 +205,12 @@ export const useEkaStore = create<EkaState>((set, get) => ({
           gotContent = true;
           const errorText = chunk.content || chunk.message || 'Something went wrong. Please try again.';
           msgs[lastIdx] = {...lastMsg, content: lastMsg.content + errorText};
-          set({messages: msgs, isStreaming: false, loadingTool: null, _abortController: null});
+          set({messages: msgs, isStreaming: false, loadingTool: null, _abortHandle: null});
           break;
       }
     };
 
-    const controller = ekaService.streamChat(
+    const handle = ekaService.streamChat(
       {
         message: text,
         conversation_id: state.currentConversationId || undefined,
@@ -219,7 +219,7 @@ export const useEkaStore = create<EkaState>((set, get) => ({
       onChunk,
     );
 
-    set({_abortController: controller});
+    set({_abortHandle: handle});
   },
 
   answerCheckupQuestion: (answer: string) => {
@@ -229,8 +229,8 @@ export const useEkaStore = create<EkaState>((set, get) => ({
 
   newConversation: () => {
     const state = get();
-    if (state._abortController) {
-      state._abortController.abort();
+    if (state._abortHandle) {
+      state._abortHandle.abort();
     }
     set({
       currentConversationId: null,
@@ -240,7 +240,7 @@ export const useEkaStore = create<EkaState>((set, get) => ({
       checkupQuestion: null,
       suggestions: [],
       loadingTool: null,
-      _abortController: null,
+      _abortHandle: null,
     });
   },
 
@@ -279,10 +279,10 @@ export const useEkaStore = create<EkaState>((set, get) => ({
 
   cancelStream: () => {
     const state = get();
-    if (state._abortController) {
-      state._abortController.abort();
+    if (state._abortHandle) {
+      state._abortHandle.abort();
     }
-    set({isStreaming: false, loadingTool: null, _abortController: null});
+    set({isStreaming: false, loadingTool: null, _abortHandle: null});
   },
 
   clearArtifact: () => {

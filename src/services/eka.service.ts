@@ -35,7 +35,9 @@ export const ekaService = {
     return {uploadId: data.uploadId, filename: data.filename};
   },
 
-  // ─── SSE Streaming Chat (raw fetch) ──────────────
+  // ─── SSE Streaming Chat (XMLHttpRequest) ─────────
+  // React Native's fetch doesn't support ReadableStream.
+  // XMLHttpRequest with onprogress gives us incremental SSE data.
   streamChat(
     payload: {
       message: string;
@@ -44,8 +46,30 @@ export const ekaService = {
       tags?: string[];
     },
     onChunk: (chunk: SSEChunk) => void,
-  ): AbortController {
-    const controller = new AbortController();
+  ): {abort: () => void} {
+    const xhr = new XMLHttpRequest();
+    let lastIndex = 0;
+    let sseBuffer = '';
+    let aborted = false;
+
+    const parseSSE = (raw: string) => {
+      sseBuffer += raw;
+      const lines = sseBuffer.split('\n');
+      sseBuffer = lines.pop() || ''; // keep incomplete line in buffer
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+
+        try {
+          const chunk: SSEChunk = JSON.parse(data);
+          onChunk(chunk);
+        } catch {
+          // skip malformed JSON
+        }
+      }
+    };
 
     (async () => {
       try {
@@ -62,59 +86,65 @@ export const ekaService = {
           body.tags = payload.tags;
         }
 
-        const response = await fetch(`${API_BASE}/eka/chat`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(body),
-          signal: controller.signal,
-        });
+        xhr.open('POST', `${API_BASE}/eka/chat`);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
-        if (!response.ok) {
-          onChunk({
-            type: 'error',
-            message: `Server error (${response.status})`,
-          });
-          return;
-        }
-
-        const reader = (response as any).body.getReader();
-        const decoder = new (globalThis as any).TextDecoder();
-        let sseBuffer = '';
-
-        while (true) {
-          const {done, value} = await reader.read();
-          if (done) break;
-
-          sseBuffer += decoder.decode(value, {stream: true});
-          const lines = sseBuffer.split('\n');
-          sseBuffer = lines.pop() || '';
-
-          for (const line of lines) {
-            if (!line.startsWith('data: ')) continue;
-            const data = line.slice(6).trim();
-            if (data === '[DONE]') continue;
-
-            try {
-              const chunk: SSEChunk = JSON.parse(data);
-              onChunk(chunk);
-            } catch {
-              // skip malformed JSON
-            }
+        xhr.onprogress = () => {
+          if (aborted) return;
+          const newData = xhr.responseText.slice(lastIndex);
+          lastIndex = xhr.responseText.length;
+          if (newData) {
+            parseSSE(newData);
           }
-        }
-      } catch (err: any) {
-        if (err?.name !== 'AbortError') {
+        };
+
+        xhr.onloadend = () => {
+          if (aborted) return;
+          // Process any remaining data in responseText
+          const remaining = xhr.responseText.slice(lastIndex);
+          if (remaining) {
+            parseSSE(remaining);
+          }
+          // Flush any leftover buffer
+          if (sseBuffer.trim()) {
+            parseSSE('\n');
+          }
+        };
+
+        xhr.onerror = () => {
+          if (aborted) return;
           onChunk({
             type: 'error',
             message: 'Connection lost. Please try again.',
+          });
+        };
+
+        xhr.ontimeout = () => {
+          if (aborted) return;
+          onChunk({
+            type: 'error',
+            message: 'Request timed out. Please try again.',
+          });
+        };
+
+        xhr.timeout = 120000; // 2 min timeout for long AI responses
+        xhr.send(JSON.stringify(body));
+      } catch (err: any) {
+        if (!aborted) {
+          onChunk({
+            type: 'error',
+            message: 'Failed to connect. Please try again.',
           });
         }
       }
     })();
 
-    return controller;
+    return {
+      abort: () => {
+        aborted = true;
+        xhr.abort();
+      },
+    };
   },
 };
