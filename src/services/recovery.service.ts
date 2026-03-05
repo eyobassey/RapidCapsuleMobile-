@@ -281,17 +281,47 @@ export const recoveryService = {
 
   // ─── Risk Assessment ──────────────────────────
   async getCurrentRisk(): Promise<RiskReport> {
-    return unwrap(await api.get('/recovery/risk/current'));
+    const raw = unwrap(await api.get('/recovery/risk/current'));
+    return {
+      _id: raw._id || '',
+      risk_score: raw.score ?? 0,
+      risk_level: raw.level ?? 'low',
+      factors: (raw.top_factors || []).map((f: any) => f.label || f.signal),
+      signals: (raw.top_factors || []).map((f: any) => ({
+        name: f.label || f.signal,
+        weight: f.contribution ?? 0,
+        value: f.recommendation || '',
+      })),
+      created_at: raw.updated_at || raw.calculated_at || '',
+    };
   },
 
   async getRiskHistory(period?: string): Promise<RiskReport[]> {
     const res = unwrap(await api.get('/recovery/risk/history', {params: {period}}));
-    return Array.isArray(res) ? res : res?.data || [];
+    const docs = Array.isArray(res) ? res : res?.data || [];
+    return docs.map((r: any) => ({
+      _id: r._id || '',
+      risk_score: r.score ?? 0,
+      risk_level: r.level ?? 'low',
+      created_at: r.calculated_at || r.created_at || '',
+    }));
   },
 
   async getRiskAssessmentReports(params?: {page?: number; limit?: number}): Promise<RiskReport[]> {
     const res = unwrap(await api.get('/recovery/profile/risk-assessments', {params}));
-    return Array.isArray(res) ? res : res?.data || [];
+    const docs = Array.isArray(res) ? res : res?.reports || res?.data || [];
+    return docs.map((r: any) => ({
+      _id: r._id || '',
+      risk_score: r.score ?? 0,
+      risk_level: r.level ?? 'low',
+      factors: (r.top_factors || []).map((f: any) => f.label || f.signal),
+      signals: (r.top_factors || []).map((f: any) => ({
+        name: f.label || f.signal,
+        weight: f.contribution ?? 0,
+        value: f.recommendation || '',
+      })),
+      created_at: r.created_at || '',
+    }));
   },
 
   // ─── Group Sessions ───────────────────────────

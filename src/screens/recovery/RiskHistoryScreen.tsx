@@ -118,13 +118,15 @@ export default function RiskHistoryScreen() {
         </View>
 
         {/* Risk Trend Chart */}
-        <LineChart
-          data={chartData}
-          color="#f97316"
-          height={160}
-          label="Risk Score Trend"
-          range={{min: 0, max: 100}}
-        />
+        {chartData.length > 1 && (
+          <LineChart
+            data={chartData}
+            color="#f97316"
+            height={160}
+            label="Risk Score Trend"
+            range={{min: 0, max: 100}}
+          />
+        )}
 
         {/* Risk Assessment Reports */}
         {reports.length > 0 && (
