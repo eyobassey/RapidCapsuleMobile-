@@ -252,10 +252,12 @@ export const recoveryService = {
   },
 
   async getExerciseStats(): Promise<ExerciseStats> {
-    const [raw, historyRes] = await Promise.all([
-      unwrap(api.get('/recovery/exercises/stats')),
-      unwrap(api.get('/recovery/exercises/history', {params: {limit: 100}})),
+    const [statsRes, histRes] = await Promise.all([
+      api.get('/recovery/exercises/stats'),
+      api.get('/recovery/exercises/history', {params: {limit: 100}}),
     ]);
+    const raw = unwrap(statsRes);
+    const historyRes = unwrap(histRes);
     const docs = Array.isArray(historyRes) ? historyRes : historyRes?.docs || [];
     const totalMinutes = docs.reduce((sum: number, e: any) => sum + (e.estimated_minutes || 0), 0);
     return {
