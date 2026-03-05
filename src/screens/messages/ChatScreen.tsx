@@ -48,6 +48,7 @@ export default function ChatScreen() {
   const fetchMessages = useMessagingStore(s => s.fetchMessages);
   const markConversationRead = useMessagingStore(s => s.markConversationRead);
   const deleteMessageLocal = useMessagingStore(s => s.deleteMessageLocal);
+  const addIncomingMessage = useMessagingStore(s => s.addIncomingMessage);
 
   const messages = useMemo(() => allMessages[conversationId] || [], [allMessages, conversationId]);
   const hasMore = allHasMore[conversationId] ?? true;
@@ -138,11 +139,14 @@ export default function ChatScreen() {
     }
 
     try {
-      await messagingService.sendMessage(conversationId, {
+      const sent = await messagingService.sendMessage(conversationId, {
         type: 'text',
         content: trimmed,
         reply_to: replyTo?._id,
       });
+      if (sent?._id && initialConv) {
+        addIncomingMessage(sent, initialConv);
+      }
     } catch {
       Alert.alert('Error', 'Failed to send message. Please try again.');
       setText(trimmed);
@@ -172,7 +176,10 @@ export default function ChatScreen() {
 
         setSending(true);
         try {
-          await messagingService.sendAttachment(conversationId, formData);
+          const sent = await messagingService.sendAttachment(conversationId, formData);
+          if (sent?._id && initialConv) {
+            addIncomingMessage(sent, initialConv);
+          }
         } catch {
           Alert.alert('Error', 'Failed to send image.');
         } finally {
