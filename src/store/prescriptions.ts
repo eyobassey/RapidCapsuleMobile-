@@ -34,8 +34,8 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
         params.status = get().filter;
       }
       const data = await prescriptionsService.list(params);
-      // API may return array directly or paginated { data: [...], total: ... }
-      const list = Array.isArray(data) ? data : data?.data || data?.prescriptions || [];
+      // API returns paginated { docs: [...], total } or array
+      const list = Array.isArray(data) ? data : data?.docs || data?.data || data?.prescriptions || [];
       set({prescriptions: Array.isArray(list) ? list : [], isLoading: false});
     } catch (err: any) {
       set({
