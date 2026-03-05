@@ -86,7 +86,11 @@ export default function MainTabs() {
         })}
       />
       <Tab.Screen name="Bookings" component={BookingsStack} />
-      <Tab.Screen name="Eka" component={EkaChatScreen} />
+      <Tab.Screen
+        name="Eka"
+        component={EkaChatScreen}
+        options={{tabBarStyle: {display: 'none'}}}
+      />
       <Tab.Screen
         name="Pharmacy"
         component={PharmacyStack}

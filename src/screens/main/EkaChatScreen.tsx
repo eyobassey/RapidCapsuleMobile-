@@ -38,6 +38,7 @@ import {
   Trash2,
   MessageSquarePlus,
   MessageCircle,
+  Home,
   Globe,
   ChevronDown,
   ChevronUp,
@@ -321,7 +322,7 @@ export default function EkaChatScreen() {
   // RENDER
   // ═══════════════════════════════════════════════════
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top', 'bottom']}>
       {/* ─── Header ─────────────────────────────── */}
       <View
         style={{
@@ -335,20 +336,36 @@ export default function EkaChatScreen() {
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         }}>
-        <TouchableOpacity
-          onPress={openSidebar}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: colors.background,
-            borderWidth: 1,
-            borderColor: colors.border,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Clock size={20} color={colors.foreground} />
-        </TouchableOpacity>
+        <View style={{flexDirection: 'row', gap: 8}}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Home')}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: colors.background,
+              borderWidth: 1,
+              borderColor: colors.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Home size={20} color={colors.foreground} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={openSidebar}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: colors.background,
+              borderWidth: 1,
+              borderColor: colors.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Clock size={20} color={colors.foreground} />
+          </TouchableOpacity>
+        </View>
 
         <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
           <View
@@ -456,7 +473,7 @@ export default function EkaChatScreen() {
             borderTopColor: colors.border,
             paddingHorizontal: 16,
             paddingTop: 10,
-            paddingBottom: Platform.OS === 'ios' ? 30 : 16,
+            paddingBottom: 8,
           }}>
           {/* Suggestion chips */}
           {suggestions.length > 0 && !isStreaming && !checkupQuestion && (
@@ -621,6 +638,7 @@ export default function EkaChatScreen() {
               transform: [{translateX: sidebarAnim}],
             }}>
             <SafeAreaView style={{flex: 1}} edges={['top']}>
+              {/* Sidebar Header */}
               <View
                 style={{
                   flexDirection: 'row',
@@ -662,9 +680,10 @@ export default function EkaChatScreen() {
                 </View>
               </View>
 
+              {/* Sidebar Body */}
               <ScrollView
                 style={{flex: 1}}
-                contentContainerStyle={{padding: 12, gap: 16}}
+                contentContainerStyle={{padding: 12, gap: 12}}
                 showsVerticalScrollIndicator={false}>
                 {groupedConversations.length === 0 && (
                   <Text
@@ -677,83 +696,183 @@ export default function EkaChatScreen() {
                     No conversations yet
                   </Text>
                 )}
-                {groupedConversations.map(group => (
-                  <View key={group.label} style={{gap: 6}}>
-                    <Text
-                      style={{
-                        fontSize: 11,
-                        fontWeight: '600',
-                        color: colors.mutedForeground,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                        paddingHorizontal: 4,
-                      }}>
-                      {group.label}
-                    </Text>
-                    {group.items.map(convo => (
-                      <TouchableOpacity
-                        key={convo._id}
-                        activeOpacity={0.7}
-                        onPress={() => handleConvoTap(convo)}
-                        onLongPress={() => handleConvoLongPress(convo)}
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          padding: 12,
-                          borderRadius: 12,
-                          backgroundColor:
-                            currentConversationId === convo._id ? `${colors.primary}15` : colors.card,
-                          borderWidth: 1,
-                          borderColor:
-                            currentConversationId === convo._id ? `${colors.primary}40` : colors.border,
-                          gap: 10,
-                        }}>
-                        <BrainCircuit
-                          size={16}
-                          color={
-                            currentConversationId === convo._id
-                              ? colors.primary
-                              : colors.mutedForeground
-                          }
-                        />
-                        <View style={{flex: 1}}>
-                          <Text
-                            numberOfLines={1}
-                            style={{
-                              fontSize: 13,
-                              fontWeight: '500',
-                              color: colors.foreground,
-                            }}>
-                            {convo.title || 'Untitled'}
-                          </Text>
-                          <Text style={{fontSize: 10, color: colors.mutedForeground, marginTop: 2}}>
-                            {formatRelativeDate(convo.updated_at || convo.created_at)}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => {
-                            Alert.alert('Delete?', 'This conversation will be permanently deleted.', [
-                              {text: 'Cancel', style: 'cancel'},
-                              {
-                                text: 'Delete',
-                                style: 'destructive',
-                                onPress: () => deleteConvoAction(convo._id),
-                              },
-                            ]);
-                          }}
-                          hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                          <Trash2 size={14} color={colors.mutedForeground} />
-                        </TouchableOpacity>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
+                {groupedConversations.map((group, groupIdx) => (
+                  <ConversationGroup
+                    key={group.label}
+                    label={group.label}
+                    count={group.items.length}
+                    defaultOpen={groupIdx === 0}
+                    items={group.items}
+                    currentId={currentConversationId}
+                    onTap={handleConvoTap}
+                    onLongPress={handleConvoLongPress}
+                    onDelete={deleteConvoAction}
+                  />
                 ))}
               </ScrollView>
+
+              {/* Sidebar Footer — Home button */}
+              <View
+                style={{
+                  borderTopWidth: 1,
+                  borderTopColor: colors.border,
+                  padding: 12,
+                }}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    closeSidebar();
+                    navigation.navigate('Home');
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    paddingVertical: 12,
+                    borderRadius: 12,
+                    backgroundColor: colors.card,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}>
+                  <Home size={18} color={colors.primary} />
+                  <Text style={{fontSize: 13, fontWeight: '600', color: colors.primary}}>
+                    Back to Dashboard
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </SafeAreaView>
           </Animated.View>
         </View>
       )}
     </SafeAreaView>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// Welcome Screen
+// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// Collapsible Conversation Group
+// ═══════════════════════════════════════════════════════
+function ConversationGroup({
+  label,
+  count,
+  defaultOpen,
+  items,
+  currentId,
+  onTap,
+  onLongPress,
+  onDelete,
+}: {
+  label: string;
+  count: number;
+  defaultOpen: boolean;
+  items: EkaConversation[];
+  currentId: string | null;
+  onTap: (c: EkaConversation) => void;
+  onLongPress: (c: EkaConversation) => void;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <View>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => setOpen(!open)}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 4,
+          paddingVertical: 8,
+        }}>
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+          <Text
+            style={{
+              fontSize: 11,
+              fontWeight: '600',
+              color: colors.mutedForeground,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+            }}>
+            {label}
+          </Text>
+          <View
+            style={{
+              backgroundColor: colors.muted,
+              borderRadius: 8,
+              paddingHorizontal: 6,
+              paddingVertical: 1,
+            }}>
+            <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground}}>
+              {count}
+            </Text>
+          </View>
+        </View>
+        {open ? (
+          <ChevronUp size={14} color={colors.mutedForeground} />
+        ) : (
+          <ChevronDown size={14} color={colors.mutedForeground} />
+        )}
+      </TouchableOpacity>
+
+      {open && (
+        <View style={{gap: 6, marginTop: 2}}>
+          {items.map(convo => (
+            <TouchableOpacity
+              key={convo._id}
+              activeOpacity={0.7}
+              onPress={() => onTap(convo)}
+              onLongPress={() => onLongPress(convo)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 12,
+                borderRadius: 12,
+                backgroundColor:
+                  currentId === convo._id ? `${colors.primary}15` : colors.card,
+                borderWidth: 1,
+                borderColor:
+                  currentId === convo._id ? `${colors.primary}40` : colors.border,
+                gap: 10,
+              }}>
+              <BrainCircuit
+                size={16}
+                color={
+                  currentId === convo._id ? colors.primary : colors.mutedForeground
+                }
+              />
+              <View style={{flex: 1}}>
+                <Text
+                  numberOfLines={1}
+                  style={{fontSize: 13, fontWeight: '500', color: colors.foreground}}>
+                  {convo.title || 'Untitled'}
+                </Text>
+                <Text style={{fontSize: 10, color: colors.mutedForeground, marginTop: 2}}>
+                  {formatRelativeDate(convo.updated_at || convo.created_at)}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  Alert.alert('Delete?', 'This conversation will be permanently deleted.', [
+                    {text: 'Cancel', style: 'cancel'},
+                    {
+                      text: 'Delete',
+                      style: 'destructive',
+                      onPress: () => onDelete(convo._id),
+                    },
+                  ]);
+                }}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                <Trash2 size={14} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
   );
 }
 
