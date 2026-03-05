@@ -71,19 +71,27 @@ export default function RiskHistoryScreen() {
             </Text>
             <RiskBadge level={currentRisk.risk_level} size="md" />
 
-            {currentRisk.signals && currentRisk.signals.length > 0 && (
+            {currentRisk.top_factors && currentRisk.top_factors.length > 0 && (
               <View style={{width: '100%', marginTop: 16, gap: 6}}>
                 <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
                   Top Risk Factors
                 </Text>
-                {currentRisk.signals.slice(0, 5).map((sig, i) => (
+                {currentRisk.top_factors.slice(0, 5).map((f, i) => (
                   <View key={i} style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
                     <Text style={{fontSize: 12, color: colors.mutedForeground, flex: 1}}>
-                      {sig.name}
+                      {f.label}
                     </Text>
-                    <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>
-                      {sig.weight}
-                    </Text>
+                    <View
+                      style={{
+                        backgroundColor: `${colors.destructive}15`,
+                        borderRadius: 6,
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                      }}>
+                      <Text style={{fontSize: 10, fontWeight: '700', color: colors.destructive}}>
+                        +{f.contribution}
+                      </Text>
+                    </View>
                   </View>
                 ))}
               </View>
@@ -166,17 +174,82 @@ export default function RiskHistoryScreen() {
                     )}
                   </TouchableOpacity>
 
-                  {isOpen && report.factors && report.factors.length > 0 && (
-                    <View style={{paddingHorizontal: 14, paddingBottom: 14, gap: 4}}>
-                      <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground, marginBottom: 4}}>
-                        Contributing Factors
-                      </Text>
-                      {report.factors.map((factor, i) => (
-                        <View key={i} style={{flexDirection: 'row', gap: 8}}>
-                          <View style={{width: 4, height: 4, borderRadius: 2, backgroundColor: '#f97316', marginTop: 6}} />
-                          <Text style={{flex: 1, fontSize: 12, color: colors.mutedForeground}}>{factor}</Text>
+                  {isOpen && (
+                    <View style={{paddingHorizontal: 14, paddingBottom: 14, gap: 12}}>
+                      {/* Category Breakdown */}
+                      {report.categories && report.categories.length > 0 && (
+                        <View style={{gap: 6}}>
+                          <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
+                            Score Breakdown
+                          </Text>
+                          {report.categories.map((cat, i) => (
+                            <View key={i} style={{gap: 3}}>
+                              <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                                <Text style={{fontSize: 12, color: colors.foreground, fontWeight: '500', textTransform: 'capitalize'}}>
+                                  {cat.name.replace(/_/g, ' ')}
+                                </Text>
+                                <Text style={{fontSize: 11, color: colors.mutedForeground}}>
+                                  {cat.score}/100 ({Math.round(cat.weight * 100)}% weight)
+                                </Text>
+                              </View>
+                              <View style={{height: 4, backgroundColor: colors.muted, borderRadius: 2}}>
+                                <View
+                                  style={{
+                                    height: 4,
+                                    width: `${Math.min(cat.score, 100)}%`,
+                                    backgroundColor: cat.score >= 50 ? '#ef4444' : cat.score >= 30 ? '#f97316' : colors.success,
+                                    borderRadius: 2,
+                                  }}
+                                />
+                              </View>
+                            </View>
+                          ))}
                         </View>
-                      ))}
+                      )}
+
+                      {/* Top Factors */}
+                      {report.top_factors && report.top_factors.length > 0 && (
+                        <View style={{gap: 6}}>
+                          <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
+                            Top Contributing Factors
+                          </Text>
+                          {report.top_factors.map((factor, i) => (
+                            <View
+                              key={i}
+                              style={{
+                                backgroundColor: `${colors.destructive}08`,
+                                borderRadius: 8,
+                                padding: 10,
+                                gap: 3,
+                              }}>
+                              <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                                <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground, flex: 1}}>
+                                  {factor.label}
+                                </Text>
+                                <View
+                                  style={{
+                                    backgroundColor: `${colors.destructive}15`,
+                                    borderRadius: 6,
+                                    paddingHorizontal: 6,
+                                    paddingVertical: 2,
+                                  }}>
+                                  <Text style={{fontSize: 10, fontWeight: '700', color: colors.destructive}}>
+                                    +{factor.contribution}
+                                  </Text>
+                                </View>
+                              </View>
+                              <Text style={{fontSize: 10, color: colors.mutedForeground, textTransform: 'capitalize'}}>
+                                {factor.category.replace(/_/g, ' ')}
+                              </Text>
+                              {factor.recommendation && (
+                                <Text style={{fontSize: 11, color: colors.primary, marginTop: 2}}>
+                                  {factor.recommendation}
+                                </Text>
+                              )}
+                            </View>
+                          ))}
+                        </View>
+                      )}
                     </View>
                   )}
                 </View>

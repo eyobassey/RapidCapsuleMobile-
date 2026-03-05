@@ -237,12 +237,28 @@ export interface ExerciseStats {
 }
 
 // ─── Risk Reports ───────────────────────────────
+export interface RiskTopFactor {
+  label: string;
+  category: string;
+  contribution: number;
+  recommendation?: string;
+}
+
+export interface RiskCategoryBreakdown {
+  name: string;
+  score: number;
+  weight: number;
+  weighted: number;
+}
+
 export interface RiskReport {
   _id: string;
   risk_score: number;
   risk_level: RiskLevel;
   factors?: string[];
   signals?: Array<{name: string; weight: number; value: any}>;
+  top_factors?: RiskTopFactor[];
+  categories?: RiskCategoryBreakdown[];
   created_at: string;
 }
 

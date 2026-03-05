@@ -282,15 +282,22 @@ export const recoveryService = {
   // ─── Risk Assessment ──────────────────────────
   async getCurrentRisk(): Promise<RiskReport> {
     const raw = unwrap(await api.get('/recovery/risk/current'));
+    const catEntries = raw.signals ? Object.entries(raw.signals) : [];
     return {
       _id: raw._id || '',
       risk_score: raw.score ?? 0,
       risk_level: raw.level ?? 'low',
-      factors: (raw.top_factors || []).map((f: any) => f.label || f.signal),
-      signals: (raw.top_factors || []).map((f: any) => ({
-        name: f.label || f.signal,
-        weight: f.contribution ?? 0,
-        value: f.recommendation || '',
+      top_factors: (raw.top_factors || []).map((f: any) => ({
+        label: f.label || f.signal,
+        category: f.category || '',
+        contribution: f.contribution ?? 0,
+        recommendation: f.recommendation,
+      })),
+      categories: catEntries.map(([name, cat]: [string, any]) => ({
+        name,
+        score: cat.score ?? 0,
+        weight: cat.weight ?? 0,
+        weighted: cat.weighted ?? 0,
       })),
       created_at: raw.updated_at || raw.calculated_at || '',
     };
@@ -310,18 +317,27 @@ export const recoveryService = {
   async getRiskAssessmentReports(params?: {page?: number; limit?: number}): Promise<RiskReport[]> {
     const res = unwrap(await api.get('/recovery/profile/risk-assessments', {params}));
     const docs = Array.isArray(res) ? res : res?.reports || res?.data || [];
-    return docs.map((r: any) => ({
-      _id: r._id || '',
-      risk_score: r.score ?? 0,
-      risk_level: r.level ?? 'low',
-      factors: (r.top_factors || []).map((f: any) => f.label || f.signal),
-      signals: (r.top_factors || []).map((f: any) => ({
-        name: f.label || f.signal,
-        weight: f.contribution ?? 0,
-        value: f.recommendation || '',
-      })),
-      created_at: r.created_at || '',
-    }));
+    return docs.map((r: any) => {
+      const catEntries = r.categories ? Object.entries(r.categories) : [];
+      return {
+        _id: r._id || '',
+        risk_score: r.score ?? 0,
+        risk_level: r.level ?? 'low',
+        top_factors: (r.top_factors || []).map((f: any) => ({
+          label: f.label || f.signal,
+          category: f.category || '',
+          contribution: f.contribution ?? 0,
+          recommendation: f.recommendation,
+        })),
+        categories: catEntries.map(([name, cat]: [string, any]) => ({
+          name,
+          score: cat.score ?? 0,
+          weight: cat.weight ?? 0,
+          weighted: cat.weighted ?? 0,
+        })),
+        created_at: r.created_at || '',
+      };
+    });
   },
 
   // ─── Group Sessions ───────────────────────────
