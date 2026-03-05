@@ -1,5 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {View, Text, FlatList, TouchableOpacity, ActivityIndicator, ScrollView} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {ClipboardCheck} from 'lucide-react-native';
@@ -17,6 +17,8 @@ const INSTRUMENTS: Array<{value: string | null; label: string}> = [
   {value: 'dast10', label: 'DAST-10'},
   {value: 'cage', label: 'CAGE'},
   {value: 'assist', label: 'ASSIST'},
+  {value: 'ciwa_ar', label: 'CIWA-Ar'},
+  {value: 'cows', label: 'COWS'},
 ];
 
 export default function ScreeningHistoryScreen() {
@@ -44,29 +46,31 @@ export default function ScreeningHistoryScreen() {
   const renderHeader = () => (
     <View style={{gap: 12, marginBottom: 16}}>
       {/* Instrument Filter */}
-      <View style={{flexDirection: 'row', gap: 6}}>
-        {INSTRUMENTS.map(inst => (
-          <TouchableOpacity
-            key={inst.value || 'all'}
-            activeOpacity={0.7}
-            onPress={() => setFilter(inst.value)}
-            style={{
-              paddingHorizontal: 12,
-              paddingVertical: 7,
-              borderRadius: 10,
-              backgroundColor: filter === inst.value ? colors.primary : colors.muted,
-            }}>
-            <Text
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{flexGrow: 0}}>
+        <View style={{flexDirection: 'row', gap: 6}}>
+          {INSTRUMENTS.map(inst => (
+            <TouchableOpacity
+              key={inst.value || 'all'}
+              activeOpacity={0.7}
+              onPress={() => setFilter(inst.value)}
               style={{
-                fontSize: 11,
-                fontWeight: '600',
-                color: filter === inst.value ? colors.white : colors.mutedForeground,
+                paddingHorizontal: 12,
+                paddingVertical: 7,
+                borderRadius: 10,
+                backgroundColor: filter === inst.value ? colors.primary : colors.muted,
               }}>
-              {inst.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: '600',
+                  color: filter === inst.value ? colors.white : colors.mutedForeground,
+                }}>
+                {inst.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
 
       {/* Score Trend Chart */}
       {chartData.length > 1 && (
