@@ -44,7 +44,43 @@ export const recoveryService = {
   },
 
   async getDashboard(): Promise<DashboardData> {
-    return unwrap(await api.get('/recovery/profile/dashboard'));
+    const raw = unwrap(await api.get('/recovery/profile/dashboard'));
+    // API returns nested structure — transform to flat DashboardData
+    const p = raw.profile || raw;
+    const today = raw.today || {};
+    const screenings = raw.screenings || {};
+    const milestones = raw.milestones || {};
+    const latestLog = raw.recent_logs?.[0];
+    return {
+      sobriety_days: p.sobriety_days ?? 0,
+      sobriety_streak: p.log_streak ?? 0,
+      longest_streak: p.longest_sobriety_days ?? 0,
+      risk_level: p.risk_level ?? 'low',
+      risk_score: p.risk_score ?? 0,
+      days_in_program: p.days_in_program ?? 0,
+      recent_screening: screenings.latest
+        ? {
+            score: screenings.latest.total_score,
+            risk_level: screenings.latest.risk_level,
+            instrument: screenings.latest.instrument,
+            date: screenings.latest.created_at,
+          }
+        : undefined,
+      upcoming_milestones: milestones.recent || [],
+      milestones_total: milestones.total ?? 0,
+      next_milestone: milestones.next || undefined,
+      daily_log_summary: {
+        logged_today: today.logged ?? false,
+        mood_score: latestLog?.mood_score ?? 0,
+        craving_intensity: latestLog?.craving_intensity ?? 0,
+        sober_today: latestLog?.sober_today ?? true,
+      },
+      mood_trend: (raw.mood_trend || []).map((m: any) => ({
+        date: m.log_date,
+        mood_score: m.mood_score,
+        craving_intensity: m.craving_intensity,
+      })),
+    };
   },
 
   async updateStatus(status: string, reason?: string): Promise<RecoveryProfile> {

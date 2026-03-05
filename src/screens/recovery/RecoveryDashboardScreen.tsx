@@ -34,12 +34,10 @@ import RiskBadge from '../../components/recovery/RiskBadge';
 import LineChart from '../../components/charts/LineChart';
 import {colors} from '../../theme/colors';
 import {useRecoveryStore} from '../../store/recovery';
-import {recoveryService} from '../../services/recovery.service';
 
 export default function RecoveryDashboardScreen() {
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
-  const [moodChartData, setMoodChartData] = useState<Array<{date: string; value: number}>>([]);
 
   const dashboard = useRecoveryStore(s => s.dashboard);
   const profile = useRecoveryStore(s => s.profile);
@@ -56,9 +54,6 @@ export default function RecoveryDashboardScreen() {
       fetchDashboard(),
       fetchActivePlan(),
       fetchRecentConversations(),
-      recoveryService.getChartData('mood_score', 14).then(data => {
-        setMoodChartData(Array.isArray(data) ? data : []);
-      }).catch(() => {}),
     ]);
   }, []);
 
@@ -233,7 +228,7 @@ export default function RecoveryDashboardScreen() {
         </View>
 
         {/* Programme Stats */}
-        {profile?.outcomes && (
+        {dashboard && (
           <View
             style={{
               backgroundColor: colors.card,
@@ -246,10 +241,10 @@ export default function RecoveryDashboardScreen() {
               Programme
             </Text>
             <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
-              <StatItem value={profile.outcomes.days_in_program} label="Days" />
-              <StatItem value={profile.outcomes.appointments_attended} label="Appointments" />
-              <StatItem value={profile.outcomes.companion_sessions_count} label="AI Sessions" />
-              <StatItem value={profile.outcomes.milestones_achieved} label="Milestones" />
+              <StatItem value={dashboard.days_in_program || profile?.outcomes?.days_in_program || 0} label="Days" />
+              <StatItem value={profile?.outcomes?.appointments_attended || 0} label="Appointments" />
+              <StatItem value={profile?.outcomes?.companion_sessions_count || 0} label="AI Sessions" />
+              <StatItem value={dashboard.milestones_total || profile?.outcomes?.milestones_achieved || 0} label="Milestones" />
             </View>
           </View>
         )}
@@ -283,12 +278,12 @@ export default function RecoveryDashboardScreen() {
         )}
 
         {/* Mood Trend Chart */}
-        {moodChartData.length > 0 && (
+        {dashboard?.mood_trend && dashboard.mood_trend.length > 0 && (
           <LineChart
-            data={moodChartData}
+            data={dashboard.mood_trend.map(m => ({date: m.date, value: m.mood_score}))}
             color={colors.primary}
             height={160}
-            label="Mood Trend (14 days)"
+            label="Mood Trend"
             range={{min: 0, max: 10}}
           />
         )}

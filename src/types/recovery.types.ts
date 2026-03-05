@@ -54,6 +54,8 @@ export interface DashboardData {
   sobriety_streak: number;
   longest_streak: number;
   risk_level: RiskLevel;
+  risk_score: number;
+  days_in_program: number;
   recent_screening?: {
     score: number;
     risk_level: string;
@@ -61,12 +63,15 @@ export interface DashboardData {
     date: string;
   };
   upcoming_milestones: Milestone[];
+  milestones_total: number;
+  next_milestone?: {type: string; name: string; value: number; points: number; message: string};
   daily_log_summary: {
     logged_today: boolean;
     mood_score: number;
     craving_intensity: number;
     sober_today: boolean;
   };
+  mood_trend: Array<{date: string; mood_score: number; craving_intensity: number}>;
 }
 
 export interface SobrietyLog {

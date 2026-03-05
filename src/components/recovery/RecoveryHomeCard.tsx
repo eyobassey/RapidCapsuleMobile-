@@ -155,7 +155,9 @@ export default function RecoveryHomeCard() {
           }}>
           <SmilePlus size={16} color={colors.primary} />
           <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground, marginTop: 2}}>
-            {logSummary?.mood_score || '--'}
+            {logSummary?.mood_score != null && logSummary.mood_score > 0
+              ? `${logSummary.mood_score}/10`
+              : '--'}
           </Text>
           <Text style={{fontSize: 9, color: colors.mutedForeground, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5}}>
             Mood
