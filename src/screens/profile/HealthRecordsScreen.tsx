@@ -289,7 +289,7 @@ export default function HealthRecordsScreen() {
                 Recent Health Checkups
               </Text>
               {checkups.length > 0 ? (
-                <TouchableOpacity onPress={() => navigation.navigate('HealthCheckupTab')}>
+                <TouchableOpacity onPress={() => navigation.navigate('Home' as any, {screen: 'HealthCheckupHistory'})}>
                   <Text style={{fontSize: 13, color: colors.primary, fontWeight: '600'}}>
                     View All
                   </Text>
@@ -315,9 +315,9 @@ export default function HealthRecordsScreen() {
                       activeOpacity={0.7}
                       onPress={() => {
                         if (checkup._id) {
-                          navigation.navigate('HealthCheckupTab', {
-                            screen: 'HistoryDetail',
-                            params: {checkupId: checkup._id},
+                          navigation.navigate('Home' as any, {
+                            screen: 'HealthCheckupDetail',
+                            params: {id: checkup._id},
                           });
                         }
                       }}
