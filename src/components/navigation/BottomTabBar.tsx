@@ -8,6 +8,7 @@ import {
   User,
 } from 'lucide-react-native';
 import {colors} from '../../theme/colors';
+import {usePharmacyStore} from '../../store/pharmacy';
 
 interface BottomTabBarProps {
   state: any;
@@ -24,6 +25,8 @@ const TAB_ICONS: Record<string, any> = {
 };
 
 export default function BottomTabBar({state, descriptors, navigation}: BottomTabBarProps) {
+  const cartCount = usePharmacyStore(s => s.cartCount);
+
   // Check if the focused tab wants to hide the tab bar
   const focusedRoute = state.routes[state.index];
   const focusedOptions = descriptors[focusedRoute.key]?.options;
@@ -87,16 +90,38 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
           );
         }
 
+        const showBadge = route.name === 'Pharmacy' && cartCount > 0;
+
         return (
           <TouchableOpacity
             key={route.key}
             onPress={onPress}
             activeOpacity={0.7}
             className="items-center gap-1 flex-1">
-            <Icon
-              size={24}
-              color={isFocused ? colors.primary : colors.mutedForeground}
-            />
+            <View style={{position: 'relative'}}>
+              <Icon
+                size={24}
+                color={isFocused ? colors.primary : colors.mutedForeground}
+              />
+              {showBadge && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -8,
+                    backgroundColor: colors.destructive,
+                    borderRadius: 9999,
+                    width: 16,
+                    height: 16,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <Text style={{color: '#fff', fontSize: 9, fontWeight: '700'}}>
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text
               className={`text-[10px] ${
                 isFocused ? 'font-bold text-primary' : 'font-medium text-muted-foreground'

@@ -29,6 +29,10 @@ const HIDE_TAB_SCREENS = new Set([
   'HealthCheckupDetail',
   'LogVitals',
   'VitalDetail',
+  'Cart',
+  'Checkout',
+  'OrderDetail',
+  'DrugDetail',
 ]);
 
 function getTabBarStyle(route: any) {
@@ -55,7 +59,13 @@ export default function MainTabs() {
       />
       <Tab.Screen name="Bookings" component={BookingsStack} />
       <Tab.Screen name="Eka" component={EkaChatScreen} />
-      <Tab.Screen name="Pharmacy" component={PharmacyStack} />
+      <Tab.Screen
+        name="Pharmacy"
+        component={PharmacyStack}
+        options={({route}) => ({
+          tabBarStyle: getTabBarStyle(route),
+        })}
+      />
       <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
   );

@@ -173,6 +173,16 @@ export const STATUS_COLORS: Record<string, string> = {
   High: 'warning',
   Low: 'warning',
   Critical: 'destructive',
+
+  // Pharmacy order statuses
+  PENDING_PAYMENT: 'secondary',
+  PAID: 'success',
+  PROCESSING: 'primary',
+  READY_FOR_PICKUP: 'accent',
+  OUT_FOR_DELIVERY: 'primary',
+  DELIVERED: 'success',
+  PICKED_UP: 'success',
+  REFUNDED: 'muted',
 };
 
 export const NOTIFICATION_ICONS: Record<string, string> = {
@@ -233,5 +243,28 @@ export const MEETING_CHANNEL_LABELS: Record<string, string> = {
   phone: 'Phone Call',
   in_person: 'In Person',
 };
+
+export const DEFAULT_PHARMACY_ID = '693f961ebb4dc1fec542610a';
+
+export const ORDER_STATUS_LABELS: Record<string, string> = {
+  PENDING_PAYMENT: 'Pending Payment',
+  PAID: 'Paid',
+  PROCESSING: 'Processing',
+  READY_FOR_PICKUP: 'Ready for Pickup',
+  OUT_FOR_DELIVERY: 'Out for Delivery',
+  DELIVERED: 'Delivered',
+  PICKED_UP: 'Picked Up',
+  CANCELLED: 'Cancelled',
+  REFUNDED: 'Refunded',
+};
+
+export const ORDER_STATUS_SEQUENCE = [
+  'PENDING_PAYMENT',
+  'PAID',
+  'PROCESSING',
+  'READY_FOR_PICKUP',
+  'OUT_FOR_DELIVERY',
+  'DELIVERED',
+] as const;
 
 export const API_BASE_URL = 'https://api.rapidcapsule.com/api';

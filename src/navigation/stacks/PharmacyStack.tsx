@@ -1,39 +1,38 @@
 import React from 'react';
-import {View, Text} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import PharmacyHomeScreen from '../../screens/pharmacy/PharmacyHomeScreen';
+import DrugSearchScreen from '../../screens/pharmacy/DrugSearchScreen';
+import DrugCategoryScreen from '../../screens/pharmacy/DrugCategoryScreen';
+import DrugDetailScreen from '../../screens/pharmacy/DrugDetailScreen';
+import CartScreen from '../../screens/pharmacy/CartScreen';
+import CheckoutScreen from '../../screens/pharmacy/CheckoutScreen';
+import MyOrdersScreen from '../../screens/pharmacy/MyOrdersScreen';
+import OrderDetailScreen from '../../screens/pharmacy/OrderDetailScreen';
 
 export type PharmacyStackParamList = {
   PharmacyHome: undefined;
-  DrugCategory: undefined;
+  DrugCategory: {categoryId: string; categoryName: string};
   DrugSearch: undefined;
-  DrugDetail: undefined;
+  DrugDetail: {drugId: string};
   Cart: undefined;
   Checkout: undefined;
   MyOrders: undefined;
-  OrderDetail: undefined;
+  OrderDetail: {orderId: string};
 };
-
-function PlaceholderScreen({route}: any) {
-  return (
-    <View className="flex-1 bg-background items-center justify-center">
-      <Text className="text-foreground text-lg">{route.name}</Text>
-    </View>
-  );
-}
 
 const Stack = createNativeStackNavigator<PharmacyStackParamList>();
 
 export default function PharmacyStack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="PharmacyHome" component={PlaceholderScreen} />
-      <Stack.Screen name="DrugCategory" component={PlaceholderScreen} />
-      <Stack.Screen name="DrugSearch" component={PlaceholderScreen} />
-      <Stack.Screen name="DrugDetail" component={PlaceholderScreen} />
-      <Stack.Screen name="Cart" component={PlaceholderScreen} />
-      <Stack.Screen name="Checkout" component={PlaceholderScreen} />
-      <Stack.Screen name="MyOrders" component={PlaceholderScreen} />
-      <Stack.Screen name="OrderDetail" component={PlaceholderScreen} />
+      <Stack.Screen name="PharmacyHome" component={PharmacyHomeScreen} />
+      <Stack.Screen name="DrugSearch" component={DrugSearchScreen} />
+      <Stack.Screen name="DrugCategory" component={DrugCategoryScreen} />
+      <Stack.Screen name="DrugDetail" component={DrugDetailScreen} />
+      <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      <Stack.Screen name="MyOrders" component={MyOrdersScreen} />
+      <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
     </Stack.Navigator>
   );
 }
