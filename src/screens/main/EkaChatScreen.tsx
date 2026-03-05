@@ -37,6 +37,7 @@ import {
   FileText,
   Trash2,
   MessageSquarePlus,
+  MessageCircle,
   Globe,
   ChevronDown,
   ChevronUp,
@@ -62,6 +63,7 @@ const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.82;
 
 // ─── Quick Actions ──────────────────────────────────
 const QUICK_ACTIONS = [
+  {label: 'Just Chat', message: null, icon: MessageCircle, color: colors.foreground, action: 'focus_input'},
   {label: 'Health Checkup', message: 'Start a health checkup', icon: Stethoscope, color: colors.primary},
   {label: 'Drug Interactions', message: 'Check my drug interactions', icon: Pill, color: colors.secondary},
   {label: 'My Vitals', message: 'Show my recent vitals', icon: Activity, color: colors.success},
@@ -232,6 +234,10 @@ export default function EkaChatScreen() {
   };
 
   const handleQuickAction = (action: typeof QUICK_ACTIONS[number]) => {
+    if (action.action === 'focus_input') {
+      inputRef.current?.focus();
+      return;
+    }
     if (action.action === 'upload_prescription') {
       handleUpload();
       return;

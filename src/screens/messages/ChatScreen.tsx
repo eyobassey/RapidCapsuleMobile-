@@ -576,7 +576,7 @@ export default function ChatScreen() {
             <TouchableOpacity
               onPress={() => {
                 setShowAttachMenu(false);
-                launchImageLibrary({mediaType: 'photo', selectionLimit: 1, cameraType: 'back'}).then(r => {
+                launchImageLibrary({mediaType: 'photo', selectionLimit: 1}).then(r => {
                   // Camera option uses same flow
                   if (r.assets?.[0]) {
                     const asset = r.assets[0];
