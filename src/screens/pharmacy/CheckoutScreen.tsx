@@ -20,6 +20,8 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  Clock,
+  Phone,
 } from 'lucide-react-native';
 
 import {usePharmacyStore} from '../../store/pharmacy';
@@ -59,6 +61,12 @@ export default function CheckoutScreen() {
     state: '',
   });
 
+  // Pickup pharmacy info
+  const [pickupPharmacy, setPickupPharmacy] = useState<any>(null);
+
+  // Wallet balance
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+
   // Paystack WebView
   const [paystackUrl, setPaystackUrl] = useState<string | null>(null);
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
@@ -69,6 +77,14 @@ export default function CheckoutScreen() {
 
   useEffect(() => {
     fetchAddresses();
+    // Fetch pickup pharmacy details
+    pharmacyService.getPharmacyById(DEFAULT_PHARMACY_ID)
+      .then(setPickupPharmacy)
+      .catch(() => {});
+    // Fetch wallet balance
+    pharmacyService.getWalletBalance()
+      .then(data => setWalletBalance(data?.currentBalance ?? 0))
+      .catch(() => {});
   }, [fetchAddresses]);
 
   // Auto-select default address
@@ -267,6 +283,59 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Pickup Pharmacy Info */}
+        {deliveryMethod === 'PICKUP' && pickupPharmacy && (
+          <View className="mb-4">
+            <Text className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-2 ml-1">
+              Pickup Location
+            </Text>
+            <View className="bg-card border border-primary rounded-2xl p-4">
+              <View className="flex-row items-start">
+                <Store size={16} color={colors.primary} />
+                <View className="flex-1 ml-2">
+                  <Text className="text-sm font-semibold text-foreground">
+                    {pickupPharmacy.name}
+                  </Text>
+                  {pickupPharmacy.address && (
+                    <Text className="text-xs text-muted-foreground mt-0.5">
+                      {pickupPharmacy.address.street}, {pickupPharmacy.address.city}, {pickupPharmacy.address.state}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              {pickupPharmacy.phone && (
+                <View className="flex-row items-center gap-2 mt-2">
+                  <Phone size={13} color={colors.mutedForeground} />
+                  <Text className="text-xs text-muted-foreground">{pickupPharmacy.phone}</Text>
+                </View>
+              )}
+
+              {pickupPharmacy.operating_hours && (() => {
+                const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+                const today = days[new Date().getDay()];
+                const todayHours = pickupPharmacy.operating_hours.find((h: any) => h.day === today);
+                return todayHours ? (
+                  <View className="flex-row items-center gap-2 mt-1">
+                    <Clock size={13} color={todayHours.is_open ? colors.success : colors.destructive} />
+                    <Text className={`text-xs ${todayHours.is_open ? 'text-success' : 'text-destructive'}`}>
+                      {todayHours.is_open ? `Open today: ${todayHours.open_time} - ${todayHours.close_time}` : 'Closed today'}
+                    </Text>
+                  </View>
+                ) : null;
+              })()}
+
+              {pickupPharmacy.pickup_instructions && (
+                <View className="mt-2 pt-2 border-t border-border">
+                  <Text className="text-xs text-muted-foreground italic">
+                    {pickupPharmacy.pickup_instructions}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
         {/* Delivery Address */}
         {deliveryMethod === 'DELIVERY' && (
           <View className="mb-4">
@@ -401,6 +470,23 @@ export default function CheckoutScreen() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Wallet Balance */}
+        {paymentMethod === 'wallet' && walletBalance !== null && (
+          <View className={`rounded-2xl p-3 mb-4 ${walletBalance >= total ? 'bg-success/10' : 'bg-destructive/10'}`}>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-sm text-foreground">Wallet Balance</Text>
+              <Text className={`text-sm font-bold ${walletBalance >= total ? 'text-success' : 'text-destructive'}`}>
+                {formatCurrency(walletBalance)}
+              </Text>
+            </View>
+            {walletBalance < total && (
+              <Text className="text-xs text-destructive mt-1">
+                Insufficient balance. You need {formatCurrency(total - walletBalance)} more. Consider using card payment.
+              </Text>
+            )}
+          </View>
+        )}
 
         {/* Notes */}
         <Input

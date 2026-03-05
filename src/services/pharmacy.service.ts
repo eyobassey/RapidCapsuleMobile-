@@ -92,6 +92,20 @@ export const pharmacyService = {
     return res.data.data || res.data.result;
   },
 
+  // ── Pharmacy / Pickup ──
+
+  async getPharmacyById(id: string) {
+    const res = await api.get(`/pharmacy/pharmacies/${id}`);
+    return res.data.data || res.data.result;
+  },
+
+  // ── Wallet ──
+
+  async getWalletBalance() {
+    const res = await api.get('/wallets/balance');
+    return res.data.data || res.data.result;
+  },
+
   // ── Addresses ──
 
   async getMyAddresses() {
