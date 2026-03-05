@@ -53,8 +53,8 @@ export const recoveryService = {
     const latestLog = raw.recent_logs?.[0];
     return {
       sobriety_days: p.sobriety_days ?? 0,
-      sobriety_streak: p.log_streak ?? 0,
-      longest_streak: p.longest_sobriety_days ?? 0,
+      sobriety_streak: p.sobriety_days ?? 0,
+      longest_streak: Math.max(p.longest_sobriety_days ?? 0, p.sobriety_days ?? 0),
       risk_level: p.risk_level ?? 'low',
       risk_score: p.risk_score ?? 0,
       days_in_program: p.days_in_program ?? 0,
