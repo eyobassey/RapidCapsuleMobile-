@@ -24,7 +24,7 @@ import {usePharmacyStore} from '../../store/pharmacy';
 import {Header, StatusBadge, Button} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {formatCurrency, formatDateTime} from '../../utils/formatters';
-import {ORDER_STATUS_SEQUENCE, ORDER_STATUS_LABELS} from '../../utils/constants';
+import {ORDER_STATUS_SEQUENCE_DELIVERY, ORDER_STATUS_SEQUENCE_PICKUP, ORDER_STATUS_LABELS} from '../../utils/constants';
 import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
 
 export default function OrderDetailScreen() {
@@ -122,12 +122,14 @@ export default function OrderDetailScreen() {
     );
   }
 
-  const canCancel = ['PENDING_PAYMENT', 'PAID'].includes(order.status);
-  const canRate = ['DELIVERED', 'PICKED_UP'].includes(order.status) && !order.rating;
-  const canTrack = ['PAID', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'].includes(order.status);
+  const canCancel = ['PENDING', 'CONFIRMED'].includes(order.status);
+  const canRate = ['DELIVERED', 'COMPLETED'].includes(order.status) && !order.rating;
+  const canTrack = ['CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'].includes(order.status);
 
-  // Status timeline
-  const currentIdx = ORDER_STATUS_SEQUENCE.indexOf(order.status as any);
+  // Status timeline — pick sequence based on delivery method
+  const isPickup = order.delivery_method === 'PICKUP';
+  const statusSequence = isPickup ? ORDER_STATUS_SEQUENCE_PICKUP : ORDER_STATUS_SEQUENCE_DELIVERY;
+  const currentIdx = statusSequence.indexOf(order.status as any);
   const isCancelled = order.status === 'CANCELLED' || order.status === 'REFUNDED';
 
   return (
@@ -163,10 +165,10 @@ export default function OrderDetailScreen() {
             <Text className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-3">
               Order Progress
             </Text>
-            {ORDER_STATUS_SEQUENCE.map((status, idx) => {
+            {statusSequence.map((status, idx) => {
               const isActive = idx <= currentIdx;
               const isCurrent = idx === currentIdx;
-              const isLast = idx === ORDER_STATUS_SEQUENCE.length - 1;
+              const isLast = idx === statusSequence.length - 1;
               const label = ORDER_STATUS_LABELS[status] || status;
 
               return (

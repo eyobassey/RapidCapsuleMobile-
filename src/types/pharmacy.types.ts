@@ -84,13 +84,13 @@ export interface CartItem {
 // ── Orders ──
 
 export type OrderStatus =
-  | 'PENDING_PAYMENT'
-  | 'PAID'
+  | 'PENDING'
+  | 'CONFIRMED'
   | 'PROCESSING'
   | 'READY_FOR_PICKUP'
   | 'OUT_FOR_DELIVERY'
   | 'DELIVERED'
-  | 'PICKED_UP'
+  | 'COMPLETED'
   | 'CANCELLED'
   | 'REFUNDED';
 

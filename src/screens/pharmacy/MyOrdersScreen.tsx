@@ -16,8 +16,8 @@ const TABS = [
   {label: 'Completed', value: 'completed'},
   {label: 'Cancelled', value: 'cancelled'},
 ];
-const ACTIVE_STATUSES = ['PENDING_PAYMENT', 'PAID', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'];
-const COMPLETED_STATUSES = ['DELIVERED', 'PICKED_UP'];
+const ACTIVE_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'];
+const COMPLETED_STATUSES = ['DELIVERED', 'COMPLETED'];
 const CANCELLED_STATUSES = ['CANCELLED', 'REFUNDED'];
 
 export default function MyOrdersScreen() {

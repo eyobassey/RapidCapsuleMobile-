@@ -32,12 +32,12 @@ import {ORDER_STATUS_LABELS} from '../../utils/constants';
 import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
 
 const TRACKABLE_STATUSES = [
-  'PAID',
+  'CONFIRMED',
   'PROCESSING',
   'READY_FOR_PICKUP',
   'OUT_FOR_DELIVERY',
   'DELIVERED',
-  'PICKED_UP',
+  'COMPLETED',
 ];
 
 export default function TrackOrderScreen() {
@@ -81,29 +81,29 @@ export default function TrackOrderScreen() {
         icon: CheckCircle,
         title: 'Order Confirmed',
         description: 'Your order has been confirmed',
-        completed: ['PAID', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'PICKED_UP'].includes(status),
-        current: status === 'PAID',
+        completed: ['CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(status),
+        current: status === 'CONFIRMED',
       },
       {
         icon: Settings,
         title: 'Preparing Order',
         description: 'The pharmacy is preparing your medications',
-        completed: ['PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'PICKED_UP'].includes(status),
+        completed: ['PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(status),
         current: status === 'PROCESSING',
       },
       {
         icon: isPickup ? Package : Truck,
         title: isPickup ? 'Ready for Pickup' : 'Out for Delivery',
         description: isPickup ? 'Your order is ready at the pharmacy' : 'Your order is on its way',
-        completed: ['READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'PICKED_UP'].includes(status),
+        completed: ['READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(status),
         current: status === 'READY_FOR_PICKUP' || status === 'OUT_FOR_DELIVERY',
       },
       {
         icon: CheckCircle,
-        title: isPickup ? 'Picked Up' : 'Delivered',
+        title: isPickup ? 'Completed' : 'Delivered',
         description: isPickup ? 'Order collected from pharmacy' : 'Order delivered to your address',
-        completed: ['DELIVERED', 'PICKED_UP'].includes(status),
-        current: status === 'DELIVERED' || status === 'PICKED_UP',
+        completed: ['DELIVERED', 'COMPLETED'].includes(status),
+        current: status === 'DELIVERED' || status === 'COMPLETED',
       },
     ];
 
@@ -113,11 +113,11 @@ export default function TrackOrderScreen() {
       if (step.completed && order.status_history?.length) {
         // Find matching history entry
         const entry = order.status_history.find(h => {
-          if (step.title === 'Order Confirmed') return h.status === 'PAID';
+          if (step.title === 'Order Confirmed') return h.status === 'CONFIRMED';
           if (step.title === 'Preparing Order') return h.status === 'PROCESSING';
           if (step.title === 'Ready for Pickup') return h.status === 'READY_FOR_PICKUP';
           if (step.title === 'Out for Delivery') return h.status === 'OUT_FOR_DELIVERY';
-          if (step.title === 'Picked Up') return h.status === 'PICKED_UP';
+          if (step.title === 'Completed') return h.status === 'COMPLETED';
           if (step.title === 'Delivered') return h.status === 'DELIVERED';
           return false;
         });

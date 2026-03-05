@@ -175,13 +175,11 @@ export const STATUS_COLORS: Record<string, string> = {
   Critical: 'destructive',
 
   // Pharmacy order statuses
-  PENDING_PAYMENT: 'secondary',
-  PAID: 'success',
+  CONFIRMED: 'primary',
   PROCESSING: 'primary',
   READY_FOR_PICKUP: 'accent',
   OUT_FOR_DELIVERY: 'primary',
   DELIVERED: 'success',
-  PICKED_UP: 'success',
   REFUNDED: 'muted',
 
   // Prescription verification statuses
@@ -261,24 +259,33 @@ export const MEETING_CHANNEL_LABELS: Record<string, string> = {
 export const DEFAULT_PHARMACY_ID = '693f961ebb4dc1fec542610a';
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
-  PENDING_PAYMENT: 'Pending Payment',
-  PAID: 'Paid',
+  PENDING: 'Pending',
+  CONFIRMED: 'Confirmed',
   PROCESSING: 'Processing',
   READY_FOR_PICKUP: 'Ready for Pickup',
   OUT_FOR_DELIVERY: 'Out for Delivery',
   DELIVERED: 'Delivered',
-  PICKED_UP: 'Picked Up',
+  COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
   REFUNDED: 'Refunded',
 };
 
-export const ORDER_STATUS_SEQUENCE = [
-  'PENDING_PAYMENT',
-  'PAID',
+// Delivery flow sequence (used for timeline)
+export const ORDER_STATUS_SEQUENCE_DELIVERY = [
+  'PENDING',
+  'CONFIRMED',
   'PROCESSING',
-  'READY_FOR_PICKUP',
   'OUT_FOR_DELIVERY',
   'DELIVERED',
+] as const;
+
+// Pickup flow sequence (used for timeline)
+export const ORDER_STATUS_SEQUENCE_PICKUP = [
+  'PENDING',
+  'CONFIRMED',
+  'PROCESSING',
+  'READY_FOR_PICKUP',
+  'COMPLETED',
 ] as const;
 
 export const API_BASE_URL = 'https://api.rapidcapsule.com/api';
