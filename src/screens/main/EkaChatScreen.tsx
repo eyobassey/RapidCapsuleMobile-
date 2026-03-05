@@ -136,6 +136,19 @@ const ACTION_ROUTES: Record<string, {tab: string; screen?: string}> = {
   profile: {tab: 'Profile'},
 };
 
+// Action links that send a message to Eka (triggers backend tools + artifacts)
+const ACTION_MESSAGES: Record<string, string> = {
+  recovery: 'Show my recovery dashboard',
+  recovery_checkin: 'I want to do my daily check-in',
+  recovery_screening: 'I want to take a screening assessment',
+  recovery_plan: 'Show my recovery plan',
+  coping_exercise: 'I need a coping exercise',
+  crisis: 'I need help right now, this is urgent',
+  screening: 'I want to take a screening assessment',
+  upload_prescription: 'I want to upload a prescription',
+  health_tips: 'Show me health tips',
+};
+
 // ─── Triage Colors ──────────────────────────────────
 const TRIAGE_COLORS: Record<string, string> = {
   emergency: '#ef4444',
@@ -306,13 +319,29 @@ export default function EkaChatScreen() {
   };
 
   const navigateAction = (routeKey: string) => {
+    // 1. Check if it's a navigation route
     const route = ACTION_ROUTES[routeKey];
-    if (!route) return;
-    if (route.screen) {
-      navigation.getParent()?.navigate(route.tab, {screen: route.screen});
-    } else {
-      navigation.getParent()?.navigate(route.tab);
+    if (route) {
+      if (route.screen) {
+        navigation.getParent()?.navigate(route.tab, {screen: route.screen});
+      } else {
+        navigation.getParent()?.navigate(route.tab);
+      }
+      return;
     }
+
+    // 2. Check if it's a "send message to Eka" action (triggers tools + artifacts)
+    const message = ACTION_MESSAGES[routeKey];
+    if (message) {
+      if (routeKey === 'upload_prescription') {
+        handleUpload();
+      } else {
+        sendMessage(message);
+      }
+      return;
+    }
+
+    // 3. Drug deep links (drug:MONGO_ID) — ignore for now
   };
 
   // ─── Group conversations by date ────────────────
