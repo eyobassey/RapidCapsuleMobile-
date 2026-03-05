@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -41,13 +41,17 @@ export default function ChatScreen() {
   };
 
   const myUserId = useAuthStore(s => s.user?._id) || '';
-  const messages = useMessagingStore(s => s.messages[conversationId] || []);
-  const hasMore = useMessagingStore(s => s.hasMoreMessages[conversationId] ?? true);
-  const typingUsers = useMessagingStore(s => s.typingMap[conversationId] || []);
+  const allMessages = useMessagingStore(s => s.messages);
+  const allHasMore = useMessagingStore(s => s.hasMoreMessages);
+  const allTyping = useMessagingStore(s => s.typingMap);
   const presenceMap = useMessagingStore(s => s.presenceMap);
   const fetchMessages = useMessagingStore(s => s.fetchMessages);
   const markConversationRead = useMessagingStore(s => s.markConversationRead);
   const deleteMessageLocal = useMessagingStore(s => s.deleteMessageLocal);
+
+  const messages = useMemo(() => allMessages[conversationId] || [], [allMessages, conversationId]);
+  const hasMore = allHasMore[conversationId] ?? true;
+  const typingUsers = useMemo(() => allTyping[conversationId] || [], [allTyping, conversationId]);
 
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);

@@ -28,10 +28,7 @@ export default function RecoveryHomeCard() {
     });
   }, []);
 
-  // Don't show anything while loading
-  if (isLoading) return null;
-
-  // Not enrolled → show CTA card
+  // Not enrolled (or still loading) → show CTA card
   if (!isEnrolled) {
     return (
       <TouchableOpacity
