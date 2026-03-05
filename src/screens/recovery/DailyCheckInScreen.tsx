@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
-import {Check, X} from 'lucide-react-native';
+import {Check, X, Pencil} from 'lucide-react-native';
 import {Header, Button} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {recoveryService} from '../../services/recovery.service';
@@ -72,7 +72,10 @@ function SliderRow({label, value, onChange, max = 10, lowLabel = '', highLabel =
 export default function DailyCheckInScreen() {
   const navigation = useNavigation<any>();
   const fetchDashboard = useRecoveryStore(s => s.fetchDashboard);
+  const loggedToday = useRecoveryStore(s => s.dashboard?.daily_log_summary?.logged_today);
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [prefilling, setPrefilling] = useState(true);
   const [soberToday, setSoberToday] = useState<boolean | null>(null);
   const [mood, setMood] = useState(5);
   const [craving, setCraving] = useState(0);
@@ -85,6 +88,34 @@ export default function DailyCheckInScreen() {
   const [gratitude, setGratitude] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Pre-fill from today's existing log if available
+  useEffect(() => {
+    (async () => {
+      try {
+        const logs = await recoveryService.getLogs({limit: 1});
+        const today = new Date().toISOString().slice(0, 10);
+        const todayLog = logs.find(
+          l => l.log_date?.slice(0, 10) === today || l.created_at?.slice(0, 10) === today,
+        );
+        if (todayLog) {
+          setIsEditing(true);
+          setSoberToday(todayLog.sober_today ?? null);
+          setMood(todayLog.mood_score ?? 5);
+          setCraving(todayLog.craving_intensity ?? 0);
+          setEnergy(todayLog.energy_level ?? 5);
+          setSleep(todayLog.sleep_quality ?? 5);
+          setAnxiety(todayLog.anxiety_level ?? 3);
+          setTriggers(todayLog.triggers_encountered ?? []);
+          setCoping(todayLog.coping_strategies_used ?? []);
+          setExercised(todayLog.exercised ?? false);
+          setGratitude(todayLog.gratitude_note ?? '');
+          setNotes(todayLog.notes ?? '');
+        }
+      } catch {}
+      setPrefilling(false);
+    })();
+  }, []);
 
   const toggleItem = (list: string[], item: string, setter: (v: string[]) => void) => {
     setter(list.includes(item) ? list.filter(x => x !== item) : [...list, item]);
@@ -122,9 +153,11 @@ export default function DailyCheckInScreen() {
           [{text: 'Great!', onPress: () => navigation.goBack()}],
         );
       } else {
-        Alert.alert('Check-in Saved', 'Keep going, you\'re doing great!', [
-          {text: 'OK', onPress: () => navigation.goBack()},
-        ]);
+        Alert.alert(
+          isEditing ? 'Check-in Updated' : 'Check-in Saved',
+          'Keep going, you\'re doing great!',
+          [{text: 'OK', onPress: () => navigation.goBack()}],
+        );
       }
     } catch (err: any) {
       Alert.alert('Error', err?.response?.data?.message || 'Failed to save check-in.');
@@ -135,11 +168,34 @@ export default function DailyCheckInScreen() {
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
-      <Header title="Daily Check-in" onBack={() => navigation.goBack()} />
+      <Header title={isEditing ? 'Update Check-in' : 'Daily Check-in'} onBack={() => navigation.goBack()} />
 
+      {prefilling ? (
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
       <ScrollView
         contentContainerStyle={{padding: 16, paddingBottom: 40, gap: 20}}
         showsVerticalScrollIndicator={false}>
+        {/* Already checked in banner */}
+        {isEditing && (
+          <View
+            style={{
+              backgroundColor: `${colors.primary}10`,
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 10,
+            }}>
+            <Pencil size={16} color={colors.primary} />
+            <Text style={{flex: 1, fontSize: 12, color: colors.mutedForeground, lineHeight: 17}}>
+              You've already checked in today. Feel free to update your responses.
+            </Text>
+          </View>
+        )}
+
         {/* Sober today? */}
         <View style={{gap: 8}}>
           <Text style={{fontSize: 15, fontWeight: '700', color: colors.foreground}}>
@@ -321,11 +377,14 @@ export default function DailyCheckInScreen() {
         <Button variant="primary" onPress={handleSubmit} disabled={loading}>
           {loading ? (
             <ActivityIndicator size="small" color={colors.white} />
+          ) : isEditing ? (
+            'Update Check-in'
           ) : (
             'Save Check-in'
           )}
         </Button>
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
