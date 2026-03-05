@@ -35,11 +35,11 @@ import {Avatar, ProgressRing, StatusBadge, Skeleton} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {
   getGreeting,
-  formatCurrency,
   formatDate,
   formatTime,
   formatRelativeDate,
 } from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import {MEETING_CHANNEL_LABELS} from '../../utils/constants';
 
 // Score thresholds → ring color
@@ -68,6 +68,7 @@ function MeetingChannelIcon({channel}: {channel?: string}) {
 }
 
 export default function HomeScreen() {
+  const {format} = useCurrency();
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -80,7 +81,7 @@ export default function HomeScreen() {
     fetchAppointments,
     setFilter,
   } = useAppointmentsStore();
-  const {balance, currency, fetchBalance} = useWalletStore();
+  const {balance, fetchBalance} = useWalletStore();
   const {totalAvailable, hasUnlimited, isLoading: creditsLoading, fetchCredits} = useCreditsStore();
   const {unreadCount, fetchUnreadCount} = useNotificationsStore();
 
@@ -300,7 +301,7 @@ export default function HomeScreen() {
               <Wallet size={16} color="#0ea5e9" />
             </View>
             <Text className="text-lg font-bold text-foreground" numberOfLines={1}>
-              {formatCurrency(balance, currency)}
+              {format(balance)}
             </Text>
             <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
               Wallet

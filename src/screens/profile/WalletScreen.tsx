@@ -41,12 +41,13 @@ import {useCreditsStore, type CreditPlan} from '../../store/credits';
 import {creditsService} from '../../services/credits.service';
 import {Header, Button, Skeleton, TabBar} from '../../components/ui';
 import {colors} from '../../theme/colors';
-import {formatCurrency, formatDate, formatDateTime} from '../../utils/formatters';
+import {formatDate, formatDateTime} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 
 const QUICK_AMOUNTS = [1000, 2000, 5000, 10000, 20000];
-const CURRENCY_SYMBOLS: Record<string, string> = {NGN: '₦', USD: '$', GBP: '£', EUR: '€'};
 
 export default function WalletScreen() {
+  const {format, symbol} = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const [refreshing, setRefreshing] = useState(false);
@@ -335,7 +336,7 @@ export default function WalletScreen() {
                   </Text>
                 </View>
                 <Text className="text-3xl font-bold text-foreground mb-6">
-                  {formatCurrency(balance, currency)}
+                  {format(balance)}
                 </Text>
                 <Button
                   variant="primary"
@@ -358,7 +359,7 @@ export default function WalletScreen() {
                   </Text>
                 </View>
                 <Text className="text-lg font-bold text-foreground">
-                  {formatCurrency(stats.totalSpent, currency)}
+                  {format(stats.totalSpent)}
                 </Text>
               </View>
               <View className="flex-1 bg-card border border-border rounded-2xl p-3">
@@ -371,7 +372,7 @@ export default function WalletScreen() {
                   </Text>
                 </View>
                 <Text className="text-lg font-bold text-foreground">
-                  {formatCurrency(stats.totalFunded, currency)}
+                  {format(stats.totalFunded)}
                 </Text>
               </View>
             </View>
@@ -424,7 +425,7 @@ export default function WalletScreen() {
                             credit ? 'text-success' : 'text-destructive'
                           }`}>
                           {credit ? '+' : '-'}
-                          {formatCurrency(Math.abs(tx.amount || 0), currency)}
+                          {format(Math.abs(tx.amount || 0))}
                         </Text>
                       </View>
                     </View>
@@ -753,7 +754,7 @@ export default function WalletScreen() {
                           </Text>
                           <View style={{flexDirection: 'row', alignItems: 'baseline', gap: 2}}>
                             <Text style={{fontSize: 24, fontWeight: '700', color: colors.foreground}}>
-                              {formatCurrency(price, currency)}
+                              {format(price)}
                             </Text>
                             {isUnlimited && plan.duration_days ? (
                               <Text style={{fontSize: 12, color: colors.mutedForeground}}>
@@ -886,7 +887,7 @@ export default function WalletScreen() {
                     Total
                   </Text>
                   <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>
-                    {selectedPlan ? formatCurrency(getPlanPrice(selectedPlan), currency) : ''}
+                    {selectedPlan ? format(getPlanPrice(selectedPlan)) : ''}
                   </Text>
                 </View>
               </View>
@@ -902,7 +903,7 @@ export default function WalletScreen() {
                   Wallet Balance
                 </Text>
                 <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>
-                  {formatCurrency(balance, currency)}
+                  {format(balance)}
                 </Text>
               </View>
 
@@ -982,7 +983,7 @@ export default function WalletScreen() {
                     {purchasing
                       ? 'Processing...'
                       : selectedPlan
-                        ? `Pay ${formatCurrency(getPlanPrice(selectedPlan), currency)}`
+                        ? `Pay ${format(getPlanPrice(selectedPlan))}`
                         : 'Pay'}
                   </Text>
                 </TouchableOpacity>
@@ -1022,7 +1023,7 @@ export default function WalletScreen() {
               {/* Amount Input */}
               <View style={{backgroundColor: colors.muted, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center'}}>
                 <Text style={{fontSize: 24, fontWeight: '700', color: colors.mutedForeground, marginRight: 4}}>
-                  {CURRENCY_SYMBOLS[currency] || currency}
+                  {symbol}
                 </Text>
                 <TextInput
                   style={{flex: 1, fontSize: 24, fontWeight: '700', color: colors.foreground, padding: 0}}
@@ -1052,7 +1053,7 @@ export default function WalletScreen() {
                         backgroundColor: isActive ? `${colors.primary}15` : 'transparent',
                       }}>
                       <Text style={{fontSize: 13, fontWeight: '600', color: isActive ? colors.primary : colors.foreground}}>
-                        {formatCurrency(amt, currency)}
+                        {format(amt)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -1060,7 +1061,7 @@ export default function WalletScreen() {
               </View>
 
               <Text style={{fontSize: 11, color: colors.mutedForeground}}>
-                Minimum amount: {CURRENCY_SYMBOLS[currency] || currency}100
+                Minimum amount: {symbol}100
               </Text>
 
               {/* Actions */}

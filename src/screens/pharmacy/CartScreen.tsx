@@ -7,17 +7,19 @@ import {Minus, Plus, X, ShoppingCart, Pill, ShieldAlert} from 'lucide-react-nati
 import {usePharmacyStore} from '../../store/pharmacy';
 import {Header, Button, EmptyState} from '../../components/ui';
 import {colors} from '../../theme/colors';
-import {formatCurrency} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import type {CartItem} from '../../types/pharmacy.types';
 
 function CartItemRow({
   item,
   onUpdateQuantity,
   onRemove,
+  format,
 }: {
   item: CartItem;
   onUpdateQuantity: (id: string, qty: number) => void;
   onRemove: (id: string) => void;
+  format: (amount: number) => string;
 }) {
   return (
     <View className="bg-card border border-border rounded-2xl p-3 flex-row items-center mb-3">
@@ -41,7 +43,7 @@ function CartItemRow({
           {item.strength}
         </Text>
         <Text className="text-sm font-bold text-primary mt-1">
-          {formatCurrency(item.price * item.quantity)}
+          {format(item.price * item.quantity)}
         </Text>
       </View>
 
@@ -79,6 +81,7 @@ function CartItemRow({
 }
 
 export default function CartScreen() {
+  const {format} = useCurrency();
   const navigation = useNavigation<any>();
   const {cartItems, updateQuantity, removeFromCart, clearCart} = usePharmacyStore();
 
@@ -134,6 +137,7 @@ export default function CartScreen() {
             item={item}
             onUpdateQuantity={updateQuantity}
             onRemove={handleRemove}
+            format={format}
           />
         )}
         contentContainerStyle={{paddingHorizontal: 20, paddingTop: 12, paddingBottom: 140}}
@@ -155,7 +159,7 @@ export default function CartScreen() {
         <View className="flex-row items-center justify-between mb-3">
           <Text className="text-sm text-muted-foreground">Subtotal</Text>
           <Text className="text-lg font-bold text-foreground">
-            {formatCurrency(subtotal)}
+            {format(subtotal)}
           </Text>
         </View>
         <Button

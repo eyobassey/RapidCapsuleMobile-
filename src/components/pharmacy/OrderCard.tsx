@@ -2,7 +2,8 @@ import React from 'react';
 import {View, Text, TouchableOpacity} from 'react-native';
 import {Package, Truck, Store} from 'lucide-react-native';
 import {StatusBadge} from '../ui';
-import {formatCurrency, formatDate} from '../../utils/formatters';
+import {formatDate} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import {colors} from '../../theme/colors';
 import type {PharmacyOrder} from '../../types/pharmacy.types';
 
@@ -12,6 +13,7 @@ interface OrderCardProps {
 }
 
 export default function OrderCard({order, onPress}: OrderCardProps) {
+  const {format} = useCurrency();
   const itemCount = order.items.length;
   const firstItem = order.items[0]?.drug_name || 'Order';
   const itemSummary = itemCount === 1 ? firstItem : `${firstItem} + ${itemCount - 1} more`;
@@ -70,7 +72,7 @@ export default function OrderCard({order, onPress}: OrderCardProps) {
           {formatDate(order.created_at)}
         </Text>
         <Text className="text-sm font-bold text-primary">
-          {formatCurrency(order.total_amount)}
+          {format(order.total_amount)}
         </Text>
       </View>
     </TouchableOpacity>

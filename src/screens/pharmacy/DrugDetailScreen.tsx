@@ -26,7 +26,7 @@ import {usePharmacyStore} from '../../store/pharmacy';
 import DrugCard from '../../components/pharmacy/DrugCard';
 import {Header} from '../../components/ui';
 import {colors} from '../../theme/colors';
-import {formatCurrency} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import type {Drug} from '../../types/pharmacy.types';
 import {getDrugPrice, getDrugImage} from '../../types/pharmacy.types';
 import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
@@ -65,6 +65,7 @@ function CollapsibleSection({title, items, icon}: {title: string; items: string[
 }
 
 export default function DrugDetailScreen() {
+  const {format} = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<PharmacyStackParamList, 'DrugDetail'>>();
   const {drugId} = route.params;
@@ -178,7 +179,7 @@ export default function DrugDetailScreen() {
 
           <View className="flex-row items-center justify-between mt-3">
             <Text className="text-xl font-bold text-primary">
-              {formatCurrency(drugPrice)}
+              {format(drugPrice)}
             </Text>
             {(drug.is_available !== false && drug.is_active !== false) ? (
               <Text className="text-xs text-success font-medium">In Stock</Text>
@@ -282,7 +283,7 @@ export default function DrugDetailScreen() {
           <View className="flex-1">
             <Text className="text-xs text-muted-foreground">Total</Text>
             <Text className="text-lg font-bold text-primary">
-              {formatCurrency(drugPrice * quantity)}
+              {format(drugPrice * quantity)}
             </Text>
           </View>
           <TouchableOpacity

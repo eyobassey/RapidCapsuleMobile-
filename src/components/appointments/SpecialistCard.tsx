@@ -3,7 +3,7 @@ import {View, Text, TouchableOpacity} from 'react-native';
 import {Star, Briefcase} from 'lucide-react-native';
 import {Avatar, Button} from '../ui';
 import {colors} from '../../theme/colors';
-import {formatCurrency} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 
 interface SpecialistCardProps {
   specialist: any;
@@ -11,6 +11,7 @@ interface SpecialistCardProps {
 }
 
 export default function SpecialistCard({specialist, onSelect}: SpecialistCardProps) {
+  const {format} = useCurrency();
   const profile = specialist.profile || {};
   const name = profile.first_name
     ? `Dr. ${profile.first_name} ${profile.last_name || ''}`
@@ -69,7 +70,7 @@ export default function SpecialistCard({specialist, onSelect}: SpecialistCardPro
           </View>
         )}
         <Text className="text-primary font-bold text-sm">
-          {formatCurrency(fee)}
+          {format(fee)}
         </Text>
       </View>
 

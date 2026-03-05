@@ -2,7 +2,7 @@ import React from 'react';
 import {View, Text, Image, TouchableOpacity} from 'react-native';
 import {Pill, ShieldAlert} from 'lucide-react-native';
 import {colors} from '../../theme/colors';
-import {formatCurrency} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import type {Drug} from '../../types/pharmacy.types';
 import {getDrugPrice, getDrugImage} from '../../types/pharmacy.types';
 
@@ -13,6 +13,7 @@ interface DrugCardProps {
 }
 
 export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProps) {
+  const {format} = useCurrency();
   const dosageForm = typeof drug.dosage_form === 'object' ? drug.dosage_form?.name : drug.dosage_form;
   const imageUrl = getDrugImage(drug);
   const price = getDrugPrice(drug);
@@ -42,7 +43,7 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
             {drug.strength}
           </Text>
           <Text className="text-sm font-bold text-primary mt-1">
-            {formatCurrency(price)}
+            {format(price)}
           </Text>
         </View>
       </TouchableOpacity>
@@ -83,7 +84,7 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
 
       <View className="items-end ml-2">
         <Text className="text-sm font-bold text-primary">
-          {formatCurrency(price)}
+          {format(price)}
         </Text>
         {drug.requires_prescription && (
           <View className="flex-row items-center mt-1">

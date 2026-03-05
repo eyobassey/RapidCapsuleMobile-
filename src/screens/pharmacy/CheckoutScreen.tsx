@@ -27,12 +27,13 @@ import {
 import {usePharmacyStore} from '../../store/pharmacy';
 import {Header, Input, Button} from '../../components/ui';
 import {colors} from '../../theme/colors';
-import {formatCurrency} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import {DEFAULT_PHARMACY_ID} from '../../utils/constants';
 import {pharmacyService} from '../../services/pharmacy.service';
 import type {DeliveryAddress, DeliveryMethod} from '../../types/pharmacy.types';
 
 export default function CheckoutScreen() {
+  const {format} = useCurrency();
   const navigation = useNavigation<any>();
   const {
     cartItems,
@@ -251,7 +252,7 @@ export default function CheckoutScreen() {
                   {item.name} x{item.quantity}
                 </Text>
                 <Text className="text-sm text-foreground font-medium ml-2">
-                  {formatCurrency(item.price * item.quantity)}
+                  {format(item.price * item.quantity)}
                 </Text>
               </View>
             ))}
@@ -481,12 +482,12 @@ export default function CheckoutScreen() {
             <View className="flex-row items-center justify-between">
               <Text className="text-sm text-foreground">Wallet Balance</Text>
               <Text className={`text-sm font-bold ${walletBalance >= total ? 'text-success' : 'text-destructive'}`}>
-                {formatCurrency(walletBalance)}
+                {format(walletBalance)}
               </Text>
             </View>
             {walletBalance < total && (
               <Text className="text-xs text-destructive mt-1">
-                Insufficient balance. You need {formatCurrency(total - walletBalance)} more. Consider using card payment.
+                Insufficient balance. You need {format(total - walletBalance)} more. Consider using card payment.
               </Text>
             )}
           </View>
@@ -507,17 +508,17 @@ export default function CheckoutScreen() {
         <View className="bg-card border border-border rounded-2xl p-4">
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-muted-foreground">Subtotal</Text>
-            <Text className="text-sm text-foreground">{formatCurrency(subtotal)}</Text>
+            <Text className="text-sm text-foreground">{format(subtotal)}</Text>
           </View>
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-muted-foreground">Delivery Fee</Text>
             <Text className="text-sm text-foreground">
-              {deliveryFee > 0 ? formatCurrency(deliveryFee) : 'Free'}
+              {deliveryFee > 0 ? format(deliveryFee) : 'Free'}
             </Text>
           </View>
           <View className="border-t border-border pt-2 mt-1 flex-row justify-between">
             <Text className="text-base font-bold text-foreground">Total</Text>
-            <Text className="text-base font-bold text-primary">{formatCurrency(total)}</Text>
+            <Text className="text-base font-bold text-primary">{format(total)}</Text>
           </View>
         </View>
       </ScrollView>
@@ -529,7 +530,7 @@ export default function CheckoutScreen() {
           onPress={handlePlaceOrder}
           loading={placing}
           disabled={cartItems.length === 0}>
-          Place Order - {formatCurrency(total)}
+          Place Order - {format(total)}
         </Button>
       </View>
 

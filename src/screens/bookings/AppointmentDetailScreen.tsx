@@ -20,7 +20,8 @@ import {
 import {Header, Avatar, StatusBadge, Button, Card, Skeleton} from '../../components/ui';
 import {useAppointmentsStore} from '../../store/appointments';
 import {colors} from '../../theme/colors';
-import {formatDate, formatTime, formatCurrency} from '../../utils/formatters';
+import {formatDate, formatTime} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import {MEETING_CHANNEL_LABELS} from '../../utils/constants';
 import type {BookingsStackParamList} from '../../navigation/stacks/BookingsStack';
 
@@ -56,6 +57,7 @@ function DetailSkeleton() {
 }
 
 export default function AppointmentDetailScreen() {
+  const {format} = useCurrency();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const {id} = route.params;
@@ -163,7 +165,7 @@ export default function AppointmentDetailScreen() {
             )}
 
             <Text className="text-primary font-bold text-lg mt-2">
-              {formatCurrency(fee)}
+              {format(fee)}
             </Text>
           </View>
 

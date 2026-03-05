@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, Text, ScrollView, TouchableOpacity, Alert} from 'react-native';
+import React, {useState} from 'react';
+import {View, Text, ScrollView, TouchableOpacity, Alert, Modal, Pressable} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {
@@ -15,9 +15,13 @@ import {
   ChevronRight,
   Edit3,
   Calendar,
+  DollarSign,
+  Check,
 } from 'lucide-react-native';
 
 import {useAuthStore} from '../../store/auth';
+import {useCurrencyStore} from '../../store/currency';
+import {SUPPORTED_CURRENCIES, CURRENCY_LIST} from '../../utils/currency';
 import {Avatar, ListItem} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {formatDate} from '../../utils/formatters';
@@ -38,6 +42,10 @@ export default function ProfileScreen() {
   const navigation = useNavigation<any>();
   const user = useAuthStore(s => s.user);
   const logout = useAuthStore(s => s.logout);
+  const currencyCode = useCurrencyStore(s => s.currencyCode);
+  const setCurrency = useCurrencyStore(s => s.setCurrency);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const currentCurrency = SUPPORTED_CURRENCIES[currencyCode] ?? SUPPORTED_CURRENCIES.USD;
 
   const firstName = user?.profile?.first_name || 'User';
   const lastName = user?.profile?.last_name || '';
@@ -94,6 +102,12 @@ export default function ProfileScreen() {
           title: 'Wallet & Billing',
           subtitle: 'Balance, transactions & payments',
           onPress: () => navigation.navigate('Wallet'),
+        },
+        {
+          icon: <DollarSign size={20} color={colors.primary} />,
+          title: 'Currency',
+          subtitle: `${currentCurrency.flag} ${currentCurrency.name} (${currentCurrency.symbol})`,
+          onPress: () => setShowCurrencyModal(true),
         },
         {
           icon: <Bell size={20} color={colors.secondary} />,
@@ -219,6 +233,66 @@ export default function ProfileScreen() {
 
         <View className="h-8" />
       </ScrollView>
+
+      {/* Currency Selector Modal */}
+      <Modal
+        visible={showCurrencyModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCurrencyModal(false)}>
+        <Pressable
+          onPress={() => setShowCurrencyModal(false)}
+          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}>
+          <Pressable
+            onPress={e => e.stopPropagation()}
+            style={{
+              backgroundColor: colors.card,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingBottom: 40,
+            }}>
+            {/* Handle */}
+            <View style={{alignItems: 'center', paddingTop: 12, paddingBottom: 8}}>
+              <View style={{width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border}} />
+            </View>
+
+            <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground, paddingHorizontal: 20, paddingBottom: 16}}>
+              Select Currency
+            </Text>
+
+            {CURRENCY_LIST.map(cur => {
+              const isSelected = cur.code === currencyCode;
+              return (
+                <TouchableOpacity
+                  key={cur.code}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setCurrency(cur.code);
+                    setShowCurrencyModal(false);
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: 14,
+                    paddingHorizontal: 20,
+                    backgroundColor: isSelected ? `${colors.primary}10` : 'transparent',
+                  }}>
+                  <Text style={{fontSize: 24, marginRight: 12}}>{cur.flag}</Text>
+                  <View style={{flex: 1}}>
+                    <Text style={{fontSize: 15, fontWeight: '600', color: colors.foreground}}>
+                      {cur.name}
+                    </Text>
+                    <Text style={{fontSize: 12, color: colors.mutedForeground}}>
+                      {cur.code} ({cur.symbol})
+                    </Text>
+                  </View>
+                  {isSelected && <Check size={20} color={colors.primary} />}
+                </TouchableOpacity>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

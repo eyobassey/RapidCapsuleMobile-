@@ -23,11 +23,13 @@ import {
 import {usePharmacyStore} from '../../store/pharmacy';
 import {Header, StatusBadge, Button} from '../../components/ui';
 import {colors} from '../../theme/colors';
-import {formatCurrency, formatDateTime} from '../../utils/formatters';
+import {formatDateTime} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import {ORDER_STATUS_SEQUENCE_DELIVERY, ORDER_STATUS_SEQUENCE_PICKUP, ORDER_STATUS_LABELS} from '../../utils/constants';
 import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
 
 export default function OrderDetailScreen() {
+  const {format} = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<PharmacyStackParamList, 'OrderDetail'>>();
   const {orderId} = route.params;
@@ -235,11 +237,11 @@ export default function OrderDetailScreen() {
               <View className="flex-1">
                 <Text className="text-sm text-foreground">{item.drug_name}</Text>
                 <Text className="text-xs text-muted-foreground">
-                  {item.quantity} x {formatCurrency(item.unit_price)}
+                  {item.quantity} x {format(item.unit_price)}
                 </Text>
               </View>
               <Text className="text-sm font-medium text-foreground ml-2">
-                {formatCurrency(item.total_price)}
+                {format(item.total_price)}
               </Text>
             </View>
           ))}
@@ -307,24 +309,24 @@ export default function OrderDetailScreen() {
           </View>
           <View className="flex-row justify-between mb-1">
             <Text className="text-sm text-muted-foreground">Subtotal</Text>
-            <Text className="text-sm text-foreground">{formatCurrency(order.subtotal)}</Text>
+            <Text className="text-sm text-foreground">{format(order.subtotal)}</Text>
           </View>
           {order.delivery_fee > 0 && (
             <View className="flex-row justify-between mb-1">
               <Text className="text-sm text-muted-foreground">Delivery</Text>
-              <Text className="text-sm text-foreground">{formatCurrency(order.delivery_fee)}</Text>
+              <Text className="text-sm text-foreground">{format(order.delivery_fee)}</Text>
             </View>
           )}
           {order.discount_amount > 0 && (
             <View className="flex-row justify-between mb-1">
               <Text className="text-sm text-success">Discount</Text>
-              <Text className="text-sm text-success">-{formatCurrency(order.discount_amount)}</Text>
+              <Text className="text-sm text-success">-{format(order.discount_amount)}</Text>
             </View>
           )}
           <View className="border-t border-border pt-2 mt-1 flex-row justify-between">
             <Text className="text-base font-bold text-foreground">Total</Text>
             <Text className="text-base font-bold text-primary">
-              {formatCurrency(order.total_amount)}
+              {format(order.total_amount)}
             </Text>
           </View>
         </View>

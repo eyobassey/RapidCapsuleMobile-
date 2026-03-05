@@ -27,7 +27,8 @@ import {
 import {usePharmacyStore} from '../../store/pharmacy';
 import {Header, StatusBadge, Button} from '../../components/ui';
 import {colors} from '../../theme/colors';
-import {formatCurrency, formatDateTime} from '../../utils/formatters';
+import {formatDateTime} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import {ORDER_STATUS_LABELS} from '../../utils/constants';
 import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
 
@@ -41,6 +42,7 @@ const TRACKABLE_STATUSES = [
 ];
 
 export default function TrackOrderScreen() {
+  const {format} = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<PharmacyStackParamList, 'TrackOrder'>>();
   const {orderNumber} = route.params;
@@ -397,7 +399,7 @@ export default function TrackOrderScreen() {
           <View className="flex-row justify-between py-2 border-b border-border">
             <Text className="text-sm text-muted-foreground">Total Amount</Text>
             <Text className="text-sm font-bold text-primary">
-              {formatCurrency(order.total_amount)}
+              {format(order.total_amount)}
             </Text>
           </View>
           <View className="flex-row justify-between py-2">

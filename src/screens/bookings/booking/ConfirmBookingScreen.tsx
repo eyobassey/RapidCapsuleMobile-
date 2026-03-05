@@ -13,13 +13,15 @@ import {
 import {Header, Avatar, Button, Card} from '../../../components/ui';
 import {useAppointmentsStore} from '../../../store/appointments';
 import {colors} from '../../../theme/colors';
-import {formatDate, formatTime, formatCurrency} from '../../../utils/formatters';
+import {formatDate, formatTime} from '../../../utils/formatters';
+import {useCurrency} from '../../../hooks/useCurrency';
 import {MEETING_CHANNEL_LABELS} from '../../../utils/constants';
 import type {BookingsStackParamList} from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 
 export default function ConfirmBookingScreen() {
+  const {format} = useCurrency();
   const navigation = useNavigation<Nav>();
   const {bookingData, isLoading, bookAppointment, setBookingData, clearBookingData} =
     useAppointmentsStore();
@@ -205,7 +207,7 @@ export default function ConfirmBookingScreen() {
         <View className="bg-card border border-border rounded-2xl p-4">
           <View className="flex-row items-center justify-between">
             <Text className="text-muted-foreground text-sm">Consultation Fee</Text>
-            <Text className="text-foreground text-lg font-bold">{formatCurrency(fee)}</Text>
+            <Text className="text-foreground text-lg font-bold">{format(fee)}</Text>
           </View>
         </View>
       </ScrollView>
@@ -213,7 +215,7 @@ export default function ConfirmBookingScreen() {
       {/* Confirm button */}
       <View className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
         <Button variant="primary" onPress={handleConfirm} loading={isLoading}>
-          Confirm & Pay {formatCurrency(fee)}
+          Confirm & Pay {format(fee)}
         </Button>
       </View>
     </SafeAreaView>

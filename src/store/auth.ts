@@ -2,6 +2,7 @@ import {create} from 'zustand';
 import api from '../services/api';
 import {storage} from '../utils/storage';
 import {useOnboardingStore} from './onboarding';
+import {useCurrencyStore} from './currency';
 
 interface UserProfile {
   first_name: string;
@@ -94,6 +95,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     await get().setToken(token);
     await get().fetchUser();
+    useCurrencyStore.getState().initCurrency();
     return {requires2FA: false};
   },
 
@@ -101,6 +103,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const res = await api.post('/auth/2fa/verify', {code});
     await get().setToken(res.data.data || res.data.result);
     await get().fetchUser();
+    useCurrencyStore.getState().initCurrency();
   },
 
   signup: async data => {
@@ -147,6 +150,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (token) {
       set({token});
       await get().fetchUser();
+      useCurrencyStore.getState().initCurrency();
     } else {
       set({isLoading: false});
     }

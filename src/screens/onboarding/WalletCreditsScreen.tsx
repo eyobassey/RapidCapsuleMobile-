@@ -5,6 +5,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {Header, Button} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {useAuthStore} from '../../store/auth';
+import {useCurrency} from '../../hooks/useCurrency';
 import api from '../../services/api';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
@@ -12,6 +13,7 @@ import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'WalletCredits'>;
 
 export default function WalletCreditsScreen({navigation}: Props) {
+  const {format} = useCurrency();
   const user = useAuthStore(s => s.user);
   const [walletData, setWalletData] = useState<any>(null);
   const [creditsData, setCreditsData] = useState<any>(null);
@@ -47,9 +49,6 @@ export default function WalletCreditsScreen({navigation}: Props) {
 
   // Wallet: GET /wallets/balance returns {totalEarnings, totalWithdrawals, currentBalance}
   const balance = walletData?.currentBalance ?? walletData?.balance ?? 0;
-  // Currency from user's preferred_currency or default NGN
-  const currency = (user as any)?.preferred_currency || 'NGN';
-
   // Credits: GET /claude-summary/credits returns
   // {free_credits_remaining, purchased_credits, gifted_credits, has_unlimited_subscription, total_available, total_summaries_generated}
   const freeCredits = creditsData?.free_credits_remaining ?? 0;
@@ -58,13 +57,6 @@ export default function WalletCreditsScreen({navigation}: Props) {
   const totalCredits = creditsData?.total_available ?? (freeCredits + purchasedCredits + giftedCredits);
   const summariesGenerated = creditsData?.total_summaries_generated ?? 0;
   const hasUnlimited = creditsData?.has_unlimited_subscription ?? false;
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    }).format(amount / 100); // Amount in kobo/pence, convert to major unit
-  };
 
   const handleFundWallet = () => {
     (navigation as any).navigate('Main', {screen: 'Wallet'});
@@ -106,7 +98,7 @@ export default function WalletCreditsScreen({navigation}: Props) {
                   Wallet Balance
                 </Text>
                 <Text style={{fontSize: 28, fontWeight: '700', color: colors.foreground}}>
-                  {currency} {formatCurrency(balance)}
+                  {format(balance / 100)}
                 </Text>
               </View>
             </View>

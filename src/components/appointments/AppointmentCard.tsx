@@ -3,7 +3,8 @@ import {View, Text, TouchableOpacity} from 'react-native';
 import {Calendar, Clock, Video, Phone, MapPin, MessageSquare} from 'lucide-react-native';
 import {Avatar, StatusBadge, Button} from '../ui';
 import {colors} from '../../theme/colors';
-import {formatDate, formatTime, formatCurrency} from '../../utils/formatters';
+import {formatDate, formatTime} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import {MEETING_CHANNEL_LABELS} from '../../utils/constants';
 
 interface AppointmentCardProps {
@@ -36,6 +37,7 @@ export default function AppointmentCard({
   onPress,
   onJoin,
 }: AppointmentCardProps) {
+  const {format} = useCurrency();
   const specialist = appointment.specialist_id || appointment.specialist || {};
   const profile = specialist.profile || {};
   const specialistName = profile.first_name
@@ -106,7 +108,7 @@ export default function AppointmentCard({
       {/* Bottom row: Fee + Actions */}
       <View className="flex-row items-center justify-between">
         <Text className="text-primary font-bold text-sm">
-          {formatCurrency(fee)}
+          {format(fee)}
         </Text>
         <View className="flex-row items-center gap-2">
           {showJoin && onJoin && (

@@ -30,7 +30,8 @@ import {
 import {usePrescriptionsStore} from '../../store/prescriptions';
 import {Header, Avatar, StatusBadge, Button, Skeleton} from '../../components/ui';
 import {colors} from '../../theme/colors';
-import {formatDate, formatCurrency} from '../../utils/formatters';
+import {formatDate} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import type {ProfileStackParamList} from '../../navigation/stacks/ProfileStack';
 import type {SpecialistPrescriptionStatus} from '../../types/prescription.types';
 
@@ -49,6 +50,7 @@ const STATUS_BANNER_CONFIG: Record<string, {bg: string; icon: React.ComponentTyp
 };
 
 export default function PrescriptionDetailScreen() {
+  const {format} = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<ProfileStackParamList, 'PrescriptionDetail'>>();
   const prescriptionId = route.params.id;
@@ -364,7 +366,7 @@ export default function PrescriptionDetailScreen() {
                   ) : null}
                 </View>
                 <Text className="text-sm font-bold text-foreground">
-                  {formatCurrency(item.total_price || 0, rx.currency || 'NGN')}
+                  {format(item.total_price || 0)}
                 </Text>
               </View>
 
@@ -419,7 +421,7 @@ export default function PrescriptionDetailScreen() {
           <View className="flex-row justify-between mb-2">
             <Text className="text-sm text-muted-foreground">Subtotal</Text>
             <Text className="text-sm text-foreground">
-              {formatCurrency(rx.subtotal || 0, rx.currency || 'NGN')}
+              {format(rx.subtotal || 0)}
             </Text>
           </View>
 
@@ -427,7 +429,7 @@ export default function PrescriptionDetailScreen() {
             <View className="flex-row justify-between mb-2">
               <Text className="text-sm text-muted-foreground">Discount</Text>
               <Text className="text-sm text-success">
-                -{formatCurrency(rx.discount, rx.currency || 'NGN')}
+                -{format(rx.discount)}
               </Text>
             </View>
           )}
@@ -436,7 +438,7 @@ export default function PrescriptionDetailScreen() {
             <View className="flex-row justify-between mb-2">
               <Text className="text-sm text-muted-foreground">Delivery Fee</Text>
               <Text className="text-sm text-foreground">
-                {formatCurrency(rx.delivery_fee, rx.currency || 'NGN')}
+                {format(rx.delivery_fee)}
               </Text>
             </View>
           )}
@@ -444,7 +446,7 @@ export default function PrescriptionDetailScreen() {
           <View className="flex-row justify-between pt-3 border-t border-border">
             <Text className="text-sm font-bold text-foreground">Total</Text>
             <Text className="text-lg font-bold text-foreground">
-              {formatCurrency(rx.total_amount || 0, rx.currency || 'NGN')}
+              {format(rx.total_amount || 0)}
             </Text>
           </View>
         </View>
@@ -554,7 +556,7 @@ export default function PrescriptionDetailScreen() {
               onPress={() => setShowPaymentPicker(true)}
               loading={actionLoading === 'pay'}
               disabled={!!actionLoading}>
-              Pay {formatCurrency(rx.total_amount || 0, rx.currency || 'NGN')}
+              Pay {format(rx.total_amount || 0)}
             </Button>
           )}
 

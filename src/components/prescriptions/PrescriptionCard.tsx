@@ -3,7 +3,8 @@ import {View, Text, TouchableOpacity} from 'react-native';
 import {Pill, Calendar, ChevronRight, User} from 'lucide-react-native';
 import {StatusBadge} from '../ui';
 import {colors} from '../../theme/colors';
-import {formatDate, formatCurrency} from '../../utils/formatters';
+import {formatDate} from '../../utils/formatters';
+import {useCurrency} from '../../hooks/useCurrency';
 import type {SpecialistPrescription} from '../../types/prescription.types';
 
 interface PrescriptionCardProps {
@@ -12,6 +13,7 @@ interface PrescriptionCardProps {
 }
 
 export default function PrescriptionCard({prescription, onPress}: PrescriptionCardProps) {
+  const {format} = useCurrency();
   const specialist = prescription.specialist_id;
   const specialistName =
     typeof specialist === 'object' && specialist?.profile
@@ -62,7 +64,7 @@ export default function PrescriptionCard({prescription, onPress}: PrescriptionCa
           {medicationCount} medication{medicationCount !== 1 ? 's' : ''}
         </Text>
         <Text className="text-sm font-bold text-foreground">
-          {formatCurrency(prescription.total_amount || 0, prescription.currency || 'NGN')}
+          {format(prescription.total_amount || 0)}
         </Text>
       </View>
 
