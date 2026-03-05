@@ -1020,10 +1020,10 @@ export default function WalletScreen() {
                 </View>
               </View>
 
-              {/* Amount Input */}
+              {/* Amount Input — always NGN since Paystack charges in Naira */}
               <View style={{backgroundColor: colors.muted, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center'}}>
                 <Text style={{fontSize: 24, fontWeight: '700', color: colors.mutedForeground, marginRight: 4}}>
-                  {symbol}
+                  {'\u20A6'}
                 </Text>
                 <TextInput
                   style={{flex: 1, fontSize: 24, fontWeight: '700', color: colors.foreground, padding: 0}}
@@ -1053,7 +1053,7 @@ export default function WalletScreen() {
                         backgroundColor: isActive ? `${colors.primary}15` : 'transparent',
                       }}>
                       <Text style={{fontSize: 13, fontWeight: '600', color: isActive ? colors.primary : colors.foreground}}>
-                        {format(amt)}
+                        {'\u20A6'}{amt.toLocaleString()}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -1061,7 +1061,7 @@ export default function WalletScreen() {
               </View>
 
               <Text style={{fontSize: 11, color: colors.mutedForeground}}>
-                Minimum amount: {symbol}100
+                Minimum amount: {'\u20A6'}100
               </Text>
 
               {/* Actions */}
