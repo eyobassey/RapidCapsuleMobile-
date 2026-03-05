@@ -124,6 +124,7 @@ export default function OrderDetailScreen() {
 
   const canCancel = ['PENDING_PAYMENT', 'PAID'].includes(order.status);
   const canRate = ['DELIVERED', 'PICKED_UP'].includes(order.status) && !order.rating;
+  const canTrack = ['PAID', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'].includes(order.status);
 
   // Status timeline
   const currentIdx = ORDER_STATUS_SEQUENCE.indexOf(order.status as any);
@@ -396,8 +397,16 @@ export default function OrderDetailScreen() {
       </ScrollView>
 
       {/* Bottom Actions */}
-      {(canCancel || canRate) && (
+      {(canCancel || canRate || canTrack) && (
         <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8 flex-row gap-3">
+          {canTrack && (
+            <Button
+              variant="primary"
+              onPress={() => navigation.navigate('TrackOrder', {orderNumber: order.order_number})}
+              className="flex-1">
+              Track Order
+            </Button>
+          )}
           {canCancel && (
             <Button
               variant="secondary"
@@ -407,7 +416,7 @@ export default function OrderDetailScreen() {
               Cancel Order
             </Button>
           )}
-          {!isCancelled && (
+          {!isCancelled && !canTrack && (
             <Button
               variant="outline"
               onPress={handleReorder}

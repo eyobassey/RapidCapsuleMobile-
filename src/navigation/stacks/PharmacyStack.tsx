@@ -11,6 +11,7 @@ import OrderDetailScreen from '../../screens/pharmacy/OrderDetailScreen';
 import UploadPrescriptionScreen from '../../screens/pharmacy/UploadPrescriptionScreen';
 import MyUploadsScreen from '../../screens/pharmacy/MyUploadsScreen';
 import UploadDetailScreen from '../../screens/pharmacy/UploadDetailScreen';
+import TrackOrderScreen from '../../screens/pharmacy/TrackOrderScreen';
 
 export type PharmacyStackParamList = {
   PharmacyHome: undefined;
@@ -21,6 +22,7 @@ export type PharmacyStackParamList = {
   Checkout: undefined;
   MyOrders: undefined;
   OrderDetail: {orderId: string};
+  TrackOrder: {orderNumber: string};
   UploadPrescription: undefined;
   MyUploads: undefined;
   UploadDetail: {uploadId: string};
@@ -39,6 +41,7 @@ export default function PharmacyStack() {
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="MyOrders" component={MyOrdersScreen} />
       <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+      <Stack.Screen name="TrackOrder" component={TrackOrderScreen} />
       <Stack.Screen name="UploadPrescription" component={UploadPrescriptionScreen} />
       <Stack.Screen name="MyUploads" component={MyUploadsScreen} />
       <Stack.Screen name="UploadDetail" component={UploadDetailScreen} />

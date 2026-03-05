@@ -72,6 +72,7 @@ interface PharmacyState {
   myOrders: PharmacyOrder[];
   ordersTotal: number;
   currentOrder: PharmacyOrder | null;
+  trackingOrder: PharmacyOrder | null;
   ordersLoading: boolean;
 
   // Addresses
@@ -102,6 +103,7 @@ interface PharmacyState {
   cancelOrder: (id: string, reason: string) => Promise<void>;
   rateOrder: (id: string, rating: number, review?: string) => Promise<void>;
   createOtcOrder: (payload: any) => Promise<PharmacyOrder>;
+  trackOrder: (orderNumber: string) => Promise<void>;
 
   // ── Address Actions ──
   fetchAddresses: () => Promise<void>;
@@ -131,6 +133,7 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
   myOrders: [],
   ordersTotal: 0,
   currentOrder: null,
+  trackingOrder: null,
   ordersLoading: false,
 
   addresses: [],
@@ -312,6 +315,16 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
   createOtcOrder: async (payload) => {
     const data = await pharmacyService.createOtcOrder(payload);
     return data;
+  },
+
+  trackOrder: async (orderNumber) => {
+    set({ordersLoading: true, trackingOrder: null});
+    try {
+      const data = await pharmacyService.trackOrder(orderNumber);
+      set({trackingOrder: data, ordersLoading: false});
+    } catch {
+      set({ordersLoading: false});
+    }
   },
 
   // ── Address Actions ──

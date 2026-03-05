@@ -32,6 +32,7 @@ const HIDE_TAB_SCREENS = new Set([
   'Cart',
   'Checkout',
   'OrderDetail',
+  'TrackOrder',
   'DrugDetail',
   'UploadPrescription',
   'UploadDetail',

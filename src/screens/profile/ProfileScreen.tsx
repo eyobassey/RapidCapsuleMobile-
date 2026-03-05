@@ -5,6 +5,7 @@ import {useNavigation} from '@react-navigation/native';
 import {
   Pill,
   FileText,
+  ClipboardList,
   Wallet,
   Bell,
   Shield,
@@ -70,6 +71,12 @@ export default function ProfileScreen() {
           title: 'Prescriptions',
           subtitle: 'View your prescriptions',
           onPress: () => navigation.navigate('PrescriptionsList'),
+        },
+        {
+          icon: <ClipboardList size={20} color={colors.secondary} />,
+          title: 'Order History',
+          subtitle: 'Track your pharmacy orders',
+          onPress: () => navigation.navigate('Pharmacy' as any, {screen: 'MyOrders'}),
         },
         {
           icon: <FileText size={20} color={colors.accent} />,

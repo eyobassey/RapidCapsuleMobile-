@@ -133,4 +133,11 @@ export const pharmacyService = {
     const res = await api.patch(`/pharmacy-orders/addresses/my/${addressId}/default`);
     return res.data.data || res.data.result;
   },
+
+  // ── Tracking ──
+
+  async trackOrder(orderNumber: string) {
+    const res = await api.get(`/pharmacy-orders/track/${orderNumber}`);
+    return res.data.data || res.data.result;
+  },
 };

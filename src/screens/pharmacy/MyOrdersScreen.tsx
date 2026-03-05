@@ -1,8 +1,8 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {View, FlatList, RefreshControl, ActivityIndicator} from 'react-native';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {View, Text, FlatList, RefreshControl, ActivityIndicator} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
-import {ClipboardList} from 'lucide-react-native';
+import {ClipboardList, TrendingUp, CheckCircle, Package} from 'lucide-react-native';
 
 import {usePharmacyStore} from '../../store/pharmacy';
 import OrderCard from '../../components/pharmacy/OrderCard';
@@ -37,6 +37,14 @@ export default function MyOrdersScreen() {
     navigation.navigate('OrderDetail', {orderId: order._id});
   };
 
+  // Stats
+  const stats = useMemo(() => {
+    const total = myOrders.length;
+    const active = myOrders.filter(o => ACTIVE_STATUSES.includes(o.status)).length;
+    const completed = myOrders.filter(o => COMPLETED_STATUSES.includes(o.status)).length;
+    return {total, active, completed};
+  }, [myOrders]);
+
   // Client-side filter by tab
   const filteredOrders = myOrders.filter(order => {
     if (activeTab === 'all') return true;
@@ -56,6 +64,27 @@ export default function MyOrdersScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header title="My Orders" onBack={() => navigation.goBack()} />
+
+      {/* Stats Bar */}
+      {myOrders.length > 0 && (
+        <View className="flex-row px-5 pt-3 pb-1 gap-3">
+          <View className="flex-1 bg-card border border-border rounded-xl p-3 items-center">
+            <Package size={16} color={colors.primary} />
+            <Text className="text-lg font-bold text-foreground mt-1">{stats.total}</Text>
+            <Text className="text-[10px] text-muted-foreground">Total</Text>
+          </View>
+          <View className="flex-1 bg-card border border-border rounded-xl p-3 items-center">
+            <TrendingUp size={16} color={colors.secondary} />
+            <Text className="text-lg font-bold text-foreground mt-1">{stats.active}</Text>
+            <Text className="text-[10px] text-muted-foreground">Active</Text>
+          </View>
+          <View className="flex-1 bg-card border border-border rounded-xl p-3 items-center">
+            <CheckCircle size={16} color={colors.success} />
+            <Text className="text-lg font-bold text-foreground mt-1">{stats.completed}</Text>
+            <Text className="text-[10px] text-muted-foreground">Completed</Text>
+          </View>
+        </View>
+      )}
 
       <View className="px-5 py-2">
         <TabBar
