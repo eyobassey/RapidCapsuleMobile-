@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, forwardRef} from 'react';
 import {View, TextInput, Text, TouchableOpacity, type TextInputProps} from 'react-native';
 
 interface InputProps extends TextInputProps {
@@ -10,16 +10,10 @@ interface InputProps extends TextInputProps {
   containerClassName?: string;
 }
 
-export default function Input({
-  label,
-  required,
-  icon,
-  rightIcon,
-  error,
-  containerClassName,
-  className,
-  ...props
-}: InputProps) {
+const Input = forwardRef<TextInput, InputProps>(function Input(
+  {label, required, icon, rightIcon, error, containerClassName, className, ...props},
+  ref,
+) {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -36,6 +30,7 @@ export default function Input({
         } ${className || ''}`}>
         {icon && <View className="pl-4">{icon}</View>}
         <TextInput
+          ref={ref}
           className={`flex-1 text-foreground text-base px-4 h-full ${icon ? 'pl-3' : ''}`}
           placeholderTextColor="#7c8ba3"
           onFocus={() => setFocused(true)}
@@ -51,4 +46,6 @@ export default function Input({
       )}
     </View>
   );
-}
+});
+
+export default Input;

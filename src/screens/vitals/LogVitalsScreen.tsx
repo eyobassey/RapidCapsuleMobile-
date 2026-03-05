@@ -1,11 +1,10 @@
-import React, {useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {
   View,
   Text,
+  TextInput,
   ScrollView,
-  TouchableOpacity,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -26,7 +25,6 @@ import {
   Percent,
   GlassWater,
   Zap,
-  Check,
   StickyNote,
 } from 'lucide-react-native';
 
@@ -47,6 +45,7 @@ export default function LogVitalsScreen() {
   const route = useRoute<RouteProp<HomeStackParamList, 'LogVitals'>>();
   const focusedVitalType = route.params?.vitalType;
   const {logVital, isLoading} = useVitalsStore();
+  const bpDiastolicRef = useRef<TextInput>(null);
 
   // Form state: keyed by vital type key
   const [values, setValues] = useState<Record<string, string>>({});
@@ -122,17 +121,6 @@ export default function LogVitalsScreen() {
       <Header
         title={focusedVitalType && displayedVitals[0] ? `Log ${displayedVitals[0].name}` : 'Log Vitals'}
         onBack={() => navigation.goBack()}
-        rightAction={
-          saving ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <TouchableOpacity
-              onPress={handleSave}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-              <Check size={24} color={colors.primary} />
-            </TouchableOpacity>
-          )
-        }
       />
 
       <KeyboardAvoidingView
@@ -177,6 +165,8 @@ export default function LogVitalsScreen() {
                         onChangeText={setBpSystolic}
                         keyboardType="numeric"
                         returnKeyType="next"
+                        autoFocus={!!focusedVitalType}
+                        onSubmitEditing={() => bpDiastolicRef.current?.focus()}
                       />
                     </View>
                     <View className="items-center justify-center">
@@ -184,11 +174,13 @@ export default function LogVitalsScreen() {
                     </View>
                     <View className="flex-1">
                       <Input
+                        ref={bpDiastolicRef}
                         placeholder="Diastolic"
                         value={bpDiastolic}
                         onChangeText={setBpDiastolic}
                         keyboardType="numeric"
                         returnKeyType="done"
+                        onSubmitEditing={focusedVitalType ? handleSave : undefined}
                       />
                     </View>
                   </View>
@@ -205,6 +197,8 @@ export default function LogVitalsScreen() {
                   onChangeText={val => updateValue(config.key, val)}
                   keyboardType="numeric"
                   returnKeyType="done"
+                  autoFocus={!!focusedVitalType}
+                  onSubmitEditing={focusedVitalType ? handleSave : undefined}
                   icon={<IconComponent size={18} color={config.color} />}
                   rightIcon={
                     <Text className="text-xs text-muted-foreground">{config.unit}</Text>
@@ -214,19 +208,21 @@ export default function LogVitalsScreen() {
             );
           })}
 
-          {/* Notes */}
-          <View className="mb-6">
-            <Input
-              label="Notes (Optional)"
-              placeholder="Any additional notes..."
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              numberOfLines={3}
-              icon={<StickyNote size={18} color={colors.mutedForeground} />}
-              className="h-24 items-start pt-3"
-            />
-          </View>
+          {/* Notes — hidden in single-vital mode for quick logging */}
+          {!focusedVitalType && (
+            <View className="mb-6">
+              <Input
+                label="Notes (Optional)"
+                placeholder="Any additional notes..."
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                numberOfLines={3}
+                icon={<StickyNote size={18} color={colors.mutedForeground} />}
+                className="h-24 items-start pt-3"
+              />
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
 
