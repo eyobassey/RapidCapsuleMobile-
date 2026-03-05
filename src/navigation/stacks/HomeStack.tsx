@@ -13,6 +13,24 @@ import InterviewScreen from '../../screens/health-checkup/InterviewScreen';
 import ResultsScreen from '../../screens/health-checkup/ResultsScreen';
 import HistoryScreen from '../../screens/health-checkup/HistoryScreen';
 import HistoryDetailScreen from '../../screens/health-checkup/HistoryDetailScreen';
+// Messages
+import ConsentScreen from '../../screens/messages/ConsentScreen';
+import ConversationsListScreen from '../../screens/messages/ConversationsListScreen';
+import ChatScreen from '../../screens/messages/ChatScreen';
+import NewConversationScreen from '../../screens/messages/NewConversationScreen';
+import MediaPreviewScreen from '../../screens/messages/MediaPreviewScreen';
+// Recovery
+import RecoveryEnrollScreen from '../../screens/recovery/RecoveryEnrollScreen';
+import RecoveryDashboardScreen from '../../screens/recovery/RecoveryDashboardScreen';
+import DailyCheckInScreen from '../../screens/recovery/DailyCheckInScreen';
+import ScreeningSelectScreen from '../../screens/recovery/ScreeningSelectScreen';
+import ScreeningFlowScreen from '../../screens/recovery/ScreeningFlowScreen';
+import ScreeningResultScreen from '../../screens/recovery/ScreeningResultScreen';
+import ScreeningHistoryScreen from '../../screens/recovery/ScreeningHistoryScreen';
+import MilestonesScreen from '../../screens/recovery/MilestonesScreen';
+import CrisisScreen from '../../screens/recovery/CrisisScreen';
+import CheckInHistoryScreen from '../../screens/recovery/CheckInHistoryScreen';
+import CompanionChatScreen from '../../screens/recovery/CompanionChatScreen';
 
 export type HomeStackParamList = {
   HomeScreen: undefined;
@@ -28,6 +46,24 @@ export type HomeStackParamList = {
   HealthCheckupResults: undefined;
   HealthCheckupHistory: undefined;
   HealthCheckupDetail: {id: string};
+  // Messages
+  MessagingConsent: undefined;
+  ConversationsList: undefined;
+  Chat: {conversationId: string; conversation?: any};
+  NewConversation: undefined;
+  MediaPreview: {url: string; type: string};
+  // Recovery
+  RecoveryEnroll: undefined;
+  RecoveryDashboard: undefined;
+  DailyCheckIn: undefined;
+  ScreeningSelect: undefined;
+  ScreeningFlow: {instrument: string; questions: any[]};
+  ScreeningResult: {screeningId: string; result: any};
+  ScreeningHistory: undefined;
+  Milestones: undefined;
+  Crisis: undefined;
+  CheckInHistory: undefined;
+  CompanionChat: {sessionId?: string};
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -48,6 +84,24 @@ export default function HomeStack() {
       <Stack.Screen name="HealthCheckupResults" component={ResultsScreen} />
       <Stack.Screen name="HealthCheckupHistory" component={HistoryScreen} />
       <Stack.Screen name="HealthCheckupDetail" component={HistoryDetailScreen} />
+      {/* Messages */}
+      <Stack.Screen name="MessagingConsent" component={ConsentScreen} />
+      <Stack.Screen name="ConversationsList" component={ConversationsListScreen} />
+      <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="NewConversation" component={NewConversationScreen} />
+      <Stack.Screen name="MediaPreview" component={MediaPreviewScreen} options={{animation: 'fade'}} />
+      {/* Recovery */}
+      <Stack.Screen name="RecoveryEnroll" component={RecoveryEnrollScreen} />
+      <Stack.Screen name="RecoveryDashboard" component={RecoveryDashboardScreen} />
+      <Stack.Screen name="DailyCheckIn" component={DailyCheckInScreen} />
+      <Stack.Screen name="ScreeningSelect" component={ScreeningSelectScreen} />
+      <Stack.Screen name="ScreeningFlow" component={ScreeningFlowScreen} />
+      <Stack.Screen name="ScreeningResult" component={ScreeningResultScreen} />
+      <Stack.Screen name="ScreeningHistory" component={ScreeningHistoryScreen} />
+      <Stack.Screen name="Milestones" component={MilestonesScreen} />
+      <Stack.Screen name="Crisis" component={CrisisScreen} />
+      <Stack.Screen name="CheckInHistory" component={CheckInHistoryScreen} />
+      <Stack.Screen name="CompanionChat" component={CompanionChatScreen} />
     </Stack.Navigator>
   );
 }

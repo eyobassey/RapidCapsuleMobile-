@@ -36,6 +36,24 @@ const HIDE_TAB_SCREENS = new Set([
   'DrugDetail',
   'UploadPrescription',
   'UploadDetail',
+  // Messages
+  'MessagingConsent',
+  'ConversationsList',
+  'Chat',
+  'NewConversation',
+  'MediaPreview',
+  // Recovery
+  'RecoveryEnroll',
+  'RecoveryDashboard',
+  'DailyCheckIn',
+  'ScreeningSelect',
+  'ScreeningFlow',
+  'ScreeningResult',
+  'ScreeningHistory',
+  'Milestones',
+  'Crisis',
+  'CheckInHistory',
+  'CompanionChat',
 ]);
 
 function getTabBarStyle(route: any) {

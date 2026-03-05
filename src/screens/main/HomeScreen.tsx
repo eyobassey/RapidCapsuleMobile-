@@ -10,6 +10,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {
   Bell,
+  MessageCircle,
   Stethoscope,
   Pill,
   Calendar,
@@ -30,8 +31,10 @@ import {useAppointmentsStore} from '../../store/appointments';
 import {useWalletStore} from '../../store/wallet';
 import {useCreditsStore} from '../../store/credits';
 import {useNotificationsStore} from '../../store/notifications';
+import {useMessagingStore} from '../../store/messaging';
 
 import {Avatar, ProgressRing, StatusBadge, Skeleton} from '../../components/ui';
+import RecoveryHomeCard from '../../components/recovery/RecoveryHomeCard';
 import {colors} from '../../theme/colors';
 import {
   getGreeting,
@@ -84,6 +87,10 @@ export default function HomeScreen() {
   const {balance, fetchBalance} = useWalletStore();
   const {totalAvailable, hasUnlimited, isLoading: creditsLoading, fetchCredits} = useCreditsStore();
   const {unreadCount, fetchUnreadCount} = useNotificationsStore();
+  const msgUnread = useMessagingStore(s => s.unreadTotal);
+  const checkConsent = useMessagingStore(s => s.checkConsent);
+  const fetchConversations = useMessagingStore(s => s.fetchConversations);
+  const computeUnreadTotal = useMessagingStore(s => s.computeUnreadTotal);
 
   // ---------- derived ----------
   const firstName = user?.profile?.first_name || 'User';
@@ -111,8 +118,18 @@ export default function HomeScreen() {
       fetchBalance(),
       fetchCredits(),
       fetchUnreadCount(),
+      fetchConversations(1).then(() => computeUnreadTotal(user?._id || '')),
     ]);
   }, [fetchScore, fetchAppointments, fetchBalance, fetchCredits, fetchUnreadCount, setFilter]);
+
+  const handleMessages = useCallback(async () => {
+    const hasConsent = await checkConsent();
+    if (hasConsent) {
+      navigation.navigate('ConversationsList');
+    } else {
+      navigation.navigate('MessagingConsent');
+    }
+  }, [checkConsent, navigation]);
 
   useEffect(() => {
     loadData();
@@ -175,6 +192,21 @@ export default function HomeScreen() {
         </View>
 
         <View className="flex-row items-center gap-3">
+          {/* Messages */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleMessages}
+            className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center">
+            <MessageCircle size={20} color={colors.foreground} />
+            {msgUnread > 0 && (
+              <View className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-primary items-center justify-center px-1">
+                <Text className="text-[10px] font-bold text-white">
+                  {msgUnread > 99 ? '99+' : msgUnread}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
           {/* Notification bell */}
           <TouchableOpacity
             activeOpacity={0.7}
@@ -268,6 +300,9 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* ---- Recovery Card ---- */}
+        <RecoveryHomeCard />
 
         {/* ---- Quick Stats Row ---- */}
         <View className="flex-row mx-5 mt-4 gap-3">

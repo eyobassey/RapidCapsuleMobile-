@@ -7,9 +7,12 @@ interface HeaderProps {
   title: string;
   onBack?: () => void;
   rightAction?: React.ReactNode;
+  right?: React.ReactNode;
+  center?: React.ReactNode;
 }
 
-export default function Header({title, onBack, rightAction}: HeaderProps) {
+export default function Header({title, onBack, rightAction, right, center}: HeaderProps) {
+  const rightNode = right ?? rightAction ?? null;
   return (
     <View className="flex-row items-center justify-between bg-card border-b border-border px-4 py-3">
       <View className="w-10 items-start">
@@ -23,13 +26,17 @@ export default function Header({title, onBack, rightAction}: HeaderProps) {
         ) : null}
       </View>
 
-      <Text
-        className="text-lg font-bold text-foreground flex-1 text-center"
-        numberOfLines={1}>
-        {title}
-      </Text>
+      {center ? (
+        <View style={{flex: 1}}>{center}</View>
+      ) : (
+        <Text
+          className="text-lg font-bold text-foreground flex-1 text-center"
+          numberOfLines={1}>
+          {title}
+        </Text>
+      )}
 
-      <View className="w-10 items-end">{rightAction ?? null}</View>
+      <View className="w-10 items-end">{rightNode}</View>
     </View>
   );
 }
