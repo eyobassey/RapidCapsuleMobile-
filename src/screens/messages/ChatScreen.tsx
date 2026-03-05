@@ -9,6 +9,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -19,8 +20,12 @@ import {
   Image as ImageIcon,
   File as FileIcon,
   Camera,
+  Mic,
+  Square,
+  Trash2,
 } from 'lucide-react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
+import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 
 import {Header, Avatar} from '../../components/ui';
 import MessageBubble from '../../components/messages/MessageBubble';
@@ -30,7 +35,9 @@ import {useMessagingStore} from '../../store/messaging';
 import {useAuthStore} from '../../store/auth';
 import {messagingService} from '../../services/messaging.service';
 import {socketService} from '../../services/socket.service';
-import type {Conversation, Message, UserSnippet} from '../../types/messaging.types';
+import type {Conversation, Message, UserSnippet, PresenceStatus} from '../../types/messaging.types';
+
+const audioRecorderPlayer = new AudioRecorderPlayer();
 
 export default function ChatScreen() {
   const navigation = useNavigation<any>();
@@ -49,6 +56,7 @@ export default function ChatScreen() {
   const markConversationRead = useMessagingStore(s => s.markConversationRead);
   const deleteMessageLocal = useMessagingStore(s => s.deleteMessageLocal);
   const addIncomingMessage = useMessagingStore(s => s.addIncomingMessage);
+  const updatePresence = useMessagingStore(s => s.updatePresence);
 
   const messages = useMemo(() => allMessages[conversationId] || [], [allMessages, conversationId]);
   const hasMore = allHasMore[conversationId] ?? true;
@@ -59,9 +67,13 @@ export default function ChatScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordDuration, setRecordDuration] = useState(0);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
   const flatListRef = useRef<FlatList>(null);
+  const recordingPathRef = useRef<string | null>(null);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   // Get partner info
   const otherParticipant = initialConv?.participants.find(p => {
@@ -85,6 +97,39 @@ export default function ChatScreen() {
   const partnerPhoto = otherUser?.profile?.profile_photo;
   const isOnline = presenceMap[otherId] === 'online';
 
+  // ── Socket: ensure connected + listen for presence ──
+  useEffect(() => {
+    socketService.connect();
+
+    const unsubPresence = socketService.on(
+      'presence_update',
+      (data: {userId: string; status: PresenceStatus}) => {
+        updatePresence(data.userId, data.status);
+      },
+    );
+
+    const unsubConnected = socketService.on('connected', (data: any) => {
+      if (data?.presence) {
+        Object.entries(data.presence).forEach(([uid, status]) => {
+          updatePresence(uid, status as PresenceStatus);
+        });
+      }
+    });
+
+    const unsubNewMsg = socketService.on(
+      'new_message',
+      (data: {message: Message; conversation: Conversation}) => {
+        addIncomingMessage(data.message, data.conversation);
+      },
+    );
+
+    return () => {
+      unsubPresence();
+      unsubConnected();
+      unsubNewMsg();
+    };
+  }, []);
+
   // Load messages on mount
   useEffect(() => {
     fetchMessages(conversationId);
@@ -105,6 +150,22 @@ export default function ChatScreen() {
       }
     }
   }, [messages.length]);
+
+  // ── Recording pulse animation ──
+  useEffect(() => {
+    if (isRecording) {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {toValue: 1.3, duration: 600, useNativeDriver: true}),
+          Animated.timing(pulseAnim, {toValue: 1, duration: 600, useNativeDriver: true}),
+        ]),
+      );
+      loop.start();
+      return () => loop.stop();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [isRecording]);
 
   // Typing indicator logic
   const handleTextChange = (val: string) => {
@@ -189,6 +250,81 @@ export default function ChatScreen() {
     } catch {
       // cancelled
     }
+  };
+
+  // ── Voice recording ──
+  const handleStartRecording = async () => {
+    try {
+      const path = Platform.select({
+        ios: `voice_${Date.now()}.m4a`,
+        android: `${Platform.OS === 'android' ? '/data/user/0/com.rapidcapsulemobile/cache/' : ''}voice_${Date.now()}.mp4`,
+      });
+      const result = await audioRecorderPlayer.startRecorder(path);
+      recordingPathRef.current = result;
+      setIsRecording(true);
+      setRecordDuration(0);
+
+      audioRecorderPlayer.addRecordBackListener(e => {
+        setRecordDuration(Math.floor(e.currentPosition / 1000));
+      });
+    } catch {
+      Alert.alert('Error', 'Could not start recording. Please check microphone permissions.');
+    }
+  };
+
+  const handleStopAndSend = async () => {
+    try {
+      const filePath = await audioRecorderPlayer.stopRecorder();
+      audioRecorderPlayer.removeRecordBackListener();
+      setIsRecording(false);
+
+      if (!filePath || recordDuration < 1) {
+        setRecordDuration(0);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('type', 'voice_note');
+      formData.append('file', {
+        uri: Platform.OS === 'android' ? `file://${filePath}` : filePath,
+        type: 'm4a' === filePath.split('.').pop() ? 'audio/m4a' : 'audio/mp4',
+        name: `voice_${Date.now()}.${filePath.split('.').pop() || 'm4a'}`,
+      } as any);
+
+      setSending(true);
+      try {
+        const sent = await messagingService.sendAttachment(conversationId, formData);
+        if (sent?._id && initialConv) {
+          addIncomingMessage(sent, initialConv);
+        }
+      } catch {
+        Alert.alert('Error', 'Failed to send voice message.');
+      } finally {
+        setSending(false);
+        setRecordDuration(0);
+      }
+    } catch {
+      setIsRecording(false);
+      setRecordDuration(0);
+    }
+  };
+
+  const handleCancelRecording = async () => {
+    try {
+      await audioRecorderPlayer.stopRecorder();
+      audioRecorderPlayer.removeRecordBackListener();
+    } catch {
+      // ignore
+    }
+    setIsRecording(false);
+    setRecordDuration(0);
+    recordingPathRef.current = null;
+  };
+
+  const formatRecordTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
   };
 
   // Delete message
@@ -403,78 +539,163 @@ export default function ChatScreen() {
         )}
 
         {/* Input bar */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'flex-end',
-            gap: 8,
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-            backgroundColor: colors.background,
-          }}>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setShowAttachMenu(!showAttachMenu)}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: colors.muted,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Paperclip size={18} color={colors.mutedForeground} />
-          </TouchableOpacity>
-
+        {isRecording ? (
+          /* ── Recording UI ── */
           <View
             style={{
-              flex: 1,
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 20,
-              paddingHorizontal: 16,
-              paddingVertical: Platform.OS === 'ios' ? 8 : 4,
-              maxHeight: 120,
-            }}>
-            <TextInput
-              value={text}
-              onChangeText={handleTextChange}
-              placeholder="Type a message..."
-              placeholderTextColor={colors.mutedForeground}
-              multiline
-              style={{
-                fontSize: 14,
-                color: colors.foreground,
-                maxHeight: 100,
-              }}
-            />
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={handleSend}
-            disabled={!text.trim() || sending}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: text.trim() ? colors.primary : colors.muted,
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center',
+              gap: 12,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
+              backgroundColor: colors.background,
             }}>
-            {sending ? (
-              <ActivityIndicator size="small" color={colors.white} />
-            ) : (
-              <Send
-                size={18}
-                color={text.trim() ? colors.white : colors.mutedForeground}
+            {/* Cancel */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handleCancelRecording}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: `${colors.destructive}15`,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Trash2 size={18} color={colors.destructive} />
+            </TouchableOpacity>
+
+            {/* Recording indicator */}
+            <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10}}>
+              <Animated.View
+                style={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: colors.destructive,
+                  transform: [{scale: pulseAnim}],
+                }}
               />
+              <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+                {formatRecordTime(recordDuration)}
+              </Text>
+              <Text style={{fontSize: 12, color: colors.mutedForeground}}>
+                Recording...
+              </Text>
+            </View>
+
+            {/* Send voice */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handleStopAndSend}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: colors.primary,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Send size={18} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* ── Normal input bar ── */
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'flex-end',
+              gap: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
+              backgroundColor: colors.background,
+            }}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setShowAttachMenu(!showAttachMenu)}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: colors.muted,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Paperclip size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
+
+            <View
+              style={{
+                flex: 1,
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 20,
+                paddingHorizontal: 16,
+                paddingVertical: Platform.OS === 'ios' ? 8 : 4,
+                maxHeight: 120,
+              }}>
+              <TextInput
+                value={text}
+                onChangeText={handleTextChange}
+                placeholder="Type a message..."
+                placeholderTextColor={colors.mutedForeground}
+                multiline
+                style={{
+                  fontSize: 14,
+                  color: colors.foreground,
+                  maxHeight: 100,
+                }}
+              />
+            </View>
+
+            {text.trim() ? (
+              /* Send text button */
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleSend}
+                disabled={sending}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: colors.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                {sending ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <Send size={18} color={colors.white} />
+                )}
+              </TouchableOpacity>
+            ) : (
+              /* Mic button */
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleStartRecording}
+                disabled={sending}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: sending ? colors.muted : colors.accent,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                {sending ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <Mic size={18} color={colors.white} />
+                )}
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
-        </View>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

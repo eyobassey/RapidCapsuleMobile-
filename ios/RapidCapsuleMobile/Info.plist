@@ -38,6 +38,8 @@
 	<string>RapidCapsule needs camera access to photograph prescriptions for verification.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>RapidCapsule needs photo library access to select prescription images for verification.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>RapidCapsule needs microphone access to send voice messages.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>UILaunchStoryboardName</key>
