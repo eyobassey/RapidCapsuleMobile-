@@ -20,6 +20,7 @@ import {
   Image as ImageIcon,
   File as FileIcon,
   Camera,
+  Video as VideoIcon,
   Mic,
   Square,
   Trash2,
@@ -243,6 +244,41 @@ export default function ChatScreen() {
           }
         } catch {
           Alert.alert('Error', 'Failed to send image.');
+        } finally {
+          setSending(false);
+        }
+      }
+    } catch {
+      // cancelled
+    }
+  };
+
+  // Send video
+  const handlePickVideo = async () => {
+    setShowAttachMenu(false);
+    try {
+      const result = await launchImageLibrary({
+        mediaType: 'video',
+        selectionLimit: 1,
+      });
+      if (result.assets?.[0]) {
+        const asset = result.assets[0];
+        const formData = new FormData();
+        formData.append('type', 'video');
+        formData.append('file', {
+          uri: asset.uri,
+          type: asset.type || 'video/mp4',
+          name: asset.fileName || `video_${Date.now()}.mp4`,
+        } as any);
+
+        setSending(true);
+        try {
+          const sent = await messagingService.sendAttachment(conversationId, formData);
+          if (sent?._id && initialConv) {
+            addIncomingMessage(sent, initialConv);
+          }
+        } catch {
+          Alert.alert('Error', 'Failed to send video.');
         } finally {
           setSending(false);
         }
@@ -504,7 +540,7 @@ export default function ChatScreen() {
               <Text style={{fontSize: 10, color: colors.mutedForeground}}>Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setShowAttachMenu(false)}
+              onPress={handlePickVideo}
               style={{alignItems: 'center', gap: 4}}>
               <View
                 style={{
@@ -515,12 +551,27 @@ export default function ChatScreen() {
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}>
-                <FileIcon size={20} color={colors.accent} />
+                <VideoIcon size={20} color={colors.accent} />
               </View>
-              <Text style={{fontSize: 10, color: colors.mutedForeground}}>File</Text>
+              <Text style={{fontSize: 10, color: colors.mutedForeground}}>Video</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={handlePickImage}
+              onPress={() => {
+                setShowAttachMenu(false);
+                launchImageLibrary({mediaType: 'photo', selectionLimit: 1, cameraType: 'back'}).then(r => {
+                  // Camera option uses same flow
+                  if (r.assets?.[0]) {
+                    const asset = r.assets[0];
+                    const fd = new FormData();
+                    fd.append('type', 'image');
+                    fd.append('file', {uri: asset.uri, type: asset.type || 'image/jpeg', name: asset.fileName || 'photo.jpg'} as any);
+                    setSending(true);
+                    messagingService.sendAttachment(conversationId, fd).then(sent => {
+                      if (sent?._id && initialConv) addIncomingMessage(sent, initialConv);
+                    }).catch(() => Alert.alert('Error', 'Failed to send photo.')).finally(() => setSending(false));
+                  }
+                }).catch(() => {});
+              }}
               style={{alignItems: 'center', gap: 4}}>
               <View
                 style={{
@@ -534,6 +585,22 @@ export default function ChatScreen() {
                 <Camera size={20} color={colors.success} />
               </View>
               <Text style={{fontSize: 10, color: colors.mutedForeground}}>Camera</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowAttachMenu(false)}
+              style={{alignItems: 'center', gap: 4}}>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: `${colors.secondary}15`,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <FileIcon size={20} color={colors.secondary} />
+              </View>
+              <Text style={{fontSize: 10, color: colors.mutedForeground}}>File</Text>
             </TouchableOpacity>
           </View>
         )}
