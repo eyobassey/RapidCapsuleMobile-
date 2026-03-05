@@ -320,7 +320,9 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
     set({addressesLoading: true});
     try {
       const data = await pharmacyService.getMyAddresses();
-      set({addresses: Array.isArray(data) ? data : [], addressesLoading: false});
+      // API returns { addresses: [...] } or a flat array
+      const list = Array.isArray(data) ? data : data?.addresses || [];
+      set({addresses: Array.isArray(list) ? list : [], addressesLoading: false});
     } catch {
       set({addressesLoading: false});
     }
@@ -328,15 +330,16 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
 
   addAddress: async (payload) => {
     await pharmacyService.addAddress(payload);
-    // Re-fetch addresses
     const data = await pharmacyService.getMyAddresses();
-    set({addresses: Array.isArray(data) ? data : []});
+    const list = Array.isArray(data) ? data : data?.addresses || [];
+    set({addresses: Array.isArray(list) ? list : []});
   },
 
   setDefaultAddress: async (id) => {
     await pharmacyService.setDefaultAddress(id);
     const data = await pharmacyService.getMyAddresses();
-    set({addresses: Array.isArray(data) ? data : []});
+    const list = Array.isArray(data) ? data : data?.addresses || [];
+    set({addresses: Array.isArray(list) ? list : []});
   },
 
   // ── Search History ──
