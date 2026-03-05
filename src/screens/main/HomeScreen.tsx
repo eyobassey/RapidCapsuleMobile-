@@ -301,9 +301,6 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* ---- Recovery Card ---- */}
-        <RecoveryHomeCard />
-
         {/* ---- Quick Stats Row ---- */}
         <View className="flex-row mx-5 mt-4 gap-3">
           {/* Upcoming Appointments */}
@@ -421,6 +418,9 @@ export default function HomeScreen() {
             ))}
           </View>
         </View>
+
+        {/* ---- Recovery Card ---- */}
+        <RecoveryHomeCard />
 
         {/* ---- Eka AI Banner ---- */}
         <TouchableOpacity
