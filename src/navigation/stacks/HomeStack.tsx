@@ -19,7 +19,7 @@ export type HomeStackParamList = {
   Notifications: undefined;
   Vitals: undefined;
   VitalDetail: {vitalType: string};
-  LogVitals: undefined;
+  LogVitals: {vitalType?: string} | undefined;
   HealthCheckupStart: undefined;
   HealthCheckupPatientInfo: undefined;
   HealthCheckupRiskFactors: undefined;

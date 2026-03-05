@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  TouchableOpacity,
   RefreshControl,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -25,6 +26,7 @@ import {
   TrendingUp,
   Clock,
   Info,
+  Plus,
 } from 'lucide-react-native';
 import Svg, {Path, Circle as SvgCircle, Line, Text as SvgText} from 'react-native-svg';
 
@@ -191,18 +193,19 @@ export default function VitalDetailScreen() {
 
   useEffect(() => {
     if (vitalType) {
-      fetchChartData({vitalToSelect: vitalType, duration: period});
+      // Backend ignores duration — always returns ~6 months. Fetch once, filter client-side.
+      fetchChartData({vitalToSelect: vitalType, duration: '90d'});
     }
-  }, [vitalType, period, fetchChartData]);
+  }, [vitalType, fetchChartData]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.allSettled([
       fetchVitals(),
-      fetchChartData({vitalToSelect: vitalType, duration: period}),
+      fetchChartData({vitalToSelect: vitalType, duration: '90d'}),
     ]);
     setRefreshing(false);
-  }, [fetchVitals, fetchChartData, vitalType, period]);
+  }, [fetchVitals, fetchChartData, vitalType]);
 
   // Extract history entries for this vital from the merged vitals object
   const history = useMemo(() => {
@@ -243,16 +246,25 @@ export default function VitalDetailScreen() {
     return entries;
   }, [vitalsData, vitalType, config]);
 
-  // Latest reading
+  // Latest reading (always from full history, not filtered)
   const latest = history[0] || null;
 
-  // Chart data points
+  // Period cutoff date
+  const periodCutoff = useMemo(() => {
+    const now = new Date();
+    const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+    return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  }, [period]);
+
+  // Chart data points — parse all, then filter by period
   const chartPoints = useMemo(() => {
+    let allPoints: {value: number; date: string}[] = [];
+
     // Backend returns: [{ date: "2025-03-01", data: [{value, unit, updatedAt}] }, ...]
     if (chartData && Array.isArray(chartData) && chartData.length > 0) {
       // Check if items have nested `data` array (backend chart format)
       if (chartData[0]?.data && Array.isArray(chartData[0].data)) {
-        return chartData
+        allPoints = chartData
           .filter((d: any) => d.data && d.data.length > 0)
           .map((d: any) => {
             const reading = d.data[0];
@@ -264,9 +276,20 @@ export default function VitalDetailScreen() {
             ) || 0;
             return {value: numValue, date: d.date};
           });
+      } else {
+        // Flat array format: [{ value, date }]
+        allPoints = chartData.map((d: any) => ({
+          value: parseFloat(
+            vitalType === 'blood_pressure'
+              ? String(d.value || '').split('/')[0]
+              : String(d.value || ''),
+          ) || 0,
+          date: d.date || d.createdAt || d.updatedAt,
+        }));
       }
-      // Flat array format: [{ value, date }]
-      return chartData.map((d: any) => ({
+    } else if (chartData?.data && Array.isArray(chartData.data)) {
+      // Object with .data array
+      allPoints = chartData.data.map((d: any) => ({
         value: parseFloat(
           vitalType === 'blood_pressure'
             ? String(d.value || '').split('/')[0]
@@ -274,31 +297,30 @@ export default function VitalDetailScreen() {
         ) || 0,
         date: d.date || d.createdAt || d.updatedAt,
       }));
+    } else {
+      // Fallback: use history for chart
+      allPoints = history
+        .slice()
+        .reverse()
+        .map(h => ({
+          value: parseFloat(
+            vitalType === 'blood_pressure'
+              ? h.value.split('/')[0]
+              : h.value,
+          ) || 0,
+          date: h.date,
+        }));
     }
-    // Object with .data array
-    if (chartData?.data && Array.isArray(chartData.data)) {
-      return chartData.data.map((d: any) => ({
-        value: parseFloat(
-          vitalType === 'blood_pressure'
-            ? String(d.value || '').split('/')[0]
-            : String(d.value || ''),
-        ) || 0,
-        date: d.date || d.createdAt || d.updatedAt,
-      }));
-    }
-    // Fallback: use history for chart
-    return history
-      .slice()
-      .reverse()
-      .map(h => ({
-        value: parseFloat(
-          vitalType === 'blood_pressure'
-            ? h.value.split('/')[0]
-            : h.value,
-        ) || 0,
-        date: h.date,
-      }));
-  }, [chartData, history, vitalType]);
+
+    // Filter by selected period
+    return allPoints.filter(p => new Date(p.date) >= periodCutoff);
+  }, [chartData, history, vitalType, periodCutoff]);
+
+  // History filtered by period (for the Reading History list)
+  const filteredHistory = useMemo(
+    () => history.filter(h => new Date(h.date) >= periodCutoff),
+    [history, periodCutoff],
+  );
 
   if (!config) {
     return (
@@ -319,7 +341,7 @@ export default function VitalDetailScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-5 pt-4 pb-12"
+        contentContainerClassName="px-5 pt-4 pb-28"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -402,15 +424,15 @@ export default function VitalDetailScreen() {
           Reading History
         </Text>
 
-        {history.length === 0 ? (
+        {filteredHistory.length === 0 ? (
           <View className="bg-card border border-border rounded-2xl p-8 items-center">
             <Clock size={32} color={colors.mutedForeground} />
             <Text className="text-sm text-muted-foreground mt-2">
-              No readings recorded yet
+              No readings in this period
             </Text>
           </View>
         ) : (
-          history.map((entry, index) => (
+          filteredHistory.map((entry, index) => (
             <View
               key={`${entry.date}-${index}`}
               className="bg-card border border-border rounded-2xl p-4 mb-2">
@@ -434,6 +456,19 @@ export default function VitalDetailScreen() {
           ))
         )}
       </ScrollView>
+
+      {/* FAB: Log Reading */}
+      <View className="absolute bottom-6 left-5 right-5">
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('LogVitals', {vitalType})}
+          className="bg-primary rounded-2xl h-14 flex-row items-center justify-center shadow-lg">
+          <Plus size={20} color={colors.white} />
+          <Text className="text-base font-bold text-white ml-2">
+            Log Reading
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }

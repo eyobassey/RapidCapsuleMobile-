@@ -67,10 +67,14 @@ export const useVitalsStore = create<VitalsState>((set) => ({
     set({isLoading: true, error: null});
     try {
       await vitalsService.create(data);
-      // Re-fetch to get the updated merged object
-      const fresh = await vitalsService.list();
+      // Re-fetch to get the updated data
+      const [fresh, recent] = await Promise.allSettled([
+        vitalsService.list(),
+        vitalsService.getRecent(),
+      ]);
       set({
-        vitalsData: fresh && typeof fresh === 'object' ? fresh : {},
+        vitalsData: fresh.status === 'fulfilled' && fresh.value && typeof fresh.value === 'object' ? fresh.value : {},
+        recentVitals: recent.status === 'fulfilled' && recent.value && typeof recent.value === 'object' ? recent.value : {},
         isLoading: false,
       });
     } catch (err: any) {

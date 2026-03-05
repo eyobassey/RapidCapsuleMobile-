@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {
   Heart,
   HeartPulse,
@@ -35,6 +35,7 @@ import {Header, Input, Button} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {VITAL_TYPES} from '../../utils/constants';
 import type {VitalTypeConfig} from '../../types/vital.types';
+import type {HomeStackParamList} from '../../navigation/stacks/HomeStack';
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Heart, HeartPulse, Thermometer, Droplets, Wind, Activity,
@@ -43,6 +44,8 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
 
 export default function LogVitalsScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<RouteProp<HomeStackParamList, 'LogVitals'>>();
+  const focusedVitalType = route.params?.vitalType;
   const {logVital, isLoading} = useVitalsStore();
 
   // Form state: keyed by vital type key
@@ -106,13 +109,18 @@ export default function LogVitalsScreen() {
     }
   };
 
+  // If navigated from VitalDetail, only show that vital's input
+  const displayedVitals = focusedVitalType
+    ? VITAL_TYPES.filter(v => v.key === focusedVitalType)
+    : VITAL_TYPES;
+
   const filledCount = Object.values(values).filter(v => v?.trim()).length +
     (bpSystolic && bpDiastolic ? 1 : 0);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header
-        title="Log Vitals"
+        title={focusedVitalType && displayedVitals[0] ? `Log ${displayedVitals[0].name}` : 'Log Vitals'}
         onBack={() => navigation.goBack()}
         rightAction={
           saving ? (
@@ -138,15 +146,17 @@ export default function LogVitalsScreen() {
           {/* Instruction */}
           <View className="bg-card border border-border rounded-2xl p-4 mb-6">
             <Text className="text-sm text-foreground font-medium">
-              Enter your current readings
+              {focusedVitalType ? `Enter your ${displayedVitals[0]?.name || 'vital'} reading` : 'Enter your current readings'}
             </Text>
-            <Text className="text-xs text-muted-foreground mt-1">
-              Only fill in the vitals you want to log. Empty fields will be skipped.
-            </Text>
+            {!focusedVitalType && (
+              <Text className="text-xs text-muted-foreground mt-1">
+                Only fill in the vitals you want to log. Empty fields will be skipped.
+              </Text>
+            )}
           </View>
 
           {/* Vital Input Groups */}
-          {VITAL_TYPES.map(config => {
+          {displayedVitals.map(config => {
             const IconComponent = ICON_MAP[config.icon] || Activity;
 
             if (config.key === 'blood_pressure') {
