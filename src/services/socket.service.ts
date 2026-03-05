@@ -16,11 +16,9 @@ class SocketService {
     const token = await storage.getToken();
     if (!token) return;
 
-    this.socket = io(API_URL, {
-      path: '/socket.io/',
-      transports: ['websocket'],
+    this.socket = io(`${API_URL}/messaging`, {
+      transports: ['websocket', 'polling'],
       auth: {token},
-      query: {namespace: 'messaging'},
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,

@@ -218,7 +218,59 @@ export default function MessageBubble({
       );
     }
 
-    // File
+    // File / Document — show thumbnail preview if available
+    const ext = att.original_name?.split('.').pop()?.toUpperCase() || 'FILE';
+    if (att.thumbnail_url) {
+      return (
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => att.url && Linking.openURL(att.url)}
+          style={{marginBottom: message.content ? 6 : 0, position: 'relative'}}>
+          <Image
+            source={{uri: att.thumbnail_url}}
+            style={{width: 220, height: 160, borderRadius: 12, backgroundColor: colors.muted}}
+            resizeMode="cover"
+          />
+          {/* Badge */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              borderRadius: 6,
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+            }}>
+            <Text style={{fontSize: 10, fontWeight: '700', color: '#fff'}}>{ext}</Text>
+          </View>
+          {/* Bottom bar with name + size */}
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: 'rgba(0,0,0,0.55)',
+              borderBottomLeftRadius: 12,
+              borderBottomRightRadius: 12,
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+            }}>
+            <Text numberOfLines={1} style={{fontSize: 11, fontWeight: '600', color: '#fff'}}>
+              {att.original_name}
+            </Text>
+            <Text style={{fontSize: 9, color: 'rgba(255,255,255,0.7)'}}>
+              {att.size_bytes >= 1048576
+                ? `${(att.size_bytes / 1048576).toFixed(1)} MB`
+                : `${(att.size_bytes / 1024).toFixed(0)} KB`}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+
+    // No thumbnail — icon card
     return (
       <TouchableOpacity
         activeOpacity={0.7}
@@ -248,7 +300,9 @@ export default function MessageBubble({
               fontSize: 10,
               color: isMine ? 'rgba(255,255,255,0.6)' : colors.mutedForeground,
             }}>
-            {(att.size_bytes / 1024).toFixed(0)} KB
+            {att.size_bytes >= 1048576
+              ? `${(att.size_bytes / 1048576).toFixed(1)} MB`
+              : `${(att.size_bytes / 1024).toFixed(0)} KB`}
           </Text>
         </View>
       </TouchableOpacity>
