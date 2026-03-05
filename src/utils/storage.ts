@@ -12,6 +12,7 @@ const KEYS = {
   TOKEN: 'rc_token',
   USER: 'rc_user',
   REMEMBER_ME: 'rc_remember',
+  EKA_LANGUAGE: 'eka_language',
 } as const;
 
 export const storage = {
@@ -38,6 +39,14 @@ export const storage = {
     if (user != null) {
       getStore().set(KEYS.USER, JSON.stringify(user));
     }
+  },
+
+  async getEkaLanguage(): Promise<string> {
+    return getStore().getString(KEYS.EKA_LANGUAGE) ?? 'English';
+  },
+
+  async setEkaLanguage(lang: string): Promise<void> {
+    getStore().set(KEYS.EKA_LANGUAGE, lang);
   },
 
   async clear(): Promise<void> {
