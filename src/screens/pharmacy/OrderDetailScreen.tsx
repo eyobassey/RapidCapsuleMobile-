@@ -164,6 +164,7 @@ export default function OrderDetailScreen() {
             </Text>
             {ORDER_STATUS_SEQUENCE.map((status, idx) => {
               const isActive = idx <= currentIdx;
+              const isCurrent = idx === currentIdx;
               const isLast = idx === ORDER_STATUS_SEQUENCE.length - 1;
               const label = ORDER_STATUS_LABELS[status] || status;
 
@@ -171,18 +172,29 @@ export default function OrderDetailScreen() {
                 <View key={status} className="flex-row">
                   <View className="items-center mr-3">
                     <View
-                      className={`w-6 h-6 rounded-full items-center justify-center ${
-                        isActive ? 'bg-primary' : 'bg-muted'
-                      }`}>
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: 13,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: isActive ? colors.primary : 'transparent',
+                        borderWidth: isActive ? 0 : 2,
+                        borderColor: isActive ? colors.primary : colors.mutedForeground,
+                      }}>
                       {isActive && <Check size={14} color="#fff" />}
                     </View>
                     {!isLast && (
                       <View
-                        className={`w-0.5 h-6 ${isActive ? 'bg-primary' : 'bg-border'}`}
+                        style={{
+                          width: 2,
+                          height: 24,
+                          backgroundColor: isActive && !isCurrent ? colors.primary : colors.mutedForeground,
+                        }}
                       />
                     )}
                   </View>
-                  <View className="pb-4">
+                  <View className="pb-4 pt-0.5">
                     <Text
                       className={`text-sm ${
                         isActive ? 'font-semibold text-foreground' : 'text-muted-foreground'
