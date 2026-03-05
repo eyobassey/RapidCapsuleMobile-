@@ -9,6 +9,7 @@ import type {
   DeliveryAddress,
   DrugSearchParams,
 } from '../types/pharmacy.types';
+import {getDrugPrice, getDrugImage} from '../types/pharmacy.types';
 
 // ── MMKV Cart Persistence ──
 
@@ -177,7 +178,12 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
   fetchDrugsByCategory: async (categoryId, params) => {
     set({catalogLoading: true});
     try {
-      const data = await pharmacyService.getDrugsByCategory(categoryId, params);
+      // Use search endpoint with category filter (the /category/{id} endpoint returns empty)
+      const data = await pharmacyService.searchDrugs({
+        category: categoryId,
+        page: params?.page,
+        limit: params?.limit || 20,
+      });
       if (data && data.drugs) {
         set({categoryDrugs: data.drugs, categoryDrugsTotal: data.total || data.drugs.length, catalogLoading: false});
       } else {
@@ -229,9 +235,9 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
         strength: drug.strength,
         dosageForm: dosageForm || '',
         manufacturer: drug.manufacturer || '',
-        price: drug.price || 0,
+        price: getDrugPrice(drug),
         quantity: 1,
-        imageUrl: drug.primary_image || null,
+        imageUrl: getDrugImage(drug),
         requiresPrescription: drug.requires_prescription,
         maxQuantityPerOrder: maxQty,
       });

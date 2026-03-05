@@ -28,6 +28,7 @@ import {Header} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {formatCurrency} from '../../utils/formatters';
 import type {Drug} from '../../types/pharmacy.types';
+import {getDrugPrice, getDrugImage} from '../../types/pharmacy.types';
 import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
 
 function CollapsibleSection({title, items, icon}: {title: string; items: string[]; icon: React.ReactNode}) {
@@ -87,6 +88,8 @@ export default function DrugDetailScreen() {
   const drug = currentDrug;
   const maxQty = drug?.max_quantity_per_order || 10;
   const dosageForm = drug ? (typeof drug.dosage_form === 'object' ? drug.dosage_form?.name : drug.dosage_form) : '';
+  const drugImage = drug ? getDrugImage(drug) : null;
+  const drugPrice = drug ? getDrugPrice(drug) : 0;
 
   const handleAddToCart = () => {
     if (!drug) return;
@@ -146,9 +149,9 @@ export default function DrugDetailScreen() {
         contentContainerClassName="pb-32"
         showsVerticalScrollIndicator={false}>
         {/* Image */}
-        {drug.primary_image ? (
+        {drugImage ? (
           <Image
-            source={{uri: drug.primary_image}}
+            source={{uri: drugImage}}
             className="w-full h-56"
             resizeMode="cover"
           />
@@ -170,7 +173,7 @@ export default function DrugDetailScreen() {
 
           <View className="flex-row items-center justify-between mt-3">
             <Text className="text-xl font-bold text-primary">
-              {formatCurrency(drug.price || 0)}
+              {formatCurrency(drugPrice)}
             </Text>
             {(drug.is_available !== false && drug.is_active) ? (
               <Text className="text-xs text-success font-medium">In Stock</Text>
@@ -274,7 +277,7 @@ export default function DrugDetailScreen() {
           <View className="flex-1">
             <Text className="text-xs text-muted-foreground">Total</Text>
             <Text className="text-lg font-bold text-primary">
-              {formatCurrency((drug.price || 0) * quantity)}
+              {formatCurrency(drugPrice * quantity)}
             </Text>
           </View>
           <TouchableOpacity

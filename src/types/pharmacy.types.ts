@@ -5,6 +5,7 @@ export interface DrugCategory {
   name: string;
   description?: string;
   icon?: string;
+  image_url?: string;
   drug_count?: number;
 }
 
@@ -12,25 +13,37 @@ export interface Drug {
   _id: string;
   name: string;
   generic_name?: string;
+  brand_name?: string;
   brand_names?: string[];
   strength: string;
   dosage_form?: string | {_id: string; name: string};
+  dosage_form_id?: string;
   route?: string | {_id: string; name: string};
+  route_abbreviation?: string;
   categories?: (string | DrugCategory)[];
   classification?: string | {_id: string; name: string};
   manufacturer?: string;
   description?: string;
+  short_description?: string;
   active_ingredients?: string[];
+  // Price fields — API returns selling_price/display_price from search, price from detail
   price?: number;
-  prices?: {USD?: number; GBP?: number; EUR?: number; NGN?: number};
+  selling_price?: number;
+  display_price?: number;
+  display_currency?: string;
+  cost_price?: number;
+  prices?: Record<string, {cost_price?: number; selling_price?: number} | number>;
   quantity?: number;
+  quantity_in_stock?: number;
   requires_prescription: boolean;
-  is_otc: boolean;
-  is_featured: boolean;
-  is_controlled: boolean;
+  is_otc?: boolean;
+  is_featured?: boolean;
+  is_controlled?: boolean;
   purchase_type?: PurchaseType;
   schedule?: string;
+  schedule_class?: string;
   images?: {url: string; alt?: string}[];
+  image_url?: string | null;
   primary_image?: string | null;
   side_effects?: string[];
   contraindications?: string[];
@@ -39,10 +52,10 @@ export interface Drug {
   storage_conditions?: string;
   pregnancy_category?: string;
   max_quantity_per_order?: number;
-  is_active: boolean;
+  is_active?: boolean;
   is_available?: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type PurchaseType =
@@ -145,6 +158,18 @@ export interface DeliveryAddress {
   postal_code?: string;
   additional_info?: string;
   is_default?: boolean;
+}
+
+// ── Helpers ──
+
+/** Resolve the best price from whichever field the API populated */
+export function getDrugPrice(drug: Drug): number {
+  return drug.display_price || drug.selling_price || drug.price || 0;
+}
+
+/** Resolve the best image URL from whichever field the API populated */
+export function getDrugImage(drug: Drug): string | null {
+  return drug.primary_image || drug.image_url || null;
 }
 
 // ── Search Params ──

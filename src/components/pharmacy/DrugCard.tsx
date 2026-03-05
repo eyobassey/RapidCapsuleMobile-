@@ -4,6 +4,7 @@ import {Pill, ShieldAlert} from 'lucide-react-native';
 import {colors} from '../../theme/colors';
 import {formatCurrency} from '../../utils/formatters';
 import type {Drug} from '../../types/pharmacy.types';
+import {getDrugPrice, getDrugImage} from '../../types/pharmacy.types';
 
 interface DrugCardProps {
   drug: Drug;
@@ -13,6 +14,8 @@ interface DrugCardProps {
 
 export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProps) {
   const dosageForm = typeof drug.dosage_form === 'object' ? drug.dosage_form?.name : drug.dosage_form;
+  const imageUrl = getDrugImage(drug);
+  const price = getDrugPrice(drug);
 
   if (variant === 'compact') {
     return (
@@ -20,9 +23,9 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
         onPress={() => onPress(drug)}
         className="w-40 bg-card border border-border rounded-2xl overflow-hidden mr-3"
         activeOpacity={0.7}>
-        {drug.primary_image ? (
+        {imageUrl ? (
           <Image
-            source={{uri: drug.primary_image}}
+            source={{uri: imageUrl}}
             className="w-full h-28"
             resizeMode="cover"
           />
@@ -39,7 +42,7 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
             {drug.strength}
           </Text>
           <Text className="text-sm font-bold text-primary mt-1">
-            {formatCurrency(drug.price || 0)}
+            {formatCurrency(price)}
           </Text>
         </View>
       </TouchableOpacity>
@@ -52,9 +55,9 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
       onPress={() => onPress(drug)}
       className="bg-card border border-border rounded-2xl p-3 flex-row items-center mb-3"
       activeOpacity={0.7}>
-      {drug.primary_image ? (
+      {imageUrl ? (
         <Image
-          source={{uri: drug.primary_image}}
+          source={{uri: imageUrl}}
           className="w-16 h-16 rounded-xl"
           resizeMode="cover"
         />
@@ -80,7 +83,7 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
 
       <View className="items-end ml-2">
         <Text className="text-sm font-bold text-primary">
-          {formatCurrency(drug.price || 0)}
+          {formatCurrency(price)}
         </Text>
         {drug.requires_prescription && (
           <View className="flex-row items-center mt-1">
