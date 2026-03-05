@@ -1147,7 +1147,7 @@ export default function WalletScreen() {
 
                   {/* Search Results */}
                   {searchResults.map((patient: any) => {
-                    const isSelected = selectedRecipient?.id === patient.id || selectedRecipient?._id === patient._id;
+                    const isSelected = !!selectedRecipient && (selectedRecipient.id === patient.id);
                     const initial = (patient.name || patient.email || '?')[0].toUpperCase();
                     return (
                       <TouchableOpacity
@@ -1221,7 +1221,7 @@ export default function WalletScreen() {
                         flex: 1,
                         paddingVertical: 14,
                         borderRadius: 14,
-                        backgroundColor: !selectedRecipient ? `${colors.primary}50` : colors.primary,
+                        backgroundColor: (!selectedRecipient || creditsToSend > maxTransfer) ? `${colors.primary}50` : colors.primary,
                         alignItems: 'center',
                       }}>
                       <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>Continue</Text>

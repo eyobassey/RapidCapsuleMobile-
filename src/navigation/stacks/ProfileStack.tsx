@@ -19,7 +19,7 @@ import DeviceIntegrationScreen from '../../screens/onboarding/DeviceIntegrationS
 import WalletCreditsScreen from '../../screens/onboarding/WalletCreditsScreen';
 
 export type ProfileStackParamList = {
-  Profile: undefined;
+  ProfileHome: undefined;
   EditProfile: undefined;
   Wallet: {initialTab?: string} | undefined;
   HealthRecords: undefined;
@@ -51,7 +51,7 @@ const Stack = createNativeStackNavigator<ProfileStackParamList>();
 export default function ProfileStack() {
   return (
     <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="ProfileHome" component={ProfileScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
       <Stack.Screen name="HealthRecords" component={HealthRecordsScreen} />

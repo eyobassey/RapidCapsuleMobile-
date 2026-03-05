@@ -46,12 +46,14 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
             canPreventDefault: true,
           });
           if (!event.defaultPrevented) {
+            // Map tab name to its initial screen name
+            const initialScreen = route.name === 'Profile' ? 'ProfileHome' : route.name;
             if (isFocused) {
               // Already on this tab — reset to initial screen
-              navigation.navigate(route.name, {screen: route.name});
+              navigation.navigate(route.name, {screen: initialScreen});
             } else {
               // Switch tab and reset its stack to initial screen
-              navigation.navigate(route.name, route.name !== 'Eka' ? {screen: route.name} : undefined);
+              navigation.navigate(route.name, route.name !== 'Eka' ? {screen: initialScreen} : undefined);
             }
           }
         };
