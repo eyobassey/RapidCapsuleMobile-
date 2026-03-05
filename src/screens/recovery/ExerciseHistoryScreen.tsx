@@ -24,6 +24,9 @@ const CATEGORY_ICONS: Record<string, {icon: any; color: string}> = {
   grounding: {icon: Heart, color: '#ec4899'},
   physical: {icon: Dumbbell, color: '#10b981'},
   journaling: {icon: BookOpen, color: '#f59e0b'},
+  dbt: {icon: Brain, color: '#6366f1'},
+  relapse_prevention: {icon: Flame, color: '#ef4444'},
+  motivational_interviewing: {icon: Star, color: '#f97316'},
 };
 
 const WELLNESS_CONFIG: Record<string, {color: string; bg: string}> = {
@@ -144,7 +147,7 @@ export default function ExerciseHistoryScreen() {
                   }}>
                   <IconComponent size={14} color={cfg.color} />
                   <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground, textTransform: 'capitalize'}}>
-                    {cat}
+                    {cat.replace(/_/g, ' ')}
                   </Text>
                   <Text style={{fontSize: 12, fontWeight: '700', color: cfg.color}}>{count}</Text>
                 </View>
@@ -190,7 +193,7 @@ export default function ExerciseHistoryScreen() {
               {item.name}
             </Text>
             <Text style={{fontSize: 11, color: colors.mutedForeground, textTransform: 'capitalize'}}>
-              {item.category}
+              {item.category?.replace(/_/g, ' ')}
             </Text>
           </View>
           {item.effectiveness_rating != null && (

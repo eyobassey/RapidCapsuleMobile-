@@ -239,11 +239,29 @@ export const recoveryService = {
   // ─── Exercises ─────────────────────────────────
   async getExerciseHistory(params?: {category?: string; page?: number; limit?: number}): Promise<ExerciseRecord[]> {
     const res = unwrap(await api.get('/recovery/exercises/history', {params}));
-    return Array.isArray(res) ? res : res?.data || [];
+    const docs = Array.isArray(res) ? res : res?.docs || res?.data || [];
+    return docs.map((e: any) => ({
+      _id: e._id,
+      category: e.category,
+      name: e.name,
+      duration_minutes: e.estimated_minutes || 0,
+      completed_at: e.completed_at || e.created_at,
+      effectiveness_rating: e.effectiveness_rating,
+      ai_summary: e.outcome || e.ai_summary,
+    }));
   },
 
   async getExerciseStats(): Promise<ExerciseStats> {
-    return unwrap(await api.get('/recovery/exercises/stats'));
+    const raw = unwrap(await api.get('/recovery/exercises/stats'));
+    return {
+      total_sessions: raw.total ?? 0,
+      total_minutes: raw.total_minutes ?? 0,
+      wellness_score: raw.wellness_score ?? 0,
+      wellness_level: raw.wellness_level,
+      streak: raw.current_streak ?? 0,
+      completion_rate: raw.completion_rate ?? 0,
+      by_category: raw.by_category ?? {},
+    };
   },
 
   // ─── Risk Assessment ──────────────────────────
