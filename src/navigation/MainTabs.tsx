@@ -33,6 +33,8 @@ const HIDE_TAB_SCREENS = new Set([
   'Checkout',
   'OrderDetail',
   'DrugDetail',
+  'UploadPrescription',
+  'UploadDetail',
 ]);
 
 function getTabBarStyle(route: any) {

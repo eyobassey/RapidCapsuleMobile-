@@ -25,4 +25,19 @@ export const prescriptionsService = {
     const res = await api.post(`/patient/prescriptions/${id}/refill`);
     return res.data.data || res.data.result;
   },
+
+  async initializeCardPayment(id: string) {
+    const res = await api.post(`/patient/prescriptions/${id}/pay/card/initialize`);
+    return res.data.data || res.data.result;
+  },
+
+  async verifyCardPayment(id: string, reference: string) {
+    const res = await api.post(`/patient/prescriptions/${id}/pay/card/verify`, {reference});
+    return res.data.data || res.data.result;
+  },
+
+  async payWithWallet(id: string) {
+    const res = await api.post(`/patient/prescriptions/${id}/pay/wallet`);
+    return res.data.data || res.data.result;
+  },
 };

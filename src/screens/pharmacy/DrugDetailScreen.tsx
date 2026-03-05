@@ -162,20 +162,25 @@ export default function DrugDetailScreen() {
         )}
 
         {/* Info Card */}
-        <View className="bg-card border border-border rounded-2xl mx-5 -mt-6 p-4 z-10">
+        <View className="bg-card border border-border rounded-2xl mx-5 mt-4 p-4">
           <Text className="text-lg font-bold text-foreground">{drug.name}</Text>
           {drug.generic_name && (
             <Text className="text-sm text-muted-foreground">{drug.generic_name}</Text>
           )}
           <Text className="text-xs text-muted-foreground mt-1">
-            {[drug.strength, dosageForm, drug.manufacturer].filter(Boolean).join(' · ')}
+            {[drug.strength, dosageForm].filter(Boolean).join(' · ')}
           </Text>
+          {drug.manufacturer && (
+            <Text className="text-xs text-muted-foreground mt-0.5">
+              Manufacturer: {drug.manufacturer}
+            </Text>
+          )}
 
           <View className="flex-row items-center justify-between mt-3">
             <Text className="text-xl font-bold text-primary">
               {formatCurrency(drugPrice)}
             </Text>
-            {(drug.is_available !== false && drug.is_active) ? (
+            {(drug.is_available !== false && drug.is_active !== false) ? (
               <Text className="text-xs text-success font-medium">In Stock</Text>
             ) : (
               <Text className="text-xs text-destructive font-medium">Out of Stock</Text>

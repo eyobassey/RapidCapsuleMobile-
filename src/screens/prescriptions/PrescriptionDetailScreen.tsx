@@ -5,9 +5,13 @@ import {
   ScrollView,
   Alert,
   RefreshControl,
+  Modal,
+  TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
+import {WebView} from 'react-native-webview';
 import {
   Pill,
   User,
@@ -18,7 +22,9 @@ import {
   XCircle,
   AlertTriangle,
   CreditCard,
+  Wallet,
   RotateCcw,
+  X,
 } from 'lucide-react-native';
 
 import {usePrescriptionsStore} from '../../store/prescriptions';
@@ -49,6 +55,9 @@ export default function PrescriptionDetailScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showPaymentPicker, setShowPaymentPicker] = useState(false);
+  const [paystackUrl, setPaystackUrl] = useState<string | null>(null);
+  const [paymentReference, setPaymentReference] = useState<string | null>(null);
 
   const {
     currentPrescription: rx,
@@ -57,6 +66,9 @@ export default function PrescriptionDetailScreen() {
     acceptPrescription,
     declinePrescription,
     requestRefill,
+    initializePayment,
+    payWithWallet,
+    verifyPayment,
   } = usePrescriptionsStore();
 
   useEffect(() => {
@@ -133,6 +145,72 @@ export default function PrescriptionDetailScreen() {
       setActionLoading(null);
     }
   };
+
+  const handlePayWithCard = async () => {
+    setShowPaymentPicker(false);
+    setActionLoading('pay');
+    try {
+      const data = await initializePayment(prescriptionId);
+      if (data?.authorization_url) {
+        setPaymentReference(data.reference);
+        setPaystackUrl(data.authorization_url);
+      } else {
+        Alert.alert('Error', 'Could not initialize payment.');
+      }
+    } catch (err: any) {
+      Alert.alert('Payment Error', err?.response?.data?.message || 'Failed to start payment.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePayWithWallet = async () => {
+    setShowPaymentPicker(false);
+    setActionLoading('pay');
+    try {
+      await payWithWallet(prescriptionId);
+      Alert.alert('Payment Successful', 'Your prescription has been paid for.');
+      await fetchPrescriptionById(prescriptionId);
+    } catch (err: any) {
+      Alert.alert(
+        'Payment Failed',
+        err?.response?.data?.message || 'Insufficient wallet balance. Try card payment.',
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePaystackNavigation = useCallback(
+    (navState: {url: string}) => {
+      const url = navState.url || '';
+      if (
+        paystackUrl &&
+        url !== paystackUrl &&
+        !url.includes('paystack.co') &&
+        !url.includes('paystack.com')
+      ) {
+        setPaystackUrl(null);
+        if (paymentReference) {
+          verifyPayment(prescriptionId, paymentReference)
+            .then(() => fetchPrescriptionById(prescriptionId))
+            .catch(() => {});
+          setPaymentReference(null);
+        }
+      }
+    },
+    [paystackUrl, paymentReference, prescriptionId, verifyPayment, fetchPrescriptionById],
+  );
+
+  const handleClosePaystack = useCallback(() => {
+    setPaystackUrl(null);
+    if (paymentReference) {
+      verifyPayment(prescriptionId, paymentReference)
+        .then(() => fetchPrescriptionById(prescriptionId))
+        .catch(() => {});
+      setPaymentReference(null);
+    }
+  }, [paymentReference, prescriptionId, verifyPayment, fetchPrescriptionById]);
 
   // Loading state
   if (isLoading && !rx) {
@@ -472,8 +550,10 @@ export default function PrescriptionDetailScreen() {
           {isAccepted && (
             <Button
               variant="primary"
-              icon={<CreditCard size={20} color={colors.white} />}
-              disabled>
+              icon={<CreditCard size={20} color="#fff" />}
+              onPress={() => setShowPaymentPicker(true)}
+              loading={actionLoading === 'pay'}
+              disabled={!!actionLoading}>
               Pay {formatCurrency(rx.total_amount || 0, rx.currency || 'NGN')}
             </Button>
           )}
@@ -490,6 +570,84 @@ export default function PrescriptionDetailScreen() {
           )}
         </View>
       )}
+
+      {/* Payment Method Picker Modal */}
+      <Modal
+        visible={showPaymentPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPaymentPicker(false)}>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShowPaymentPicker(false)}
+          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}>
+          <View style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40}}>
+            <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground, marginBottom: 16}}>
+              Choose Payment Method
+            </Text>
+
+            <TouchableOpacity
+              onPress={handlePayWithCard}
+              activeOpacity={0.7}
+              style={{flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.background, borderRadius: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 12}}>
+              <CreditCard size={22} color={colors.primary} />
+              <View style={{marginLeft: 12, flex: 1}}>
+                <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+                  Pay with Card
+                </Text>
+                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 2}}>
+                  Visa, Mastercard via Paystack
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handlePayWithWallet}
+              activeOpacity={0.7}
+              style={{flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.background, borderRadius: 16, borderWidth: 1, borderColor: colors.border}}>
+              <Wallet size={22} color={colors.primary} />
+              <View style={{marginLeft: 12, flex: 1}}>
+                <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+                  Pay with Wallet
+                </Text>
+                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 2}}>
+                  Use your RapidCapsule wallet balance
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Paystack WebView Modal */}
+      <Modal
+        visible={!!paystackUrl}
+        animationType="slide"
+        onRequestClose={handleClosePaystack}>
+        <View style={{flex: 1, backgroundColor: colors.background}}>
+          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border}}>
+            <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground}}>
+              Complete Payment
+            </Text>
+            <TouchableOpacity onPress={handleClosePaystack} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+              <X size={24} color={colors.foreground} />
+            </TouchableOpacity>
+          </View>
+          {paystackUrl && (
+            <WebView
+              source={{uri: paystackUrl}}
+              onNavigationStateChange={handlePaystackNavigation}
+              startInLoadingState
+              renderLoading={() => (
+                <View style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center'}}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+              )}
+              style={{flex: 1}}
+            />
+          )}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

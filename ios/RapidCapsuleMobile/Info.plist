@@ -34,6 +34,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>RapidCapsule needs camera access to photograph prescriptions for verification.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>RapidCapsule needs photo library access to select prescription images for verification.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
 	<key>UILaunchStoryboardName</key>

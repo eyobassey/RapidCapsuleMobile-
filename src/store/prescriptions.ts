@@ -14,6 +14,9 @@ interface PrescriptionsState {
   acceptPrescription: (id: string) => Promise<void>;
   declinePrescription: (id: string) => Promise<void>;
   requestRefill: (id: string) => Promise<void>;
+  initializePayment: (id: string) => Promise<{authorization_url: string; reference: string}>;
+  payWithWallet: (id: string) => Promise<void>;
+  verifyPayment: (id: string, reference: string) => Promise<void>;
 }
 
 export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
@@ -105,5 +108,22 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
       });
       throw err;
     }
+  },
+
+  initializePayment: async (id: string) => {
+    const data = await prescriptionsService.initializeCardPayment(id);
+    return data;
+  },
+
+  payWithWallet: async (id: string) => {
+    await prescriptionsService.payWithWallet(id);
+    const data = await prescriptionsService.getById(id);
+    set({currentPrescription: data});
+  },
+
+  verifyPayment: async (id: string, reference: string) => {
+    await prescriptionsService.verifyCardPayment(id, reference);
+    const data = await prescriptionsService.getById(id);
+    set({currentPrescription: data});
   },
 }));

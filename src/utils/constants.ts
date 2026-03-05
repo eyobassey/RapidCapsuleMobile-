@@ -183,6 +183,20 @@ export const STATUS_COLORS: Record<string, string> = {
   DELIVERED: 'success',
   PICKED_UP: 'success',
   REFUNDED: 'muted',
+
+  // Prescription verification statuses
+  TIER1_PROCESSING: 'primary',
+  TIER1_PASSED: 'success',
+  TIER1_FAILED: 'destructive',
+  TIER2_PROCESSING: 'primary',
+  TIER2_PASSED: 'success',
+  TIER2_FAILED: 'destructive',
+  PHARMACIST_REVIEW: 'warning',
+  CLARIFICATION_NEEDED: 'warning',
+  CLARIFICATION_RECEIVED: 'primary',
+  APPROVED: 'success',
+  REJECTED: 'destructive',
+  EXPIRED: 'muted',
 };
 
 export const NOTIFICATION_ICONS: Record<string, string> = {

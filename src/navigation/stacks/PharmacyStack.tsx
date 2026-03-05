@@ -8,6 +8,9 @@ import CartScreen from '../../screens/pharmacy/CartScreen';
 import CheckoutScreen from '../../screens/pharmacy/CheckoutScreen';
 import MyOrdersScreen from '../../screens/pharmacy/MyOrdersScreen';
 import OrderDetailScreen from '../../screens/pharmacy/OrderDetailScreen';
+import UploadPrescriptionScreen from '../../screens/pharmacy/UploadPrescriptionScreen';
+import MyUploadsScreen from '../../screens/pharmacy/MyUploadsScreen';
+import UploadDetailScreen from '../../screens/pharmacy/UploadDetailScreen';
 
 export type PharmacyStackParamList = {
   PharmacyHome: undefined;
@@ -18,6 +21,9 @@ export type PharmacyStackParamList = {
   Checkout: undefined;
   MyOrders: undefined;
   OrderDetail: {orderId: string};
+  UploadPrescription: undefined;
+  MyUploads: undefined;
+  UploadDetail: {uploadId: string};
 };
 
 const Stack = createNativeStackNavigator<PharmacyStackParamList>();
@@ -33,6 +39,9 @@ export default function PharmacyStack() {
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
       <Stack.Screen name="MyOrders" component={MyOrdersScreen} />
       <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
+      <Stack.Screen name="UploadPrescription" component={UploadPrescriptionScreen} />
+      <Stack.Screen name="MyUploads" component={MyUploadsScreen} />
+      <Stack.Screen name="UploadDetail" component={UploadDetailScreen} />
     </Stack.Navigator>
   );
 }

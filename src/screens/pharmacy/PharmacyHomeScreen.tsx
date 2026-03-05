@@ -14,6 +14,8 @@ import {
   ShoppingCart,
   ChevronRight,
   ClipboardList,
+  Upload,
+  FileText,
 } from 'lucide-react-native';
 
 import {usePharmacyStore} from '../../store/pharmacy';
@@ -153,19 +155,51 @@ export default function PharmacyHomeScreen() {
           )}
         </View>
 
-        {/* My Orders Link */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate('MyOrders')}
-          activeOpacity={0.7}
-          className="mx-5 mt-6 bg-card border border-border rounded-2xl p-4 flex-row items-center justify-between">
-          <View className="flex-row items-center">
-            <ClipboardList size={20} color={colors.primary} />
-            <Text className="text-sm font-semibold text-foreground ml-3">
-              My Orders
-            </Text>
-          </View>
-          <ChevronRight size={18} color={colors.mutedForeground} />
-        </TouchableOpacity>
+        {/* Quick Links */}
+        <View className="mx-5 mt-6 bg-card border border-border rounded-2xl overflow-hidden">
+          <TouchableOpacity
+            onPress={() => navigation.navigate('UploadPrescription')}
+            activeOpacity={0.7}
+            className="p-4 flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Upload size={20} color={colors.primary} />
+              <Text className="text-sm font-semibold text-foreground ml-3">
+                Upload Prescription
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+
+          <View className="border-t border-border" />
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MyUploads')}
+            activeOpacity={0.7}
+            className="p-4 flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <FileText size={20} color={colors.primary} />
+              <Text className="text-sm font-semibold text-foreground ml-3">
+                My Prescriptions
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+
+          <View className="border-t border-border" />
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MyOrders')}
+            activeOpacity={0.7}
+            className="p-4 flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <ClipboardList size={20} color={colors.primary} />
+              <Text className="text-sm font-semibold text-foreground ml-3">
+                My Orders
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Cart FAB */}
