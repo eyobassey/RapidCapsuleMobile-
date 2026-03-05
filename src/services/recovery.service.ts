@@ -140,7 +140,7 @@ export const recoveryService = {
 
   async getScreeningHistory(params?: {instrument?: string; page?: number; limit?: number}): Promise<ScreeningResult[]> {
     const res = unwrap(await api.get('/recovery/screening/history', {params}));
-    return Array.isArray(res) ? res : res?.data || [];
+    return Array.isArray(res) ? res : res?.docs || res?.data || [];
   },
 
   async getScreeningById(id: string): Promise<ScreeningResult> {
@@ -194,7 +194,33 @@ export const recoveryService = {
 
   // ─── Recovery Plans ────────────────────────────
   async getActivePlan(): Promise<RecoveryPlan> {
-    return unwrap(await api.get('/recovery/plans/active'));
+    const raw = unwrap(await api.get('/recovery/plans/active'));
+    if (!raw) return raw;
+    // Map API structure to RecoveryPlan type
+    return {
+      _id: raw._id,
+      patient: raw.user,
+      specialist: raw.created_by?._id,
+      title: raw.plan_name,
+      status: raw.status,
+      stages: (raw.stages || []).map((s: any) => ({
+        _id: s.stage_id || s._id,
+        name: s.stage_name || s.name,
+        description: s.goals?.map((g: any) => g.measurable_target).filter(Boolean).join('; ') || '',
+        status: s.status,
+        estimated_weeks: s.estimated_duration_weeks || s.duration_weeks,
+        goals: (s.goals || []).map((g: any) => ({
+          _id: g.goal_id || g._id,
+          description: g.description || g.title,
+          status: g.status,
+          completed_at: g.achieved_at,
+        })),
+      })),
+      progress_percentage: raw.progress?.goal_completion_rate ?? 0,
+      review_date: raw.next_review_date,
+      created_at: raw.created_at,
+      updated_at: raw.updated_at,
+    };
   },
 
   async getPlanHistory(params?: {page?: number; limit?: number}): Promise<RecoveryPlan[]> {
