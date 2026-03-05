@@ -113,10 +113,6 @@ export default function ExerciseHistoryScreen() {
             <StatItem value={exerciseStats.streak} label="Streak" />
             <StatItem value={`${Math.round(exerciseStats.completion_rate || 0)}%`} label="Complete" />
           </View>
-          <View style={{flexDirection: 'row', justifyContent: 'space-around', marginTop: 12}}>
-            <StatItem value={exerciseStats.exercises_last_14_days} label="Last 14 Days" />
-            <StatItem value={exerciseStats.unique_categories} label="Categories" />
-          </View>
         </View>
       )}
 
