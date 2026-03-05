@@ -303,15 +303,20 @@ export interface MATCompliance {
 // ─── Harm Reduction ─────────────────────────────
 export interface HarmReductionSubstance {
   substance: string;
+  display_name?: string;
   icon?: string;
   category?: string;
 }
 
 export interface SubstanceGuidance {
   substance: string;
+  display_name?: string;
   safer_use_tips: string[];
   overdose_signs: string[];
-  overdose_response: string[];
+  overdose_response?: string[];
+  mixing_dangers?: Array<{substance: string; risk: string}>;
+  withdrawal_warnings?: string[];
+  long_term_risks?: string[];
   recovery_position?: string;
   fentanyl_risk?: string;
 }

@@ -180,8 +180,8 @@ export default function HarmReductionScreen() {
                       <Shield size={16} color={colors.primary} />
                     </View>
                     <View style={{flex: 1}}>
-                      <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground, textTransform: 'capitalize'}}>
-                        {sub.substance}
+                      <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+                        {sub.display_name || sub.substance}
                       </Text>
                       {sub.category && (
                         <Text style={{fontSize: 11, color: colors.mutedForeground}}>{sub.category}</Text>
@@ -214,11 +214,41 @@ export default function HarmReductionScreen() {
                               color={colors.destructive}
                             />
                           )}
-                          {g.overdose_response?.length > 0 && (
+                          {g.overdose_response && g.overdose_response.length > 0 && (
                             <GuidanceSection
                               title="Overdose Response"
                               items={g.overdose_response}
                               color="#f59e0b"
+                            />
+                          )}
+                          {g.mixing_dangers && g.mixing_dangers.length > 0 && (
+                            <View>
+                              <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground, marginBottom: 6}}>
+                                Mixing Dangers
+                              </Text>
+                              {g.mixing_dangers.map((md, mi) => (
+                                <View key={mi} style={{flexDirection: 'row', gap: 8, marginBottom: 4}}>
+                                  <View style={{width: 5, height: 5, borderRadius: 3, backgroundColor: '#f97316', marginTop: 6}} />
+                                  <Text style={{flex: 1, fontSize: 12, color: colors.mutedForeground, lineHeight: 18}}>
+                                    <Text style={{fontWeight: '600', color: colors.foreground}}>{md.substance}: </Text>
+                                    {md.risk}
+                                  </Text>
+                                </View>
+                              ))}
+                            </View>
+                          )}
+                          {g.withdrawal_warnings && g.withdrawal_warnings.length > 0 && (
+                            <GuidanceSection
+                              title="Withdrawal Warnings"
+                              items={g.withdrawal_warnings}
+                              color="#ef4444"
+                            />
+                          )}
+                          {g.long_term_risks && g.long_term_risks.length > 0 && (
+                            <GuidanceSection
+                              title="Long-Term Risks"
+                              items={g.long_term_risks}
+                              color="#6366f1"
                             />
                           )}
                           {g.recovery_position && (

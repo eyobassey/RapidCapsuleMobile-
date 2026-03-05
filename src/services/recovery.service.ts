@@ -181,7 +181,13 @@ export const recoveryService = {
 
   async getHarmReductionSubstances(): Promise<HarmReductionSubstance[]> {
     const res = unwrap(await api.get('/recovery/harm-reduction/substances'));
-    return Array.isArray(res) ? res : res?.data || [];
+    const docs = Array.isArray(res) ? res : res?.data || [];
+    return docs.map((s: any) => ({
+      substance: s.key || s.substance,
+      display_name: s.display_name,
+      icon: s.icon,
+      category: s.category,
+    }));
   },
 
   async getSubstanceGuidance(substance: string): Promise<SubstanceGuidance> {
