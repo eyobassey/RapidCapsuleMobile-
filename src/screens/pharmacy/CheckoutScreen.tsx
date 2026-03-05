@@ -126,14 +126,13 @@ export default function CheckoutScreen() {
 
       if (deliveryMethod === 'DELIVERY' && selectedAddress) {
         payload.delivery_address = {
-          label: selectedAddress.label,
           recipient_name: selectedAddress.recipient_name,
           phone: selectedAddress.phone,
-          street: selectedAddress.street,
-          city: selectedAddress.city,
-          state: selectedAddress.state,
-          country: selectedAddress.country,
-          postal_code: selectedAddress.postal_code,
+          address_line1: selectedAddress.street || '',
+          city: selectedAddress.city || '',
+          state: selectedAddress.state || '',
+          postal_code: selectedAddress.postal_code || '',
+          landmark: selectedAddress.additional_info || '',
         };
       }
 
@@ -176,10 +175,15 @@ export default function CheckoutScreen() {
         }
       }
     } catch (err: any) {
-      Alert.alert(
-        'Order Failed',
-        err?.response?.data?.message || err?.message || 'Failed to place order.',
-      );
+      const apiMsg = err?.response?.data?.message;
+      const apiErrors = err?.response?.data?.errors;
+      let detail = apiMsg || err?.message || 'Failed to place order.';
+      if (Array.isArray(apiErrors) && apiErrors.length > 0) {
+        detail = apiErrors.join('\n');
+      } else if (typeof apiErrors === 'object' && apiErrors) {
+        detail = Object.values(apiErrors).flat().join('\n');
+      }
+      Alert.alert('Order Failed', detail);
     } finally {
       setPlacing(false);
     }
