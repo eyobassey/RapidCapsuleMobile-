@@ -252,15 +252,22 @@ export const recoveryService = {
   },
 
   async getExerciseStats(): Promise<ExerciseStats> {
-    const raw = unwrap(await api.get('/recovery/exercises/stats'));
+    const [raw, historyRes] = await Promise.all([
+      unwrap(api.get('/recovery/exercises/stats')),
+      unwrap(api.get('/recovery/exercises/history', {params: {limit: 100}})),
+    ]);
+    const docs = Array.isArray(historyRes) ? historyRes : historyRes?.docs || [];
+    const totalMinutes = docs.reduce((sum: number, e: any) => sum + (e.estimated_minutes || 0), 0);
     return {
       total_sessions: raw.total ?? 0,
-      total_minutes: raw.total_minutes ?? 0,
+      total_minutes: totalMinutes,
       wellness_score: raw.wellness_score ?? 0,
       wellness_level: raw.wellness_level,
       streak: raw.current_streak ?? 0,
       completion_rate: raw.completion_rate ?? 0,
       by_category: raw.by_category ?? {},
+      exercises_last_14_days: raw.exercises_last_14_days ?? 0,
+      unique_categories: raw.unique_categories ?? 0,
     };
   },
 

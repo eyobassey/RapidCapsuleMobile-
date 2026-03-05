@@ -232,6 +232,8 @@ export interface ExerciseStats {
   streak: number;
   completion_rate: number;
   by_category: Record<string, number>;
+  exercises_last_14_days: number;
+  unique_categories: number;
 }
 
 // ─── Risk Reports ───────────────────────────────
