@@ -1,19 +1,30 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useState} from 'react';
 import {View, Text, FlatList, TouchableOpacity, ActivityIndicator} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {ClipboardCheck} from 'lucide-react-native';
 import {Header} from '../../components/ui';
 import RiskBadge from '../../components/recovery/RiskBadge';
+import LineChart from '../../components/charts/LineChart';
 import {colors} from '../../theme/colors';
 import {useRecoveryStore} from '../../store/recovery';
 import {formatDate} from '../../utils/formatters';
+import type {ScreeningResult, ScreeningInstrument} from '../../types/recovery.types';
+
+const INSTRUMENTS: Array<{value: string | null; label: string}> = [
+  {value: null, label: 'All'},
+  {value: 'audit', label: 'AUDIT'},
+  {value: 'dast10', label: 'DAST-10'},
+  {value: 'cage', label: 'CAGE'},
+  {value: 'assist', label: 'ASSIST'},
+];
 
 export default function ScreeningHistoryScreen() {
   const navigation = useNavigation<any>();
   const history = useRecoveryStore(s => s.screeningHistory);
   const isLoading = useRecoveryStore(s => s.isLoading);
   const fetchScreeningHistory = useRecoveryStore(s => s.fetchScreeningHistory);
+  const [filter, setFilter] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -21,14 +32,63 @@ export default function ScreeningHistoryScreen() {
     }, []),
   );
 
+  const filtered = filter
+    ? history.filter(s => s.instrument === filter)
+    : history;
+
+  // Build chart data from filtered history (oldest first)
+  const chartData = [...filtered]
+    .reverse()
+    .map(s => ({date: s.created_at, value: s.total_score}));
+
+  const renderHeader = () => (
+    <View style={{gap: 12, marginBottom: 16}}>
+      {/* Instrument Filter */}
+      <View style={{flexDirection: 'row', gap: 6}}>
+        {INSTRUMENTS.map(inst => (
+          <TouchableOpacity
+            key={inst.value || 'all'}
+            activeOpacity={0.7}
+            onPress={() => setFilter(inst.value)}
+            style={{
+              paddingHorizontal: 12,
+              paddingVertical: 7,
+              borderRadius: 10,
+              backgroundColor: filter === inst.value ? colors.primary : colors.muted,
+            }}>
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: '600',
+                color: filter === inst.value ? colors.white : colors.mutedForeground,
+              }}>
+              {inst.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Score Trend Chart */}
+      {chartData.length > 1 && (
+        <LineChart
+          data={chartData}
+          color={colors.primary}
+          height={150}
+          label="Score Trend"
+        />
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
       <Header title="Screening History" onBack={() => navigation.goBack()} />
 
       <FlatList
-        data={history}
+        data={filtered}
         keyExtractor={item => item._id}
         contentContainerStyle={{padding: 16, gap: 10}}
+        ListHeaderComponent={renderHeader}
         renderItem={({item}) => (
           <TouchableOpacity
             activeOpacity={0.7}

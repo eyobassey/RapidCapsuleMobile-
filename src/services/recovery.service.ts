@@ -10,9 +10,20 @@ import type {
   Milestone,
   CompanionSession,
   CompanionMessage,
+  CompanionSessionSummary,
   SubstanceHistory,
   RecoveryConsent,
   CareLevel,
+  RecoveryPlan,
+  ExerciseRecord,
+  ExerciseStats,
+  RiskReport,
+  GroupSession,
+  PeerAssignment,
+  MATMedication,
+  MATCompliance,
+  HarmReductionSubstance,
+  SubstanceGuidance,
 } from '../types/recovery.types';
 
 const unwrap = (res: any) => res.data.data ?? res.data.result ?? res.data;
@@ -130,5 +141,114 @@ export const recoveryService = {
   // ─── Harm Reduction ─────────────────────────────
   async getEmergencyResources(): Promise<any> {
     return unwrap(await api.get('/recovery/harm-reduction/emergency-resources'));
+  },
+
+  async getHarmReductionSubstances(): Promise<HarmReductionSubstance[]> {
+    const res = unwrap(await api.get('/recovery/harm-reduction/substances'));
+    return Array.isArray(res) ? res : res?.data || [];
+  },
+
+  async getSubstanceGuidance(substance: string): Promise<SubstanceGuidance> {
+    return unwrap(await api.get(`/recovery/harm-reduction/guidance/${substance}`));
+  },
+
+  async getOverdoseResponse(substance: string): Promise<any> {
+    return unwrap(await api.get(`/recovery/harm-reduction/overdose-response/${substance}`));
+  },
+
+  // ─── Recovery Plans ────────────────────────────
+  async getActivePlan(): Promise<RecoveryPlan> {
+    return unwrap(await api.get('/recovery/plans/active'));
+  },
+
+  async getPlanHistory(params?: {page?: number; limit?: number}): Promise<RecoveryPlan[]> {
+    const res = unwrap(await api.get('/recovery/plans/history', {params}));
+    return Array.isArray(res) ? res : res?.data || [];
+  },
+
+  async updateStageStatus(stageId: string, status: string): Promise<any> {
+    return unwrap(await api.patch(`/recovery/plans/stages/${stageId}/status`, {status}));
+  },
+
+  async updateGoalStatus(stageId: string, goalId: string, status: string): Promise<any> {
+    return unwrap(await api.patch(`/recovery/plans/stages/${stageId}/goals/${goalId}`, {status}));
+  },
+
+  // ─── Exercises ─────────────────────────────────
+  async getExerciseHistory(params?: {category?: string; page?: number; limit?: number}): Promise<ExerciseRecord[]> {
+    const res = unwrap(await api.get('/recovery/exercises/history', {params}));
+    return Array.isArray(res) ? res : res?.data || [];
+  },
+
+  async getExerciseStats(): Promise<ExerciseStats> {
+    return unwrap(await api.get('/recovery/exercises/stats'));
+  },
+
+  // ─── Risk Assessment ──────────────────────────
+  async getCurrentRisk(): Promise<RiskReport> {
+    return unwrap(await api.get('/recovery/risk/current'));
+  },
+
+  async getRiskHistory(period?: string): Promise<RiskReport[]> {
+    const res = unwrap(await api.get('/recovery/risk/history', {params: {period}}));
+    return Array.isArray(res) ? res : res?.data || [];
+  },
+
+  async getRiskAssessmentReports(params?: {page?: number; limit?: number}): Promise<RiskReport[]> {
+    const res = unwrap(await api.get('/recovery/profile/risk-assessments', {params}));
+    return Array.isArray(res) ? res : res?.data || [];
+  },
+
+  // ─── Group Sessions ───────────────────────────
+  async getGroupSessions(params?: {status?: string; category?: string; page?: number; limit?: number}): Promise<GroupSession[]> {
+    const res = unwrap(await api.get('/recovery/group-sessions', {params}));
+    return Array.isArray(res) ? res : res?.data || [];
+  },
+
+  async getMyGroupSessions(): Promise<GroupSession[]> {
+    const res = unwrap(await api.get('/recovery/group-sessions/my-sessions'));
+    return Array.isArray(res) ? res : res?.data || [];
+  },
+
+  async joinGroupSession(id: string): Promise<any> {
+    return unwrap(await api.post(`/recovery/group-sessions/${id}/join`));
+  },
+
+  async leaveGroupSession(id: string): Promise<any> {
+    return unwrap(await api.post(`/recovery/group-sessions/${id}/leave`));
+  },
+
+  // ─── Peer Support ─────────────────────────────
+  async getPeerAssignments(params?: {page?: number; limit?: number}): Promise<PeerAssignment[]> {
+    const res = unwrap(await api.get('/recovery/peer-support', {params}));
+    return Array.isArray(res) ? res : res?.data || [];
+  },
+
+  async consentPeerAssignment(id: string): Promise<PeerAssignment> {
+    return unwrap(await api.post(`/recovery/peer-support/${id}/consent`));
+  },
+
+  async logPeerCheckIn(id: string, data: {mood?: number; notes?: string}): Promise<any> {
+    return unwrap(await api.post(`/recovery/peer-support/${id}/check-in`, data));
+  },
+
+  async endPeerAssignment(id: string): Promise<any> {
+    return unwrap(await api.post(`/recovery/peer-support/${id}/end`));
+  },
+
+  // ─── MAT (Medication-Assisted Treatment) ──────
+  async getMATMedications(): Promise<MATMedication[]> {
+    const res = unwrap(await api.get('/recovery/mat/medications'));
+    return Array.isArray(res) ? res : res?.data || [];
+  },
+
+  async getMATCompliance(): Promise<MATCompliance> {
+    return unwrap(await api.get('/recovery/mat/compliance'));
+  },
+
+  // ─── Companion (additional) ───────────────────
+  async getRecentSessions(): Promise<CompanionSessionSummary[]> {
+    const res = unwrap(await api.get('/recovery/companion'));
+    return Array.isArray(res) ? res : res?.data || [];
   },
 };

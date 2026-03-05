@@ -31,6 +31,13 @@ import MilestonesScreen from '../../screens/recovery/MilestonesScreen';
 import CrisisScreen from '../../screens/recovery/CrisisScreen';
 import CheckInHistoryScreen from '../../screens/recovery/CheckInHistoryScreen';
 import CompanionChatScreen from '../../screens/recovery/CompanionChatScreen';
+import RecoveryPlanScreen from '../../screens/recovery/RecoveryPlanScreen';
+import GroupSessionsScreen from '../../screens/recovery/GroupSessionsScreen';
+import PeerSupportScreen from '../../screens/recovery/PeerSupportScreen';
+import MATDashboardScreen from '../../screens/recovery/MATDashboardScreen';
+import HarmReductionScreen from '../../screens/recovery/HarmReductionScreen';
+import RiskHistoryScreen from '../../screens/recovery/RiskHistoryScreen';
+import ExerciseHistoryScreen from '../../screens/recovery/ExerciseHistoryScreen';
 
 export type HomeStackParamList = {
   HomeScreen: undefined;
@@ -64,6 +71,13 @@ export type HomeStackParamList = {
   Crisis: undefined;
   CheckInHistory: undefined;
   CompanionChat: {sessionId?: string};
+  RecoveryPlan: undefined;
+  GroupSessions: undefined;
+  PeerSupport: undefined;
+  MATDashboard: undefined;
+  HarmReduction: undefined;
+  RiskHistory: undefined;
+  ExerciseHistory: undefined;
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -102,6 +116,13 @@ export default function HomeStack() {
       <Stack.Screen name="Crisis" component={CrisisScreen} />
       <Stack.Screen name="CheckInHistory" component={CheckInHistoryScreen} />
       <Stack.Screen name="CompanionChat" component={CompanionChatScreen} />
+      <Stack.Screen name="RecoveryPlan" component={RecoveryPlanScreen} />
+      <Stack.Screen name="GroupSessions" component={GroupSessionsScreen} />
+      <Stack.Screen name="PeerSupport" component={PeerSupportScreen} />
+      <Stack.Screen name="MATDashboard" component={MATDashboardScreen} />
+      <Stack.Screen name="HarmReduction" component={HarmReductionScreen} />
+      <Stack.Screen name="RiskHistory" component={RiskHistoryScreen} />
+      <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} />
     </Stack.Navigator>
   );
 }

@@ -177,3 +177,143 @@ export interface CompanionMessage {
     escalation_suggested: boolean;
   };
 }
+
+// ─── Recovery Plans ─────────────────────────────
+export interface PlanGoal {
+  _id: string;
+  description: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  completed_at?: string;
+}
+
+export interface PlanStage {
+  _id: string;
+  name: string;
+  description?: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  estimated_weeks?: number;
+  goals: PlanGoal[];
+}
+
+export interface RecoveryPlan {
+  _id: string;
+  patient: string;
+  specialist?: string;
+  title?: string;
+  status: 'draft' | 'active' | 'completed' | 'abandoned';
+  stages: PlanStage[];
+  progress_percentage: number;
+  review_date?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Exercises ──────────────────────────────────
+export interface ExerciseRecord {
+  _id: string;
+  category: string;
+  name: string;
+  duration_minutes: number;
+  completed_at: string;
+  effectiveness_rating?: number;
+  ai_summary?: string;
+}
+
+export interface ExerciseStats {
+  total_sessions: number;
+  total_minutes: number;
+  wellness_score: number;
+  wellness_level?: string;
+  streak: number;
+  completion_rate: number;
+  by_category: Record<string, number>;
+}
+
+// ─── Risk Reports ───────────────────────────────
+export interface RiskReport {
+  _id: string;
+  risk_score: number;
+  risk_level: RiskLevel;
+  factors?: string[];
+  signals?: Array<{name: string; weight: number; value: any}>;
+  created_at: string;
+}
+
+// ─── Group Sessions ─────────────────────────────
+export interface GroupSession {
+  _id: string;
+  title: string;
+  description?: string;
+  category?: string;
+  facilitator?: {_id: string; profile?: {first_name: string; last_name: string}};
+  schedule?: {day_of_week?: string; time?: string; recurring?: boolean};
+  max_members: number;
+  current_members: number;
+  members?: string[];
+  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+  created_at: string;
+}
+
+// ─── Peer Support ───────────────────────────────
+export interface PeerCheckIn {
+  _id: string;
+  mood?: number;
+  notes?: string;
+  created_at: string;
+}
+
+export interface PeerAssignment {
+  _id: string;
+  peer: {_id: string; profile?: {first_name: string; last_name: string}};
+  supporter: {_id: string; profile?: {first_name: string; last_name: string}};
+  match_score?: number;
+  shared_substance?: string;
+  gender_match?: boolean;
+  age_proximity?: number;
+  status: 'pending' | 'active' | 'ended';
+  check_ins?: PeerCheckIn[];
+  created_at: string;
+}
+
+// ─── MAT (Medication-Assisted Treatment) ────────
+export interface MATMedication {
+  _id: string;
+  drug: {_id: string; name: string; strength?: string};
+  dosage: string;
+  frequency: string;
+  start_date: string;
+  end_date?: string;
+  condition?: string;
+}
+
+export interface MATCompliance {
+  compliance_level: 'excellent' | 'good' | 'fair' | 'poor';
+  check_in_rate: number;
+  screening_completion: number;
+  medications: MATMedication[];
+}
+
+// ─── Harm Reduction ─────────────────────────────
+export interface HarmReductionSubstance {
+  substance: string;
+  icon?: string;
+  category?: string;
+}
+
+export interface SubstanceGuidance {
+  substance: string;
+  safer_use_tips: string[];
+  overdose_signs: string[];
+  overdose_response: string[];
+  recovery_position?: string;
+  fentanyl_risk?: string;
+}
+
+// ─── Companion Sessions ─────────────────────────
+export interface CompanionSessionSummary {
+  session_id: string;
+  context?: string;
+  started_at: string;
+  ended_at?: string;
+  message_count?: number;
+}

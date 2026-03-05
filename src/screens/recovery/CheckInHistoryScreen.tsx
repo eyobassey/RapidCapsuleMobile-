@@ -1,22 +1,31 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, FlatList, ActivityIndicator} from 'react-native';
+import {View, Text, FlatList, ActivityIndicator, TouchableOpacity} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {CalendarCheck, SmilePlus, Flame, Brain} from 'lucide-react-native';
 import {Header} from '../../components/ui';
+import LineChart from '../../components/charts/LineChart';
 import {colors} from '../../theme/colors';
 import {recoveryService} from '../../services/recovery.service';
 import {formatDate} from '../../utils/formatters';
 import type {SobrietyLog} from '../../types/recovery.types';
 
+type ChartMetric = 'mood_score' | 'craving_intensity';
+
 export default function CheckInHistoryScreen() {
   const navigation = useNavigation<any>();
   const [logs, setLogs] = useState<SobrietyLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState<Array<{date: string; value: number}>>([]);
+  const [chartMetric, setChartMetric] = useState<ChartMetric>('mood_score');
 
   useEffect(() => {
     loadLogs();
   }, []);
+
+  useEffect(() => {
+    loadChart();
+  }, [chartMetric]);
 
   const loadLogs = async () => {
     try {
@@ -28,6 +37,57 @@ export default function CheckInHistoryScreen() {
       setLoading(false);
     }
   };
+
+  const loadChart = async () => {
+    try {
+      const data = await recoveryService.getChartData(chartMetric, 30);
+      setChartData(Array.isArray(data) ? data : []);
+    } catch {
+      setChartData([]);
+    }
+  };
+
+  const chartLabel = chartMetric === 'mood_score' ? 'Mood' : 'Cravings';
+  const chartColor = chartMetric === 'mood_score' ? colors.primary : colors.secondary;
+
+  const renderHeader = () => (
+    <View style={{gap: 12, marginBottom: 16}}>
+      {/* Metric Toggle */}
+      <View style={{flexDirection: 'row', gap: 8}}>
+        {(['mood_score', 'craving_intensity'] as ChartMetric[]).map(metric => (
+          <TouchableOpacity
+            key={metric}
+            activeOpacity={0.7}
+            onPress={() => setChartMetric(metric)}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              borderRadius: 10,
+              backgroundColor: chartMetric === metric ? colors.primary : colors.muted,
+              alignItems: 'center',
+            }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: '600',
+                color: chartMetric === metric ? colors.white : colors.mutedForeground,
+              }}>
+              {metric === 'mood_score' ? 'Mood' : 'Cravings'}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Chart */}
+      <LineChart
+        data={chartData}
+        color={chartColor}
+        height={160}
+        label={`${chartLabel} Trend (30 days)`}
+        range={{min: 0, max: 10}}
+      />
+    </View>
+  );
 
   const renderLog = ({item}: {item: SobrietyLog}) => (
     <View
@@ -95,6 +155,7 @@ export default function CheckInHistoryScreen() {
           data={logs}
           keyExtractor={item => item._id}
           contentContainerStyle={{padding: 16, gap: 10}}
+          ListHeaderComponent={renderHeader}
           renderItem={renderLog}
           ListEmptyComponent={
             <View style={{alignItems: 'center', paddingTop: 60, paddingHorizontal: 40}}>
