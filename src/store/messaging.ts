@@ -74,15 +74,26 @@ export const useMessagingStore = create<MessagingState>((set, get) => ({
     set({isLoading: true});
     try {
       const res = await messagingService.getConversations({page, limit: 20, search});
-      const list = res.data || res;
+      const raw = Array.isArray(res.data || res) ? (res.data || res) : [];
+      // Deduplicate by _id in case backend returns duplicates
+      const seen = new Set<string>();
+      const list = raw.filter((c: Conversation) => {
+        if (seen.has(c._id)) return false;
+        seen.add(c._id);
+        return true;
+      });
       const pagination = (res as any).pagination;
       if (page === 1) {
-        set({conversations: Array.isArray(list) ? list : [], currentPage: 1});
+        set({conversations: list, currentPage: 1});
       } else {
-        set(s => ({
-          conversations: [...s.conversations, ...(Array.isArray(list) ? list : [])],
-          currentPage: page,
-        }));
+        set(s => {
+          const existingIds = new Set(s.conversations.map(c => c._id));
+          const newItems = list.filter((c: Conversation) => !existingIds.has(c._id));
+          return {
+            conversations: [...s.conversations, ...newItems],
+            currentPage: page,
+          };
+        });
       }
       set({
         hasMoreConversations: pagination
@@ -105,23 +116,32 @@ export const useMessagingStore = create<MessagingState>((set, get) => ({
         before: cursor ?? undefined,
         limit: 50,
       });
-      const msgs = res.data || [];
-      set(s => ({
-        messages: {
-          ...s.messages,
-          [conversationId]: loadMore
-            ? [...(s.messages[conversationId] || []), ...msgs]
-            : msgs,
-        },
-        hasMoreMessages: {
-          ...s.hasMoreMessages,
-          [conversationId]: res.has_more ?? false,
-        },
-        cursors: {
-          ...s.cursors,
-          [conversationId]: res.cursor ?? null,
-        },
-      }));
+      const msgs: Message[] = res.data || [];
+      set(s => {
+        let merged: Message[];
+        if (loadMore) {
+          const existing = s.messages[conversationId] || [];
+          const existingIds = new Set(existing.map(m => m._id));
+          const newMsgs = msgs.filter(m => !existingIds.has(m._id));
+          merged = [...existing, ...newMsgs];
+        } else {
+          merged = msgs;
+        }
+        return {
+          messages: {
+            ...s.messages,
+            [conversationId]: merged,
+          },
+          hasMoreMessages: {
+            ...s.hasMoreMessages,
+            [conversationId]: res.has_more ?? false,
+          },
+          cursors: {
+            ...s.cursors,
+            [conversationId]: res.cursor ?? null,
+          },
+        };
+      });
     } catch {
       // silently fail
     }
