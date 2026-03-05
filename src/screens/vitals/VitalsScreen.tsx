@@ -70,19 +70,35 @@ function getVitalStatus(
 }
 
 /**
- * Get the latest reading for a vital key from the merged vitals object.
- * The backend returns { blood_pressure: [{value, unit, updatedAt}], ... }
+ * Get the latest reading for a vital key.
+ * Prefers recentVitals (GET /vitals/recent — single latest per type).
+ * Falls back to vitalsData arrays (GET /vitals — full history).
  */
-function getLatestReading(vitalsData: Record<string, any>, vitalKey: string) {
+function getLatestReading(
+  recentVitals: Record<string, any>,
+  vitalsData: Record<string, any>,
+  vitalKey: string,
+) {
+  // 1. Check recentVitals first (flat object: { value, unit, updatedAt })
+  const recent = recentVitals[vitalKey];
+  if (recent && recent.value != null) {
+    return recent;
+  }
+
+  // 2. Fallback to vitalsData arrays
   const readings = vitalsData[vitalKey];
   if (!readings) return null;
 
-  // If it's an array of readings, return the last one
   if (Array.isArray(readings) && readings.length > 0) {
-    return readings[readings.length - 1];
+    // Sort by updatedAt descending and return the most recent
+    const sorted = [...readings].sort((a, b) => {
+      const da = new Date(a.updatedAt || 0).getTime();
+      const db = new Date(b.updatedAt || 0).getTime();
+      return db - da;
+    });
+    return sorted[0];
   }
 
-  // If it's a single object with value (some endpoints return flat object)
   if (readings.value != null) {
     return readings;
   }
@@ -94,17 +110,18 @@ export default function VitalsScreen() {
   const navigation = useNavigation<any>();
   const [refreshing, setRefreshing] = useState(false);
 
-  const {vitalsData, isLoading, fetchVitals} = useVitalsStore();
+  const {vitalsData, recentVitals, isLoading, fetchVitals, fetchRecentVitals} = useVitalsStore();
 
   useEffect(() => {
     fetchVitals();
-  }, [fetchVitals]);
+    fetchRecentVitals();
+  }, [fetchVitals, fetchRecentVitals]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchVitals();
+    await Promise.allSettled([fetchVitals(), fetchRecentVitals()]);
     setRefreshing(false);
-  }, [fetchVitals]);
+  }, [fetchVitals, fetchRecentVitals]);
 
   const hasData = Object.keys(vitalsData).length > 0;
 
@@ -115,7 +132,7 @@ export default function VitalsScreen() {
     let alertCount = 0;
 
     VITAL_TYPES.forEach(config => {
-      const reading = getLatestReading(vitalsData, config.key);
+      const reading = getLatestReading(recentVitals, vitalsData, config.key);
       if (reading) {
         totalTracked++;
         const numValue = parseFloat(
@@ -223,7 +240,7 @@ export default function VitalsScreen() {
         {/* Vital Type Cards */}
         {VITAL_TYPES.map(config => {
           const IconComponent = getIconComponent(config.icon);
-          const reading = getLatestReading(vitalsData, config.key);
+          const reading = getLatestReading(recentVitals, vitalsData, config.key);
           const displayValue = reading?.value != null
             ? formatVitalValue(String(reading.value), config.key)
             : null;

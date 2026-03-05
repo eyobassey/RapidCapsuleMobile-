@@ -248,15 +248,41 @@ export default function VitalDetailScreen() {
 
   // Chart data points
   const chartPoints = useMemo(() => {
-    if (chartData && Array.isArray(chartData.data)) {
-      return chartData.data.map((d: any) => ({
-        value: parseFloat(d.value) || 0,
+    // Backend returns: [{ date: "2025-03-01", data: [{value, unit, updatedAt}] }, ...]
+    if (chartData && Array.isArray(chartData) && chartData.length > 0) {
+      // Check if items have nested `data` array (backend chart format)
+      if (chartData[0]?.data && Array.isArray(chartData[0].data)) {
+        return chartData
+          .filter((d: any) => d.data && d.data.length > 0)
+          .map((d: any) => {
+            const reading = d.data[0];
+            const rawValue = String(reading.value || '');
+            const numValue = parseFloat(
+              vitalType === 'blood_pressure'
+                ? rawValue.split('/')[0]
+                : rawValue,
+            ) || 0;
+            return {value: numValue, date: d.date};
+          });
+      }
+      // Flat array format: [{ value, date }]
+      return chartData.map((d: any) => ({
+        value: parseFloat(
+          vitalType === 'blood_pressure'
+            ? String(d.value || '').split('/')[0]
+            : String(d.value || ''),
+        ) || 0,
         date: d.date || d.createdAt || d.updatedAt,
       }));
     }
-    if (chartData && Array.isArray(chartData)) {
-      return chartData.map((d: any) => ({
-        value: parseFloat(d.value) || 0,
+    // Object with .data array
+    if (chartData?.data && Array.isArray(chartData.data)) {
+      return chartData.data.map((d: any) => ({
+        value: parseFloat(
+          vitalType === 'blood_pressure'
+            ? String(d.value || '').split('/')[0]
+            : String(d.value || ''),
+        ) || 0,
         date: d.date || d.createdAt || d.updatedAt,
       }));
     }

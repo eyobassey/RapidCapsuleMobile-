@@ -9,17 +9,20 @@ interface VitalsData {
 
 interface VitalsState {
   vitalsData: VitalsData;
+  recentVitals: VitalsData;
   chartData: any | null;
   isLoading: boolean;
   error: string | null;
 
   fetchVitals: () => Promise<void>;
+  fetchRecentVitals: () => Promise<void>;
   fetchChartData: (params: {vitalToSelect: string; duration: string}) => Promise<void>;
   logVital: (data: any) => Promise<void>;
 }
 
 export const useVitalsStore = create<VitalsState>((set) => ({
   vitalsData: {},
+  recentVitals: {},
   chartData: null,
   isLoading: false,
   error: null,
@@ -35,6 +38,15 @@ export const useVitalsStore = create<VitalsState>((set) => ({
         error: err?.response?.data?.message || err?.message || 'Failed to fetch vitals',
         isLoading: false,
       });
+    }
+  },
+
+  fetchRecentVitals: async () => {
+    try {
+      const data = await vitalsService.getRecent();
+      set({recentVitals: data && typeof data === 'object' ? data : {}});
+    } catch {
+      // Silent fail — main vitals list still works from vitalsData
     }
   },
 
