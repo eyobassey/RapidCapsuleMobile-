@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import {usePaystack} from 'react-native-paystack-webview';
+import {WebView} from 'react-native-webview';
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -27,7 +27,6 @@ import {
   Crown,
   ShoppingCart,
   ChevronRight,
-  Infinity,
   Send,
   AlertTriangle,
   Check,
@@ -37,7 +36,6 @@ import {
   Plus,
 } from 'lucide-react-native';
 
-import {useAuthStore} from '../../store/auth';
 import {useWalletStore} from '../../store/wallet';
 import {useCreditsStore, type CreditPlan} from '../../store/credits';
 import {creditsService} from '../../services/credits.service';
@@ -51,8 +49,6 @@ const CURRENCY_SYMBOLS: Record<string, string> = {NGN: '₦', USD: '$', GBP: '£
 export default function WalletScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const {popup} = usePaystack();
-  const user = useAuthStore(s => s.user);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState(route?.params?.initialTab || 'wallet');
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -61,6 +57,8 @@ export default function WalletScreen() {
   // Fund wallet state
   const [showFundModal, setShowFundModal] = useState(false);
   const [fundAmount, setFundAmount] = useState('');
+  const [paystackUrl, setPaystackUrl] = useState<string | null>(null);
+  const [fundReference, setFundReference] = useState<string | null>(null);
 
   // Share credits state
   const [showShareModal, setShowShareModal] = useState(false);
@@ -80,6 +78,7 @@ export default function WalletScreen() {
     funding,
     fetchBalance,
     fetchTransactions,
+    fundWallet,
     verifyFunding,
   } = useWalletStore();
 
@@ -114,7 +113,7 @@ export default function WalletScreen() {
 
   useEffect(() => {
     fetchBalance();
-    fetchTransactions();
+    fetchTransactions({limit: 100});
     fetchCredits();
     fetchPlans();
     fetchCreditTransactions();
@@ -132,7 +131,7 @@ export default function WalletScreen() {
     setRefreshing(true);
     await Promise.allSettled([
       fetchBalance(),
-      fetchTransactions(),
+      fetchTransactions({limit: 100}),
       fetchCredits(),
       fetchPlans(),
       fetchCreditTransactions(),
@@ -146,7 +145,8 @@ export default function WalletScreen() {
     let totalFunded = 0;
     for (const tx of transactions) {
       const amount = tx.amount || 0;
-      if (tx.type === 'credit' || tx.type === 'fund' || tx.type === 'deposit') {
+      const type = (tx.type || '').toLowerCase();
+      if (type === 'credit' || type === 'fund' || type === 'deposit') {
         totalFunded += amount;
       } else {
         totalSpent += amount;
@@ -155,8 +155,10 @@ export default function WalletScreen() {
     return {totalSpent, totalFunded};
   }, [transactions]);
 
-  const isCredit = (tx: any) =>
-    tx.type === 'credit' || tx.type === 'fund' || tx.type === 'deposit';
+  const isCredit = (tx: any) => {
+    const type = (tx.type || '').toLowerCase();
+    return type === 'credit' || type === 'fund' || type === 'deposit';
+  };
 
   // Plan price in user's currency
   const getPlanPrice = (plan: CreditPlan) => {
@@ -182,30 +184,54 @@ export default function WalletScreen() {
   };
 
   // ── Fund Wallet handler ──
-  const handleFundWallet = useCallback(() => {
+  const handleFundWallet = useCallback(async () => {
     const amount = parseFloat(fundAmount);
     if (!amount || amount < 100) return;
     setShowFundModal(false);
-    popup.checkout({
-      email: user?.email || '',
-      amount: amount * 100, // Paystack expects kobo/cents
-      onSuccess: async (res: any) => {
-        const reference = res?.reference || res?.trxref;
-        if (reference) {
-          const verified = await verifyFunding(reference);
-          if (verified) {
-            Alert.alert('Success', 'Wallet funded successfully!');
-            setFundAmount('');
-          } else {
-            Alert.alert('Verification Pending', 'Your payment is being processed. Balance will update shortly.');
-          }
+    const result = await fundWallet(amount);
+    if (result?.authorization_url) {
+      setFundReference(result.reference);
+      setPaystackUrl(result.authorization_url);
+    } else {
+      // Payment processed directly or failed
+      const err = useWalletStore.getState().fundingError;
+      if (err) {
+        Alert.alert('Error', err);
+      }
+    }
+  }, [fundAmount, fundWallet]);
+
+  // ── Handle Paystack WebView navigation ──
+  const handlePaystackNavigation = useCallback(async (navState: {url: string}) => {
+    const url = navState.url || '';
+    // Detect redirect away from Paystack (callback reached)
+    if (paystackUrl && url !== paystackUrl && !url.includes('paystack.co') && !url.includes('paystack.com')) {
+      setPaystackUrl(null);
+      if (fundReference) {
+        const verified = await verifyFunding(fundReference);
+        if (verified) {
+          Alert.alert('Success', 'Wallet funded successfully!');
+          setFundAmount('');
+        } else {
+          Alert.alert('Verification Pending', 'Your payment is being processed. Balance will update shortly.');
         }
-      },
-      onCancel: () => {
-        // User cancelled payment
-      },
-    });
-  }, [fundAmount, user?.email, popup, verifyFunding]);
+        setFundReference(null);
+      }
+    }
+  }, [paystackUrl, fundReference, verifyFunding]);
+
+  const handleClosePaystack = useCallback(async () => {
+    setPaystackUrl(null);
+    // Attempt to verify in case payment was completed before closing
+    if (fundReference) {
+      const verified = await verifyFunding(fundReference);
+      if (verified) {
+        Alert.alert('Success', 'Wallet funded successfully!');
+        setFundAmount('');
+      }
+      setFundReference(null);
+    }
+  }, [fundReference, verifyFunding]);
 
   // ── Recipient search (debounced) ──
   const handleRecipientSearch = useCallback((text: string) => {
@@ -1309,6 +1335,53 @@ export default function WalletScreen() {
             </ScrollView>
           </Pressable>
         </Pressable>
+      </Modal>
+
+      {/* ═══════ PAYSTACK WEBVIEW MODAL ═══════ */}
+      <Modal
+        visible={!!paystackUrl}
+        animationType="slide"
+        onRequestClose={handleClosePaystack}>
+        <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+            }}>
+            <TouchableOpacity onPress={handleClosePaystack} style={{padding: 4}}>
+              <X size={24} color={colors.foreground} />
+            </TouchableOpacity>
+            <Text
+              style={{
+                flex: 1,
+                textAlign: 'center',
+                fontSize: 16,
+                fontWeight: '700',
+                color: colors.foreground,
+              }}>
+              Complete Payment
+            </Text>
+            <View style={{width: 32}} />
+          </View>
+          {paystackUrl && (
+            <WebView
+              source={{uri: paystackUrl}}
+              onNavigationStateChange={handlePaystackNavigation}
+              style={{flex: 1}}
+              startInLoadingState
+              renderLoading={() => (
+                <View style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background}}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                  <Text style={{marginTop: 12, fontSize: 14, color: colors.mutedForeground}}>Loading payment page...</Text>
+                </View>
+              )}
+            />
+          )}
+        </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );

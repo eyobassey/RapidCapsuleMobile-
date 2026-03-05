@@ -45,8 +45,14 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
             target: route.key,
             canPreventDefault: true,
           });
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
+          if (!event.defaultPrevented) {
+            if (isFocused) {
+              // Already on this tab — reset to initial screen
+              navigation.navigate(route.name, {screen: route.name});
+            } else {
+              // Switch tab and reset its stack to initial screen
+              navigation.navigate(route.name, route.name !== 'Eka' ? {screen: route.name} : undefined);
+            }
           }
         };
 
