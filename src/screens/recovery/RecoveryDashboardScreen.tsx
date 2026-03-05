@@ -27,6 +27,8 @@ import {
   TrendingUp,
   MessageCircle,
   Award,
+  Heart,
+  Sparkles,
 } from 'lucide-react-native';
 
 import {Header} from '../../components/ui';
@@ -73,6 +75,13 @@ export default function RecoveryDashboardScreen() {
   const streak = dashboard?.sobriety_streak ?? 0;
   const longestStreak = dashboard?.longest_streak ?? 0;
   const logSummary = dashboard?.daily_log_summary;
+
+  // New user = enrolled but hasn't done any screening or daily log yet
+  const isNewUser =
+    dashboard != null &&
+    !dashboard.recent_screening &&
+    sobrietyDays === 0 &&
+    (!dashboard.mood_trend || dashboard.mood_trend.length === 0);
 
   const quickActions = [
     {
@@ -169,6 +178,205 @@ export default function RecoveryDashboardScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }>
+        {/* ─── New User Welcome ─── */}
+        {isNewUser && (
+          <View style={{gap: 16}}>
+            {/* Welcome Hero */}
+            <View
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: `${colors.accent}30`,
+                borderRadius: 24,
+                padding: 28,
+                alignItems: 'center',
+              }}>
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                  backgroundColor: `${colors.accent}15`,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16,
+                }}>
+                <Heart size={32} color={colors.accent} />
+              </View>
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: '800',
+                  color: colors.foreground,
+                  textAlign: 'center',
+                }}>
+                Welcome to Recovery
+              </Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: colors.mutedForeground,
+                  textAlign: 'center',
+                  marginTop: 8,
+                  lineHeight: 20,
+                  paddingHorizontal: 8,
+                }}>
+                You've taken a brave first step. This space is here to support you with evidence-based tools, daily tracking, and compassionate AI guidance.
+              </Text>
+            </View>
+
+            {/* Screening CTA */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('ScreeningSelect')}
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: `${colors.primary}30`,
+                borderRadius: 20,
+                padding: 20,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+              }}>
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: `${colors.primary}15`,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <ClipboardCheck size={24} color={colors.primary} />
+              </View>
+              <View style={{flex: 1}}>
+                <Text style={{fontSize: 15, fontWeight: '700', color: colors.foreground}}>
+                  Take Your First Screening
+                </Text>
+                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 3, lineHeight: 17}}>
+                  A short confidential assessment to understand where you are and personalise your support.
+                </Text>
+              </View>
+              <ChevronRight size={18} color={colors.primary} />
+            </TouchableOpacity>
+
+            {/* Other getting-started actions */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('DailyCheckIn')}
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: `${colors.success}30`,
+                borderRadius: 20,
+                padding: 20,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+              }}>
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: `${colors.success}15`,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <CalendarCheck size={24} color={colors.success} />
+              </View>
+              <View style={{flex: 1}}>
+                <Text style={{fontSize: 15, fontWeight: '700', color: colors.foreground}}>
+                  Log Your First Check-in
+                </Text>
+                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 3, lineHeight: 17}}>
+                  Track your mood, cravings, and daily progress. Just a minute a day makes a difference.
+                </Text>
+              </View>
+              <ChevronRight size={18} color={colors.success} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('CompanionChat', {})}
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: '#8b5cf630',
+                borderRadius: 20,
+                padding: 20,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 14,
+              }}>
+              <View
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  backgroundColor: '#8b5cf615',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                <BrainCircuit size={24} color="#8b5cf6" />
+              </View>
+              <View style={{flex: 1}}>
+                <Text style={{fontSize: 15, fontWeight: '700', color: colors.foreground}}>
+                  Chat with AI Companion
+                </Text>
+                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 3, lineHeight: 17}}>
+                  A judgement-free space to talk, get coping strategies, or just be heard.
+                </Text>
+              </View>
+              <ChevronRight size={18} color="#8b5cf6" />
+            </TouchableOpacity>
+
+            {/* Explore more */}
+            <View>
+              <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground, marginBottom: 12}}>
+                Explore Tools
+              </Text>
+              <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
+                {quickActions.map((action, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    activeOpacity={0.7}
+                    onPress={action.onPress}
+                    style={{
+                      width: '31%',
+                      backgroundColor: colors.card,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      borderRadius: 16,
+                      padding: 14,
+                      alignItems: 'center',
+                      gap: 8,
+                      flexGrow: 1,
+                    }}>
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: action.bg,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                      {action.icon}
+                    </View>
+                    <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground, textAlign: 'center'}}>
+                      {action.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* ─── Regular Dashboard (users with screening/activity) ─── */}
+        {!isNewUser && (<>
         {/* Sobriety Hero */}
         <View
           style={{
@@ -460,6 +668,7 @@ export default function RecoveryDashboardScreen() {
             ))}
           </View>
         </View>
+        </>)}
       </ScrollView>
     </SafeAreaView>
   );
