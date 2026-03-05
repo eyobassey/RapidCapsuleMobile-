@@ -26,7 +26,6 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
-import AudioRecorderPlayer from 'react-native-audio-recorder-player';
 
 import {Header, Avatar} from '../../components/ui';
 import MessageBubble from '../../components/messages/MessageBubble';
@@ -38,7 +37,19 @@ import {messagingService} from '../../services/messaging.service';
 import {socketService} from '../../services/socket.service';
 import type {Conversation, Message, UserSnippet, PresenceStatus} from '../../types/messaging.types';
 
-const audioRecorderPlayer = new AudioRecorderPlayer();
+// Lazy-init to avoid crash if native module isn't linked
+let audioRecorderPlayer: any = null;
+function getRecorder() {
+  if (!audioRecorderPlayer) {
+    try {
+      const ARP = require('react-native-audio-recorder-player').default;
+      audioRecorderPlayer = new ARP();
+    } catch {
+      return null;
+    }
+  }
+  return audioRecorderPlayer;
+}
 
 export default function ChatScreen() {
   const navigation = useNavigation<any>();
@@ -290,17 +301,22 @@ export default function ChatScreen() {
 
   // ── Voice recording ──
   const handleStartRecording = async () => {
+    const recorder = getRecorder();
+    if (!recorder) {
+      Alert.alert('Unavailable', 'Voice recording is not available on this device.');
+      return;
+    }
     try {
       const path = Platform.select({
         ios: `voice_${Date.now()}.m4a`,
         android: `${Platform.OS === 'android' ? '/data/user/0/com.rapidcapsulemobile/cache/' : ''}voice_${Date.now()}.mp4`,
       });
-      const result = await audioRecorderPlayer.startRecorder(path);
+      const result = await recorder.startRecorder(path);
       recordingPathRef.current = result;
       setIsRecording(true);
       setRecordDuration(0);
 
-      audioRecorderPlayer.addRecordBackListener(e => {
+      recorder.addRecordBackListener((e: any) => {
         setRecordDuration(Math.floor(e.currentPosition / 1000));
       });
     } catch {
@@ -310,8 +326,9 @@ export default function ChatScreen() {
 
   const handleStopAndSend = async () => {
     try {
-      const filePath = await audioRecorderPlayer.stopRecorder();
-      audioRecorderPlayer.removeRecordBackListener();
+      const recorder = getRecorder();
+      const filePath = await recorder?.stopRecorder();
+      recorder?.removeRecordBackListener();
       setIsRecording(false);
 
       if (!filePath || recordDuration < 1) {
@@ -347,8 +364,9 @@ export default function ChatScreen() {
 
   const handleCancelRecording = async () => {
     try {
-      await audioRecorderPlayer.stopRecorder();
-      audioRecorderPlayer.removeRecordBackListener();
+      const recorder = getRecorder();
+      await recorder?.stopRecorder();
+      recorder?.removeRecordBackListener();
     } catch {
       // ignore
     }
