@@ -46,11 +46,13 @@ import {
   Shield,
   Phone,
   Check,
+  Search,
 } from 'lucide-react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {colors} from '../../theme/colors';
 import {useEkaStore} from '../../store/eka';
 import {ekaService} from '../../services/eka.service';
+import {healthCheckupService} from '../../services/healthCheckup.service';
 import type {
   EkaMessage,
   EkaArtifact,
@@ -1164,6 +1166,226 @@ function FormattedText({text, onActionLink}: {text: string; onActionLink: (key: 
 }
 
 // ═══════════════════════════════════════════════════════
+// Health Checkup Start — Symptom Search Card
+// ═══════════════════════════════════════════════════════
+function HealthCheckupStartCard({data}: {data: any}) {
+  const [searchText, setSearchText] = useState('');
+  const [results, setResults] = useState<any[]>([]);
+  const [selected, setSelected] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sendMessage = useEkaStore(s => s.sendMessage);
+
+  const sex = data?.patient_gender || 'male';
+  const age = data?.patient_age || 25;
+
+  const doSearch = useCallback(async (phrase: string) => {
+    if (phrase.length < 2) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await healthCheckupService.searchSymptoms({phrase, age, sex});
+      setResults(res || []);
+    } catch {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [age, sex]);
+
+  const onSearchChange = useCallback((text: string) => {
+    setSearchText(text);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (text.trim().length < 2) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    searchTimer.current = setTimeout(() => doSearch(text.trim()), 400);
+  }, [doSearch]);
+
+  const isSelected = useCallback((id: string) => selected.some(s => s.id === id), [selected]);
+
+  const toggleSymptom = useCallback((sym: any) => {
+    setSelected(prev =>
+      prev.some(s => s.id === sym.id)
+        ? prev.filter(s => s.id !== sym.id)
+        : [...prev, sym],
+    );
+  }, []);
+
+  const onContinue = useCallback(() => {
+    if (selected.length === 0) return;
+    const names = selected.map(s => s.label || s.common_name || s.name).join(', ');
+    const message = `I've selected these symptoms from the body diagram: ${names}. Please proceed with my health checkup.`;
+    setSubmitted(true);
+    sendMessage(message);
+  }, [selected, sendMessage]);
+
+  if (submitted) {
+    return (
+      <View style={{alignItems: 'center', gap: 8}}>
+        <Check size={24} color={colors.success} />
+        <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>
+          {selected.length} symptom{selected.length !== 1 ? 's' : ''} submitted
+        </Text>
+        <Text style={{fontSize: 11, color: colors.mutedForeground, textAlign: 'center'}}>
+          Health checkup in progress...
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{gap: 10}}>
+      {/* Search input */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          backgroundColor: `${colors.muted}40`,
+          borderRadius: 10,
+          paddingHorizontal: 10,
+          height: 38,
+          gap: 8,
+        }}>
+        <Search size={16} color={colors.mutedForeground} />
+        <TextInput
+          value={searchText}
+          onChangeText={onSearchChange}
+          placeholder="Search symptoms..."
+          placeholderTextColor={colors.mutedForeground}
+          style={{
+            flex: 1,
+            fontSize: 13,
+            color: colors.foreground,
+            padding: 0,
+          }}
+        />
+        {searchText.length > 0 && (
+          <TouchableOpacity onPress={() => { setSearchText(''); setResults([]); }}>
+            <X size={14} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Search results */}
+      {loading && (
+        <Text style={{fontSize: 11, color: colors.mutedForeground, textAlign: 'center'}}>
+          Searching...
+        </Text>
+      )}
+      {results.length > 0 && (
+        <View style={{maxHeight: 180, borderRadius: 8, overflow: 'hidden'}}>
+          <ScrollView nestedScrollEnabled>
+            {results.map(sym => {
+              const sel = isSelected(sym.id);
+              return (
+                <TouchableOpacity
+                  key={sym.id}
+                  activeOpacity={0.7}
+                  onPress={() => toggleSymptom(sym)}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    paddingVertical: 8,
+                    paddingHorizontal: 10,
+                    backgroundColor: sel ? `${colors.success}15` : 'transparent',
+                    borderBottomWidth: 1,
+                    borderBottomColor: `${colors.border}60`,
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: sel ? colors.success : colors.foreground,
+                      flex: 1,
+                    }}
+                    numberOfLines={1}>
+                    {sym.label || sym.common_name || sym.name}
+                  </Text>
+                  {sel ? (
+                    <Check size={14} color={colors.success} />
+                  ) : (
+                    <Plus size={14} color={colors.mutedForeground} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+      {searchText.length > 0 && !loading && results.length === 0 && (
+        <Text style={{fontSize: 11, color: colors.mutedForeground, textAlign: 'center'}}>
+          No symptoms found
+        </Text>
+      )}
+
+      {/* Selected symptoms */}
+      {selected.length > 0 && (
+        <View style={{gap: 6}}>
+          <Text style={{fontSize: 11, fontWeight: '600', color: colors.mutedForeground, textTransform: 'uppercase'}}>
+            Selected ({selected.length})
+          </Text>
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 6}}>
+            {selected.map(sym => (
+              <TouchableOpacity
+                key={sym.id}
+                onPress={() => toggleSymptom(sym)}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 4,
+                  backgroundColor: `${colors.primary}15`,
+                  borderWidth: 1,
+                  borderColor: `${colors.primary}30`,
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 5,
+                }}>
+                <Text style={{fontSize: 11, color: colors.primary}}>
+                  {sym.label || sym.common_name || sym.name}
+                </Text>
+                <X size={12} color={colors.primary} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Hint + Continue */}
+      {selected.length === 0 ? (
+        <Text style={{fontSize: 11, color: colors.mutedForeground, textAlign: 'center'}}>
+          Search and select your symptoms, or describe them in the chat
+        </Text>
+      ) : (
+        <TouchableOpacity
+          onPress={onContinue}
+          activeOpacity={0.8}
+          style={{
+            backgroundColor: colors.accent,
+            borderRadius: 10,
+            paddingVertical: 10,
+            alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: 6,
+          }}>
+          <Text style={{fontSize: 13, fontWeight: '600', color: '#fff'}}>
+            Continue with checkup
+          </Text>
+          <Send size={14} color="#fff" />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
 // Artifact Card
 // ═══════════════════════════════════════════════════════
 function ArtifactCard({artifact}: {artifact: EkaArtifact}) {
@@ -1173,17 +1395,7 @@ function ArtifactCard({artifact}: {artifact: EkaArtifact}) {
   const renderContent = () => {
     switch (artifact.type) {
       case 'health_checkup_start':
-        return (
-          <View style={{alignItems: 'center', gap: 8}}>
-            <Stethoscope size={28} color={colors.primary} />
-            <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>
-              Health Checkup in Progress
-            </Text>
-            <Text style={{fontSize: 11, color: colors.mutedForeground, textAlign: 'center'}}>
-              Answer the questions below to complete your assessment
-            </Text>
-          </View>
-        );
+        return <HealthCheckupStartCard data={data} />;
 
       case 'health_checkup_report':
         return <CheckupReportCard data={data} />;
