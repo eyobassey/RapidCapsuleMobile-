@@ -47,6 +47,7 @@ import {
   Phone,
   Check,
   Search,
+  Download,
 } from 'lucide-react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import WebView from 'react-native-webview';
@@ -54,6 +55,8 @@ import {colors} from '../../theme/colors';
 import {useEkaStore} from '../../store/eka';
 import {ekaService} from '../../services/eka.service';
 import {healthCheckupService} from '../../services/healthCheckup.service';
+import {generateHealthCheckupPDF} from '../../utils/healthCheckupPdf';
+import {useAuthStore} from '../../store/auth';
 import type {
   EkaMessage,
   EkaArtifact,
@@ -1614,9 +1617,38 @@ function CheckupReportCard({data}: {data: any}) {
 
   const [report, setReport] = useState<any>(data?.report || null);
   const [generating, setGenerating] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const user = useAuthStore(s => s.user);
 
   const conditionExplanations = report?.possible_conditions_explained || [];
+
+  const handleShareReport = async () => {
+    setPdfLoading(true);
+    try {
+      const patientName = `${user?.profile?.first_name || ''} ${user?.profile?.last_name || ''}`.trim() || 'Patient';
+      const patientAge = data?.patient?.age || (user?.profile?.date_of_birth
+        ? Math.floor((Date.now() - new Date(user.profile.date_of_birth).getTime()) / 31557600000)
+        : 0);
+      const patientSex = data?.patient?.gender || user?.profile?.gender || '';
+      await generateHealthCheckupPDF({
+        patientName,
+        age: patientAge,
+        sex: patientSex,
+        date: data?.date || new Date().toISOString(),
+        triageLevel: triage,
+        hasEmergency: triage === 'emergency' || triage === 'emergency_ambulance',
+        conditions: conditions.map((c: any) => ({
+          name: c.name,
+          common_name: c.common_name || c.name,
+          probability: (c.probability || 0) / 100, // PDF util expects 0-1 range
+        })),
+        claudeSummary: report?.overview ? report : null,
+      });
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   const getExplanation = (name: string) => {
     const match = conditionExplanations.find(
@@ -1808,6 +1840,32 @@ function CheckupReportCard({data}: {data: any}) {
           )}
         </View>
       )}
+
+      {/* Download / Share Report */}
+      <TouchableOpacity
+        onPress={handleShareReport}
+        disabled={pdfLoading}
+        activeOpacity={0.7}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          paddingVertical: 10,
+          borderRadius: 10,
+          borderWidth: 1,
+          borderColor: colors.border,
+          backgroundColor: colors.card,
+        }}>
+        {pdfLoading ? (
+          <ActivityIndicator size="small" color={colors.primary} />
+        ) : (
+          <Download size={14} color={colors.primary} />
+        )}
+        <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>
+          {pdfLoading ? 'Generating PDF...' : 'Download & Share Report'}
+        </Text>
+      </TouchableOpacity>
 
       {/* Disclaimer */}
       <Text style={{fontSize: 10, color: colors.mutedForeground, textAlign: 'center', fontStyle: 'italic'}}>
