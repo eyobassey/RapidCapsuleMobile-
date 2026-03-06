@@ -1281,7 +1281,7 @@ function HealthCheckupStartCard({data}: {data: any}) {
         height: 340,
         borderRadius: 12,
         overflow: 'hidden',
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#ffffff',
       }}>
         {!avatarReady && (
           <View style={{
