@@ -1253,7 +1253,7 @@ function HealthCheckupStartCard({data}: {data: any}) {
   const onContinue = useCallback(() => {
     if (selected.length === 0) return;
     const names = selected.map(s => s.label || s.common_name || s.name).join(', ');
-    const message = `I've selected these symptoms from the body diagram: ${names}. Please proceed with my health checkup.`;
+    const message = `I've selected these symptoms from the body diagram: ${names}. Please proceed with the symptom assessment.`;
     setSubmitted(true);
     sendMessage(message);
   }, [selected, sendMessage]);
