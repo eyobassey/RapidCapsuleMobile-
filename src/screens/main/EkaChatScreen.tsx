@@ -1609,8 +1609,13 @@ function CheckupReportCard({data}: {data: any}) {
   const triage = data?.triage_level || data?.triage?.level || 'self_care';
   const triageCfg = TRIAGE_CONFIG[triage] || TRIAGE_CONFIG.consultation;
   const conditions = data?.conditions?.slice(0, 5) || [];
-  const report = data?.report || {};
   const checkupId = data?.checkup_id;
+  const hasReport = !!data?.report?.overview;
+
+  const [report, setReport] = useState<any>(data?.report || null);
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const conditionExplanations = report?.possible_conditions_explained || [];
 
   const getExplanation = (name: string) => {
@@ -1624,6 +1629,30 @@ function CheckupReportCard({data}: {data: any}) {
     if (prob >= 60) return '#ef4444';
     if (prob >= 30) return '#f97316';
     return colors.primary;
+  };
+
+  const generateAISummary = async () => {
+    if (!checkupId) return;
+    setGenerating(true);
+    setError(null);
+    try {
+      const status = await healthCheckupService.getClaudeSummaryStatus();
+      if (!status?.can_generate) {
+        setError('No AI credits available. Go to your Dashboard to top up your AI credit wallet.');
+        return;
+      }
+      const result = await healthCheckupService.generateClaudeSummary(checkupId);
+      const summary = result?.claude_summary?.content || result?.content || result;
+      if (summary?.overview) {
+        setReport(summary);
+      } else {
+        setError('Could not generate summary. Please try again.');
+      }
+    } catch {
+      setError('Failed to generate AI summary. Please try again later.');
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -1649,14 +1678,7 @@ function CheckupReportCard({data}: {data: any}) {
         </Text>
       </View>
 
-      {/* Overview */}
-      {report.overview && (
-        <Text style={{fontSize: 12, color: colors.foreground, lineHeight: 18}}>
-          {report.overview}
-        </Text>
-      )}
-
-      {/* Conditions */}
+      {/* Conditions (always shown — from Infermedica) */}
       {conditions.length > 0 && (
         <View style={{gap: 8}}>
           <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
@@ -1689,60 +1711,101 @@ function CheckupReportCard({data}: {data: any}) {
         </View>
       )}
 
-      {/* Key Findings */}
-      {report.key_findings?.length > 0 && (
-        <View style={{gap: 4}}>
-          <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
-            Key Findings
+      {/* AI Summary section */}
+      {report?.overview ? (
+        <>
+          {/* Overview */}
+          <Text style={{fontSize: 12, color: colors.foreground, lineHeight: 18}}>
+            {report.overview}
           </Text>
-          {report.key_findings.map((f: string, i: number) => (
-            <View key={i} style={{flexDirection: 'row', gap: 6, paddingRight: 4}}>
-              <Text style={{fontSize: 11, color: colors.primary}}>•</Text>
-              <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{f}</Text>
-            </View>
-          ))}
-        </View>
-      )}
 
-      {/* Recommendations */}
-      {report.recommendations?.length > 0 && (
-        <View style={{gap: 4}}>
-          <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
-            Recommendations
-          </Text>
-          {report.recommendations.map((r: string, i: number) => (
-            <View key={i} style={{flexDirection: 'row', gap: 6, paddingRight: 4}}>
-              <Check size={12} color={colors.success} style={{marginTop: 2}} />
-              <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{r}</Text>
+          {/* Key Findings */}
+          {report.key_findings?.length > 0 && (
+            <View style={{gap: 4}}>
+              <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
+                Key Findings
+              </Text>
+              {report.key_findings.map((f: string, i: number) => (
+                <View key={i} style={{flexDirection: 'row', gap: 6, paddingRight: 4}}>
+                  <Text style={{fontSize: 11, color: colors.primary}}>•</Text>
+                  <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{f}</Text>
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
-      )}
+          )}
 
-      {/* When to Seek Care */}
-      {report.when_to_seek_care && (
-        <View style={{backgroundColor: '#f9731610', borderRadius: 8, padding: 10, gap: 4}}>
-          <Text style={{fontSize: 11, fontWeight: '700', color: '#f97316', textTransform: 'uppercase'}}>
-            When to Seek Care
-          </Text>
-          <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16}}>
-            {report.when_to_seek_care}
-          </Text>
-        </View>
-      )}
-
-      {/* Lifestyle Tips */}
-      {report.lifestyle_tips?.length > 0 && (
-        <View style={{gap: 4}}>
-          <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
-            Lifestyle Tips
-          </Text>
-          {report.lifestyle_tips.map((t: string, i: number) => (
-            <View key={i} style={{flexDirection: 'row', gap: 6, paddingRight: 4}}>
-              <Heart size={11} color={colors.accent} style={{marginTop: 2}} />
-              <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{t}</Text>
+          {/* Recommendations */}
+          {report.recommendations?.length > 0 && (
+            <View style={{gap: 4}}>
+              <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
+                Recommendations
+              </Text>
+              {report.recommendations.map((r: string, i: number) => (
+                <View key={i} style={{flexDirection: 'row', gap: 6, paddingRight: 4}}>
+                  <Check size={12} color={colors.success} style={{marginTop: 2}} />
+                  <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{r}</Text>
+                </View>
+              ))}
             </View>
-          ))}
+          )}
+
+          {/* When to Seek Care */}
+          {report.when_to_seek_care && (
+            <View style={{backgroundColor: '#f9731610', borderRadius: 8, padding: 10, gap: 4}}>
+              <Text style={{fontSize: 11, fontWeight: '700', color: '#f97316', textTransform: 'uppercase'}}>
+                When to Seek Care
+              </Text>
+              <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16}}>
+                {report.when_to_seek_care}
+              </Text>
+            </View>
+          )}
+
+          {/* Lifestyle Tips */}
+          {report.lifestyle_tips?.length > 0 && (
+            <View style={{gap: 4}}>
+              <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
+                Lifestyle Tips
+              </Text>
+              {report.lifestyle_tips.map((t: string, i: number) => (
+                <View key={i} style={{flexDirection: 'row', gap: 6, paddingRight: 4}}>
+                  <Heart size={11} color={colors.accent} style={{marginTop: 2}} />
+                  <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{t}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </>
+      ) : (
+        /* Generate AI Summary button */
+        <View style={{gap: 8}}>
+          <TouchableOpacity
+            onPress={generateAISummary}
+            disabled={generating}
+            activeOpacity={0.8}
+            style={{
+              backgroundColor: generating ? colors.muted : colors.accent,
+              borderRadius: 10,
+              paddingVertical: 11,
+              alignItems: 'center',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              gap: 8,
+            }}>
+            {generating ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <BrainCircuit size={16} color="#fff" />
+            )}
+            <Text style={{fontSize: 13, fontWeight: '600', color: '#fff'}}>
+              {generating ? 'Generating AI Summary...' : 'Generate AI Summary (1 credit)'}
+            </Text>
+          </TouchableOpacity>
+          {error && (
+            <Text style={{fontSize: 11, color: colors.destructive, textAlign: 'center'}}>
+              {error}
+            </Text>
+          )}
         </View>
       )}
 
