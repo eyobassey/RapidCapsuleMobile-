@@ -1597,49 +1597,159 @@ function getArtifactTitle(type: string): string {
 
 // ─── Artifact Sub-Cards ─────────────────────────────
 
+const TRIAGE_CONFIG: Record<string, {label: string; desc: string; color: string}> = {
+  emergency: {label: 'Emergency', desc: 'Seek immediate medical attention', color: '#ef4444'},
+  emergency_ambulance: {label: 'Emergency', desc: 'Call an ambulance immediately', color: '#ef4444'},
+  consultation_24: {label: 'See a Doctor Within 24h', desc: 'Medical attention recommended soon', color: '#f97316'},
+  consultation: {label: 'Consultation Recommended', desc: 'Schedule a visit with a specialist', color: '#eab308'},
+  self_care: {label: 'Self Care', desc: 'Monitor symptoms at home', color: '#22c55e'},
+};
+
 function CheckupReportCard({data}: {data: any}) {
   const triage = data?.triage_level || data?.triage?.level || 'self_care';
-  const conditions = data?.conditions?.slice(0, 3) || [];
-  const triageColor = TRIAGE_COLORS[triage] || '#22c55e';
+  const triageCfg = TRIAGE_CONFIG[triage] || TRIAGE_CONFIG.consultation;
+  const conditions = data?.conditions?.slice(0, 5) || [];
+  const report = data?.report || {};
+  const checkupId = data?.checkup_id;
+  const conditionExplanations = report?.possible_conditions_explained || [];
+
+  const getExplanation = (name: string) => {
+    const match = conditionExplanations.find(
+      (e: any) => e.condition?.toLowerCase() === name?.toLowerCase(),
+    );
+    return match?.explanation;
+  };
+
+  const barColor = (prob: number) => {
+    if (prob >= 60) return '#ef4444';
+    if (prob >= 30) return '#f97316';
+    return colors.primary;
+  };
 
   return (
-    <View style={{gap: 10}}>
+    <View style={{gap: 12}}>
+      {/* Triage banner */}
       <View
         style={{
-          backgroundColor: `${triageColor}15`,
-          borderRadius: 10,
+          backgroundColor: `${triageCfg.color}15`,
+          borderLeftWidth: 3,
+          borderLeftColor: triageCfg.color,
+          borderRadius: 8,
           padding: 10,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 8,
+          gap: 2,
         }}>
-        <AlertTriangle size={16} color={triageColor} />
-        <Text style={{fontSize: 12, fontWeight: '700', color: triageColor, textTransform: 'capitalize'}}>
-          {triage.replace(/_/g, ' ')}
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+          <AlertTriangle size={14} color={triageCfg.color} />
+          <Text style={{fontSize: 12, fontWeight: '700', color: triageCfg.color}}>
+            {triageCfg.label}
+          </Text>
+        </View>
+        <Text style={{fontSize: 11, color: colors.mutedForeground, paddingLeft: 20}}>
+          {triageCfg.desc}
         </Text>
       </View>
-      {conditions.map((c: any, i: number) => (
-        <View key={i} style={{gap: 4}}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-            <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground, flex: 1}} numberOfLines={1}>
-              {c.common_name || c.name}
-            </Text>
-            <Text style={{fontSize: 11, fontWeight: '700', color: colors.primary}}>
-              {Math.round((c.probability || 0) * 100)}%
-            </Text>
-          </View>
-          <View style={{height: 4, backgroundColor: colors.muted, borderRadius: 2}}>
-            <View
-              style={{
-                height: 4,
-                width: `${Math.min(Math.round((c.probability || 0) * 100), 100)}%`,
-                backgroundColor: colors.primary,
-                borderRadius: 2,
-              }}
-            />
-          </View>
+
+      {/* Overview */}
+      {report.overview && (
+        <Text style={{fontSize: 12, color: colors.foreground, lineHeight: 18}}>
+          {report.overview}
+        </Text>
+      )}
+
+      {/* Conditions */}
+      {conditions.length > 0 && (
+        <View style={{gap: 8}}>
+          <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
+            Possible Conditions
+          </Text>
+          {conditions.map((c: any, i: number) => {
+            const prob = Math.min(Math.round(c.probability || 0), 100);
+            const explanation = getExplanation(c.common_name || c.name);
+            return (
+              <View key={i} style={{gap: 3}}>
+                <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                  <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground, flex: 1}} numberOfLines={1}>
+                    {c.common_name || c.name}
+                  </Text>
+                  <Text style={{fontSize: 11, fontWeight: '700', color: barColor(prob)}}>
+                    {prob}%
+                  </Text>
+                </View>
+                <View style={{height: 4, backgroundColor: `${colors.muted}60`, borderRadius: 2}}>
+                  <View style={{height: 4, width: `${prob}%`, backgroundColor: barColor(prob), borderRadius: 2}} />
+                </View>
+                {explanation && (
+                  <Text style={{fontSize: 11, color: colors.mutedForeground, lineHeight: 16, marginTop: 1}}>
+                    {explanation}
+                  </Text>
+                )}
+              </View>
+            );
+          })}
         </View>
-      ))}
+      )}
+
+      {/* Key Findings */}
+      {report.key_findings?.length > 0 && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
+            Key Findings
+          </Text>
+          {report.key_findings.map((f: string, i: number) => (
+            <View key={i} style={{flexDirection: 'row', gap: 6, paddingRight: 4}}>
+              <Text style={{fontSize: 11, color: colors.primary}}>•</Text>
+              <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{f}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Recommendations */}
+      {report.recommendations?.length > 0 && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
+            Recommendations
+          </Text>
+          {report.recommendations.map((r: string, i: number) => (
+            <View key={i} style={{flexDirection: 'row', gap: 6, paddingRight: 4}}>
+              <Check size={12} color={colors.success} style={{marginTop: 2}} />
+              <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{r}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* When to Seek Care */}
+      {report.when_to_seek_care && (
+        <View style={{backgroundColor: '#f9731610', borderRadius: 8, padding: 10, gap: 4}}>
+          <Text style={{fontSize: 11, fontWeight: '700', color: '#f97316', textTransform: 'uppercase'}}>
+            When to Seek Care
+          </Text>
+          <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16}}>
+            {report.when_to_seek_care}
+          </Text>
+        </View>
+      )}
+
+      {/* Lifestyle Tips */}
+      {report.lifestyle_tips?.length > 0 && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>
+            Lifestyle Tips
+          </Text>
+          {report.lifestyle_tips.map((t: string, i: number) => (
+            <View key={i} style={{flexDirection: 'row', gap: 6, paddingRight: 4}}>
+              <Heart size={11} color={colors.accent} style={{marginTop: 2}} />
+              <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{t}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Disclaimer */}
+      <Text style={{fontSize: 10, color: colors.mutedForeground, textAlign: 'center', fontStyle: 'italic'}}>
+        This is an AI-generated health assessment, not a medical diagnosis.
+      </Text>
     </View>
   );
 }
