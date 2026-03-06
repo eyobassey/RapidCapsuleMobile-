@@ -484,8 +484,8 @@ export default function EkaChatScreen() {
             </Animated.View>
           )}
 
-          {/* Checkup Question Buttons */}
-          {checkupQuestion && (
+          {/* Checkup Question Buttons — only show when not streaming (same as web) */}
+          {checkupQuestion && !isStreaming && (
             <CheckupQuestionUI
               question={checkupQuestion}
               onAnswer={answerCheckupQuestion}
@@ -1926,6 +1926,11 @@ function CheckupQuestionUI({
 }) {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
+  // Reset selected items when question changes
+  useEffect(() => {
+    setSelectedItems([]);
+  }, [question.text]);
+
   if (question.type === 'single') {
     return (
       <View style={{marginLeft: 40, gap: 8}}>
@@ -1961,9 +1966,9 @@ function CheckupQuestionUI({
         <Text style={{fontSize: 12, fontWeight: '600', color: colors.mutedForeground}}>
           Select one:
         </Text>
-        {(question.items || []).map(item => (
+        {(question.items || []).map((item, idx) => (
           <TouchableOpacity
-            key={item.id}
+            key={item.id || item.name || idx}
             activeOpacity={0.7}
             onPress={() => onAnswer(item.common_name || item.name)}
             style={{
@@ -1994,12 +1999,12 @@ function CheckupQuestionUI({
         Select all that apply:
       </Text>
       <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 6}}>
-        {(question.items || []).map(item => {
+        {(question.items || []).map((item, idx) => {
           const name = item.common_name || item.name;
           const selected = selectedItems.includes(name);
           return (
             <TouchableOpacity
-              key={item.id}
+              key={item.id || item.name || idx}
               activeOpacity={0.7}
               onPress={() => toggleItem(name)}
               style={{
