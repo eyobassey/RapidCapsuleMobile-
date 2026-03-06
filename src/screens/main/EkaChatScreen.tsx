@@ -49,6 +49,7 @@ import {
   Search,
 } from 'lucide-react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
+import WebView from 'react-native-webview';
 import {colors} from '../../theme/colors';
 import {useEkaStore} from '../../store/eka';
 import {ekaService} from '../../services/eka.service';
@@ -1166,7 +1167,7 @@ function FormattedText({text, onActionLink}: {text: string; onActionLink: (key: 
 }
 
 // ═══════════════════════════════════════════════════════
-// Health Checkup Start — Symptom Search Card
+// Health Checkup Start — Body Avatar + Symptom Search
 // ═══════════════════════════════════════════════════════
 function HealthCheckupStartCard({data}: {data: any}) {
   const [searchText, setSearchText] = useState('');
@@ -1174,12 +1175,43 @@ function HealthCheckupStartCard({data}: {data: any}) {
   const [selected, setSelected] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [bodyPartResults, setBodyPartResults] = useState<any[]>([]);
+  const [bodyPartLoading, setBodyPartLoading] = useState(false);
+  const [tappedPart, setTappedPart] = useState<string | null>(null);
+  const [avatarReady, setAvatarReady] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const webviewRef = useRef<any>(null);
   const sendMessage = useEkaStore(s => s.sendMessage);
 
   const sex = data?.patient_gender || 'male';
   const age = data?.patient_age || 25;
 
+  // Body avatar WebView message handler
+  const onWebViewMessage = useCallback(async (event: any) => {
+    try {
+      const msg = JSON.parse(event.nativeEvent.data);
+      if (msg.type === 'body_part' && msg.part) {
+        setTappedPart(msg.part);
+        setBodyPartLoading(true);
+        setBodyPartResults([]);
+        try {
+          const res = await healthCheckupService.searchSymptoms({phrase: msg.part, age, sex});
+          setBodyPartResults(res || []);
+        } catch {
+          setBodyPartResults([]);
+        } finally {
+          setBodyPartLoading(false);
+        }
+      }
+    } catch {}
+  }, [age, sex]);
+
+  const dismissBodyPartResults = useCallback(() => {
+    setTappedPart(null);
+    setBodyPartResults([]);
+  }, []);
+
+  // Text search
   const doSearch = useCallback(async (phrase: string) => {
     if (phrase.length < 2) {
       setResults([]);
@@ -1226,6 +1258,8 @@ function HealthCheckupStartCard({data}: {data: any}) {
     sendMessage(message);
   }, [selected, sendMessage]);
 
+  const avatarUri = `https://rapidcapsule.com/body-avatar/?gender=${sex}`;
+
   if (submitted) {
     return (
       <View style={{alignItems: 'center', gap: 8}}>
@@ -1242,6 +1276,96 @@ function HealthCheckupStartCard({data}: {data: any}) {
 
   return (
     <View style={{gap: 10}}>
+      {/* Body Avatar WebView */}
+      <View style={{
+        height: 340,
+        borderRadius: 12,
+        overflow: 'hidden',
+        backgroundColor: '#f8f9fa',
+      }}>
+        {!avatarReady && (
+          <View style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0, bottom: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1,
+          }}>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 6}}>
+              Loading body map...
+            </Text>
+          </View>
+        )}
+        <WebView
+          ref={webviewRef}
+          source={{uri: avatarUri}}
+          onMessage={onWebViewMessage}
+          onLoad={() => setAvatarReady(true)}
+          style={{flex: 1, opacity: avatarReady ? 1 : 0}}
+          scrollEnabled={false}
+          javaScriptEnabled
+          originWhitelist={['*']}
+        />
+      </View>
+
+      {/* Body part tap results */}
+      {tappedPart && (
+        <View style={{
+          backgroundColor: `${colors.primary}08`,
+          borderRadius: 10,
+          padding: 10,
+          gap: 8,
+        }}>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+            <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>
+              Symptoms for: {tappedPart}
+            </Text>
+            <TouchableOpacity onPress={dismissBodyPartResults}>
+              <X size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          </View>
+          {bodyPartLoading ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : bodyPartResults.length > 0 ? (
+            <View style={{maxHeight: 150}}>
+              <ScrollView nestedScrollEnabled>
+                {bodyPartResults.map(sym => {
+                  const sel = isSelected(sym.id);
+                  return (
+                    <TouchableOpacity
+                      key={sym.id}
+                      activeOpacity={0.7}
+                      onPress={() => toggleSymptom(sym)}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingVertical: 7,
+                        paddingHorizontal: 8,
+                        backgroundColor: sel ? `${colors.success}15` : 'transparent',
+                        borderBottomWidth: 1,
+                        borderBottomColor: `${colors.border}40`,
+                      }}>
+                      <Text
+                        style={{fontSize: 12, color: sel ? colors.success : colors.foreground, flex: 1}}
+                        numberOfLines={1}>
+                        {sym.label || sym.common_name || sym.name}
+                      </Text>
+                      {sel ? <Check size={14} color={colors.success} /> : <Plus size={14} color={colors.mutedForeground} />}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+          ) : (
+            <Text style={{fontSize: 11, color: colors.mutedForeground, textAlign: 'center'}}>
+              No symptoms found for this area
+            </Text>
+          )}
+        </View>
+      )}
+
       {/* Search input */}
       <View
         style={{
@@ -1257,7 +1381,7 @@ function HealthCheckupStartCard({data}: {data: any}) {
         <TextInput
           value={searchText}
           onChangeText={onSearchChange}
-          placeholder="Search symptoms..."
+          placeholder="Or search symptoms by name..."
           placeholderTextColor={colors.mutedForeground}
           style={{
             flex: 1,
@@ -1280,7 +1404,7 @@ function HealthCheckupStartCard({data}: {data: any}) {
         </Text>
       )}
       {results.length > 0 && (
-        <View style={{maxHeight: 180, borderRadius: 8, overflow: 'hidden'}}>
+        <View style={{maxHeight: 150, borderRadius: 8, overflow: 'hidden'}}>
           <ScrollView nestedScrollEnabled>
             {results.map(sym => {
               const sel = isSelected(sym.id);
@@ -1300,19 +1424,11 @@ function HealthCheckupStartCard({data}: {data: any}) {
                     borderBottomColor: `${colors.border}60`,
                   }}>
                   <Text
-                    style={{
-                      fontSize: 12,
-                      color: sel ? colors.success : colors.foreground,
-                      flex: 1,
-                    }}
+                    style={{fontSize: 12, color: sel ? colors.success : colors.foreground, flex: 1}}
                     numberOfLines={1}>
                     {sym.label || sym.common_name || sym.name}
                   </Text>
-                  {sel ? (
-                    <Check size={14} color={colors.success} />
-                  ) : (
-                    <Plus size={14} color={colors.mutedForeground} />
-                  )}
+                  {sel ? <Check size={14} color={colors.success} /> : <Plus size={14} color={colors.mutedForeground} />}
                 </TouchableOpacity>
               );
             })}
@@ -1360,7 +1476,7 @@ function HealthCheckupStartCard({data}: {data: any}) {
       {/* Hint + Continue */}
       {selected.length === 0 ? (
         <Text style={{fontSize: 11, color: colors.mutedForeground, textAlign: 'center'}}>
-          Search and select your symptoms, or describe them in the chat
+          Tap a body part or search to select symptoms
         </Text>
       ) : (
         <TouchableOpacity
