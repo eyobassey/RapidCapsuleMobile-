@@ -67,11 +67,12 @@ export const useEkaStore = create<EkaState>((set, get) => ({
   loadConversation: async (id: string) => {
     try {
       const convo = await ekaService.getConversation(id);
-      const msgs: EkaMessage[] = (convo.messages || []).map((m, i) => ({
+      const msgs: EkaMessage[] = (convo.messages || []).map((m: any, i: number) => ({
         id: `${convo._id}-${i}`,
         role: m.role,
         content: m.content,
         tools_used: m.tools_used,
+        artifact: m.artifact || undefined,
         created_at: m.created_at || convo.created_at,
       }));
       set({

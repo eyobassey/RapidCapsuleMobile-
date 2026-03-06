@@ -82,6 +82,7 @@ export interface EkaConversation {
     role: 'user' | 'assistant';
     content: string;
     tools_used?: string[];
+    artifact?: EkaArtifact;
     created_at: string;
   }>;
   created_at: string;
