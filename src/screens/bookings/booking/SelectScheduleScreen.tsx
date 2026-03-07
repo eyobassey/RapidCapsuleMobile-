@@ -112,7 +112,7 @@ export default function SelectScheduleScreen() {
       fetchAvailableTimes({
         specialistId,
         preferredDates: [{date: selectedDate}],
-        patientId: user?._id || user?.id,
+        patientId: user?._id,
         timezone,
       });
       setSelectedTime(null);
