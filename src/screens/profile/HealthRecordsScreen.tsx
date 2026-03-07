@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Clock,
   Shield,
+  Users,
 } from 'lucide-react-native';
 
 import {useAuthStore} from '../../store/auth';
@@ -253,6 +254,35 @@ export default function HealthRecordsScreen() {
               </View>
             ) : (
               <EmptyState text="No allergy data recorded" />
+            )}
+          </SectionCard>
+
+          {/* Dependants */}
+          <SectionCard
+            icon={<Users size={18} color={colors.primary} />}
+            title="Dependants"
+            onPress={() => navigation.navigate('Dependants')}>
+            {user?.dependants?.length ? (
+              <View style={{gap: 6, marginTop: 12}}>
+                {user.dependants.slice(0, 4).map((d: any, i: number) => {
+                  const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || d.name || 'Unnamed';
+                  return (
+                    <InfoRow
+                      key={i}
+                      label={d.relationship || 'Dependant'}
+                      value={name}
+                      count={i + 1}
+                    />
+                  );
+                })}
+                {user.dependants.length > 4 && (
+                  <Text style={{fontSize: 12, color: colors.mutedForeground}}>
+                    +{user.dependants.length - 4} more
+                  </Text>
+                )}
+              </View>
+            ) : (
+              <EmptyState text="No dependants added yet" />
             )}
           </SectionCard>
 

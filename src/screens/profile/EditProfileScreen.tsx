@@ -11,16 +11,36 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
-import {Camera, Check, User, Phone, Calendar, Users} from 'lucide-react-native';
+import {
+  Camera,
+  Check,
+  User,
+  Phone,
+  Calendar,
+  Users,
+  ChevronRight,
+  MapPin,
+  Activity,
+  AlertTriangle,
+  Stethoscope,
+  Briefcase,
+} from 'lucide-react-native';
 
 import {useAuthStore} from '../../store/auth';
 import {useOnboardingStore} from '../../store/onboarding';
 import {usersService} from '../../services/users.service';
 import {Header, Avatar, Input, Button, ProgressRing} from '../../components/ui';
+import SelectPicker from '../../components/onboarding/SelectPicker';
 import {colors} from '../../theme/colors';
-import {ChevronRight} from 'lucide-react-native';
 
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'] as const;
+
+const MARITAL_OPTIONS = [
+  {label: 'Single', value: 'Single'},
+  {label: 'Married', value: 'Married'},
+  {label: 'Divorced', value: 'Divorced'},
+  {label: 'Widowed', value: 'Widowed'},
+];
 
 export default function EditProfileScreen() {
   const navigation = useNavigation<any>();
@@ -45,6 +65,12 @@ export default function EditProfileScreen() {
   const rawDob = user?.profile?.date_of_birth || '';
   const [dateOfBirth, setDateOfBirth] = useState(rawDob ? rawDob.split('T')[0] : '');
   const [gender, setGender] = useState<string>(user?.profile?.gender || '');
+  const [maritalStatus, setMaritalStatus] = useState(
+    (user?.profile as any)?.marital_status || '',
+  );
+  const [occupation, setOccupation] = useState(
+    (user?.profile as any)?.occupation || '',
+  );
 
   // Emergency contact (first one if exists)
   // Backend stores: {first_name, last_name, relationship, phone: {country_code, number}}
@@ -93,6 +119,8 @@ export default function EditProfileScreen() {
           last_name: lastName.trim(),
           date_of_birth: dateOfBirth.trim() || undefined,
           gender: gender || undefined,
+          marital_status: maritalStatus || undefined,
+          occupation: occupation.trim() || undefined,
         },
       };
 
@@ -288,6 +316,84 @@ export default function EditProfileScreen() {
                 );
               })}
             </View>
+          </View>
+
+          {/* Marital Status & Occupation */}
+          <View className="mb-4">
+            <SelectPicker
+              label="Marital Status"
+              placeholder="Select"
+              value={maritalStatus}
+              options={MARITAL_OPTIONS}
+              onChange={setMaritalStatus}
+            />
+          </View>
+
+          <View className="mb-6">
+            <Input
+              label="Occupation"
+              placeholder="e.g. Software Engineer"
+              value={occupation}
+              onChangeText={setOccupation}
+              autoCapitalize="words"
+              icon={<Briefcase size={18} color={colors.mutedForeground} />}
+            />
+          </View>
+
+          {/* Quick links to other profile sections */}
+          <Text className="text-xs text-muted-foreground uppercase tracking-wider mb-3 font-semibold">
+            Health & Personal Data
+          </Text>
+          <View className="bg-card border border-border rounded-2xl overflow-hidden mb-6">
+            {[
+              {
+                icon: <MapPin size={18} color={colors.primary} />,
+                title: 'Address & Emergency Contacts',
+                subtitle: 'Home address, up to 3 emergency contacts',
+                screen: 'AddressEmergency',
+              },
+              {
+                icon: <Users size={18} color={colors.accent} />,
+                title: 'Dependants',
+                subtitle: 'Family members on your account',
+                screen: 'Dependants',
+              },
+              {
+                icon: <Activity size={18} color={colors.success} />,
+                title: 'Vitals & Metrics',
+                subtitle: 'Height, weight, blood type, genotype',
+                screen: 'VitalsMetrics',
+              },
+              {
+                icon: <Stethoscope size={18} color={colors.secondary} />,
+                title: 'Medical History',
+                subtitle: 'Conditions, medications, lifestyle',
+                screen: 'MedicalHistory',
+              },
+              {
+                icon: <AlertTriangle size={18} color={colors.destructive} />,
+                title: 'Allergies',
+                subtitle: 'Drug, food & environmental allergies',
+                screen: 'Allergies',
+              },
+            ].map((item, index) => (
+              <TouchableOpacity
+                key={item.screen}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate(item.screen as any)}
+                className={`flex-row items-center p-4 gap-3 ${
+                  index < 4 ? 'border-b border-border' : ''
+                }`}>
+                <View className="w-9 h-9 rounded-full bg-muted items-center justify-center">
+                  {item.icon}
+                </View>
+                <View className="flex-1">
+                  <Text className="text-foreground text-sm font-medium">{item.title}</Text>
+                  <Text className="text-muted-foreground text-xs mt-0.5">{item.subtitle}</Text>
+                </View>
+                <ChevronRight size={16} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            ))}
           </View>
 
           {/* Section: Emergency Contact */}
