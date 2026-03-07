@@ -41,6 +41,11 @@ export const appointmentsService = {
     return res.data.data || res.data.result;
   },
 
+  async verifyPayment(reference: string) {
+    const res = await api.post('/appointments/transactions/verify', {reference});
+    return res.data.data || res.data.result;
+  },
+
   async getSpecialistCategories() {
     const res = await api.get('/specialist-categories');
     return res.data.data || res.data.result;

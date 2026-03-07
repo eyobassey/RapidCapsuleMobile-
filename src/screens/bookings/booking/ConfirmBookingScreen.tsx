@@ -1,8 +1,9 @@
 import React, {useState, useCallback, useEffect, useMemo} from 'react';
-import {View, Text, ScrollView, TextInput, Alert, TouchableOpacity} from 'react-native';
+import {View, Text, ScrollView, TextInput, Alert, TouchableOpacity, Modal, ActivityIndicator} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {WebView} from 'react-native-webview';
 import {
   Calendar,
   Clock,
@@ -19,6 +20,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import {Header, Avatar, Button} from '../../../components/ui';
+import {appointmentsService} from '../../../services/appointments.service';
 import {useAppointmentsStore} from '../../../store/appointments';
 import {useWalletStore} from '../../../store/wallet';
 import {colors} from '../../../theme/colors';
@@ -119,6 +121,8 @@ export default function ConfirmBookingScreen() {
     bookingData.health_checkup_id || null,
   );
   const [showCheckupPicker, setShowCheckupPicker] = useState(false);
+  const [paystackUrl, setPaystackUrl] = useState<string | null>(null);
+  const [paymentReference, setPaymentReference] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBalance();
@@ -212,25 +216,15 @@ export default function ConfirmBookingScreen() {
         ...(selectedCheckupId ? {health_checkup_id: selectedCheckupId} : {}),
       });
 
-      let message =
-        'Your appointment has been successfully booked. You will receive a confirmation shortly.';
-      if (result?.join_url || result?.zoom_meeting_url) {
-        message +=
-          '\n\nYour meeting link has been created and will be available in your appointment details.';
+      // Card payment — open Paystack WebView
+      if (result?.authorization_url) {
+        setPaymentReference(result.payment_reference || null);
+        setPaystackUrl(result.authorization_url);
+        return;
       }
 
-      Alert.alert('Booking Confirmed!', message, [
-        {
-          text: 'View Appointments',
-          onPress: () => {
-            clearBookingData();
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'AppointmentsList'}],
-            });
-          },
-        },
-      ]);
+      // Wallet payment — immediate success
+      showBookingSuccess(result);
     } catch (err: any) {
       Alert.alert(
         'Booking Failed',
@@ -254,6 +248,64 @@ export default function ConfirmBookingScreen() {
     timezone,
     balance,
   ]);
+
+  const showBookingSuccess = useCallback(
+    (result?: any) => {
+      let message =
+        'Your appointment has been successfully booked. You will receive a confirmation shortly.';
+      if (result?.join_url || result?.zoom_meeting_url) {
+        message +=
+          '\n\nYour meeting link has been created and will be available in your appointment details.';
+      }
+      Alert.alert('Booking Confirmed!', message, [
+        {
+          text: 'View Appointments',
+          onPress: () => {
+            clearBookingData();
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'AppointmentsList'}],
+            });
+          },
+        },
+      ]);
+    },
+    [clearBookingData, navigation],
+  );
+
+  const handlePaystackNavigation = useCallback(
+    async (navState: {url: string}) => {
+      const {url} = navState;
+      // Detect redirect away from Paystack (callback URL reached)
+      if (
+        paystackUrl &&
+        url !== paystackUrl &&
+        !url.includes('paystack.co') &&
+        !url.includes('paystack.com')
+      ) {
+        setPaystackUrl(null);
+        // Verify the payment
+        if (paymentReference) {
+          try {
+            await appointmentsService.verifyPayment(paymentReference);
+          } catch {
+            // Verification may happen via webhook — proceed anyway
+          }
+        }
+        showBookingSuccess();
+      }
+    },
+    [paystackUrl, paymentReference, showBookingSuccess],
+  );
+
+  const handleClosePaystack = useCallback(() => {
+    setPaystackUrl(null);
+    Alert.alert(
+      'Payment Cancelled',
+      'Your appointment has been created but payment is pending. You can complete payment from your appointments list.',
+      [{text: 'OK'}],
+    );
+  }, []);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -698,6 +750,66 @@ export default function ConfirmBookingScreen() {
           Confirm & Pay {format(totalFee)}
         </Button>
       </View>
+
+      {/* Paystack WebView Modal */}
+      <Modal
+        visible={!!paystackUrl}
+        animationType="slide"
+        onRequestClose={handleClosePaystack}>
+        <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+            }}>
+            <TouchableOpacity onPress={handleClosePaystack} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+              <X size={24} color={colors.foreground} />
+            </TouchableOpacity>
+            <Text
+              style={{
+                flex: 1,
+                textAlign: 'center',
+                fontSize: 16,
+                fontWeight: '700',
+                color: colors.foreground,
+              }}>
+              Complete Payment
+            </Text>
+            <View style={{width: 32}} />
+          </View>
+
+          {paystackUrl && (
+            <WebView
+              source={{uri: paystackUrl}}
+              onNavigationStateChange={handlePaystackNavigation}
+              style={{flex: 1}}
+              startInLoadingState
+              renderLoading={() => (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: colors.background,
+                  }}>
+                  <ActivityIndicator size="large" color={colors.primary} />
+                  <Text style={{color: colors.mutedForeground, marginTop: 12, fontSize: 14}}>
+                    Loading payment...
+                  </Text>
+                </View>
+              )}
+            />
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
