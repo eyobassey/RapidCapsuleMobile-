@@ -4,10 +4,19 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {RouteProp} from '@react-navigation/native';
-import {Clock} from 'lucide-react-native';
+import {
+  Clock,
+  Video,
+  Phone,
+  MessageSquare,
+  Globe,
+  ChevronDown,
+} from 'lucide-react-native';
 import {Header, Button, EmptyState} from '../../../components/ui';
 import {useAppointmentsStore} from '../../../store/appointments';
+import {useAuthStore} from '../../../store/auth';
 import {colors} from '../../../theme/colors';
+import {MEETING_CHANNEL_LABELS} from '../../../utils/constants';
 import type {BookingsStackParamList} from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
@@ -21,7 +30,7 @@ const MONTH_NAMES = [
 
 interface DateItem {
   date: Date;
-  dateString: string; // YYYY-MM-DD
+  dateString: string;
   dayName: string;
   dayNum: number;
   monthName: string;
@@ -49,24 +58,66 @@ function generateNext14Days(): DateItem[] {
   return days;
 }
 
+const MEETING_CHANNELS = [
+  {key: 'zoom', label: 'Zoom', icon: Video, color: colors.primary},
+  {key: 'google_meet', label: 'Google Meet', icon: Video, color: '#34A853'},
+  {key: 'phone', label: 'Phone Call', icon: Phone, color: colors.secondary},
+];
+
+const COMMON_TIMEZONES = [
+  {label: 'West Africa (WAT)', value: 'Africa/Lagos'},
+  {label: 'East Africa (EAT)', value: 'Africa/Nairobi'},
+  {label: 'South Africa (SAST)', value: 'Africa/Johannesburg'},
+  {label: 'GMT / UTC', value: 'UTC'},
+  {label: 'Eastern US (ET)', value: 'America/New_York'},
+  {label: 'Central US (CT)', value: 'America/Chicago'},
+  {label: 'Pacific US (PT)', value: 'America/Los_Angeles'},
+  {label: 'London (GMT/BST)', value: 'Europe/London'},
+  {label: 'Central Europe (CET)', value: 'Europe/Berlin'},
+  {label: 'Dubai (GST)', value: 'Asia/Dubai'},
+  {label: 'India (IST)', value: 'Asia/Kolkata'},
+];
+
 export default function SelectScheduleScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const {specialistId} = route.params;
+  const user = useAuthStore(s => s.user);
 
-  const {availableTimes, isLoading, fetchAvailableTimes, setBookingData} =
+  const {availableTimes, isLoading, fetchAvailableTimes, setBookingData, bookingData} =
     useAppointmentsStore();
 
   const days = useMemo(() => generateNext14Days(), []);
   const [selectedDate, setSelectedDate] = useState(days[0]?.dateString || '');
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedChannel, setSelectedChannel] = useState(
+    bookingData.specialist?.meeting_channels?.[0] || 'zoom',
+  );
+  const [timezone, setTimezone] = useState(
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
+  );
+  const [showTimezones, setShowTimezones] = useState(false);
+
+  // Get available channels from specialist or default
+  const specialistChannels = bookingData.specialist?.meeting_channels;
+  const availableChannels = useMemo(() => {
+    if (specialistChannels?.length) {
+      return MEETING_CHANNELS.filter(ch => specialistChannels.includes(ch.key));
+    }
+    return MEETING_CHANNELS;
+  }, [specialistChannels]);
 
   useEffect(() => {
     if (selectedDate) {
-      fetchAvailableTimes({specialistId, date: selectedDate});
+      fetchAvailableTimes({
+        specialistId,
+        preferredDates: [{date: selectedDate}],
+        patientId: user?._id || user?.id,
+        timezone,
+      });
       setSelectedTime(null);
     }
-  }, [selectedDate, specialistId]);
+  }, [selectedDate, specialistId, timezone]);
 
   const handleDateSelect = useCallback((dateString: string) => {
     setSelectedDate(dateString);
@@ -78,9 +129,17 @@ export default function SelectScheduleScreen() {
 
   const handleContinue = useCallback(() => {
     if (!selectedDate || !selectedTime) return;
-    setBookingData({date: selectedDate, time: selectedTime});
+    setBookingData({
+      date: selectedDate,
+      time: selectedTime,
+      meeting_channel: selectedChannel,
+      timezone,
+    });
     navigation.navigate('ConfirmBooking');
-  }, [selectedDate, selectedTime, setBookingData, navigation]);
+  }, [selectedDate, selectedTime, selectedChannel, timezone, setBookingData, navigation]);
+
+  const currentTzLabel =
+    COMMON_TIMEZONES.find(tz => tz.value === timezone)?.label || timezone;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -109,8 +168,89 @@ export default function SelectScheduleScreen() {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{paddingBottom: 100}}>
-        {/* Date selector */}
+
+        {/* Meeting channel picker */}
         <View className="px-4 pt-2 pb-1">
+          <Text className="text-foreground text-base font-bold mb-3">
+            Meeting Channel
+          </Text>
+          <View className="flex-row gap-3">
+            {availableChannels.map(ch => {
+              const Icon = ch.icon;
+              const isSelected = selectedChannel === ch.key;
+              return (
+                <TouchableOpacity
+                  key={ch.key}
+                  onPress={() => setSelectedChannel(ch.key)}
+                  activeOpacity={0.7}
+                  className={`flex-1 items-center py-3 rounded-xl border ${
+                    isSelected ? 'border-primary' : 'border-border'
+                  }`}
+                  style={{
+                    backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
+                  }}>
+                  <Icon
+                    size={20}
+                    color={isSelected ? colors.primary : colors.mutedForeground}
+                  />
+                  <Text
+                    className={`text-xs font-medium mt-1.5 ${
+                      isSelected ? 'text-primary' : 'text-muted-foreground'
+                    }`}>
+                    {ch.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Timezone picker */}
+        <View className="px-4 pt-4 pb-1">
+          <Text className="text-foreground text-base font-bold mb-2">Timezone</Text>
+          <TouchableOpacity
+            onPress={() => setShowTimezones(!showTimezones)}
+            activeOpacity={0.7}
+            className="flex-row items-center justify-between p-3 bg-card border border-border rounded-xl">
+            <View className="flex-row items-center gap-2">
+              <Globe size={16} color={colors.mutedForeground} />
+              <Text className="text-foreground text-sm">{currentTzLabel}</Text>
+            </View>
+            <ChevronDown
+              size={16}
+              color={colors.mutedForeground}
+              style={{transform: [{rotate: showTimezones ? '180deg' : '0deg'}]}}
+            />
+          </TouchableOpacity>
+
+          {showTimezones && (
+            <View className="bg-card border border-border rounded-xl mt-1 overflow-hidden">
+              {COMMON_TIMEZONES.map(tz => (
+                <TouchableOpacity
+                  key={tz.value}
+                  onPress={() => {
+                    setTimezone(tz.value);
+                    setShowTimezones(false);
+                  }}
+                  className={`px-4 py-3 border-b border-border/50 ${
+                    timezone === tz.value ? 'bg-primary/10' : ''
+                  }`}>
+                  <Text
+                    className={`text-sm ${
+                      timezone === tz.value
+                        ? 'text-primary font-bold'
+                        : 'text-foreground'
+                    }`}>
+                    {tz.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Date selector */}
+        <View className="px-4 pt-4 pb-1">
           <Text className="text-foreground text-base font-bold mb-3">Select a date</Text>
         </View>
 

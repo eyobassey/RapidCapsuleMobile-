@@ -1,5 +1,6 @@
 import {create} from 'zustand';
 import {appointmentsService} from '../services/appointments.service';
+import {healthCheckupService} from '../services/healthCheckup.service';
 
 interface BookingData {
   categoryId?: string;
@@ -8,6 +9,11 @@ interface BookingData {
   date?: string;
   time?: string;
   notes?: string;
+  timezone?: string;
+  meeting_channel?: string;
+  health_checkup_id?: string;
+  healthCheckupSummary?: string;
+  paymentMethod?: 'wallet' | 'card';
 }
 
 interface AppointmentsState {
@@ -16,6 +22,7 @@ interface AppointmentsState {
   specialists: any[];
   categories: any[];
   availableTimes: any[];
+  recentCheckups: any[];
   isLoading: boolean;
   error: string | null;
   filter: 'upcoming' | 'past' | 'missed' | 'cancelled';
@@ -27,6 +34,7 @@ interface AppointmentsState {
   fetchCategories: () => Promise<void>;
   fetchSpecialists: (payload: any) => Promise<void>;
   fetchAvailableTimes: (payload: any) => Promise<void>;
+  fetchRecentCheckups: () => Promise<void>;
   bookAppointment: (payload: any) => Promise<any>;
   cancelAppointment: (id: string) => Promise<void>;
   rateAppointment: (id: string, payload: any) => Promise<void>;
@@ -40,6 +48,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
   specialists: [],
   categories: [],
   availableTimes: [],
+  recentCheckups: [],
   isLoading: false,
   error: null,
   filter: 'upcoming',
@@ -116,12 +125,48 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
     set({isLoading: true, error: null});
     try {
       const data = await appointmentsService.getAvailableTimes(payload);
-      set({availableTimes: data || [], isLoading: false});
+      // Backend returns {[date]: {available: string[], booked: [...]}} or a flat array
+      let times: any[] = [];
+      if (Array.isArray(data)) {
+        times = data;
+      } else if (data && typeof data === 'object') {
+        // Extract available slots from the date-keyed response
+        const dateKey = payload.preferredDates?.[0]?.date;
+        const dateData = dateKey ? data[dateKey] : Object.values(data)[0];
+        if (dateData?.available) {
+          times = dateData.available;
+        } else if (Array.isArray(dateData)) {
+          times = dateData;
+        } else {
+          times = Object.values(data).flatMap((d: any) =>
+            d?.available || (Array.isArray(d) ? d : []),
+          );
+        }
+      }
+      set({availableTimes: times, isLoading: false});
     } catch (err: any) {
       set({
         error: err?.response?.data?.message || err?.message || 'Failed to fetch available times',
         isLoading: false,
       });
+    }
+  },
+
+  fetchRecentCheckups: async () => {
+    try {
+      const data = await healthCheckupService.getHistory({page: 1, limit: 5});
+      const list = data?.checkups || (Array.isArray(data) ? data : []);
+      // Only show checkups from the last 30 days that have conditions
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const recent = list.filter((c: any) => {
+        const hasConditions = c.response?.data?.conditions?.length > 0;
+        const isRecent = new Date(c.created_at) >= thirtyDaysAgo;
+        return hasConditions && isRecent;
+      });
+      set({recentCheckups: recent});
+    } catch {
+      set({recentCheckups: []});
     }
   },
 

@@ -1,8 +1,9 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import type {RouteProp} from '@react-navigation/native';
 import {
   Stethoscope,
   Heart,
@@ -16,15 +17,18 @@ import {
   Shield,
   Syringe,
   Microscope,
+  ClipboardCheck,
+  X,
+  Clock,
 } from 'lucide-react-native';
-import {Header, Skeleton} from '../../../components/ui';
+import {Header, Button, Skeleton} from '../../../components/ui';
 import {useAppointmentsStore} from '../../../store/appointments';
 import {colors} from '../../../theme/colors';
 import type {BookingsStackParamList} from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
+type Route = RouteProp<BookingsStackParamList, 'SelectSpecialty'>;
 
-// Attempt to map category names to icons; fallback to Stethoscope
 const iconMap: Record<string, React.ComponentType<any>> = {
   cardiology: Heart,
   neurology: Brain,
@@ -78,13 +82,38 @@ function LoadingSkeleton() {
 
 export default function SelectSpecialtyScreen() {
   const navigation = useNavigation<Nav>();
-  const {categories, isLoading, fetchCategories, setBookingData, clearBookingData} =
-    useAppointmentsStore();
+  const route = useRoute<Route>();
+  const healthCheckupId = route.params?.healthCheckupId;
+  const healthCheckupSummary = route.params?.healthCheckupSummary;
+  const {
+    categories,
+    recentCheckups,
+    isLoading,
+    fetchCategories,
+    fetchRecentCheckups,
+    setBookingData,
+    clearBookingData,
+  } = useAppointmentsStore();
+
+  const [showSuggestion, setShowSuggestion] = useState(false);
+  const hasLinkedCheckup = !!healthCheckupId;
 
   useEffect(() => {
     clearBookingData();
+    if (healthCheckupId) {
+      setBookingData({health_checkup_id: healthCheckupId, healthCheckupSummary});
+    }
     fetchCategories();
+    // Fetch recent checkups to decide whether to show suggestion
+    fetchRecentCheckups();
   }, []);
+
+  // Show suggestion only if no linked checkup and no recent checkups
+  useEffect(() => {
+    if (!hasLinkedCheckup && recentCheckups.length === 0 && categories.length > 0) {
+      setShowSuggestion(true);
+    }
+  }, [recentCheckups, hasLinkedCheckup, categories]);
 
   const handleSelect = (category: any) => {
     setBookingData({
@@ -92,8 +121,13 @@ export default function SelectSpecialtyScreen() {
       categoryName: category.name,
     });
     navigation.navigate('SelectSpecialist', {
-      categoryId: category._id || category.id,
+      professionalCategory: category.professional_category || 'Specialist',
+      specialistCategory: category.name,
     });
+  };
+
+  const handleStartCheckup = () => {
+    (navigation as any).navigate('Home', {screen: 'HealthCheckupPatientInfo'});
   };
 
   return (
@@ -119,7 +153,7 @@ export default function SelectSpecialtyScreen() {
         </View>
       </View>
 
-      <Text className="px-4 pt-2 pb-4 text-foreground text-base font-bold">
+      <Text className="px-4 pt-2 pb-2 text-foreground text-base font-bold">
         What type of specialist do you need?
       </Text>
 
@@ -131,51 +165,131 @@ export default function SelectSpecialtyScreen() {
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingBottom: 40,
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: 12,
           }}
           showsVerticalScrollIndicator={false}>
-          {categories.map((category: any, index: number) => {
-            const IconComponent = getIconForCategory(category.name);
-            const color = categoryColors[index % categoryColors.length];
 
-            return (
-              <TouchableOpacity
-                key={category._id || category.id || index}
-                onPress={() => handleSelect(category)}
-                activeOpacity={0.7}
-                className="bg-card border border-border rounded-2xl p-4 items-center justify-center"
-                style={{width: '47%', minHeight: 120}}>
+          {/* Health checkup suggestion card */}
+          {showSuggestion && (
+            <View
+              className="rounded-2xl p-4 mb-4 border"
+              style={{
+                backgroundColor: `${colors.primary}08`,
+                borderColor: `${colors.primary}25`,
+              }}>
+              <View className="flex-row items-start gap-3">
                 <View
-                  className="w-12 h-12 rounded-2xl items-center justify-center mb-3"
-                  style={{backgroundColor: `${color}20`}}>
-                  <IconComponent size={24} color={color} />
+                  className="w-10 h-10 rounded-xl items-center justify-center"
+                  style={{backgroundColor: `${colors.primary}20`}}>
+                  <ClipboardCheck size={20} color={colors.primary} />
                 </View>
-                <Text
-                  className="text-foreground text-sm font-bold text-center"
-                  numberOfLines={2}>
-                  {category.name}
-                </Text>
-                {category.description && (
-                  <Text
-                    className="text-muted-foreground text-xs text-center mt-1"
-                    numberOfLines={2}>
-                    {category.description}
+                <View className="flex-1">
+                  <Text className="text-foreground text-sm font-bold">
+                    Get better care with a quick health checkup
                   </Text>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-
-          {categories.length === 0 && !isLoading && (
-            <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80, width: '100%'}}>
-              <Stethoscope size={32} color={colors.mutedForeground} />
-              <Text className="text-muted-foreground text-base mt-3">
-                No specialties available
-              </Text>
+                  <Text className="text-muted-foreground text-xs mt-1 leading-relaxed">
+                    A 3-5 min AI health assessment helps your specialist understand your
+                    symptoms before your appointment — leading to a more focused and
+                    productive consultation.
+                  </Text>
+                  <View className="flex-row items-center gap-1.5 mt-1.5">
+                    <Clock size={11} color={colors.mutedForeground} />
+                    <Text className="text-muted-foreground text-[11px]">
+                      Takes only 3-5 minutes
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setShowSuggestion(false)}
+                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                  <X size={16} color={colors.mutedForeground} />
+                </TouchableOpacity>
+              </View>
+              <View className="flex-row gap-3 mt-3">
+                <TouchableOpacity
+                  onPress={handleStartCheckup}
+                  activeOpacity={0.7}
+                  className="flex-1 py-2.5 rounded-xl items-center"
+                  style={{backgroundColor: colors.primary}}>
+                  <Text className="text-white text-xs font-bold">
+                    Start Health Checkup
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setShowSuggestion(false)}
+                  activeOpacity={0.7}
+                  className="flex-1 py-2.5 rounded-xl items-center border"
+                  style={{borderColor: colors.border, backgroundColor: colors.card}}>
+                  <Text className="text-muted-foreground text-xs font-medium">
+                    Maybe Later
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           )}
+
+          {/* Linked health checkup banner */}
+          {hasLinkedCheckup && (
+            <View
+              className="flex-row items-center gap-3 p-3 rounded-xl mb-4 border"
+              style={{
+                backgroundColor: `${colors.success}10`,
+                borderColor: `${colors.success}30`,
+              }}>
+              <ClipboardCheck size={18} color={colors.success} />
+              <View className="flex-1">
+                <Text className="text-success text-sm font-bold">
+                  Health Checkup Linked
+                </Text>
+                <Text className="text-muted-foreground text-xs mt-0.5">
+                  Results will be included in your notes for the specialist
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Category grid */}
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 12}}>
+            {categories.map((category: any, index: number) => {
+              const IconComponent = getIconForCategory(category.name);
+              const color = categoryColors[index % categoryColors.length];
+
+              return (
+                <TouchableOpacity
+                  key={category._id || category.id || index}
+                  onPress={() => handleSelect(category)}
+                  activeOpacity={0.7}
+                  className="bg-card border border-border rounded-2xl p-4 items-center justify-center"
+                  style={{width: '47%', minHeight: 120}}>
+                  <View
+                    className="w-12 h-12 rounded-2xl items-center justify-center mb-3"
+                    style={{backgroundColor: `${color}20`}}>
+                    <IconComponent size={24} color={color} />
+                  </View>
+                  <Text
+                    className="text-foreground text-sm font-bold text-center"
+                    numberOfLines={2}>
+                    {category.name}
+                  </Text>
+                  {category.description && (
+                    <Text
+                      className="text-muted-foreground text-xs text-center mt-1"
+                      numberOfLines={2}>
+                      {category.description}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+
+            {categories.length === 0 && !isLoading && (
+              <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80, width: '100%'}}>
+                <Stethoscope size={32} color={colors.mutedForeground} />
+                <Text className="text-muted-foreground text-base mt-3">
+                  No specialties available
+                </Text>
+              </View>
+            )}
+          </View>
         </ScrollView>
       )}
     </SafeAreaView>

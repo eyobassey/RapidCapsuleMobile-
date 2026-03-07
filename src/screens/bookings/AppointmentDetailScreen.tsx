@@ -93,6 +93,10 @@ export default function AppointmentDetailScreen() {
   const isCompleted = status === 'COMPLETED';
   const isCancelled = status === 'CANCELLED';
 
+  const meetingUrl = appointment?.join_url || appointment?.zoom_meeting_url || appointment?.meeting_link || appointment?.zoom_link;
+  const meetingId = appointment?.meeting_id || appointment?.zoom_meeting_id;
+  const meetingPassword = appointment?.meeting_password || appointment?.zoom_meeting_password;
+
   const handleJoinMeeting = useCallback(() => {
     const link = appointment?.zoom_meeting_url || appointment?.meeting_link || appointment?.zoom_link;
     if (link) {
@@ -225,7 +229,62 @@ export default function AppointmentDetailScreen() {
             </View>
           </View>
 
-          {/* Section 3: Notes */}
+          {/* Section 3: Meeting Details */}
+          {isUpcoming && (meetingUrl || meetingId) && (
+            <View className="bg-card border border-border rounded-2xl p-4 mb-4">
+              <View className="flex-row items-center gap-2 mb-3">
+                <Video size={16} color={colors.primary} />
+                <Text className="text-foreground font-bold text-sm">Meeting Details</Text>
+              </View>
+
+              {meetingId && (
+                <View className="mb-2">
+                  <Text className="text-muted-foreground text-xs">Meeting ID</Text>
+                  <Text className="text-foreground text-sm font-medium" selectable>
+                    {meetingId}
+                  </Text>
+                </View>
+              )}
+
+              {meetingPassword && (
+                <View className="mb-2">
+                  <Text className="text-muted-foreground text-xs">Password</Text>
+                  <Text className="text-foreground text-sm font-medium" selectable>
+                    {meetingPassword}
+                  </Text>
+                </View>
+              )}
+
+              {meetingUrl && (
+                <View>
+                  <Text className="text-muted-foreground text-xs">Meeting Link</Text>
+                  <Text
+                    className="text-primary text-sm font-medium"
+                    selectable
+                    numberOfLines={2}>
+                    {meetingUrl}
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Health Checkup Link */}
+          {appointment.health_checkup_id && (
+            <View
+              className="flex-row items-center gap-3 p-3 rounded-xl mb-4 border"
+              style={{backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}30`}}>
+              <FileText size={18} color={colors.primary} />
+              <View className="flex-1">
+                <Text className="text-primary text-sm font-bold">Health Checkup Linked</Text>
+                <Text className="text-muted-foreground text-xs mt-0.5">
+                  Health checkup results shared with specialist
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Section 4: Notes */}
           {(appointment.patient_notes || appointment.specialist_notes || appointment.notes) && (
             <View className="bg-card border border-border rounded-2xl p-4 mb-4">
               <View className="flex-row items-center gap-2 mb-3">

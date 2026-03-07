@@ -1,9 +1,10 @@
 import React from 'react';
 import {View, Text, TouchableOpacity} from 'react-native';
-import {Star, Briefcase} from 'lucide-react-native';
+import {Star, Briefcase, Video, Phone} from 'lucide-react-native';
 import {Avatar, Button} from '../ui';
 import {colors} from '../../theme/colors';
 import {useCurrency} from '../../hooks/useCurrency';
+import {MEETING_CHANNEL_LABELS} from '../../utils/constants';
 
 interface SpecialistCardProps {
   specialist: any;
@@ -13,17 +14,20 @@ interface SpecialistCardProps {
 export default function SpecialistCard({specialist, onSelect}: SpecialistCardProps) {
   const {format} = useCurrency();
   const profile = specialist.profile || {};
+  const practice = specialist.professional_practice || {};
   const name = profile.first_name
     ? `Dr. ${profile.first_name} ${profile.last_name || ''}`
-    : specialist.name || 'Specialist';
+    : specialist.full_name || specialist.name || 'Specialist';
   const specialty =
+    practice.area_of_specialty ||
     specialist.specialist_category?.name ||
     specialist.specialty ||
     'General Practice';
   const rating = specialist.average_rating || specialist.rating || 0;
   const reviewCount = specialist.review_count || specialist.total_reviews || 0;
-  const experience = specialist.years_of_experience || specialist.experience || 0;
+  const experience = Number(practice.years_of_practice) || specialist.years_of_experience || 0;
   const fee = specialist.consultation_fee || specialist.fee || 0;
+  const channels: string[] = specialist.meeting_channels || [];
 
   return (
     <View className="bg-card border border-border rounded-2xl p-4 mb-3">
@@ -60,7 +64,7 @@ export default function SpecialistCard({specialist, onSelect}: SpecialistCardPro
       </View>
 
       {/* Stats row */}
-      <View className="flex-row items-center gap-4 mb-4 px-1">
+      <View className="flex-row items-center gap-4 mb-3 px-1">
         {experience > 0 && (
           <View className="flex-row items-center gap-1.5">
             <Briefcase size={14} color={colors.mutedForeground} />
@@ -69,10 +73,33 @@ export default function SpecialistCard({specialist, onSelect}: SpecialistCardPro
             </Text>
           </View>
         )}
-        <Text className="text-primary font-bold text-sm">
-          {format(fee)}
-        </Text>
+        {fee > 0 && (
+          <Text className="text-primary font-bold text-sm">
+            {format(fee)}
+          </Text>
+        )}
       </View>
+
+      {/* Meeting channels */}
+      {channels.length > 0 && (
+        <View className="flex-row flex-wrap gap-1.5 mb-3 px-1">
+          {channels.map(ch => (
+            <View
+              key={ch}
+              className="flex-row items-center gap-1 px-2 py-1 rounded-lg"
+              style={{backgroundColor: `${colors.primary}10`}}>
+              {ch === 'phone' ? (
+                <Phone size={10} color={colors.primary} />
+              ) : (
+                <Video size={10} color={colors.primary} />
+              )}
+              <Text className="text-primary text-[10px] font-medium">
+                {MEETING_CHANNEL_LABELS[ch] || ch}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
 
       {/* Select button */}
       <Button variant="outline" onPress={onSelect}>

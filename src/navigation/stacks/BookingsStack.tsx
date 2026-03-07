@@ -12,8 +12,14 @@ import RateAppointmentScreen from '../../screens/bookings/RateAppointmentScreen'
 export type BookingsStackParamList = {
   AppointmentsList: undefined;
   AppointmentDetail: {id: string};
-  SelectSpecialty: undefined;
-  SelectSpecialist: {categoryId: string};
+  SelectSpecialty: {
+    healthCheckupId?: string;
+    healthCheckupSummary?: string;
+  } | undefined;
+  SelectSpecialist: {
+    professionalCategory: string;
+    specialistCategory: string;
+  };
   SelectSchedule: {specialistId: string};
   ConfirmBooking: undefined;
   RateAppointment: {id: string};

@@ -334,11 +334,22 @@ export default function EkaChatScreen() {
   };
 
   const navigateAction = (routeKey: string) => {
+    // Handle parameterized route keys like book_appointment:CHECKUP_ID
+    const [baseKey, param] = routeKey.split(':');
+
     // 1. Check if it's a navigation route
-    const route = ACTION_ROUTES[routeKey];
+    const route = ACTION_ROUTES[baseKey] || ACTION_ROUTES[routeKey];
     if (route) {
-      if (route.screen) {
-        // Navigate to the tab, then to the nested screen within that tab's stack
+      if (baseKey === 'book_appointment' && param) {
+        // Pass health checkup ID to booking flow
+        (navigation as any).navigate(route.tab, {
+          screen: 'SelectSpecialty',
+          params: {
+            healthCheckupId: param,
+            healthCheckupSummary: 'Health checkup completed via Eka — results will be shared with specialist',
+          },
+        });
+      } else if (route.screen) {
         (navigation as any).navigate(route.tab, {screen: route.screen});
       } else {
         (navigation as any).navigate(route.tab);

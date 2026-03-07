@@ -144,8 +144,22 @@ export default function ResultsScreen() {
   };
 
   const handleBookAppointment = () => {
+    const topCondition = conditions?.[0]?.common_name || conditions?.[0]?.name;
+    const summary = topCondition
+      ? `Health checkup indicated: ${topCondition}`
+      : 'Health checkup completed';
+    const savedCheckupId = checkupId;
     reset();
-    navigation.navigate('Main', {screen: 'Bookings'});
+    navigation.navigate('Main', {
+      screen: 'Bookings',
+      params: {
+        screen: 'SelectSpecialty',
+        params: {
+          healthCheckupId: savedCheckupId,
+          healthCheckupSummary: summary,
+        },
+      },
+    });
   };
 
   const handleGoHome = () => {
