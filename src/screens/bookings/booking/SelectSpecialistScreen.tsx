@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, {useEffect, useState, useCallback, useMemo} from 'react';
 import {View, Text, FlatList, TouchableOpacity, ScrollView} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -22,8 +22,8 @@ const GENDER_OPTIONS = [
 
 const RATING_OPTIONS = [
   {label: 'Any Rating', value: ''},
-  {label: '4+ Stars', value: '4'},
-  {label: '3+ Stars', value: '3'},
+  {label: '4+ Stars', value: '4 stars and above'},
+  {label: '3+ Stars', value: '3 stars and above'},
 ];
 
 const CHANNEL_OPTIONS = [
@@ -142,14 +142,21 @@ export default function SelectSpecialistScreen() {
       specialist_category: specialistCategory,
     };
     if (gender) payload.gender = gender;
-    if (rating) payload.min_rating = Number(rating);
-    if (channel) payload.meeting_channel = channel;
+    if (rating) payload.rating = rating;
     fetchSpecialists(payload);
-  }, [professionalCategory, specialistCategory, gender, rating, channel]);
+  }, [professionalCategory, specialistCategory, gender, rating]);
 
   useEffect(() => {
     loadSpecialists();
   }, [loadSpecialists]);
+
+  // Client-side meeting channel filter (backend returns meeting_channels per specialist)
+  const filteredSpecialists = useMemo(() => {
+    if (!channel) return specialists;
+    return specialists.filter(
+      (s: any) => s.meeting_channels?.includes(channel),
+    );
+  }, [specialists, channel]);
 
   const clearFilters = () => {
     setGender('');
@@ -273,7 +280,7 @@ export default function SelectSpecialistScreen() {
         <ListSkeleton />
       ) : (
         <FlatList
-          data={specialists}
+          data={filteredSpecialists}
           keyExtractor={item => item._id || item.id || String(Math.random())}
           renderItem={({item}) => (
             <SpecialistCard
@@ -284,7 +291,7 @@ export default function SelectSpecialistScreen() {
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingBottom: 40,
-            flexGrow: specialists.length === 0 ? 1 : undefined,
+            flexGrow: filteredSpecialists.length === 0 ? 1 : undefined,
           }}
           ListEmptyComponent={
             <EmptyState

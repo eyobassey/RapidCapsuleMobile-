@@ -8,55 +8,36 @@ import {
   Clock,
   Video,
   Phone,
-  MessageSquare,
   Globe,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react-native';
 import {Header, Button, EmptyState} from '../../../components/ui';
 import {useAppointmentsStore} from '../../../store/appointments';
 import {useAuthStore} from '../../../store/auth';
 import {colors} from '../../../theme/colors';
-import {MEETING_CHANNEL_LABELS} from '../../../utils/constants';
 import type {BookingsStackParamList} from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 type Route = RouteProp<BookingsStackParamList, 'SelectSchedule'>;
 
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTH_NAMES = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+const WEEKDAY_HEADERS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_NAMES_FULL = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-interface DateItem {
-  date: Date;
-  dateString: string;
-  dayName: string;
-  dayNum: number;
-  monthName: string;
-  isToday: boolean;
-}
-
-function generateNext14Days(): DateItem[] {
-  const today = new Date();
-  const days: DateItem[] = [];
-  for (let i = 0; i < 14; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    days.push({
-      date: d,
-      dateString: `${year}-${month}-${day}`,
-      dayName: DAY_NAMES[d.getDay()],
-      dayNum: d.getDate(),
-      monthName: MONTH_NAMES[d.getMonth()],
-      isToday: i === 0,
-    });
-  }
-  return days;
-}
+// Maps JS getDay() (0=Sun) to backend day names
+const DAY_INDEX_TO_NAME: Record<number, string> = {
+  0: 'Sunday',
+  1: 'Monday',
+  2: 'Tuesday',
+  3: 'Wednesday',
+  4: 'Thursday',
+  5: 'Friday',
+  6: 'Saturday',
+};
 
 const MEETING_CHANNELS = [
   {key: 'zoom', label: 'Zoom', icon: Video, color: colors.primary},
@@ -78,6 +59,89 @@ const COMMON_TIMEZONES = [
   {label: 'India (IST)', value: 'Asia/Kolkata'},
 ];
 
+interface CalendarDay {
+  date: Date;
+  dateString: string;
+  dayNum: number;
+  isCurrentMonth: boolean;
+  isPast: boolean;
+  isToday: boolean;
+  isAvailable: boolean; // specialist works this day of the week
+}
+
+function buildCalendarGrid(
+  year: number,
+  month: number,
+  availableDayNames: string[],
+): CalendarDay[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const firstOfMonth = new Date(year, month, 1);
+  const startDay = firstOfMonth.getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Previous month filler days
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const days: CalendarDay[] = [];
+
+  for (let i = startDay - 1; i >= 0; i--) {
+    const d = new Date(year, month - 1, daysInPrevMonth - i);
+    days.push({
+      date: d,
+      dateString: formatDateString(d),
+      dayNum: d.getDate(),
+      isCurrentMonth: false,
+      isPast: d < today,
+      isToday: false,
+      isAvailable: false,
+    });
+  }
+
+  // Current month days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = new Date(year, month, day);
+    const dayName = DAY_INDEX_TO_NAME[d.getDay()];
+    const isPast = d < today;
+    const isToday = d.getTime() === today.getTime();
+    days.push({
+      date: d,
+      dateString: formatDateString(d),
+      dayNum: day,
+      isCurrentMonth: true,
+      isPast,
+      isToday,
+      isAvailable: !isPast && availableDayNames.includes(dayName),
+    });
+  }
+
+  // Next month filler to complete the grid (always show full weeks)
+  const remaining = 7 - (days.length % 7);
+  if (remaining < 7) {
+    for (let i = 1; i <= remaining; i++) {
+      const d = new Date(year, month + 1, i);
+      days.push({
+        date: d,
+        dateString: formatDateString(d),
+        dayNum: i,
+        isCurrentMonth: false,
+        isPast: false,
+        isToday: false,
+        isAvailable: false,
+      });
+    }
+  }
+
+  return days;
+}
+
+function formatDateString(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function SelectScheduleScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
@@ -87,8 +151,12 @@ export default function SelectScheduleScreen() {
   const {availableTimes, isLoading, fetchAvailableTimes, setBookingData, bookingData} =
     useAppointmentsStore();
 
-  const days = useMemo(() => generateNext14Days(), []);
-  const [selectedDate, setSelectedDate] = useState(days[0]?.dateString || '');
+  // Calendar month state
+  const today = useMemo(() => new Date(), []);
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedChannel, setSelectedChannel] = useState(
     bookingData.specialist?.meeting_channels?.[0] || 'zoom',
@@ -98,7 +166,13 @@ export default function SelectScheduleScreen() {
   );
   const [showTimezones, setShowTimezones] = useState(false);
 
-  // Get available channels from specialist or default
+  // Specialist's available days of the week (e.g. ['Monday', 'Wednesday', 'Friday'])
+  const availableDayNames: string[] = useMemo(
+    () => bookingData.specialist?.available_days || [],
+    [bookingData.specialist?.available_days],
+  );
+
+  // Get available channels from specialist
   const specialistChannels = bookingData.specialist?.meeting_channels;
   const availableChannels = useMemo(() => {
     if (specialistChannels?.length) {
@@ -107,20 +181,59 @@ export default function SelectScheduleScreen() {
     return MEETING_CHANNELS;
   }, [specialistChannels]);
 
+  // Month navigation bounds (today to 6 months ahead)
+  const maxDate = useMemo(() => {
+    const d = new Date(today);
+    d.setMonth(d.getMonth() + 6);
+    return d;
+  }, [today]);
+
+  const canGoPrev = viewYear > today.getFullYear() || viewMonth > today.getMonth();
+  const canGoNext =
+    viewYear < maxDate.getFullYear() ||
+    (viewYear === maxDate.getFullYear() && viewMonth < maxDate.getMonth());
+
+  const goToPrevMonth = () => {
+    if (!canGoPrev) return;
+    if (viewMonth === 0) {
+      setViewYear(viewYear - 1);
+      setViewMonth(11);
+    } else {
+      setViewMonth(viewMonth - 1);
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (!canGoNext) return;
+    if (viewMonth === 11) {
+      setViewYear(viewYear + 1);
+      setViewMonth(0);
+    } else {
+      setViewMonth(viewMonth + 1);
+    }
+  };
+
+  // Build calendar grid for current view month
+  const calendarDays = useMemo(
+    () => buildCalendarGrid(viewYear, viewMonth, availableDayNames),
+    [viewYear, viewMonth, availableDayNames],
+  );
+
+  // Fetch available times when a date is selected
   useEffect(() => {
     if (selectedDate) {
       fetchAvailableTimes({
         specialistId,
         preferredDates: [{date: selectedDate}],
         patientId: user?._id,
-        timezone,
       });
       setSelectedTime(null);
     }
   }, [selectedDate, specialistId, timezone]);
 
-  const handleDateSelect = useCallback((dateString: string) => {
-    setSelectedDate(dateString);
+  const handleDateSelect = useCallback((day: CalendarDay) => {
+    if (!day.isCurrentMonth || !day.isAvailable) return;
+    setSelectedDate(day.dateString);
   }, []);
 
   const handleTimeSelect = useCallback((time: string) => {
@@ -249,67 +362,149 @@ export default function SelectScheduleScreen() {
           )}
         </View>
 
-        {/* Date selector */}
+        {/* Calendar */}
         <View className="px-4 pt-4 pb-1">
           <Text className="text-foreground text-base font-bold mb-3">Select a date</Text>
-        </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{paddingHorizontal: 16, gap: 10, paddingBottom: 4}}>
-          {days.map(day => {
-            const isSelected = day.dateString === selectedDate;
-            return (
-              <TouchableOpacity
-                key={day.dateString}
-                onPress={() => handleDateSelect(day.dateString)}
-                activeOpacity={0.7}
-                className={`items-center justify-center rounded-2xl py-3 px-4 border ${
-                  isSelected
-                    ? 'border-primary'
-                    : 'border-border'
-                }`}
-                style={{
-                  backgroundColor: isSelected ? colors.primary : colors.card,
-                  minWidth: 64,
-                }}>
-                <Text
-                  className={`text-xs font-medium ${
-                    isSelected ? 'text-white' : 'text-muted-foreground'
-                  }`}>
-                  {day.dayName}
+          {/* Month navigation */}
+          <View className="flex-row items-center justify-between mb-3">
+            <TouchableOpacity
+              onPress={goToPrevMonth}
+              disabled={!canGoPrev}
+              activeOpacity={0.7}
+              className="p-2 rounded-xl"
+              style={{
+                backgroundColor: canGoPrev ? colors.card : 'transparent',
+                opacity: canGoPrev ? 1 : 0.3,
+              }}>
+              <ChevronLeft size={20} color={colors.foreground} />
+            </TouchableOpacity>
+
+            <Text className="text-foreground text-base font-bold">
+              {MONTH_NAMES_FULL[viewMonth]} {viewYear}
+            </Text>
+
+            <TouchableOpacity
+              onPress={goToNextMonth}
+              disabled={!canGoNext}
+              activeOpacity={0.7}
+              className="p-2 rounded-xl"
+              style={{
+                backgroundColor: canGoNext ? colors.card : 'transparent',
+                opacity: canGoNext ? 1 : 0.3,
+              }}>
+              <ChevronRight size={20} color={colors.foreground} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Weekday headers */}
+          <View className="flex-row mb-1">
+            {WEEKDAY_HEADERS.map(day => (
+              <View key={day} className="flex-1 items-center py-1">
+                <Text className="text-muted-foreground text-xs font-medium">
+                  {day}
                 </Text>
-                <Text
-                  className={`text-xl font-bold mt-1 ${
-                    isSelected ? 'text-white' : 'text-foreground'
-                  }`}>
-                  {day.dayNum}
-                </Text>
-                <Text
-                  className={`text-xs mt-0.5 ${
-                    isSelected ? 'text-white/80' : 'text-muted-foreground'
-                  }`}>
-                  {day.monthName}
-                </Text>
-                {day.isToday && (
+              </View>
+            ))}
+          </View>
+
+          {/* Calendar grid */}
+          <View className="flex-row flex-wrap">
+            {calendarDays.map((day, index) => {
+              const isSelected = day.dateString === selectedDate;
+              const isDisabled = !day.isCurrentMonth || !day.isAvailable;
+
+              return (
+                <TouchableOpacity
+                  key={`${day.dateString}-${index}`}
+                  onPress={() => handleDateSelect(day)}
+                  disabled={isDisabled}
+                  activeOpacity={0.7}
+                  style={{width: '14.28%', aspectRatio: 1}}
+                  className="items-center justify-center">
                   <View
-                    className="w-1.5 h-1.5 rounded-full mt-1"
+                    className="items-center justify-center rounded-full"
                     style={{
-                      backgroundColor: isSelected ? colors.white : colors.primary,
-                    }}
-                  />
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+                      width: 38,
+                      height: 38,
+                      backgroundColor: isSelected
+                        ? colors.primary
+                        : day.isToday && day.isAvailable
+                          ? `${colors.primary}15`
+                          : 'transparent',
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: isSelected || day.isToday ? '700' : '400',
+                        color: isSelected
+                          ? '#FFFFFF'
+                          : !day.isCurrentMonth
+                            ? colors.border
+                            : day.isAvailable
+                              ? colors.foreground
+                              : colors.mutedForeground,
+                        opacity: !day.isCurrentMonth ? 0.3 : day.isAvailable ? 1 : 0.35,
+                      }}>
+                      {day.dayNum}
+                    </Text>
+                  </View>
+                  {/* Availability dot */}
+                  {day.isCurrentMonth && day.isAvailable && !isSelected && (
+                    <View
+                      style={{
+                        width: 4,
+                        height: 4,
+                        borderRadius: 2,
+                        backgroundColor: colors.primary,
+                        marginTop: 1,
+                      }}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {/* Legend */}
+          <View className="flex-row items-center gap-4 mt-2 px-1">
+            <View className="flex-row items-center gap-1.5">
+              <View
+                style={{
+                  width: 4,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: colors.primary,
+                }}
+              />
+              <Text className="text-muted-foreground text-xs">Available</Text>
+            </View>
+            <View className="flex-row items-center gap-1.5">
+              <Text
+                style={{
+                  fontSize: 10,
+                  color: colors.mutedForeground,
+                  opacity: 0.35,
+                }}>
+                15
+              </Text>
+              <Text className="text-muted-foreground text-xs">Unavailable</Text>
+            </View>
+          </View>
+        </View>
 
         {/* Time slots */}
         <View className="px-4 pt-6">
           <Text className="text-foreground text-base font-bold mb-3">Available times</Text>
 
-          {isLoading ? (
+          {!selectedDate ? (
+            <View className="items-center justify-center py-12">
+              <Clock size={32} color={colors.mutedForeground} />
+              <Text className="text-muted-foreground text-sm mt-3 text-center">
+                Select a date to see available time slots.
+              </Text>
+            </View>
+          ) : isLoading ? (
             <View className="items-center justify-center py-12">
               <ActivityIndicator size="large" color={colors.primary} />
               <Text className="text-muted-foreground text-sm mt-3">Loading available times...</Text>
