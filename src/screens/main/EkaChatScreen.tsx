@@ -51,11 +51,20 @@ import {
 } from 'lucide-react-native';
 import {launchImageLibrary} from 'react-native-image-picker';
 import WebView from 'react-native-webview';
+import Svg, {Polyline, Circle as SvgCircle, Path, Rect as SvgRect, Text as SvgText} from 'react-native-svg';
 import {colors} from '../../theme/colors';
 import {useEkaStore} from '../../store/eka';
 import {ekaService} from '../../services/eka.service';
 import {healthCheckupService} from '../../services/healthCheckup.service';
 import {generateHealthCheckupPDF} from '../../utils/healthCheckupPdf';
+import {
+  generateDrugInteractionPDF,
+  generatePrescriptionPDF,
+  generateRecoveryDashboardPDF,
+  generateScreeningReportPDF,
+  generateCopingExercisePDF,
+  generateRiskAssessmentPDF,
+} from '../../utils/artifactPdf';
 import {useAuthStore} from '../../store/auth';
 import type {
   EkaMessage,
@@ -1877,173 +1886,909 @@ function CheckupReportCard({data}: {data: any}) {
 
 function DrugInteractionCard({data}: {data: any}) {
   const interactions = data?.interactions || data?.results || [];
+  const drugsChecked = data?.drugs_checked || [];
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+
+  const sevColor = (severity: string) => {
+    if (severity === 'major' || severity === 'contraindicated') return colors.destructive;
+    if (severity === 'moderate') return '#f97316';
+    return '#3b82f6';
+  };
+
+  const handleShare = async () => {
+    setPdfLoading(true);
+    try { await generateDrugInteractionPDF(data); } finally { setPdfLoading(false); }
+  };
+
   return (
-    <View style={{gap: 8}}>
+    <View style={{gap: 10}}>
+      {/* Drugs checked tags */}
+      {drugsChecked.length > 0 && (
+        <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 4}}>
+          {drugsChecked.map((drug: string, i: number) => (
+            <View key={i} style={{backgroundColor: `${colors.primary}10`, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3}}>
+              <Text style={{fontSize: 10, fontWeight: '600', color: colors.primary}}>{drug}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* No interactions */}
       {interactions.length === 0 && (
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-          <Check size={16} color={colors.success} />
-          <Text style={{fontSize: 12, fontWeight: '600', color: colors.success}}>
-            No significant interactions found
+        <View style={{alignItems: 'center', gap: 6, paddingVertical: 12}}>
+          <Shield size={24} color={colors.success} />
+          <Text style={{fontSize: 13, fontWeight: '700', color: colors.success}}>No Significant Interactions Found</Text>
+          <Text style={{fontSize: 11, color: colors.mutedForeground, textAlign: 'center', lineHeight: 16}}>
+            Based on current clinical evidence, no major drug-drug interactions were identified.
           </Text>
         </View>
       )}
-      {interactions.slice(0, 5).map((ix: any, i: number) => {
+
+      {/* Interaction cards */}
+      {interactions.map((ix: any, i: number) => {
         const severity = ix.severity || 'moderate';
-        const sevColor = severity === 'major' || severity === 'contraindicated' ? colors.destructive : severity === 'moderate' ? '#f97316' : colors.success;
+        const sc = sevColor(severity);
+        const isExpanded = expandedIdx === i;
         return (
-          <View key={i} style={{gap: 4}}>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
-              <View style={{backgroundColor: `${sevColor}15`, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2}}>
-                <Text style={{fontSize: 9, fontWeight: '700', color: sevColor, textTransform: 'uppercase'}}>
-                  {severity}
+          <View key={i} style={{borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: `${sc}30`}}>
+            {/* Severity banner */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setExpandedIdx(isExpanded ? null : i)}
+              style={{backgroundColor: `${sc}15`, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 8}}>
+              <AlertTriangle size={14} color={sc} />
+              <View style={{flex: 1}}>
+                <Text style={{fontSize: 10, fontWeight: '700', color: sc, textTransform: 'uppercase'}}>{severity} interaction</Text>
+                <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}} numberOfLines={1}>
+                  {ix.drug1 || ix.drugs?.[0]} + {ix.drug2 || ix.drugs?.[1]}
                 </Text>
               </View>
-              <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground, flex: 1}} numberOfLines={1}>
-                {ix.drug1 || ix.drugs?.[0]} + {ix.drug2 || ix.drugs?.[1]}
-              </Text>
-            </View>
+              {isExpanded ? <ChevronUp size={14} color={sc} /> : <ChevronDown size={14} color={sc} />}
+            </TouchableOpacity>
+
+            {/* Description (always visible) */}
             {ix.description && (
-              <Text style={{fontSize: 11, color: colors.mutedForeground}} numberOfLines={2}>
-                {ix.description}
-              </Text>
+              <View style={{paddingHorizontal: 10, paddingTop: 8, paddingBottom: isExpanded ? 0 : 8}}>
+                <Text style={{fontSize: 11, color: colors.mutedForeground, lineHeight: 16}}>{ix.description}</Text>
+              </View>
+            )}
+
+            {/* Expanded details */}
+            {isExpanded && (
+              <View style={{padding: 10, gap: 8}}>
+                {/* Enzyme badge */}
+                {ix.enzyme_involved && (
+                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+                    <View style={{backgroundColor: `${colors.primary}10`, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2}}>
+                      <Text style={{fontSize: 9, fontWeight: '600', color: colors.primary}}>{ix.enzyme_involved}</Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Mechanism */}
+                {ix.mechanism && (
+                  <View style={{backgroundColor: colors.muted, borderRadius: 8, padding: 10, gap: 3}}>
+                    <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Mechanism</Text>
+                    <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16}}>{ix.mechanism}</Text>
+                  </View>
+                )}
+
+                {/* Management */}
+                {ix.management?.length > 0 && (
+                  <View style={{backgroundColor: colors.muted, borderRadius: 8, padding: 10, gap: 4}}>
+                    <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Management</Text>
+                    {ix.management.map((m: any, mi: number) => (
+                      <View key={mi} style={{gap: 1}}>
+                        <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground}}>{m.title || m.type}</Text>
+                        {m.detail && <Text style={{fontSize: 11, color: colors.mutedForeground, lineHeight: 16}}>{m.detail}</Text>}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Monitoring */}
+                {ix.monitoring?.length > 0 && (
+                  <View style={{backgroundColor: colors.muted, borderRadius: 8, padding: 10, gap: 4}}>
+                    <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Monitoring</Text>
+                    {ix.monitoring.map((m: any, mi: number) => (
+                      <View key={mi} style={{gap: 1}}>
+                        <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground}}>{m.test}</Text>
+                        {m.detail && <Text style={{fontSize: 11, color: colors.mutedForeground, lineHeight: 16}}>{m.detail}</Text>}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Alternatives */}
+                {ix.alternatives?.length > 0 && (
+                  <View style={{backgroundColor: colors.muted, borderRadius: 8, padding: 10, gap: 4}}>
+                    <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Alternatives</Text>
+                    {ix.alternatives.map((a: any, ai: number) => (
+                      <View key={ai} style={{gap: 1}}>
+                        <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground}}>{a.suggestion}</Text>
+                        {a.detail && <Text style={{fontSize: 11, color: colors.mutedForeground, lineHeight: 16}}>{a.detail}</Text>}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Clinical significance */}
+                {ix.clinical_significance && (
+                  <View style={{backgroundColor: colors.muted, borderRadius: 8, padding: 10, gap: 4}}>
+                    <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Clinical Significance</Text>
+                    {ix.clinical_significance.risk_level && (
+                      <View style={{flexDirection: 'row', gap: 4}}>
+                        <Text style={{fontSize: 11, color: colors.mutedForeground}}>Risk:</Text>
+                        <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground, textTransform: 'capitalize'}}>{ix.clinical_significance.risk_level}</Text>
+                      </View>
+                    )}
+                    {ix.clinical_significance.onset && (
+                      <View style={{flexDirection: 'row', gap: 4}}>
+                        <Text style={{fontSize: 11, color: colors.mutedForeground}}>Onset:</Text>
+                        <Text style={{fontSize: 11, color: colors.foreground}}>{ix.clinical_significance.onset}</Text>
+                      </View>
+                    )}
+                    {ix.clinical_significance.documentation && (
+                      <View style={{flexDirection: 'row', gap: 4}}>
+                        <Text style={{fontSize: 11, color: colors.mutedForeground}}>Evidence:</Text>
+                        <Text style={{fontSize: 11, color: colors.foreground}}>{ix.clinical_significance.documentation}</Text>
+                      </View>
+                    )}
+                    {ix.clinical_significance.primary_risk && (
+                      <View style={{flexDirection: 'row', gap: 4}}>
+                        <Text style={{fontSize: 11, color: colors.mutedForeground}}>Primary Risk:</Text>
+                        <Text style={{fontSize: 11, color: colors.foreground}}>{ix.clinical_significance.primary_risk}</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
             )}
           </View>
         );
       })}
+
+      {/* Clinical summary */}
+      {data?.summary && (
+        <View style={{gap: 3}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Clinical Summary</Text>
+          <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16}}>{data.summary}</Text>
+        </View>
+      )}
+
+      {/* Disclaimer */}
+      <Text style={{fontSize: 10, color: colors.mutedForeground, textAlign: 'center', fontStyle: 'italic'}}>
+        AI-generated report. Always consult a healthcare professional before making medication changes.
+      </Text>
+
+      {/* Download */}
+      <TouchableOpacity onPress={handleShare} disabled={pdfLoading} activeOpacity={0.7}
+        style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card}}>
+        {pdfLoading ? <ActivityIndicator size="small" color={colors.primary} /> : <Download size={14} color={colors.primary} />}
+        <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>{pdfLoading ? 'Generating PDF...' : 'Download & Share Report'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 function PrescriptionAnalysisCard({data}: {data: any}) {
   const medications = data?.medications || [];
-  const readiness = data?.readiness_score ?? data?.confidence ?? 0;
+  const readiness = data?.prescription_readiness;
+  const totalCost = data?.total_estimated_cost;
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const statusText = (med: any) => {
+    if (!med.in_inventory) return 'Not Available';
+    if (med.schedule_class && !['OTC', 'OTC_GENERAL'].includes(med.schedule_class)) return 'Controlled';
+    if (!med.in_stock) return 'Out of Stock';
+    if (med.requires_prescription) return 'Rx Required';
+    return 'In Stock';
+  };
+
+  const statusColor = (med: any) => {
+    if (!med.in_inventory) return colors.mutedForeground;
+    if (!med.in_stock) return colors.destructive;
+    if (med.requires_prescription) return '#f97316';
+    return colors.success;
+  };
+
+  const fmtPrice = (v: any) => v != null ? Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
+
+  const handleShare = async () => {
+    setPdfLoading(true);
+    try { await generatePrescriptionPDF(data); } finally { setPdfLoading(false); }
+  };
+
   return (
-    <View style={{gap: 8}}>
-      <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-        <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>
-          {medications.length} medication{medications.length !== 1 ? 's' : ''} found
-        </Text>
-        <Text style={{fontSize: 11, fontWeight: '700', color: colors.primary}}>
-          {Math.round(readiness * 100)}% confidence
-        </Text>
+    <View style={{gap: 10}}>
+      {/* Prescription info */}
+      <View style={{backgroundColor: colors.muted, borderRadius: 8, padding: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
+        {data?.doctor_name && (
+          <Text style={{fontSize: 11, color: colors.foreground}}>Dr. {data.doctor_name}</Text>
+        )}
+        {data?.confidence != null && (
+          <Text style={{fontSize: 11, color: colors.mutedForeground}}>{Math.round(data.confidence)}% readable</Text>
+        )}
+        {data?.source && (
+          <Text style={{fontSize: 11, color: colors.mutedForeground}}>
+            {data.source === 'specialist' ? 'Specialist Rx' : 'Uploaded Rx'}
+          </Text>
+        )}
       </View>
-      <View style={{height: 4, backgroundColor: colors.muted, borderRadius: 2}}>
-        <View
-          style={{
-            height: 4,
-            width: `${Math.min(Math.round(readiness * 100), 100)}%`,
-            backgroundColor: colors.primary,
-            borderRadius: 2,
-          }}
-        />
-      </View>
-      {medications.slice(0, 4).map((med: any, i: number) => (
-        <Text key={i} style={{fontSize: 12, color: colors.foreground}}>
-          • {med.name || med.drug_name} {med.dosage || med.strength || ''}
-        </Text>
-      ))}
+
+      {/* Medications count */}
+      <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
+        Medications ({medications.length})
+      </Text>
+
+      {/* Medication cards */}
+      {medications.map((med: any, i: number) => {
+        const prices = med.prices || {};
+        return (
+          <View key={i} style={{borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, gap: 4}}>
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start'}}>
+              <View style={{flex: 1, gap: 2}}>
+                <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>{med.name || med.drug_name}</Text>
+                {med.prescribed_dosage && (
+                  <Text style={{fontSize: 11, color: colors.mutedForeground}}>{med.prescribed_dosage}</Text>
+                )}
+              </View>
+              <View style={{backgroundColor: `${statusColor(med)}15`, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2}}>
+                <Text style={{fontSize: 9, fontWeight: '700', color: statusColor(med), textTransform: 'uppercase'}}>
+                  {statusText(med)}
+                </Text>
+              </View>
+            </View>
+
+            {med.in_inventory && med.matched_drug_name && (
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+                <Check size={10} color={colors.success} />
+                <Text style={{fontSize: 11, color: colors.success}}>{med.matched_drug_name}</Text>
+                {med.dosage_form && <Text style={{fontSize: 10, color: colors.mutedForeground}}>({med.dosage_form})</Text>}
+              </View>
+            )}
+
+            {/* Prices */}
+            {Object.keys(prices).length > 0 && (
+              <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 6}}>
+                {Object.entries(prices).map(([currency, amount]: [string, any]) => (
+                  <Text key={currency} style={{fontSize: 10, color: colors.primary, fontWeight: '600'}}>
+                    {currency} {fmtPrice(amount)}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {med.instructions && (
+              <Text style={{fontSize: 11, color: colors.mutedForeground, lineHeight: 16}}>{med.instructions}</Text>
+            )}
+
+            {!med.in_inventory && (
+              <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+                <AlertTriangle size={10} color={colors.mutedForeground} />
+                <Text style={{fontSize: 10, color: colors.mutedForeground}}>Not available in our pharmacy</Text>
+              </View>
+            )}
+          </View>
+        );
+      })}
+
+      {/* Total cost */}
+      {totalCost && Object.values(totalCost).some(v => v) && (
+        <View style={{backgroundColor: colors.muted, borderRadius: 10, padding: 10, gap: 4}}>
+          <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Estimated Total</Text>
+          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
+            {Object.entries(totalCost).filter(([, v]) => v).map(([k, v]: [string, any]) => (
+              <View key={k}>
+                <Text style={{fontSize: 10, color: colors.mutedForeground}}>{k}</Text>
+                <Text style={{fontSize: 14, fontWeight: '700', color: k === 'NGN' ? colors.foreground : colors.mutedForeground}}>{fmtPrice(v)}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Readiness score */}
+      {readiness && (
+        <View style={{gap: 6}}>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+            <Text style={{fontSize: 11, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Order Readiness</Text>
+            <Text style={{fontSize: 13, fontWeight: '800', color: readiness.score >= 90 ? colors.success : readiness.score >= 60 ? '#f97316' : colors.destructive}}>
+              {readiness.score}%
+            </Text>
+          </View>
+          {readiness.ready_for_order && (
+            <View style={{backgroundColor: `${colors.success}15`, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, flexDirection: 'row', alignItems: 'center', gap: 6}}>
+              <Check size={12} color={colors.success} />
+              <Text style={{fontSize: 11, fontWeight: '600', color: colors.success}}>Ready to order!</Text>
+            </View>
+          )}
+          {readiness.issues?.map((issue: any, idx: number) => {
+            const passed = issue.status === 'passed';
+            return (
+              <View key={idx} style={{flexDirection: 'row', alignItems: 'flex-start', gap: 6}}>
+                {passed ? <Check size={12} color={colors.success} style={{marginTop: 1}} /> : <AlertTriangle size={12} color={colors.destructive} style={{marginTop: 1}} />}
+                <View style={{flex: 1}}>
+                  <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground}}>{issue.check}</Text>
+                  <Text style={{fontSize: 10, color: colors.mutedForeground}}>{issue.message}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {/* Disclaimer */}
+      <Text style={{fontSize: 10, color: colors.mutedForeground, textAlign: 'center', fontStyle: 'italic'}}>
+        Prices are estimates. This analysis does not constitute a medical recommendation.
+      </Text>
+
+      {/* Download */}
+      <TouchableOpacity onPress={handleShare} disabled={pdfLoading} activeOpacity={0.7}
+        style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card}}>
+        {pdfLoading ? <ActivityIndicator size="small" color={colors.primary} /> : <Download size={14} color={colors.primary} />}
+        <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>{pdfLoading ? 'Generating PDF...' : 'Download & Share Report'}</Text>
+      </TouchableOpacity>
     </View>
+  );
+}
+
+function SparklineSvg({trend, color, maxVal = 10, width = 140, height = 36}: {trend: any[]; color: string; maxVal?: number; width?: number; height?: number}) {
+  if (!trend || trend.length < 2) return null;
+  const pad = 4;
+  const usableW = width - pad * 2;
+  const usableH = height - pad * 2;
+  const step = usableW / (trend.length - 1);
+  const points = trend.map((pt: any, i: number) => {
+    const x = pad + i * step;
+    const y = pad + usableH - ((pt.value ?? pt) / maxVal) * usableH;
+    return `${x},${y}`;
+  }).join(' ');
+  const lastPt = trend[trend.length - 1];
+  const lastX = pad + (trend.length - 1) * step;
+  const lastY = pad + usableH - ((lastPt.value ?? lastPt) / maxVal) * usableH;
+
+  return (
+    <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+      <Polyline points={points} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <SvgCircle cx={lastX} cy={lastY} r={3} fill={color} />
+    </Svg>
   );
 }
 
 function RecoveryDashboardCard({data}: {data: any}) {
   const sobrietyDays = data?.sobriety_days ?? data?.profile?.sobriety_days ?? 0;
   const riskLevel = data?.risk_level ?? data?.profile?.risk_level ?? 'low';
-  const riskColor = riskLevel === 'critical' || riskLevel === 'high' ? colors.destructive : riskLevel === 'moderate' ? '#f97316' : colors.success;
+  const riskColors: Record<string, string> = {low: colors.success, moderate: '#f97316', high: '#f97316', critical: colors.destructive};
+  const riskColor = riskColors[riskLevel] || colors.success;
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const hasMood = data?.mood_trend?.length > 1;
+  const hasCraving = data?.craving_trend?.length > 1;
+  const milestoneProgress = data?.next_milestone
+    ? Math.min(100, Math.round(((data.next_milestone.days_target - data.next_milestone.days_remaining) / data.next_milestone.days_target) * 100))
+    : 0;
+
+  const handleShare = async () => {
+    setPdfLoading(true);
+    try { await generateRecoveryDashboardPDF(data); } finally { setPdfLoading(false); }
+  };
 
   return (
     <View style={{gap: 10}}>
-      <View style={{flexDirection: 'row', gap: 12}}>
+      {/* Hero: sobriety + risk */}
+      <View style={{flexDirection: 'row', gap: 10}}>
         <View style={{flex: 1, alignItems: 'center', backgroundColor: `${colors.success}10`, borderRadius: 12, padding: 12}}>
-          <Text style={{fontSize: 24, fontWeight: '800', color: colors.success}}>{sobrietyDays}</Text>
-          <Text style={{fontSize: 10, color: colors.mutedForeground, fontWeight: '600'}}>Sober Days</Text>
+          <Text style={{fontSize: 10, color: colors.mutedForeground, fontWeight: '600'}}>Day</Text>
+          <Text style={{fontSize: 28, fontWeight: '800', color: colors.success}}>{sobrietyDays}</Text>
+          {data?.sobriety_start_date && (
+            <Text style={{fontSize: 9, color: colors.mutedForeground}}>
+              Since {new Date(data.sobriety_start_date).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'})}
+            </Text>
+          )}
         </View>
-        <View style={{flex: 1, alignItems: 'center', backgroundColor: `${riskColor}10`, borderRadius: 12, padding: 12}}>
-          <Text style={{fontSize: 14, fontWeight: '700', color: riskColor, textTransform: 'capitalize'}}>{riskLevel}</Text>
-          <Text style={{fontSize: 10, color: colors.mutedForeground, fontWeight: '600'}}>Risk Level</Text>
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6}}>
+          <View style={{backgroundColor: `${riskColor}15`, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4}}>
+            <Text style={{fontSize: 11, fontWeight: '700', color: riskColor, textTransform: 'capitalize'}}>{riskLevel} Risk</Text>
+          </View>
+          {data?.primary_substance && (
+            <View style={{backgroundColor: colors.muted, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2}}>
+              <Text style={{fontSize: 10, color: colors.mutedForeground}}>{data.primary_substance}</Text>
+            </View>
+          )}
+          {data?.care_level && (
+            <Text style={{fontSize: 10, color: colors.mutedForeground}}>{data.care_level}</Text>
+          )}
         </View>
       </View>
+
+      {/* Check-in status */}
+      {data?.today_checked_in != null && (
+        <View style={{
+          backgroundColor: data.today_checked_in ? `${colors.success}10` : `${colors.destructive}10`,
+          borderRadius: 8, padding: 8, flexDirection: 'row', alignItems: 'center', gap: 6,
+        }}>
+          {data.today_checked_in
+            ? <Check size={14} color={colors.success} />
+            : <AlertTriangle size={14} color={colors.destructive} />
+          }
+          <Text style={{fontSize: 11, fontWeight: '600', color: data.today_checked_in ? colors.success : colors.destructive}}>
+            {data.today_checked_in ? 'Daily check-in complete' : "You haven't checked in today"}
+          </Text>
+        </View>
+      )}
+
+      {/* Mood & Craving sparklines */}
+      {(hasMood || hasCraving) && (
+        <View style={{flexDirection: 'row', gap: 8}}>
+          {hasMood && (
+            <View style={{flex: 1, backgroundColor: colors.muted, borderRadius: 10, padding: 8, gap: 4}}>
+              <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground}}>Mood Trend</Text>
+              <SparklineSvg trend={data.mood_trend} color="#4FC3F7" />
+              <Text style={{fontSize: 10, color: colors.mutedForeground}}>
+                Latest: {data.mood_trend[data.mood_trend.length - 1]?.value ?? '--'}/10
+              </Text>
+            </View>
+          )}
+          {hasCraving && (
+            <View style={{flex: 1, backgroundColor: colors.muted, borderRadius: 10, padding: 8, gap: 4}}>
+              <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground}}>Craving Trend</Text>
+              <SparklineSvg trend={data.craving_trend} color="#F59E0B" />
+              <Text style={{fontSize: 10, color: colors.mutedForeground}}>
+                Latest: {data.craving_trend[data.craving_trend.length - 1]?.value ?? '--'}/10
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Next milestone */}
+      {data?.next_milestone && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Next Milestone</Text>
+          <View style={{backgroundColor: colors.muted, borderRadius: 10, padding: 10, gap: 4}}>
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+              <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>{data.next_milestone.name}</Text>
+              <Text style={{fontSize: 10, color: colors.mutedForeground}}>{data.next_milestone.days_remaining}d to go</Text>
+            </View>
+            <View style={{height: 4, backgroundColor: `${colors.muted}80`, borderRadius: 2}}>
+              <View style={{height: 4, width: `${milestoneProgress}%`, backgroundColor: colors.primary, borderRadius: 2}} />
+            </View>
+            <Text style={{fontSize: 10, color: colors.primary, fontWeight: '600', alignSelf: 'flex-end'}}>{milestoneProgress}%</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Recent milestones */}
+      {data?.recent_milestones?.length > 0 && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Recent Milestones</Text>
+          {data.recent_milestones.slice(0, 3).map((ms: any, i: number) => (
+            <View key={i} style={{flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4}}>
+              <Text style={{fontSize: 14}}>{ms.icon || '🏆'}</Text>
+              <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground, flex: 1}}>{ms.name}</Text>
+              <Text style={{fontSize: 10, color: colors.primary, fontWeight: '600'}}>+{ms.points} pts</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Latest screening */}
+      {data?.latest_screening && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Latest Screening</Text>
+          <View style={{backgroundColor: colors.muted, borderRadius: 10, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+            <View>
+              <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground}}>{data.latest_screening.instrument}</Text>
+              <Text style={{fontSize: 16, fontWeight: '800', color: colors.foreground}}>
+                {data.latest_screening.score} <Text style={{fontSize: 11, fontWeight: '400', color: colors.mutedForeground}}>/ {data.latest_screening.max_score}</Text>
+              </Text>
+            </View>
+            <View style={{backgroundColor: `${riskColors[data.latest_screening.risk_level] || colors.mutedForeground}15`, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3}}>
+              <Text style={{fontSize: 10, fontWeight: '700', color: riskColors[data.latest_screening.risk_level] || colors.mutedForeground, textTransform: 'capitalize'}}>
+                {data.latest_screening.risk_level}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Disclaimer */}
+      <Text style={{fontSize: 10, color: colors.mutedForeground, textAlign: 'center', fontStyle: 'italic'}}>
+        Recovery tracking summary, not a clinical report. Share with your care team.
+      </Text>
+
+      {/* Download */}
+      <TouchableOpacity onPress={handleShare} disabled={pdfLoading} activeOpacity={0.7}
+        style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card}}>
+        {pdfLoading ? <ActivityIndicator size="small" color={colors.primary} /> : <Download size={14} color={colors.primary} />}
+        <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>{pdfLoading ? 'Generating PDF...' : 'Download & Share'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 function ScreeningReportCard({data}: {data: any}) {
   const score = data?.total_score ?? data?.score ?? 0;
+  const maxScore = data?.max_score ?? 27;
   const riskLevel = data?.risk_level || 'low';
-  const instrument = data?.instrument || '';
-  const riskColor = riskLevel === 'severe' || riskLevel === 'high' ? colors.destructive : riskLevel === 'moderate' || riskLevel === 'moderately_severe' ? '#f97316' : colors.success;
+  const instrument = data?.instrument_name || data?.instrument || '';
+  const riskColorMap: Record<string, string> = {low: colors.success, mild: colors.success, moderate: '#f59e0b', moderately_severe: '#f97316', high: colors.destructive, severe: colors.destructive, critical: '#991b1b'};
+  const riskColor = riskColorMap[riskLevel] || colors.mutedForeground;
+  const riskZones = data?.risk_zones || [];
+  const markerPos = maxScore ? Math.min(100, Math.max(0, (score / maxScore) * 100)) : 0;
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+
+  const handleShare = async () => {
+    setPdfLoading(true);
+    try { await generateScreeningReportPDF(data); } finally { setPdfLoading(false); }
+  };
+
+  const zoneDefaultColor = (level: string) => {
+    const c: Record<string, string> = {low: '#10B981', mild: '#10B981', moderate: '#F59E0B', moderately_severe: '#F97316', high: '#EF4444', severe: '#EF4444', critical: '#991B1B'};
+    return c[level] || '#94A3B8';
+  };
 
   return (
     <View style={{gap: 10}}>
-      <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-        <View style={{alignItems: 'center'}}>
-          <Text style={{fontSize: 28, fontWeight: '800', color: riskColor}}>{score}</Text>
-          <Text style={{fontSize: 10, color: colors.mutedForeground, fontWeight: '600'}}>Score</Text>
-        </View>
-        <View style={{flex: 1}}>
-          <View style={{backgroundColor: `${riskColor}15`, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'flex-start'}}>
-            <Text style={{fontSize: 11, fontWeight: '700', color: riskColor, textTransform: 'capitalize'}}>
-              {riskLevel.replace(/_/g, ' ')}
-            </Text>
-          </View>
-          {instrument && (
-            <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 4, textTransform: 'uppercase'}}>
-              {instrument}
-            </Text>
+      {/* Instrument name */}
+      {instrument && (
+        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+          <Text style={{fontSize: 13, fontWeight: '700', color: colors.foreground}}>{instrument}</Text>
+          {data?.is_baseline && (
+            <View style={{backgroundColor: `${colors.primary}15`, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2}}>
+              <Text style={{fontSize: 9, fontWeight: '700', color: colors.primary}}>BASELINE</Text>
+            </View>
           )}
         </View>
-      </View>
-      {data?.subscale_scores && Object.entries(data.subscale_scores).slice(0, 4).map(([key, val]: [string, any]) => (
-        <View key={key} style={{gap: 3}}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-            <Text style={{fontSize: 11, color: colors.foreground, fontWeight: '500', textTransform: 'capitalize'}}>
-              {key.replace(/_/g, ' ')}
-            </Text>
-            <Text style={{fontSize: 11, color: colors.mutedForeground}}>{val}</Text>
+      )}
+
+      {/* Score gauge bar */}
+      {riskZones.length > 0 ? (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Score</Text>
+          <View style={{height: 16, borderRadius: 8, overflow: 'hidden', flexDirection: 'row', position: 'relative'}}>
+            {riskZones.map((zone: any, i: number) => {
+              const w = maxScore ? ((zone.max_score - zone.min_score) / maxScore) * 100 : 0;
+              return (
+                <View key={i} style={{width: `${w}%`, backgroundColor: zone.colour || zoneDefaultColor(zone.level), alignItems: 'center', justifyContent: 'center'}}>
+                  <Text style={{fontSize: 7, fontWeight: '700', color: '#fff'}} numberOfLines={1}>{zone.label}</Text>
+                </View>
+              );
+            })}
           </View>
-          <View style={{height: 3, backgroundColor: colors.muted, borderRadius: 2}}>
-            <View style={{height: 3, width: `${Math.min(Number(val) * 10, 100)}%`, backgroundColor: riskColor, borderRadius: 2}} />
+          {/* Marker */}
+          <View style={{position: 'relative', height: 16}}>
+            <View style={{position: 'absolute', left: `${markerPos}%`, marginLeft: -12, alignItems: 'center'}}>
+              <View style={{width: 0, height: 0, borderLeftWidth: 6, borderRightWidth: 6, borderBottomWidth: 6, borderLeftColor: 'transparent', borderRightColor: 'transparent', borderBottomColor: riskColor}} />
+              <View style={{backgroundColor: riskColor, borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1}}>
+                <Text style={{fontSize: 10, fontWeight: '700', color: '#fff'}}>{score}</Text>
+              </View>
+            </View>
+          </View>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+            <Text style={{fontSize: 9, color: colors.mutedForeground}}>0</Text>
+            <Text style={{fontSize: 9, color: colors.mutedForeground}}>{maxScore}</Text>
           </View>
         </View>
-      ))}
+      ) : (
+        <View style={{flexDirection: 'row', alignItems: 'baseline', gap: 4}}>
+          <Text style={{fontSize: 32, fontWeight: '800', color: riskColor}}>{score}</Text>
+          <Text style={{fontSize: 13, color: colors.mutedForeground}}>/ {maxScore}</Text>
+        </View>
+      )}
+
+      {/* Risk badge + recommendation */}
+      <View style={{alignItems: 'flex-start', gap: 4}}>
+        <View style={{backgroundColor: `${riskColor}20`, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4}}>
+          <Text style={{fontSize: 12, fontWeight: '700', color: riskColor, textTransform: 'capitalize'}}>
+            {(data?.risk_zone_label || riskLevel || '').replace(/_/g, ' ')}
+          </Text>
+        </View>
+        {data?.recommendation && (
+          <Text style={{fontSize: 11, color: colors.mutedForeground, lineHeight: 16}}>{data.recommendation}</Text>
+        )}
+      </View>
+
+      {/* Subscale breakdown */}
+      {data?.subscale_scores && Object.keys(data.subscale_scores).length > 0 && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Subscale Scores</Text>
+          {Object.entries(data.subscale_scores).map(([key, val]: [string, any]) => (
+            <View key={key} style={{gap: 3}}>
+              <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                <Text style={{fontSize: 11, color: colors.foreground, fontWeight: '500', textTransform: 'capitalize'}}>{key.replace(/_/g, ' ')}</Text>
+                <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground}}>{val}</Text>
+              </View>
+              <View style={{height: 4, backgroundColor: colors.muted, borderRadius: 2}}>
+                <View style={{height: 4, width: `${Math.min(Number(val) * 10, 100)}%`, backgroundColor: riskColor, borderRadius: 2}} />
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* AI Interpretation (collapsible) */}
+      {data?.ai_interpretation && (
+        <View style={{gap: 4}}>
+          <TouchableOpacity onPress={() => setShowAI(!showAI)} activeOpacity={0.7} style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+            <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>AI Interpretation</Text>
+            {showAI ? <ChevronUp size={12} color={colors.mutedForeground} /> : <ChevronDown size={12} color={colors.mutedForeground} />}
+          </TouchableOpacity>
+          {showAI && (
+            <View style={{backgroundColor: colors.muted, borderRadius: 10, padding: 10, gap: 8}}>
+              {data.ai_interpretation.summary && (
+                <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16}}>{data.ai_interpretation.summary}</Text>
+              )}
+              {data.ai_interpretation.risk_assessment && (
+                <View style={{gap: 2}}>
+                  <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground}}>Risk Assessment</Text>
+                  <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16}}>{data.ai_interpretation.risk_assessment}</Text>
+                </View>
+              )}
+              {data.ai_interpretation.recommended_interventions?.length > 0 && (
+                <View style={{gap: 2}}>
+                  <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground}}>Recommended Interventions</Text>
+                  {data.ai_interpretation.recommended_interventions.map((item: string, i: number) => (
+                    <View key={i} style={{flexDirection: 'row', gap: 4}}>
+                      <Text style={{fontSize: 11, color: colors.primary}}>•</Text>
+                      <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{item}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+              {data.ai_interpretation.motivational_message && (
+                <View style={{backgroundColor: `${colors.success}10`, borderRadius: 8, padding: 8}}>
+                  <Text style={{fontSize: 11, color: colors.success, lineHeight: 16}}>{data.ai_interpretation.motivational_message}</Text>
+                </View>
+              )}
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Score change comparison */}
+      {data?.previous_score != null && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Score Change</Text>
+          <View style={{backgroundColor: colors.muted, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+            <Text style={{fontSize: 11, color: colors.mutedForeground}}>Previous: {data.previous_score}</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 2}}>
+              <Text style={{fontSize: 14, fontWeight: '700', color: score > data.previous_score ? colors.destructive : score < data.previous_score ? colors.success : colors.mutedForeground}}>
+                {score > data.previous_score ? '↑' : score < data.previous_score ? '↓' : '='} {score > data.previous_score ? '+' : ''}{score - data.previous_score}
+              </Text>
+            </View>
+            <Text style={{fontSize: 11, color: colors.foreground, fontWeight: '600'}}>Current: {score}</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Disclaimer */}
+      <Text style={{fontSize: 10, color: colors.mutedForeground, textAlign: 'center', fontStyle: 'italic'}}>
+        Screening tool, not a clinical diagnosis. Review with a healthcare professional.
+      </Text>
+
+      {/* Download */}
+      <TouchableOpacity onPress={handleShare} disabled={pdfLoading} activeOpacity={0.7}
+        style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card}}>
+        {pdfLoading ? <ActivityIndicator size="small" color={colors.primary} /> : <Download size={14} color={colors.primary} />}
+        <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>{pdfLoading ? 'Generating PDF...' : 'Download & Share Report'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 function CopingExerciseCard({data}: {data: any}) {
-  const steps = data?.steps || [];
+  const steps: string[] = (data?.steps || []).map((s: any) => typeof s === 'string' ? s : s.instruction || s.text || '');
   const name = data?.exercise_name || data?.name || 'Coping Exercise';
-  const currentStep = data?.current_step ?? 0;
+  const isBoxBreathing = data?.exercise_id === 'box_breathing';
+  const [completedSteps, setCompletedSteps] = useState<Record<number, boolean>>({});
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  // Box breathing state
+  const [breathingActive, setBreathingActive] = useState(false);
+  const [breathPhase, setBreathPhase] = useState(0);
+  const [breathCycles, setBreathCycles] = useState(0);
+  const [breathDone, setBreathDone] = useState(false);
+  const breathTimer = useRef<any>(null);
+  const breathPhaseLabels = ['Breathe In', 'Hold', 'Breathe Out', 'Hold'];
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Sync completed steps from backend
+  useEffect(() => {
+    if (data?.completed_steps && Array.isArray(data.completed_steps)) {
+      const map: Record<number, boolean> = {};
+      data.completed_steps.forEach((n: number) => { map[n - 1] = true; });
+      setCompletedSteps(map);
+    }
+  }, [data?.completed_steps]);
+
+  const toggleStep = (idx: number) => {
+    setCompletedSteps(prev => ({...prev, [idx]: !prev[idx]}));
+  };
+
+  const doneCount = Object.values(completedSteps).filter(Boolean).length;
+  const progress = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
+
+  // Box breathing logic
+  const startBreathing = () => {
+    setBreathingActive(true);
+    let phase = 0;
+    let cycles = 0;
+    breathTimer.current = setInterval(() => {
+      phase++;
+      if (phase % 4 === 0) {
+        cycles++;
+        if (cycles >= 4) {
+          clearInterval(breathTimer.current);
+          setBreathingActive(false);
+          setBreathDone(true);
+          return;
+        }
+        setBreathCycles(cycles);
+      }
+      setBreathPhase(phase % 4);
+    }, 4000);
+  };
+
+  const stopBreathing = () => {
+    if (breathTimer.current) clearInterval(breathTimer.current);
+    setBreathingActive(false);
+  };
+
+  useEffect(() => {
+    if (breathingActive) {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {toValue: 1.15, duration: 4000, useNativeDriver: true}),
+          Animated.timing(pulseAnim, {toValue: 1, duration: 4000, useNativeDriver: true}),
+        ]),
+      );
+      loop.start();
+      return () => loop.stop();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [breathingActive]);
+
+  useEffect(() => {
+    return () => { if (breathTimer.current) clearInterval(breathTimer.current); };
+  }, []);
+
+  const handleShare = async () => {
+    setPdfLoading(true);
+    try { await generateCopingExercisePDF(data); } finally { setPdfLoading(false); }
+  };
 
   return (
-    <View style={{gap: 8}}>
-      <Text style={{fontSize: 13, fontWeight: '700', color: colors.foreground}}>{name}</Text>
-      {steps.map((step: any, i: number) => {
-        const done = i < currentStep;
-        return (
-          <View key={i} style={{flexDirection: 'row', alignItems: 'flex-start', gap: 8}}>
-            <View
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: 10,
-                backgroundColor: done ? colors.success : colors.muted,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginTop: 1,
-              }}>
-              {done ? (
-                <Check size={12} color={colors.white} />
-              ) : (
-                <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground}}>{i + 1}</Text>
-              )}
+    <View style={{gap: 10}}>
+      {/* Header */}
+      <View>
+        <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>{name}</Text>
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4}}>
+          {data?.category && (
+            <View style={{backgroundColor: `${colors.primary}15`, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2}}>
+              <Text style={{fontSize: 10, fontWeight: '600', color: colors.primary}}>{data.category}</Text>
             </View>
-            <Text style={{fontSize: 12, color: done ? colors.success : colors.foreground, flex: 1, lineHeight: 18}}>
-              {typeof step === 'string' ? step : step.instruction || step.text || ''}
-            </Text>
+          )}
+          {data?.estimated_minutes && (
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 3}}>
+              <Clock size={10} color={colors.mutedForeground} />
+              <Text style={{fontSize: 10, color: colors.mutedForeground}}>{data.estimated_minutes} min</Text>
+            </View>
+          )}
+        </View>
+        {data?.description && (
+          <Text style={{fontSize: 11, color: colors.mutedForeground, lineHeight: 16, marginTop: 4}}>{data.description}</Text>
+        )}
+      </View>
+
+      {/* Completion banner */}
+      {data?.completed && (
+        <View style={{backgroundColor: `${colors.success}10`, borderRadius: 10, padding: 12, alignItems: 'center', gap: 4}}>
+          <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+            <Check size={16} color={colors.success} />
+            <Text style={{fontSize: 13, fontWeight: '700', color: colors.success}}>Exercise Completed</Text>
           </View>
-        );
-      })}
+          {data.outcome && <Text style={{fontSize: 11, color: colors.success, textAlign: 'center'}}>{data.outcome}</Text>}
+        </View>
+      )}
+
+      {/* Box breathing */}
+      {isBoxBreathing && (
+        <View style={{alignItems: 'center', gap: 10, paddingVertical: 8}}>
+          <Animated.View style={{
+            width: 100, height: 100, borderRadius: 50,
+            backgroundColor: breathingActive ? `${colors.primary}20` : colors.muted,
+            borderWidth: 3, borderColor: breathingActive ? colors.primary : colors.border,
+            alignItems: 'center', justifyContent: 'center',
+            transform: [{scale: pulseAnim}],
+          }}>
+            <Text style={{fontSize: 13, fontWeight: '700', color: breathingActive ? colors.primary : colors.mutedForeground}}>
+              {breathingActive ? breathPhaseLabels[breathPhase] : breathDone ? 'Done!' : 'Ready'}
+            </Text>
+          </Animated.View>
+          {breathCycles > 0 && (
+            <Text style={{fontSize: 11, color: colors.mutedForeground}}>{breathCycles} / 4 cycles</Text>
+          )}
+          {!breathDone ? (
+            <TouchableOpacity
+              onPress={breathingActive ? stopBreathing : startBreathing}
+              activeOpacity={0.7}
+              style={{backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10}}>
+              <Text style={{fontSize: 12, fontWeight: '600', color: '#fff'}}>
+                {breathingActive ? 'Pause' : 'Start Breathing'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+              <Check size={14} color={colors.success} />
+              <Text style={{fontSize: 12, fontWeight: '600', color: colors.success}}>Breathing complete!</Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Steps */}
+      {steps.length > 0 && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Steps</Text>
+          <Text style={{fontSize: 10, color: colors.mutedForeground}}>Tap steps to mark complete</Text>
+          {steps.map((step, i) => {
+            const done = !!completedSteps[i];
+            return (
+              <TouchableOpacity
+                key={i}
+                activeOpacity={0.7}
+                onPress={() => toggleStep(i)}
+                style={{flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingVertical: 4}}>
+                <View style={{
+                  width: 22, height: 22, borderRadius: 11,
+                  backgroundColor: done ? colors.success : colors.muted,
+                  alignItems: 'center', justifyContent: 'center', marginTop: 1,
+                }}>
+                  {done
+                    ? <Check size={12} color="#fff" />
+                    : <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground}}>{i + 1}</Text>
+                  }
+                </View>
+                <Text style={{fontSize: 12, color: done ? colors.success : colors.foreground, flex: 1, lineHeight: 18, textDecorationLine: done ? 'line-through' : 'none'}}>
+                  {step}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+          {/* Progress bar */}
+          <View style={{gap: 2, marginTop: 4}}>
+            <View style={{height: 4, backgroundColor: colors.muted, borderRadius: 2}}>
+              <View style={{height: 4, width: `${progress}%`, backgroundColor: colors.success, borderRadius: 2}} />
+            </View>
+            <Text style={{fontSize: 10, color: colors.mutedForeground, alignSelf: 'flex-end'}}>{doneCount} of {steps.length} steps</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Evidence base */}
+      {data?.evidence_base && (
+        <View style={{gap: 3}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Evidence Base</Text>
+          <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16}}>{data.evidence_base}</Text>
+        </View>
+      )}
+
+      {/* Disclaimer */}
+      <Text style={{fontSize: 10, color: colors.mutedForeground, textAlign: 'center', fontStyle: 'italic'}}>
+        For informational purposes. Not a substitute for professional treatment.
+      </Text>
+
+      {/* Download */}
+      <TouchableOpacity onPress={handleShare} disabled={pdfLoading} activeOpacity={0.7}
+        style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card}}>
+        {pdfLoading ? <ActivityIndicator size="small" color={colors.primary} /> : <Download size={14} color={colors.primary} />}
+        <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>{pdfLoading ? 'Generating PDF...' : 'Download & Share'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -2115,32 +2860,151 @@ function SafetyPlanCard({data}: {data: any}) {
 function RiskAssessmentCard({data}: {data: any}) {
   const score = data?.score ?? data?.risk_score ?? 0;
   const level = data?.level ?? data?.risk_level ?? 'low';
-  const factors = data?.top_factors?.slice(0, 3) || [];
-  const riskColor = level === 'critical' || level === 'high' ? colors.destructive : level === 'moderate' ? '#f97316' : colors.success;
+  const levelColors: Record<string, string> = {low: '#10B981', moderate: '#F59E0B', high: '#F97316', critical: '#EF4444'};
+  const levelLabels: Record<string, string> = {low: 'Low Risk', moderate: 'Moderate Risk', high: 'High Risk', critical: 'Critical Risk'};
+  const lColor = levelColors[level] || '#94A3B8';
+  const factors = data?.top_factors?.slice(0, 5) || [];
+  const categories = data?.categories ? Object.entries(data.categories) : [];
+  const history = data?.score_history || [];
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const barColor = (s: number) => {
+    if (s >= 75) return '#EF4444';
+    if (s >= 50) return '#F97316';
+    if (s >= 25) return '#F59E0B';
+    return '#10B981';
+  };
+
+  // Semicircle gauge via SVG
+  const arcRadius = 45;
+  const totalArcLength = Math.PI * arcRadius; // ~141
+  const fillRatio = Math.min(score / 100, 1);
+  const dashOffset = totalArcLength * (1 - fillRatio);
+
+  const handleShare = async () => {
+    setPdfLoading(true);
+    try { await generateRiskAssessmentPDF(data); } finally { setPdfLoading(false); }
+  };
 
   return (
     <View style={{gap: 10}}>
-      <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-        <View style={{alignItems: 'center'}}>
-          <Text style={{fontSize: 28, fontWeight: '800', color: riskColor}}>{score}</Text>
-          <Text style={{fontSize: 10, color: colors.mutedForeground, fontWeight: '600'}}>/ 100</Text>
+      {/* Gauge */}
+      <View style={{alignItems: 'center', gap: 4}}>
+        <Svg width={130} height={75} viewBox="0 0 130 75">
+          <Path
+            d="M 10 68 A 50 50 0 0 1 120 68"
+            fill="none"
+            stroke={colors.muted}
+            strokeWidth={10}
+            strokeLinecap="round"
+          />
+          <Path
+            d="M 10 68 A 50 50 0 0 1 120 68"
+            fill="none"
+            stroke={lColor}
+            strokeWidth={10}
+            strokeLinecap="round"
+            strokeDasharray={`${totalArcLength}`}
+            strokeDashoffset={`${dashOffset}`}
+          />
+          <SvgText x="65" y="55" textAnchor="middle" fontSize="22" fontWeight="800" fill={lColor}>
+            {score}
+          </SvgText>
+          <SvgText x="65" y="68" textAnchor="middle" fontSize="10" fill="#64748B">
+            / 100
+          </SvgText>
+        </Svg>
+        <View style={{backgroundColor: `${lColor}20`, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4}}>
+          <Text style={{fontSize: 12, fontWeight: '700', color: lColor}}>{levelLabels[level] || `${level} Risk`}</Text>
         </View>
-        <View style={{flex: 1}}>
-          <View style={{backgroundColor: `${riskColor}15`, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'flex-start'}}>
-            <Text style={{fontSize: 11, fontWeight: '700', color: riskColor, textTransform: 'capitalize'}}>
-              {level} Risk
-            </Text>
-          </View>
-        </View>
+        {data?.updated_at && (
+          <Text style={{fontSize: 9, color: colors.mutedForeground}}>Updated {new Date(data.updated_at).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'})}</Text>
+        )}
       </View>
-      {factors.map((f: any, i: number) => (
-        <View key={i} style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-          <Text style={{fontSize: 12, color: colors.foreground, flex: 1}}>{f.label || f.signal}</Text>
-          <View style={{backgroundColor: `${colors.destructive}15`, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2}}>
-            <Text style={{fontSize: 10, fontWeight: '700', color: colors.destructive}}>+{f.contribution}</Text>
+
+      {/* Category breakdown */}
+      {categories.length > 0 && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Signal Breakdown</Text>
+          {categories.map(([key, cat]: [string, any]) => (
+            <View key={key} style={{gap: 3}}>
+              <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+                <Text style={{fontSize: 11, color: colors.foreground, fontWeight: '500', textTransform: 'capitalize'}}>{key.replace(/_/g, ' ')}</Text>
+                <Text style={{fontSize: 10, fontWeight: '600', color: colors.foreground}}>{cat.score}/100</Text>
+              </View>
+              <View style={{height: 4, backgroundColor: colors.muted, borderRadius: 2}}>
+                <View style={{height: 4, width: `${Math.min(cat.score, 100)}%`, backgroundColor: barColor(cat.score), borderRadius: 2}} />
+              </View>
+              {cat.weight && <Text style={{fontSize: 9, color: colors.mutedForeground}}>Weight: {cat.weight}</Text>}
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Top factors */}
+      {factors.length > 0 && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Top Contributing Factors</Text>
+          {factors.map((f: any, i: number) => {
+            const contrib = f.contribution || f.value || 0;
+            return (
+              <View key={i} style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+                <View style={{flex: 1}}>
+                  <View style={{height: 4, backgroundColor: colors.muted, borderRadius: 2}}>
+                    <View style={{height: 4, width: `${Math.min(contrib, 100)}%`, backgroundColor: barColor(contrib), borderRadius: 2}} />
+                  </View>
+                </View>
+                <Text style={{fontSize: 11, color: colors.foreground, width: 100}} numberOfLines={1}>{f.name || f.signal || f.label}</Text>
+                <View style={{backgroundColor: `${colors.destructive}15`, borderRadius: 6, paddingHorizontal: 5, paddingVertical: 1}}>
+                  <Text style={{fontSize: 9, fontWeight: '700', color: colors.destructive}}>+{contrib}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {/* 7-day trend sparkline */}
+      {history.length > 1 && (
+        <View style={{gap: 4}}>
+          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+            <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>7-Day Trend</Text>
+            {data?.trend?.direction && (
+              <Text style={{fontSize: 10, fontWeight: '600', color: data.trend.direction === 'increasing' ? colors.destructive : data.trend.direction === 'decreasing' ? colors.success : colors.mutedForeground}}>
+                {data.trend.direction === 'increasing' ? '↑' : data.trend.direction === 'decreasing' ? '↓' : '→'} {data.trend.direction}
+              </Text>
+            )}
+          </View>
+          <View style={{backgroundColor: colors.muted, borderRadius: 10, padding: 8}}>
+            <SparklineSvg trend={history} color={lColor} maxVal={100} width={200} height={40} />
           </View>
         </View>
-      ))}
+      )}
+
+      {/* Suggestions */}
+      {data?.suggestions?.length > 0 && (
+        <View style={{gap: 4}}>
+          <Text style={{fontSize: 10, fontWeight: '700', color: colors.mutedForeground, textTransform: 'uppercase'}}>Suggested Actions</Text>
+          {data.suggestions.map((sug: any, i: number) => (
+            <View key={i} style={{flexDirection: 'row', alignItems: 'flex-start', gap: 6}}>
+              <Text style={{fontSize: 11, color: colors.primary}}>›</Text>
+              <Text style={{fontSize: 11, color: colors.foreground, lineHeight: 16, flex: 1}}>{sug.text || sug}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Disclaimer */}
+      <Text style={{fontSize: 10, color: colors.mutedForeground, textAlign: 'center', fontStyle: 'italic'}}>
+        AI-generated risk estimate, not a clinical diagnosis. Consult your care team.
+      </Text>
+
+      {/* Download */}
+      <TouchableOpacity onPress={handleShare} disabled={pdfLoading} activeOpacity={0.7}
+        style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card}}>
+        {pdfLoading ? <ActivityIndicator size="small" color={colors.primary} /> : <Download size={14} color={colors.primary} />}
+        <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>{pdfLoading ? 'Generating PDF...' : 'Download & Share Report'}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
