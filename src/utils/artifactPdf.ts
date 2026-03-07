@@ -381,7 +381,7 @@ export async function generateRecoveryDashboardPDF(data: any): Promise<void> {
       <div class="card">
         <strong>${escapeHTML(data.next_milestone.name)}</strong>
         <div style="font-size:11px;color:#64748b;margin:4px 0;">${data.next_milestone.days_remaining} day${data.next_milestone.days_remaining === 1 ? '' : 's'} to go</div>
-        <div class="bar-container"><div class="bar-fill" style="width:${Math.min(100, Math.round(((data.next_milestone.days_target - data.next_milestone.days_remaining) / data.next_milestone.days_target) * 100))}%;background:#0ea5e9;"></div></div>
+        <div class="bar-container"><div class="bar-fill" style="width:${Math.min(100, Math.round(((data.next_milestone.days_required - data.next_milestone.days_remaining) / data.next_milestone.days_required) * 100))}%;background:#0ea5e9;"></div></div>
       </div>` : ''}
     ${milestonesHTML}
     ${screeningHTML}

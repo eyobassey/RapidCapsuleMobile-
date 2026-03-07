@@ -2268,7 +2268,7 @@ function RecoveryDashboardCard({data}: {data: any}) {
   const hasMood = data?.mood_trend?.length > 1;
   const hasCraving = data?.craving_trend?.length > 1;
   const milestoneProgress = data?.next_milestone
-    ? Math.min(100, Math.round(((data.next_milestone.days_target - data.next_milestone.days_remaining) / data.next_milestone.days_target) * 100))
+    ? Math.min(100, Math.round(((data.next_milestone.days_required - data.next_milestone.days_remaining) / data.next_milestone.days_required) * 100))
     : 0;
 
   const handleShare = async () => {
