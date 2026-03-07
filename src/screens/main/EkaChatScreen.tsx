@@ -142,9 +142,9 @@ const TOOL_LOADING: Record<string, string> = {
 const ACTION_ROUTES: Record<string, {tab: string; screen?: string}> = {
   book_appointment: {tab: 'Bookings'},
   appointments: {tab: 'Bookings'},
-  vitals: {tab: 'Home', screen: 'VitalDetail'},
+  vitals: {tab: 'Home', screen: 'Vitals'},
   health_checkup: {tab: 'Home', screen: 'HealthCheckupPatientInfo'},
-  prescriptions: {tab: 'Home', screen: 'Prescriptions'},
+  prescriptions: {tab: 'Profile', screen: 'PrescriptionsList'},
   pharmacy: {tab: 'Pharmacy'},
   orders: {tab: 'Pharmacy'},
   wallet: {tab: 'Profile', screen: 'Wallet'},
