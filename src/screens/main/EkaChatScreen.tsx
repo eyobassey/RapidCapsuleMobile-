@@ -338,9 +338,10 @@ export default function EkaChatScreen() {
     const route = ACTION_ROUTES[routeKey];
     if (route) {
       if (route.screen) {
-        navigation.getParent()?.navigate(route.tab, {screen: route.screen});
+        // Navigate to the tab, then to the nested screen within that tab's stack
+        (navigation as any).navigate(route.tab, {screen: route.screen});
       } else {
-        navigation.getParent()?.navigate(route.tab);
+        (navigation as any).navigate(route.tab);
       }
       return;
     }
