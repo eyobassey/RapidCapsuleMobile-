@@ -7,16 +7,19 @@ interface PrescriptionsState {
   isLoading: boolean;
   error: string | null;
   filter: string;
+  searchQuery: string;
 
   fetchPrescriptions: () => Promise<void>;
   fetchPrescriptionById: (id: string) => Promise<void>;
   setFilter: (filter: string) => void;
+  setSearchQuery: (query: string) => void;
   acceptPrescription: (id: string) => Promise<void>;
   declinePrescription: (id: string) => Promise<void>;
   requestRefill: (id: string) => Promise<void>;
   initializePayment: (id: string) => Promise<{authorization_url: string; reference: string}>;
   payWithWallet: (id: string) => Promise<void>;
   verifyPayment: (id: string, reference: string) => Promise<void>;
+  ratePrescription: (id: string, rating: number, review?: string) => Promise<void>;
 }
 
 export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
@@ -25,18 +28,13 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
   isLoading: false,
   error: null,
   filter: '',
+  searchQuery: '',
 
   fetchPrescriptions: async () => {
     set({isLoading: true, error: null});
     try {
-      const params: Record<string, any> = {};
-      if (get().filter) {
-        params.status = get().filter;
-      }
-      const data = await prescriptionsService.list(params);
-      // API returns paginated { docs: [...], total } or array
-      const list = Array.isArray(data) ? data : data?.docs || data?.data || data?.prescriptions || [];
-      set({prescriptions: Array.isArray(list) ? list : [], isLoading: false});
+      const data = await prescriptionsService.fetchAll();
+      set({prescriptions: Array.isArray(data) ? data : [], isLoading: false});
     } catch (err: any) {
       set({
         error: err?.response?.data?.message || err?.message || 'Failed to fetch prescriptions',
@@ -60,6 +58,10 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
 
   setFilter: (filter: string) => {
     set({filter});
+  },
+
+  setSearchQuery: (query: string) => {
+    set({searchQuery: query});
   },
 
   acceptPrescription: async (id: string) => {
@@ -123,6 +125,12 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
 
   verifyPayment: async (id: string, reference: string) => {
     await prescriptionsService.verifyCardPayment(id, reference);
+    const data = await prescriptionsService.getById(id);
+    set({currentPrescription: data});
+  },
+
+  ratePrescription: async (id: string, rating: number, review?: string) => {
+    await prescriptionsService.ratePrescription(id, {rating, review});
     const data = await prescriptionsService.getById(id);
     set({currentPrescription: data});
   },

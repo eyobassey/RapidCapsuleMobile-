@@ -7,9 +7,12 @@ import {
   Alert,
   RefreshControl,
   TouchableOpacity,
+  Modal,
+  TextInput,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {
   FileImage,
   User,
@@ -24,6 +27,9 @@ import {
   CheckCircle,
   XCircle,
   Clock,
+  Camera,
+  ImageIcon,
+  ShoppingCart,
 } from 'lucide-react-native';
 
 import {usePrescriptionUploadStore} from '../../store/prescriptionUpload';
@@ -40,6 +46,9 @@ export default function UploadDetailScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showClarification, setShowClarification] = useState(false);
+  const [clarificationText, setClarificationText] = useState('');
+  const [clarificationImage, setClarificationImage] = useState<string | null>(null);
 
   const {
     currentUpload: upload,
@@ -47,6 +56,7 @@ export default function UploadDetailScreen() {
     fetchUploadById,
     retryVerification,
     deleteUpload,
+    submitClarification,
   } = usePrescriptionUploadStore();
 
   useEffect(() => {
@@ -133,6 +143,67 @@ export default function UploadDetailScreen() {
   const canDelete = ['PENDING', 'TIER1_FAILED', 'TIER2_FAILED', 'REJECTED', 'EXPIRED'].includes(status);
   const needsClarification = status === 'CLARIFICATION_NEEDED';
   const isApproved = status === 'APPROVED';
+
+  const handleSubmitClarification = async () => {
+    if (!clarificationText.trim()) {
+      Alert.alert('Required', 'Please enter a response.');
+      return;
+    }
+    setActionLoading('clarify');
+    try {
+      const formData = new FormData();
+      formData.append('message', clarificationText.trim());
+      if (clarificationImage) {
+        formData.append('image', {
+          uri: clarificationImage,
+          type: 'image/jpeg',
+          name: 'clarification.jpg',
+        } as any);
+      }
+      await submitClarification(uploadId, formData);
+      setShowClarification(false);
+      setClarificationText('');
+      setClarificationImage(null);
+      Alert.alert('Submitted', 'Your clarification has been sent for review.');
+    } catch {
+      Alert.alert('Error', 'Failed to submit clarification.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const pickClarificationImage = () => {
+    Alert.alert('Add Image', 'Choose a source', [
+      {
+        text: 'Camera',
+        onPress: () =>
+          launchCamera({mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000}, res => {
+            if (res.assets?.[0]?.uri) setClarificationImage(res.assets[0].uri);
+          }),
+      },
+      {
+        text: 'Gallery',
+        onPress: () =>
+          launchImageLibrary({mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000}, res => {
+            if (res.assets?.[0]?.uri) setClarificationImage(res.assets[0].uri);
+          }),
+      },
+      {text: 'Cancel', style: 'cancel'},
+    ]);
+  };
+
+  const handleOrderFromPrescription = () => {
+    const meds = ocr?.medications || [];
+    if (meds.length === 0) {
+      Alert.alert('No Medications', 'No medications were detected in this prescription.');
+      return;
+    }
+    // Navigate to pharmacy search with first medication name pre-filled
+    navigation.navigate('Pharmacy', {
+      screen: 'DrugSearch',
+      params: {query: meds[0]?.name || ''},
+    });
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -403,7 +474,7 @@ export default function UploadDetailScreen() {
       </ScrollView>
 
       {/* Action Buttons */}
-      {(canRetry || canDelete || needsClarification) && (
+      {(canRetry || canDelete || needsClarification || isApproved) && (
         <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
           <View className="flex-row gap-3">
             {canDelete && (
@@ -435,19 +506,99 @@ export default function UploadDetailScreen() {
                 <Button
                   variant="primary"
                   icon={<MessageSquare size={16} color="#fff" />}
-                  onPress={() =>
-                    Alert.alert(
-                      'Respond to Clarification',
-                      'This feature will allow you to respond with additional information.',
-                    )
-                  }>
+                  onPress={() => setShowClarification(true)}>
                   Respond
+                </Button>
+              </View>
+            )}
+            {isApproved && (
+              <View className="flex-1">
+                <Button
+                  variant="primary"
+                  icon={<ShoppingCart size={16} color="#fff" />}
+                  onPress={handleOrderFromPrescription}>
+                  Order Medications
                 </Button>
               </View>
             )}
           </View>
         </View>
       )}
+
+      {/* Clarification Response Modal */}
+      <Modal
+        visible={showClarification}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowClarification(false)}>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShowClarification(false)}
+          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40}}>
+              <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground, marginBottom: 4}}>
+                Respond to Clarification
+              </Text>
+              {upload?.clarification_request?.message && (
+                <View style={{backgroundColor: `${colors.secondary}15`, borderRadius: 12, padding: 12, marginBottom: 16, marginTop: 8}}>
+                  <Text style={{fontSize: 12, fontWeight: '600', color: colors.secondary, marginBottom: 4}}>
+                    Request:
+                  </Text>
+                  <Text style={{fontSize: 13, color: colors.foreground}}>
+                    {upload.clarification_request.message}
+                  </Text>
+                </View>
+              )}
+
+              <TextInput
+                style={{
+                  backgroundColor: colors.background,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 16,
+                  padding: 14,
+                  fontSize: 14,
+                  color: colors.foreground,
+                  minHeight: 100,
+                  textAlignVertical: 'top',
+                  marginBottom: 12,
+                }}
+                placeholder="Provide additional information..."
+                placeholderTextColor={colors.mutedForeground}
+                value={clarificationText}
+                onChangeText={setClarificationText}
+                multiline
+              />
+
+              <View style={{flexDirection: 'row', gap: 12, marginBottom: 16}}>
+                <TouchableOpacity
+                  onPress={pickClarificationImage}
+                  activeOpacity={0.7}
+                  style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+                  <Camera size={16} color={colors.primary} />
+                  <Text style={{fontSize: 13, color: colors.primary, fontWeight: '600'}}>
+                    {clarificationImage ? 'Change Image' : 'Add Image'}
+                  </Text>
+                </TouchableOpacity>
+                {clarificationImage && (
+                  <Image
+                    source={{uri: clarificationImage}}
+                    style={{width: 48, height: 48, borderRadius: 8}}
+                  />
+                )}
+              </View>
+
+              <Button
+                variant="primary"
+                onPress={handleSubmitClarification}
+                loading={actionLoading === 'clarify'}>
+                Submit Response
+              </Button>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }

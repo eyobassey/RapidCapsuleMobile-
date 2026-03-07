@@ -8,13 +8,13 @@ import {
   Modal,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {WebView} from 'react-native-webview';
 import {
   Pill,
-  User,
   CheckCircle,
   Clock,
   Truck,
@@ -25,6 +25,9 @@ import {
   Wallet,
   RotateCcw,
   X,
+  Star,
+  Calendar,
+  FileText,
 } from 'lucide-react-native';
 
 import {usePrescriptionsStore} from '../../store/prescriptions';
@@ -33,7 +36,6 @@ import {colors} from '../../theme/colors';
 import {formatDate} from '../../utils/formatters';
 import {useCurrency} from '../../hooks/useCurrency';
 import type {ProfileStackParamList} from '../../navigation/stacks/ProfileStack';
-import type {SpecialistPrescriptionStatus} from '../../types/prescription.types';
 
 const STATUS_BANNER_CONFIG: Record<string, {bg: string; icon: React.ComponentType<any>; label: string}> = {
   pending_acceptance: {bg: `${colors.secondary}20`, icon: Clock, label: 'Awaiting Your Response'},
@@ -49,6 +51,20 @@ const STATUS_BANNER_CONFIG: Record<string, {bg: string; icon: React.ComponentTyp
   draft: {bg: `${colors.muted}`, icon: Clock, label: 'Draft'},
 };
 
+const TIMELINE_ICONS: Record<string, React.ComponentType<any>> = {
+  pending_acceptance: Clock,
+  accepted: CheckCircle,
+  pending_payment: CreditCard,
+  paid: CheckCircle,
+  processing: Package,
+  dispensed: Package,
+  shipped: Truck,
+  delivered: CheckCircle,
+  cancelled: XCircle,
+  expired: AlertTriangle,
+  draft: Clock,
+};
+
 export default function PrescriptionDetailScreen() {
   const {format} = useCurrency();
   const navigation = useNavigation<any>();
@@ -60,6 +76,9 @@ export default function PrescriptionDetailScreen() {
   const [showPaymentPicker, setShowPaymentPicker] = useState(false);
   const [paystackUrl, setPaystackUrl] = useState<string | null>(null);
   const [paymentReference, setPaymentReference] = useState<string | null>(null);
+  const [showRating, setShowRating] = useState(false);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [reviewText, setReviewText] = useState('');
 
   const {
     currentPrescription: rx,
@@ -71,6 +90,7 @@ export default function PrescriptionDetailScreen() {
     initializePayment,
     payWithWallet,
     verifyPayment,
+    ratePrescription,
   } = usePrescriptionsStore();
 
   useEffect(() => {
@@ -214,6 +234,23 @@ export default function PrescriptionDetailScreen() {
     }
   }, [paymentReference, prescriptionId, verifyPayment, fetchPrescriptionById]);
 
+  const handleSubmitRating = async () => {
+    if (ratingValue === 0) {
+      Alert.alert('Rating Required', 'Please select a star rating.');
+      return;
+    }
+    setActionLoading('rate');
+    try {
+      await ratePrescription(prescriptionId, ratingValue, reviewText.trim() || undefined);
+      setShowRating(false);
+      Alert.alert('Thank you!', 'Your rating has been submitted.');
+    } catch (err: any) {
+      Alert.alert('Error', err?.message || 'Failed to submit rating.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Loading state
   if (isLoading && !rx) {
     return (
@@ -273,6 +310,7 @@ export default function PrescriptionDetailScreen() {
   const isAccepted = rx.status === 'accepted' || rx.status === 'pending_payment';
   const canRefill = rx.is_refillable && rx.refills_used < rx.refill_count &&
     ['delivered', 'dispensed'].includes(rx.status);
+  const canRate = rx.status === 'delivered' && !rx.rating;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -332,6 +370,19 @@ export default function PrescriptionDetailScreen() {
           </View>
         )}
 
+        {/* Linked Appointment */}
+        {rx.appointment_id && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('AppointmentDetail', {id: typeof rx.appointment_id === 'object' ? rx.appointment_id._id : rx.appointment_id})}
+            className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3">
+            <Calendar size={18} color={colors.primary} />
+            <Text className="text-sm text-primary font-medium flex-1">
+              View Linked Appointment
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* Clinical Notes */}
         {rx.clinical_notes ? (
           <View className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4">
@@ -365,9 +416,11 @@ export default function PrescriptionDetailScreen() {
                     </Text>
                   ) : null}
                 </View>
-                <Text className="text-sm font-bold text-foreground">
-                  {format(item.total_price || 0)}
-                </Text>
+                {item.total_price ? (
+                  <Text className="text-sm font-bold text-foreground">
+                    {format(item.total_price)}
+                  </Text>
+                ) : null}
               </View>
 
               <View className="flex-row flex-wrap gap-2 mt-1">
@@ -413,43 +466,98 @@ export default function PrescriptionDetailScreen() {
         </View>
 
         {/* Price Summary */}
-        <View className="mx-5 mt-2 bg-card border border-border rounded-2xl p-4">
-          <Text className="text-xs text-muted-foreground uppercase tracking-wider mb-3">
-            Price Summary
-          </Text>
-
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-sm text-muted-foreground">Subtotal</Text>
-            <Text className="text-sm text-foreground">
-              {format(rx.subtotal || 0)}
+        {(rx.subtotal > 0 || rx.total_amount > 0) && (
+          <View className="mx-5 mt-2 bg-card border border-border rounded-2xl p-4">
+            <Text className="text-xs text-muted-foreground uppercase tracking-wider mb-3">
+              Price Summary
             </Text>
-          </View>
 
-          {rx.discount > 0 && (
             <View className="flex-row justify-between mb-2">
-              <Text className="text-sm text-muted-foreground">Discount</Text>
-              <Text className="text-sm text-success">
-                -{format(rx.discount)}
-              </Text>
-            </View>
-          )}
-
-          {rx.delivery_fee > 0 && (
-            <View className="flex-row justify-between mb-2">
-              <Text className="text-sm text-muted-foreground">Delivery Fee</Text>
+              <Text className="text-sm text-muted-foreground">Subtotal</Text>
               <Text className="text-sm text-foreground">
-                {format(rx.delivery_fee)}
+                {format(rx.subtotal || 0)}
               </Text>
             </View>
-          )}
 
-          <View className="flex-row justify-between pt-3 border-t border-border">
-            <Text className="text-sm font-bold text-foreground">Total</Text>
-            <Text className="text-lg font-bold text-foreground">
-              {format(rx.total_amount || 0)}
-            </Text>
+            {rx.discount > 0 && (
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-sm text-muted-foreground">Discount</Text>
+                <Text className="text-sm text-success">
+                  -{format(rx.discount)}
+                </Text>
+              </View>
+            )}
+
+            {rx.delivery_fee > 0 && (
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-sm text-muted-foreground">Delivery Fee</Text>
+                <Text className="text-sm text-foreground">
+                  {format(rx.delivery_fee)}
+                </Text>
+              </View>
+            )}
+
+            <View className="flex-row justify-between pt-3 border-t border-border">
+              <Text className="text-sm font-bold text-foreground">Total</Text>
+              <Text className="text-lg font-bold text-foreground">
+                {format(rx.total_amount || 0)}
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
+
+        {/* Status Timeline */}
+        {rx.status_history && rx.status_history.length > 0 && (
+          <View className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4">
+            <Text className="text-xs text-muted-foreground uppercase tracking-wider mb-4">
+              Status Timeline
+            </Text>
+            {rx.status_history.map((entry: any, idx: number) => {
+              const TimelineIcon = TIMELINE_ICONS[entry.status] || Clock;
+              const isLast = idx === rx.status_history.length - 1;
+              const statusLabel = STATUS_BANNER_CONFIG[entry.status]?.label || entry.status;
+              return (
+                <View key={idx}>
+                  <View className="flex-row gap-3">
+                    <View className="items-center">
+                      <View
+                        className="w-7 h-7 rounded-full items-center justify-center"
+                        style={{backgroundColor: isLast ? `${colors.primary}20` : `${colors.muted}`}}>
+                        <TimelineIcon
+                          size={14}
+                          color={isLast ? colors.primary : colors.mutedForeground}
+                        />
+                      </View>
+                      {!isLast && (
+                        <View
+                          style={{
+                            width: 2,
+                            height: 20,
+                            backgroundColor: colors.border,
+                          }}
+                        />
+                      )}
+                    </View>
+                    <View className="flex-1 pb-3">
+                      <Text
+                        className={`text-sm font-medium ${isLast ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {statusLabel}
+                      </Text>
+                      <Text className="text-[11px] text-muted-foreground mt-0.5">
+                        {formatDate(entry.changed_at)}
+                      </Text>
+                      {entry.notes ? (
+                        <Text className="text-xs text-muted-foreground mt-0.5 italic">
+                          {entry.notes}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
         {/* Tracking Info (if shipped) */}
         {rx.status === 'shipped' && (
@@ -482,6 +590,21 @@ export default function PrescriptionDetailScreen() {
           </View>
         )}
 
+        {/* Pickup Info */}
+        {rx.is_pickup_order && rx.pickup_code && (
+          <View className="mx-5 mt-4 bg-primary/10 border border-primary/20 rounded-2xl p-4">
+            <Text className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+              Pickup Code
+            </Text>
+            <Text className="text-2xl font-bold text-primary text-center tracking-widest">
+              {rx.pickup_code}
+            </Text>
+            <Text className="text-xs text-muted-foreground text-center mt-1">
+              Show this code when picking up your prescription
+            </Text>
+          </View>
+        )}
+
         {/* Refill Info */}
         {rx.is_refillable && (
           <View className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4">
@@ -508,6 +631,50 @@ export default function PrescriptionDetailScreen() {
           </View>
         )}
 
+        {/* Existing Rating */}
+        {rx.rating && (
+          <View className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4">
+            <Text className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+              Your Rating
+            </Text>
+            <View className="flex-row gap-1 mb-1">
+              {[1, 2, 3, 4, 5].map(s => (
+                <Star
+                  key={s}
+                  size={18}
+                  color={s <= rx.rating ? '#f59e0b' : colors.border}
+                  fill={s <= rx.rating ? '#f59e0b' : 'transparent'}
+                />
+              ))}
+            </View>
+            {rx.review ? (
+              <Text className="text-xs text-muted-foreground mt-1">
+                "{rx.review}"
+              </Text>
+            ) : null}
+          </View>
+        )}
+
+        {/* Linked Pharmacy Order */}
+        {rx.linked_pharmacy_order && (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('OrderDetail', {orderId: rx.linked_pharmacy_order})}
+            className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3">
+            <Package size={18} color={colors.primary} />
+            <View className="flex-1">
+              <Text className="text-sm text-primary font-medium">
+                View Pharmacy Order
+              </Text>
+              {rx.linked_pharmacy_order_number && (
+                <Text className="text-xs text-muted-foreground">
+                  #{rx.linked_pharmacy_order_number}
+                </Text>
+              )}
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Date info */}
         <View className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4">
           <View className="flex-row justify-between mb-1">
@@ -520,11 +687,20 @@ export default function PrescriptionDetailScreen() {
               <Text className="text-sm text-foreground">{formatDate(rx.expires_at)}</Text>
             </View>
           )}
+          {rx.pdf_url && (
+            <TouchableOpacity
+              className="mt-3 pt-3 border-t border-border flex-row items-center gap-2"
+              activeOpacity={0.7}
+              onPress={() => {/* Could open PDF in browser */}}>
+              <FileText size={16} color={colors.primary} />
+              <Text className="text-sm text-primary font-medium">Download PDF</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
 
       {/* Action Buttons */}
-      {(isPending || isAccepted || canRefill) && (
+      {(isPending || isAccepted || canRefill || canRate) && (
         <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
           {isPending && (
             <View className="flex-row gap-3">
@@ -560,7 +736,7 @@ export default function PrescriptionDetailScreen() {
             </Button>
           )}
 
-          {canRefill && (
+          {canRefill && !canRate && (
             <Button
               variant="outline"
               icon={<RotateCcw size={18} color={colors.foreground} />}
@@ -569,6 +745,31 @@ export default function PrescriptionDetailScreen() {
               disabled={!!actionLoading}>
               Request Refill
             </Button>
+          )}
+
+          {canRate && (
+            <View className="flex-row gap-3">
+              {canRefill && (
+                <View className="flex-1">
+                  <Button
+                    variant="outline"
+                    icon={<RotateCcw size={16} color={colors.foreground} />}
+                    onPress={handleRefill}
+                    loading={actionLoading === 'refill'}
+                    disabled={!!actionLoading}>
+                    Refill
+                  </Button>
+                </View>
+              )}
+              <View className="flex-1">
+                <Button
+                  variant="primary"
+                  icon={<Star size={16} color="#fff" />}
+                  onPress={() => setShowRating(true)}>
+                  Rate
+                </Button>
+              </View>
+            </View>
           )}
         </View>
       )}
@@ -618,6 +819,71 @@ export default function PrescriptionDetailScreen() {
               </View>
             </TouchableOpacity>
           </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Rating Modal */}
+      <Modal
+        visible={showRating}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowRating(false)}>
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShowRating(false)}
+          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40}}>
+              <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground, marginBottom: 4}}>
+                Rate this prescription
+              </Text>
+              <Text style={{fontSize: 13, color: colors.mutedForeground, marginBottom: 20}}>
+                How was your experience with this prescription?
+              </Text>
+
+              <View style={{flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20}}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <TouchableOpacity
+                    key={s}
+                    onPress={() => setRatingValue(s)}
+                    hitSlop={{top: 8, bottom: 8, left: 4, right: 4}}>
+                    <Star
+                      size={36}
+                      color={s <= ratingValue ? '#f59e0b' : colors.border}
+                      fill={s <= ratingValue ? '#f59e0b' : 'transparent'}
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TextInput
+                style={{
+                  backgroundColor: colors.background,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 16,
+                  padding: 14,
+                  fontSize: 14,
+                  color: colors.foreground,
+                  minHeight: 80,
+                  textAlignVertical: 'top',
+                  marginBottom: 16,
+                }}
+                placeholder="Write a review (optional)"
+                placeholderTextColor={colors.mutedForeground}
+                value={reviewText}
+                onChangeText={setReviewText}
+                multiline
+              />
+
+              <Button
+                variant="primary"
+                onPress={handleSubmitRating}
+                loading={actionLoading === 'rate'}>
+                Submit Rating
+              </Button>
+            </View>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
 

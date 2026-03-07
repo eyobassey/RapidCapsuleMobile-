@@ -37,6 +37,9 @@ const HIDE_TAB_SCREENS = new Set([
   'MedicalHistory',
   'DeviceIntegration',
   'WalletCredits',
+  // Prescription screens
+  'PrescriptionsList',
+  'PrescriptionDetail',
   'HealthCheckupPatientInfo',
   'HealthCheckupRiskFactors',
   'HealthCheckupSymptomSearch',
@@ -121,7 +124,13 @@ export default function MainTabs() {
           tabBarStyle: getTabBarStyle(route),
         })}
       />
-      <Tab.Screen name="Profile" component={ProfileStack} />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
+        options={({route}) => ({
+          tabBarStyle: getTabBarStyle(route),
+        })}
+      />
     </Tab.Navigator>
   );
 }

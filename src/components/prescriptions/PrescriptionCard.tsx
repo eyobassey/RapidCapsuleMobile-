@@ -1,26 +1,45 @@
 import React from 'react';
 import {View, Text, TouchableOpacity} from 'react-native';
-import {Pill, Calendar, ChevronRight, User} from 'lucide-react-native';
+import {Pill, Calendar, ChevronRight, User, Upload, ShoppingCart} from 'lucide-react-native';
 import {StatusBadge} from '../ui';
 import {colors} from '../../theme/colors';
 import {formatDate} from '../../utils/formatters';
 import {useCurrency} from '../../hooks/useCurrency';
-import type {SpecialistPrescription} from '../../types/prescription.types';
 
 interface PrescriptionCardProps {
-  prescription: SpecialistPrescription;
+  prescription: any;
   onPress: () => void;
 }
 
 export default function PrescriptionCard({prescription, onPress}: PrescriptionCardProps) {
   const {format} = useCurrency();
+
+  const type = prescription.type;
   const specialist = prescription.specialist_id;
-  const specialistName =
-    typeof specialist === 'object' && specialist?.profile
-      ? `Dr. ${specialist.profile.first_name || ''} ${specialist.profile.last_name || ''}`.trim()
-      : null;
+  const prescribedBy = prescription.prescribed_by;
+
+  let doctorName: string | null = null;
+  if (typeof specialist === 'object' && specialist?.profile) {
+    doctorName = `Dr. ${specialist.profile.first_name || ''} ${specialist.profile.last_name || ''}`.trim();
+  } else if (typeof prescribedBy === 'object' && prescribedBy?.profile) {
+    doctorName = `${prescribedBy.profile.first_name || ''} ${prescribedBy.profile.last_name || ''}`.trim();
+  } else if (prescription.ocr_data?.doctor_name) {
+    doctorName = `Dr. ${prescription.ocr_data.doctor_name}`;
+  }
 
   const medicationCount = prescription.items?.length || 0;
+
+  const sourceLabel =
+    type === 'ORDER'
+      ? 'Pharmacy Order'
+      : prescription.prescription_source === 'patient_upload'
+        ? 'Uploaded'
+        : doctorName || 'Specialist';
+
+  const IconComponent =
+    type === 'ORDER' ? ShoppingCart : prescription.prescription_source === 'patient_upload' ? Upload : Pill;
+  const iconColor =
+    type === 'ORDER' ? colors.accent : prescription.prescription_source === 'patient_upload' ? colors.secondary : colors.primary;
 
   return (
     <TouchableOpacity
@@ -30,25 +49,25 @@ export default function PrescriptionCard({prescription, onPress}: PrescriptionCa
       {/* Top row: prescription number + status */}
       <View className="flex-row items-center justify-between mb-2">
         <View className="flex-row items-center gap-2">
-          <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center">
-            <Pill size={16} color={colors.primary} />
+          <View
+            className="w-8 h-8 rounded-full items-center justify-center"
+            style={{backgroundColor: `${iconColor}15`}}>
+            <IconComponent size={16} color={iconColor} />
           </View>
-          <Text className="text-sm font-bold text-foreground">
+          <Text className="text-sm font-bold text-foreground" numberOfLines={1}>
             #{prescription.prescription_number || 'RX'}
           </Text>
         </View>
         <StatusBadge status={prescription.status} />
       </View>
 
-      {/* Specialist name */}
-      {specialistName && (
-        <View className="flex-row items-center gap-1.5 mb-1.5">
-          <User size={13} color={colors.mutedForeground} />
-          <Text className="text-xs text-muted-foreground" numberOfLines={1}>
-            {specialistName}
-          </Text>
-        </View>
-      )}
+      {/* Source / Doctor name */}
+      <View className="flex-row items-center gap-1.5 mb-1.5">
+        <User size={13} color={colors.mutedForeground} />
+        <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+          {sourceLabel}
+        </Text>
+      </View>
 
       {/* Date */}
       <View className="flex-row items-center gap-1.5 mb-3">
@@ -63,9 +82,11 @@ export default function PrescriptionCard({prescription, onPress}: PrescriptionCa
         <Text className="text-xs text-muted-foreground">
           {medicationCount} medication{medicationCount !== 1 ? 's' : ''}
         </Text>
-        <Text className="text-sm font-bold text-foreground">
-          {format(prescription.total_amount || 0)}
-        </Text>
+        {prescription.total_amount ? (
+          <Text className="text-sm font-bold text-foreground">
+            {format(prescription.total_amount)}
+          </Text>
+        ) : null}
       </View>
 
       {/* Chevron */}
