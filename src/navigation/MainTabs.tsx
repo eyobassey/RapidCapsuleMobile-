@@ -20,6 +20,13 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Screens where the tab bar should be hidden (focused flows)
 const HIDE_TAB_SCREENS = new Set([
+  // Booking flow
+  'SelectSpecialty',
+  'SelectSpecialist',
+  'SelectSchedule',
+  'ConfirmBooking',
+  'AppointmentDetail',
+  'RateAppointment',
   'HealthCheckupPatientInfo',
   'HealthCheckupRiskFactors',
   'HealthCheckupSymptomSearch',
@@ -85,7 +92,13 @@ export default function MainTabs() {
           tabBarStyle: getTabBarStyle(route),
         })}
       />
-      <Tab.Screen name="Bookings" component={BookingsStack} />
+      <Tab.Screen
+        name="Bookings"
+        component={BookingsStack}
+        options={({route}) => ({
+          tabBarStyle: getTabBarStyle(route),
+        })}
+      />
       <Tab.Screen
         name="Eka"
         component={EkaChatScreen}
