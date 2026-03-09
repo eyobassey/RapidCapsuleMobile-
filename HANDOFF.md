@@ -270,12 +270,16 @@ The project uses `patch-package` to fix native module compatibility:
 - [x] Offline support — NetInfo hook, offline request queue with auto-sync, OfflineBanner component
 - [x] Deep linking — Linking config for `rapidcapsule://` and `https://rapidcapsule.com` URL schemes
 
+- [x] React Query screen migration — 10 key screens now use query hooks (Home, Appointments, Vitals, Wallet, Prescriptions, Notifications, Recovery, Specialist/Schedule selection)
+- [x] Form validation extended — PersonalDetails, AddressEmergency (with useFieldArray), LogVitals, RateAppointment, ConfirmBooking
+- [x] Accessibility complete — All ~80 screens have a11y props on interactive elements
+- [x] Test coverage expanded — 159 total tests across 13 suites
+
 ### Remaining items to consider:
-- [ ] **Migrate screens to React Query** — Query hooks are ready in `src/hooks/queries/`; screens still use Zustand stores. Incrementally adopt hooks in screens
-- [ ] **More form validation** — Extend to onboarding, booking, and vitals forms using the existing schemas and FormInput component
-- [ ] **More accessibility** — Extend a11y props to remaining screens beyond Home, Login, and base components
-- [ ] **More test coverage** — Add integration tests for health checkup flow, payment flow, and booking flow
 - [ ] **Push notifications** — Configure Firebase Cloud Messaging / APNs for push delivery
+- [ ] **Migrate remaining screens to React Query** — Pharmacy, messaging, and health checkup screens still use Zustand for data fetching
+- [ ] **More form validation** — Extend to MedicalHistory, Allergies, Dependants, Checkout screens
+- [ ] **E2E tests** — Add Detox or Maestro for end-to-end testing of critical user flows
 
 ### Architecture decisions to discuss:
 - **Expo migration** — Evaluate if the native module requirements (HealthKit, Keychain) justify staying on bare RN or if Expo's `prebuild` workflow would help. Not urgent.
