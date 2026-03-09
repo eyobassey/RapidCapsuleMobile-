@@ -45,5 +45,18 @@ target 'RapidCapsuleMobile' do
         end
       end
     end
+
+    # Suppress deprecation warnings-as-errors for older pods (iOS SDK 26 compat)
+    problematic_pods = ['RNAppleHealthKit', 'HtmlToPdf']
+    installer.pods_project.targets.each do |target|
+      if problematic_pods.include?(target.name)
+        target.build_configurations.each do |config|
+          config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+          config.build_settings['WARNING_CFLAGS'] ||= ['$(inherited)']
+          config.build_settings['WARNING_CFLAGS'] << '-Wno-deprecated-declarations'
+          config.build_settings['WARNING_CFLAGS'] << '-Wno-deprecated-implementations'
+        end
+      end
+    end
   end
 end
