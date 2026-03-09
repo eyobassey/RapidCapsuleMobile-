@@ -2,11 +2,11 @@ import React, {useCallback, useEffect} from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   RefreshControl,
   ScrollView,
 } from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {
@@ -113,7 +113,7 @@ export default function PharmacyHomeScreen() {
               ))}
             </View>
           ) : (
-            <FlatList
+            <FlashList
               horizontal
               data={featuredDrugs}
               keyExtractor={item => item._id}
@@ -122,6 +122,7 @@ export default function PharmacyHomeScreen() {
               )}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{paddingHorizontal: 20}}
+              estimatedItemSize={160}
               ListEmptyComponent={
                 <Text className="text-sm text-muted-foreground px-5">
                   No featured drugs available

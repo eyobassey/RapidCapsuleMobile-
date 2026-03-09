@@ -28,6 +28,9 @@ export default function TabBar({tabs, activeTab, onChange}: TabBarProps) {
             key={tab.value}
             onPress={() => onChange(tab.value)}
             activeOpacity={0.7}
+            accessibilityRole="tab"
+            accessibilityLabel={tab.label}
+            accessibilityState={{selected: isActive}}
             style={[styles.tab, isActive && styles.tabActive]}>
             <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
               {tab.label}

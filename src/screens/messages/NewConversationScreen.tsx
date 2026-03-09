@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {View, Text, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {Users, Search as SearchIcon} from 'lucide-react-native';
@@ -129,10 +130,11 @@ export default function NewConversationScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={displayList}
           keyExtractor={item => item._id}
           renderItem={renderUser}
+          estimatedItemSize={64}
           ListEmptyComponent={
             <View style={{alignItems: 'center', paddingTop: 60, paddingHorizontal: 40}}>
               <View

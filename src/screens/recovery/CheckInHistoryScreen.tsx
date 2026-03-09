@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, FlatList, ActivityIndicator, TouchableOpacity} from 'react-native';
+import {View, Text, ActivityIndicator, TouchableOpacity} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {CalendarCheck, SmilePlus, Flame, Brain} from 'lucide-react-native';
@@ -151,10 +152,11 @@ export default function CheckInHistoryScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={logs}
           keyExtractor={item => item._id}
-          contentContainerStyle={{padding: 16, gap: 10}}
+          contentContainerStyle={{padding: 16}}
+          estimatedItemSize={100}
           ListHeaderComponent={renderHeader}
           renderItem={renderLog}
           ListEmptyComponent={

@@ -61,6 +61,8 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
           }
         };
 
+        const tabLabel = route.name === 'Eka' ? 'Eka AI' : route.name;
+
         // Eka FAB (elevated center button)
         if (isEka) {
           return (
@@ -68,6 +70,9 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
               key={route.key}
               onPress={onPress}
               activeOpacity={0.8}
+              accessibilityRole="tab"
+              accessibilityLabel={tabLabel}
+              accessibilityState={{selected: isFocused}}
               style={{
                 position: 'relative',
                 top: -20,
@@ -97,6 +102,9 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
             key={route.key}
             onPress={onPress}
             activeOpacity={0.7}
+            accessibilityRole="tab"
+            accessibilityLabel={`${tabLabel}${showBadge ? `, ${cartCount} items in cart` : ''}`}
+            accessibilityState={{selected: isFocused}}
             className="items-center gap-1 flex-1">
             <View style={{position: 'relative'}}>
               <Icon

@@ -37,7 +37,11 @@ RapidCapsule is a telemedicine platform. The mobile app is the **patient-facing 
 | Navigation | React Navigation 7.x (native-stack, bottom-tabs) |
 | Styling | NativeWind 4.2.2 (Tailwind CSS for RN) |
 | Icons | Lucide React Native |
+| Server State | React Query (@tanstack/react-query 5.x) |
+| Form Validation | react-hook-form 7.x + zod 3.x |
+| Lists | @shopify/flash-list 1.x |
 | Secure Storage | react-native-keychain (tokens), MMKV (non-sensitive data) |
+| Network Status | @react-native-community/netinfo |
 | Payments | react-native-paystack-webview |
 | Health Data | react-native-health (Apple HealthKit) |
 | Animations | react-native-reanimated 4.x |
@@ -258,15 +262,20 @@ The project uses `patch-package` to fix native module compatibility:
 - [x] ErrorBoundary component added
 - [x] Pre-commit hooks (Husky + lint-staged) configured
 - [x] iOS build fix for Xcode 26 / RN 0.84 compatibility
+- [x] React Query migration — 30+ query/mutation hooks in `src/hooks/queries/` (appointments, vitals, wallet, health score, prescriptions, notifications, recovery)
+- [x] Form validation — `react-hook-form` + `zod` schemas in `src/utils/validation.ts`, `FormInput` component, Login and Signup screens refactored
+- [x] Accessibility — `accessibilityRole`, `accessibilityLabel`, `accessibilityState` added to Button, Input, Avatar, TabBar, SearchInput, BottomTabBar, HomeScreen, LoginScreen
+- [x] FlashList — Replaced `FlatList` with `@shopify/flash-list` in 20 screens
+- [x] Test coverage — 56 tests across 6 files (storage, API client, error classes, auth store, validation schemas, env config)
+- [x] Offline support — NetInfo hook, offline request queue with auto-sync, OfflineBanner component
+- [x] Deep linking — Linking config for `rapidcapsule://` and `https://rapidcapsule.com` URL schemes
 
-### Remaining items to address:
-- [ ] **React Query migration** — Server state in Zustand stores should migrate to React Query for caching, deduplication, and background refresh. Start with high-traffic queries (appointments, vitals, wallet balance)
-- [ ] **Form validation** — Add `react-hook-form` + `zod` for structured validation (login, signup, onboarding, booking forms)
-- [ ] **Accessibility** — Add `accessibilityLabel`, `accessibilityRole`, `accessibilityHint` to interactive components
-- [ ] **FlashList** — Replace `FlatList` with `@shopify/flash-list` in high-volume lists (prescriptions, drugs, notifications)
-- [ ] **Test coverage** — Currently minimal. Priority: auth flows, health checkup, payment flows
-- [ ] **Offline support** — Consider NetInfo + queue for vitals logging when offline
-- [ ] **Deep linking** — Configure for appointment links, notification taps
+### Remaining items to consider:
+- [ ] **Migrate screens to React Query** — Query hooks are ready in `src/hooks/queries/`; screens still use Zustand stores. Incrementally adopt hooks in screens
+- [ ] **More form validation** — Extend to onboarding, booking, and vitals forms using the existing schemas and FormInput component
+- [ ] **More accessibility** — Extend a11y props to remaining screens beyond Home, Login, and base components
+- [ ] **More test coverage** — Add integration tests for health checkup flow, payment flow, and booking flow
+- [ ] **Push notifications** — Configure Firebase Cloud Messaging / APNs for push delivery
 
 ### Architecture decisions to discuss:
 - **Expo migration** — Evaluate if the native module requirements (HealthKit, Keychain) justify staying on bare RN or if Expo's `prebuild` workflow would help. Not urgent.

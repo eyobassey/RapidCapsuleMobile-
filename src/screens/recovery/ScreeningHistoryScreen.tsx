@@ -1,5 +1,6 @@
 import React, {useCallback, useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity, ActivityIndicator, ScrollView} from 'react-native';
+import {View, Text, TouchableOpacity, ActivityIndicator, ScrollView} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {ClipboardCheck} from 'lucide-react-native';
@@ -88,11 +89,12 @@ export default function ScreeningHistoryScreen() {
     <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
       <Header title="Screening History" onBack={() => navigation.goBack()} />
 
-      <FlatList
+      <FlashList
         data={filtered}
         keyExtractor={item => item._id}
-        contentContainerStyle={{padding: 16, gap: 10}}
+        contentContainerStyle={{padding: 16}}
         ListHeaderComponent={renderHeader}
+        estimatedItemSize={80}
         renderItem={({item}) => (
           <TouchableOpacity
             activeOpacity={0.7}
@@ -155,3 +157,4 @@ export default function ScreeningHistoryScreen() {
     </SafeAreaView>
   );
 }
+

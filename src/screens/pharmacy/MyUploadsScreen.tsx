@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {View, FlatList, RefreshControl} from 'react-native';
+import {View, RefreshControl} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {FileImage, Upload} from 'lucide-react-native';
@@ -89,13 +90,14 @@ export default function MyUploadsScreen() {
           ))}
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={filteredUploads}
           keyExtractor={item => item._id}
           renderItem={({item}) => (
             <UploadCard upload={item} onPress={() => handlePress(item)} />
           )}
           contentContainerStyle={{paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100}}
+          estimatedItemSize={120}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

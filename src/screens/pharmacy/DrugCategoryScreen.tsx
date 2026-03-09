@@ -1,5 +1,6 @@
 import React, {useEffect, useCallback} from 'react';
-import {FlatList, RefreshControl, ActivityIndicator} from 'react-native';
+import {RefreshControl, ActivityIndicator} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
 import {Pill} from 'lucide-react-native';
@@ -34,7 +35,7 @@ export default function DrugCategoryScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header title={categoryName} onBack={() => navigation.goBack()} />
 
-      <FlatList
+      <FlashList
         data={categoryDrugs}
         keyExtractor={item => item._id}
         renderItem={({item}) => (
@@ -42,6 +43,7 @@ export default function DrugCategoryScreen() {
         )}
         contentContainerStyle={{paddingHorizontal: 20, paddingTop: 12, paddingBottom: 100}}
         showsVerticalScrollIndicator={false}
+        estimatedItemSize={100}
         refreshControl={
           <RefreshControl refreshing={false} onRefresh={onRefresh} />
         }

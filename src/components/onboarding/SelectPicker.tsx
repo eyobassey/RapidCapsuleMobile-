@@ -4,9 +4,9 @@ import {
   Text,
   TouchableOpacity,
   Modal,
-  FlatList,
   Pressable,
 } from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {Check, ChevronDown} from 'lucide-react-native';
 import {colors} from '../../theme/colors';
 
@@ -130,9 +130,10 @@ export default function SelectPicker({
               {label || 'Select'}
             </Text>
 
-            <FlatList
+            <FlashList
               data={options}
               keyExtractor={item => item.value}
+              estimatedItemSize={50}
               renderItem={({item}) => {
                 const isSelected =
                   item.value === value ||

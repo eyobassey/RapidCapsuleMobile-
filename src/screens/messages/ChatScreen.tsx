@@ -2,7 +2,6 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   Text,
-  FlatList,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -11,6 +10,7 @@ import {
   Alert,
   Animated,
 } from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {
@@ -83,7 +83,7 @@ export default function ChatScreen() {
   const [recordDuration, setRecordDuration] = useState(0);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlashList<Message>>(null);
   const recordingPathRef = useRef<string | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -472,7 +472,7 @@ export default function ChatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={0}>
         {/* Messages list (inverted) */}
-        <FlatList
+        <FlashList
           ref={flatListRef}
           data={messages}
           keyExtractor={item => item._id}
@@ -480,6 +480,7 @@ export default function ChatScreen() {
           inverted
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{paddingVertical: 8}}
+          estimatedItemSize={80}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.3}
           ListHeaderComponent={

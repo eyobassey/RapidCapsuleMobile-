@@ -33,18 +33,25 @@ export default function Avatar({
   const dimension = sizeMap[size];
   const initials = getInitials(firstName, lastName);
 
+  const fullName = `${firstName} ${lastName}`.trim();
+  const accessLabel = fullName || 'User avatar';
+
   if (uri) {
     return (
       <Image
         source={{uri}}
         style={{width: dimension, height: dimension, borderRadius: dimension / 2}}
         resizeMode="cover"
+        accessibilityRole="image"
+        accessibilityLabel={accessLabel}
       />
     );
   }
 
   return (
     <View
+      accessibilityRole="image"
+      accessibilityLabel={accessLabel}
       style={{
         width: dimension,
         height: dimension,

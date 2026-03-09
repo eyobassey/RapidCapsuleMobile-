@@ -1,5 +1,6 @@
 import React, {useCallback, useState} from 'react';
-import {View, Text, FlatList, ActivityIndicator} from 'react-native';
+import {View, Text, ActivityIndicator} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {Trophy} from 'lucide-react-native';
@@ -34,10 +35,11 @@ export default function MilestonesScreen() {
     <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
       <Header title="Milestones" onBack={() => navigation.goBack()} />
 
-      <FlatList
+      <FlashList
         data={milestones}
         keyExtractor={item => item._id}
-        contentContainerStyle={{padding: 16, gap: 12}}
+        contentContainerStyle={{padding: 16}}
+        estimatedItemSize={100}
         renderItem={({item}) => (
           <MilestoneCard milestone={item} onCelebrate={handleCelebrate} />
         )}

@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useCallback, useMemo} from 'react';
-import {View, Text, FlatList, TouchableOpacity, ScrollView} from 'react-native';
+import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -279,7 +280,7 @@ export default function SelectSpecialistScreen() {
       {isLoading && specialists.length === 0 ? (
         <ListSkeleton />
       ) : (
-        <FlatList
+        <FlashList
           data={filteredSpecialists}
           keyExtractor={item => item._id || item.id || String(Math.random())}
           renderItem={({item}) => (
@@ -291,8 +292,8 @@ export default function SelectSpecialistScreen() {
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingBottom: 40,
-            flexGrow: filteredSpecialists.length === 0 ? 1 : undefined,
           }}
+          estimatedItemSize={120}
           ListEmptyComponent={
             <EmptyState
               icon={<Users size={32} color={colors.mutedForeground} />}

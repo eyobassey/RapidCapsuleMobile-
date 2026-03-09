@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {View, Text, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {PenSquare, MessageCircle} from 'lucide-react-native';
@@ -102,9 +103,10 @@ export default function ConversationsListScreen() {
         />
       </View>
 
-      <FlatList
+      <FlashList
         data={conversations}
         keyExtractor={item => item._id}
+        estimatedItemSize={80}
         renderItem={({item}) => (
           <ConversationRow
             conversation={item}

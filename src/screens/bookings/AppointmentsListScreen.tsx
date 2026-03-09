@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect} from 'react';
-import {View, Text, FlatList, TouchableOpacity, Linking} from 'react-native';
+import {View, Text, TouchableOpacity, Linking} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -118,7 +119,7 @@ export default function AppointmentsListScreen() {
       {isLoading && appointments.length === 0 ? (
         <ListSkeleton />
       ) : (
-        <FlatList
+        <FlashList
           data={appointments}
           keyExtractor={item => item._id || item.id || String(Math.random())}
           renderItem={({item}) => (
@@ -131,8 +132,8 @@ export default function AppointmentsListScreen() {
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingBottom: 100,
-            flexGrow: appointments.length === 0 ? 1 : undefined,
           }}
+          estimatedItemSize={120}
           ListEmptyComponent={
             <EmptyState
               icon={empty.icon}

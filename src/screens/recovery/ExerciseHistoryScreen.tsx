@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl} from 'react-native';
+import {View, Text, TouchableOpacity, ActivityIndicator, RefreshControl} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {
@@ -236,12 +237,13 @@ export default function ExerciseHistoryScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={exercises}
           keyExtractor={item => item._id}
-          contentContainerStyle={{padding: 16, gap: 10}}
+          contentContainerStyle={{padding: 16}}
           ListHeaderComponent={renderHeader}
           renderItem={renderExercise}
+          estimatedItemSize={100}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }

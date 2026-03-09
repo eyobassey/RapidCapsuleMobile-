@@ -29,13 +29,17 @@ export default function SearchInput({
         returnKeyType="search"
         onSubmitEditing={onSubmit}
         autoCorrect={false}
+        accessibilityRole="search"
+        accessibilityLabel={placeholder}
       />
 
       {value.length > 0 ? (
         <TouchableOpacity
           onPress={() => onChangeText('')}
           activeOpacity={0.7}
-          hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+          hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+          accessibilityRole="button"
+          accessibilityLabel="Clear search">
           <X size={18} color={colors.mutedForeground} />
         </TouchableOpacity>
       ) : null}

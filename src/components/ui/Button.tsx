@@ -48,16 +48,25 @@ export default function Button({
   fullWidth = true,
   disabled,
   className,
+  accessibilityLabel,
   ...props
 }: ButtonProps) {
   const styles = variantStyles[variant];
   const opacity = disabled ? 'opacity-50' : '';
   const width = fullWidth ? 'w-full' : '';
 
+  // Derive accessible label from children if not explicitly provided
+  const derivedLabel =
+    accessibilityLabel ||
+    (typeof children === 'string' ? children : undefined);
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityLabel={derivedLabel}
+      accessibilityState={{disabled: !!(disabled || loading)}}
       className={`${width} rounded-2xl h-14 flex-row items-center justify-center ${styles.container} ${opacity} ${className || ''}`}
       {...props}>
       {loading ? (

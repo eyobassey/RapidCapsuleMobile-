@@ -2,11 +2,11 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {Search, X, Clock, TrendingUp} from 'lucide-react-native';
@@ -167,7 +167,7 @@ export default function DrugSearchScreen() {
           </View>
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={searchResults}
           keyExtractor={item => item._id}
           renderItem={({item}) => (
@@ -175,6 +175,7 @@ export default function DrugSearchScreen() {
           )}
           contentContainerStyle={{paddingHorizontal: 20, paddingTop: 8, paddingBottom: 100}}
           showsVerticalScrollIndicator={false}
+          estimatedItemSize={100}
           ListHeaderComponent={
             catalogLoading ? (
               <View className="items-center py-4">

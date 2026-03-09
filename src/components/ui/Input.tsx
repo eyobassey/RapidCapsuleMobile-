@@ -11,10 +11,12 @@ interface InputProps extends TextInputProps {
 }
 
 const Input = forwardRef<TextInput, InputProps>(function Input(
-  {label, required, icon, rightIcon, error, containerClassName, className, ...props},
+  {label, required, icon, rightIcon, error, containerClassName, className, accessibilityLabel, ...props},
   ref,
 ) {
   const [focused, setFocused] = useState(false);
+
+  const derivedAccessibilityLabel = accessibilityLabel || label;
 
   return (
     <View className={containerClassName}>
@@ -35,6 +37,8 @@ const Input = forwardRef<TextInput, InputProps>(function Input(
           placeholderTextColor="#7c8ba3"
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          accessibilityRole="text"
+          accessibilityLabel={derivedAccessibilityLabel}
           {...props}
         />
         {rightIcon && (

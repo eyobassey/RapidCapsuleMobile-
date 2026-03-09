@@ -1,5 +1,6 @@
 import React from 'react';
-import {View, Text, Image, FlatList, TouchableOpacity, Alert} from 'react-native';
+import {View, Text, Image, TouchableOpacity, Alert} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {Minus, Plus, X, ShoppingCart, Pill, ShieldAlert} from 'lucide-react-native';
@@ -129,9 +130,10 @@ export default function CartScreen() {
         }
       />
 
-      <FlatList
+      <FlashList
         data={cartItems}
         keyExtractor={item => item.drugId}
+        estimatedItemSize={80}
         renderItem={({item}) => (
           <CartItemRow
             item={item}

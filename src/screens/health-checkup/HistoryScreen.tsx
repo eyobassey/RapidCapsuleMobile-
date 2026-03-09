@@ -1,5 +1,6 @@
 import React, {useEffect, useCallback, useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity, RefreshControl} from 'react-native';
+import {View, Text, TouchableOpacity, RefreshControl} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {ChevronRight, History, Stethoscope} from 'lucide-react-native';
@@ -34,15 +35,15 @@ export default function HistoryScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header title="Checkup History" onBack={() => navigation.goBack()} />
 
-      <FlatList
+      <FlashList
         data={history}
         keyExtractor={(item: any) => item._id || item.id}
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: 12,
           paddingBottom: 40,
-          flexGrow: history.length === 0 ? 1 : undefined,
         }}
+        estimatedItemSize={80}
         renderItem={({item}) => {
           const topCondition = item.response?.data?.conditions?.[0];
           const triage = item.response?.data?.triage_level;

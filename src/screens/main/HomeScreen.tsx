@@ -196,6 +196,9 @@ export default function HomeScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleMessages}
+            accessibilityRole="button"
+            accessibilityLabel={`Messages${msgUnread > 0 ? `, ${msgUnread} unread` : ''}`}
+            accessibilityHint="Double tap to open messages"
             className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center">
             <MessageCircle size={20} color={colors.foreground} />
             {msgUnread > 0 && (
@@ -211,6 +214,9 @@ export default function HomeScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => navigation.navigate('Notifications')}
+            accessibilityRole="button"
+            accessibilityLabel={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+            accessibilityHint="Double tap to view notifications"
             className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center">
             <Bell size={20} color={colors.foreground} />
             {unreadCount > 0 && (
@@ -223,7 +229,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           {/* Avatar */}
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Profile">
             <Avatar
               uri={profileImage}
               firstName={firstName}
@@ -247,7 +253,9 @@ export default function HomeScreen() {
           />
         }>
         {/* ---- Health Score Card ---- */}
-        <View className="mx-5 mt-2 bg-card border border-border rounded-3xl p-5 overflow-hidden relative">
+        <View
+          className="mx-5 mt-2 bg-card border border-border rounded-3xl p-5 overflow-hidden relative"
+          accessibilityLabel={score != null ? `Health score ${score}, ${healthStatus || ''}` : 'Health score not available'}>
           {/* Subtle decorative orb */}
           <View className="absolute -top-10 -right-10 w-40 h-40 bg-success/5 rounded-full" />
 
@@ -402,6 +410,8 @@ export default function HomeScreen() {
                 key={i}
                 activeOpacity={0.7}
                 onPress={action.onPress}
+                accessibilityRole="button"
+                accessibilityLabel={`${action.title}, ${action.subtitle}`}
                 className="bg-card border border-border rounded-2xl p-4"
                 style={{width: '48%', flexGrow: 1}}>
                 <View
@@ -426,6 +436,9 @@ export default function HomeScreen() {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => navigation.getParent()?.navigate('Eka')}
+          accessibilityRole="button"
+          accessibilityLabel="Ask Eka AI, your personal health assistant"
+          accessibilityHint="Double tap to open AI health assistant"
           className="mx-5 mt-6 bg-card border border-primary/20 rounded-3xl p-5 overflow-hidden relative">
           {/* Decorative orb */}
           <View className="absolute -top-6 -right-6 w-28 h-28 bg-primary/10 rounded-full" />
@@ -457,6 +470,9 @@ export default function HomeScreen() {
             </Text>
             <TouchableOpacity
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Next appointment"
+              accessibilityHint="Double tap to view appointment details"
               className="bg-card border border-border rounded-2xl p-4 overflow-hidden relative">
               {/* Decorative accent strip */}
               <View

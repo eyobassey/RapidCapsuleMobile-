@@ -2,7 +2,6 @@ import React, {useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
-  FlatList,
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -10,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {Send, BrainCircuit, AlertTriangle} from 'lucide-react-native';
@@ -35,7 +35,7 @@ export default function CompanionChatScreen() {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [starting, setStarting] = useState(!initialSessionId);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlashList<ChatMessage>>(null);
 
   useEffect(() => {
     if (!initialSessionId) {
@@ -219,12 +219,13 @@ export default function CompanionChatScreen() {
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <FlatList
+        <FlashList
           ref={flatListRef}
           data={messages}
           keyExtractor={item => item.id}
           renderItem={renderMessage}
           contentContainerStyle={{paddingVertical: 8}}
+          estimatedItemSize={80}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({animated: true})}
         />
 

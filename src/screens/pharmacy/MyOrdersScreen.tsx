@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {View, Text, FlatList, RefreshControl, ActivityIndicator} from 'react-native';
+import {View, Text, RefreshControl, ActivityIndicator} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {ClipboardList, TrendingUp, CheckCircle, Package} from 'lucide-react-native';
@@ -94,7 +95,7 @@ export default function MyOrdersScreen() {
         />
       </View>
 
-      <FlatList
+      <FlashList
         data={filteredOrders}
         keyExtractor={item => item._id}
         renderItem={({item}) => (
@@ -102,6 +103,7 @@ export default function MyOrdersScreen() {
         )}
         contentContainerStyle={{paddingHorizontal: 20, paddingTop: 12, paddingBottom: 100}}
         showsVerticalScrollIndicator={false}
+        estimatedItemSize={120}
         refreshControl={
           <RefreshControl refreshing={false} onRefresh={onRefresh} />
         }

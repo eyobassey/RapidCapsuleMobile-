@@ -8,35 +8,49 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {ArrowLeft, Eye, EyeOff} from 'lucide-react-native';
-import {Button, Input} from '../../components/ui';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {Button, FormInput} from '../../components/ui';
 import {useAuthStore} from '../../store/auth';
 import {colors} from '../../theme/colors';
+import {signupSchema, type SignupFormData} from '../../utils/validation';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {AuthStackParamList} from '../../navigation/AuthStack';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 
 export default function SignupScreen({navigation}: Props) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [dob, setDob] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const signup = useAuthStore(s => s.signup);
 
-  const handleSignup = async () => {
+  const {control, handleSubmit, formState: {errors}} = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      date_of_birth: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (data: SignupFormData) => {
     setLoading(true);
     try {
       await signup({
-        profile: {first_name: firstName, last_name: lastName, phone_number: phone, date_of_birth: dob},
-        email,
-        password,
+        profile: {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          phone_number: data.phone,
+          date_of_birth: data.date_of_birth,
+        },
+        email: data.email,
+        password: data.password,
       });
-      navigation.navigate('VerifyEmail', {email});
+      navigation.navigate('VerifyEmail', {email: data.email});
     } catch (err: any) {
       // TODO: show error toast
     } finally {
@@ -64,63 +78,69 @@ export default function SignupScreen({navigation}: Props) {
         {/* Name row */}
         <View className="flex-row gap-4 mb-5">
           <View className="flex-1">
-            <Input
+            <FormInput
+              control={control}
+              name="first_name"
               label="First Name"
               required
               placeholder="John"
-              value={firstName}
-              onChangeText={setFirstName}
+              error={errors.first_name?.message}
             />
           </View>
           <View className="flex-1">
-            <Input
+            <FormInput
+              control={control}
+              name="last_name"
               label="Last Name"
               required
               placeholder="Doe"
-              value={lastName}
-              onChangeText={setLastName}
+              error={errors.last_name?.message}
             />
           </View>
         </View>
 
-        <Input
+        <FormInput
+          control={control}
+          name="email"
           label="Email"
           required
           placeholder="you@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
+          error={errors.email?.message}
           containerClassName="mb-5"
         />
 
-        <Input
+        <FormInput
+          control={control}
+          name="phone"
           label="Phone"
           required
           placeholder="801 234 5678"
           keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
+          error={errors.phone?.message}
           containerClassName="mb-5"
         />
 
-        <Input
+        <FormInput
+          control={control}
+          name="date_of_birth"
           label="Date of Birth"
           required
           placeholder="YYYY-MM-DD"
-          value={dob}
-          onChangeText={setDob}
+          error={errors.date_of_birth?.message}
           containerClassName="mb-1"
         />
         <Text className="text-[10px] text-muted-foreground ml-1 mb-5">Must be 18+ years old</Text>
 
-        <Input
+        <FormInput
+          control={control}
+          name="password"
           label="Password"
           required
           placeholder="••••••••"
           secureTextEntry={!showPassword}
-          value={password}
-          onChangeText={setPassword}
+          error={errors.password?.message}
           rightIcon={
             showPassword ? (
               <Eye size={18} color={colors.mutedForeground} onPress={() => setShowPassword(false)} />
@@ -148,9 +168,9 @@ export default function SignupScreen({navigation}: Props) {
         </View>
 
         <Button
-          onPress={handleSignup}
+          onPress={handleSubmit(onSubmit)}
           loading={loading}
-          disabled={!agreeTerms || !firstName || !email || !password}>
+          disabled={!agreeTerms}>
           Create Account
         </Button>
 

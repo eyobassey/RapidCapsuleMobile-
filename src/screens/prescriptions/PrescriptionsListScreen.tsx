@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {View, Text, FlatList, RefreshControl, TextInput} from 'react-native';
+import {View, Text, RefreshControl, TextInput} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {Pill, Search, X, Upload} from 'lucide-react-native';
@@ -231,11 +232,12 @@ export default function PrescriptionsListScreen() {
         />
       </View>
 
-      <FlatList
+      <FlashList
         data={filteredPrescriptions}
         keyExtractor={(item: any) => item._id}
         contentContainerClassName="px-5 pt-2 pb-8"
         showsVerticalScrollIndicator={false}
+        estimatedItemSize={120}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

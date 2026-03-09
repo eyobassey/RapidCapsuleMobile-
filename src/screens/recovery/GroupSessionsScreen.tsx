@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert} from 'react-native';
+import {View, Text, TouchableOpacity, ActivityIndicator, Alert} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {Users, Calendar, User, UserPlus, UserMinus} from 'lucide-react-native';
@@ -202,10 +203,11 @@ export default function GroupSessionsScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={sessions}
           keyExtractor={item => item._id}
-          contentContainerStyle={{padding: 16, gap: 12}}
+          contentContainerStyle={{padding: 16}}
+          estimatedItemSize={180}
           renderItem={renderSession}
           ListEmptyComponent={
             <View style={{alignItems: 'center', paddingTop: 60, paddingHorizontal: 40}}>
