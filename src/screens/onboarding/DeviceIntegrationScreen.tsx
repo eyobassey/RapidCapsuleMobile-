@@ -27,6 +27,7 @@ import {useAuthStore} from '../../store/auth';
 import {useOnboardingStore} from '../../store/onboarding';
 import {usersService} from '../../services/users.service';
 import {healthIntegrationsService} from '../../services/healthIntegrations.service';
+import {appleHealthService} from '../../services/appleHealth.service';
 
 const HEALTH_APPS = [
   {
@@ -148,12 +149,27 @@ export default function DeviceIntegrationScreen({navigation}: any) {
         autoSync: true,
       });
 
-      if (result.requiresNativeApp) {
-        // Apple Health — needs native HealthKit (not yet implemented natively)
-        Alert.alert(
-          'Apple Health',
-          'Apple Health integration requires native HealthKit access. This will be available in a future update with direct HealthKit syncing.',
-        );
+      if (result.requiresNativeApp && appId === 'apple_health') {
+        // Apple Health — use native HealthKit SDK
+        const initialized = await appleHealthService.initialize();
+        if (initialized) {
+          Alert.alert(
+            'Apple Health Connected',
+            'HealthKit permissions granted. Syncing your health data now...',
+          );
+          const syncResult = await appleHealthService.fetchAndSync();
+          if (syncResult.synced > 0) {
+            Alert.alert('Sync Complete', `${syncResult.synced} health readings synced.`);
+          }
+          await loadIntegrations();
+        } else {
+          Alert.alert(
+            'Permission Denied',
+            'Please enable HealthKit access in Settings > Privacy & Security > Health > RapidCapsule.',
+          );
+        }
+      } else if (result.requiresNativeApp) {
+        Alert.alert('Not Available', 'This provider requires native SDK support.');
       } else if (result.authUrl) {
         // OAuth flow — open in WebView
         setOauthProvider(appId);
@@ -203,8 +219,17 @@ export default function DeviceIntegrationScreen({navigation}: any) {
   const handleSync = async (appId: string) => {
     setSyncing(appId);
     try {
-      await healthIntegrationsService.sync(appId);
-      Alert.alert('Sync Complete', 'Your health data has been synced.');
+      if (appId === 'apple_health' && appleHealthService.isAvailable()) {
+        const result = await appleHealthService.fetchAndSync();
+        if (result.synced > 0) {
+          Alert.alert('Sync Complete', `${result.synced} health readings synced from Apple Health.`);
+        } else {
+          Alert.alert('No New Data', 'No new health data found to sync.');
+        }
+      } else {
+        await healthIntegrationsService.sync(appId);
+        Alert.alert('Sync Complete', 'Your health data has been synced.');
+      }
       await loadIntegrations();
     } catch (err: any) {
       Alert.alert('Sync Error', err?.response?.data?.message || 'Failed to sync health data.');

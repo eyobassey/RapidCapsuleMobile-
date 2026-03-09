@@ -61,5 +61,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>RapidCapsule needs access to your health data to sync vitals like heart rate, steps, sleep, and blood pressure with your medical profile.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>RapidCapsule may write health data from your consultations back to Apple Health.</string>
 </dict>
 </plist>
