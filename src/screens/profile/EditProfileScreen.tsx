@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   Stethoscope,
   Briefcase,
+  Smartphone,
 } from 'lucide-react-native';
 
 import {useAuthStore} from '../../store/auth';
@@ -376,13 +377,19 @@ export default function EditProfileScreen() {
                 subtitle: 'Drug, food & environmental allergies',
                 screen: 'Allergies',
               },
-            ].map((item, index) => (
+              {
+                icon: <Smartphone size={18} color={colors.primary} />,
+                title: 'Devices & Health Apps',
+                subtitle: 'Connect Apple Health, Fitbit, Google Fit',
+                screen: 'DeviceIntegration',
+              },
+            ].map((item, index, arr) => (
               <TouchableOpacity
                 key={item.screen}
                 activeOpacity={0.7}
                 onPress={() => navigation.navigate(item.screen as any)}
                 className={`flex-row items-center p-4 gap-3 ${
-                  index < 4 ? 'border-b border-border' : ''
+                  index < arr.length - 1 ? 'border-b border-border' : ''
                 }`}>
                 <View className="w-9 h-9 rounded-full bg-muted items-center justify-center">
                   {item.icon}
