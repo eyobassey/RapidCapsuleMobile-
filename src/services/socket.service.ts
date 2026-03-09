@@ -1,7 +1,8 @@
 import {io, Socket} from 'socket.io-client';
 import {storage} from '../utils/storage';
+import ENV from '../config/env';
 
-const API_URL = 'https://api.rapidcapsule.com';
+const API_URL = ENV.SOCKET_URL;
 
 type EventHandler = (...args: any[]) => void;
 

@@ -1,8 +1,9 @@
 import api from './api';
 import {storage} from '../utils/storage';
 import type {SSEChunk, EkaConversation} from '../types/eka.types';
+import ENV from '../config/env';
 
-const API_BASE = 'https://api.rapidcapsule.com/api';
+const API_BASE = ENV.API_BASE_URL;
 
 const unwrap = (res: any) => res.data.data ?? res.data.result ?? res.data;
 

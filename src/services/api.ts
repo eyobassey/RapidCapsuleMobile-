@@ -1,11 +1,11 @@
 import axios from 'axios';
 import {storage} from '../utils/storage';
-
-const API_BASE_URL = 'https://api.rapidcapsule.com/api';
+import ENV from '../config/env';
+import {parseApiError} from './api-error';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 30000,
+  baseURL: ENV.API_BASE_URL,
+  timeout: ENV.REQUEST_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -27,7 +27,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       await storage.clear();
     }
-    return Promise.reject(error);
+    return Promise.reject(parseApiError(error));
   },
 );
 

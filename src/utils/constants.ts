@@ -287,5 +287,3 @@ export const ORDER_STATUS_SEQUENCE_PICKUP = [
   'READY_FOR_PICKUP',
   'COMPLETED',
 ] as const;
-
-export const API_BASE_URL = 'https://api.rapidcapsule.com/api';

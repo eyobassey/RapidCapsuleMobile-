@@ -1,4 +1,5 @@
 import {createMMKV} from 'react-native-mmkv';
+import * as Keychain from 'react-native-keychain';
 
 let mmkv: ReturnType<typeof createMMKV>;
 function getStore() {
@@ -9,27 +10,40 @@ function getStore() {
 }
 
 const KEYS = {
-  TOKEN: 'rc_token',
   USER: 'rc_user',
   REMEMBER_ME: 'rc_remember',
   EKA_LANGUAGE: 'eka_language',
 } as const;
 
+const KEYCHAIN_SERVICE = 'com.rapidcapsule.auth';
+
 export const storage = {
+  // Secure token storage via Keychain/Keystore
   async getToken(): Promise<string | null> {
-    return getStore().getString(KEYS.TOKEN) ?? null;
+    try {
+      const credentials = await Keychain.getGenericPassword({
+        service: KEYCHAIN_SERVICE,
+      });
+      return credentials ? credentials.password : null;
+    } catch {
+      return null;
+    }
   },
 
   async setToken(token: string): Promise<void> {
     if (token) {
-      getStore().set(KEYS.TOKEN, token);
+      await Keychain.setGenericPassword('token', token, {
+        service: KEYCHAIN_SERVICE,
+        accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+      });
     }
   },
 
   async removeToken(): Promise<void> {
-    getStore().remove(KEYS.TOKEN);
+    await Keychain.resetGenericPassword({service: KEYCHAIN_SERVICE});
   },
 
+  // Non-sensitive data stays in MMKV
   async getUser(): Promise<any | null> {
     const data = getStore().getString(KEYS.USER);
     return data ? JSON.parse(data) : null;
@@ -50,7 +64,7 @@ export const storage = {
   },
 
   async clear(): Promise<void> {
-    getStore().remove(KEYS.TOKEN);
+    await Keychain.resetGenericPassword({service: KEYCHAIN_SERVICE});
     getStore().remove(KEYS.USER);
     getStore().remove(KEYS.REMEMBER_ME);
   },
