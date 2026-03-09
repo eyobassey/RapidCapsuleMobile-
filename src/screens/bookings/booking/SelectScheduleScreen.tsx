@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import {Header, Button, EmptyState} from '../../../components/ui';
+import {useAvailableTimesQuery} from '../../../hooks/queries';
 import {useAppointmentsStore} from '../../../store/appointments';
 import {useAuthStore} from '../../../store/auth';
 import {colors} from '../../../theme/colors';
@@ -148,8 +149,8 @@ export default function SelectScheduleScreen() {
   const {specialistId} = route.params;
   const user = useAuthStore(s => s.user);
 
-  const {availableTimes, isLoading, fetchAvailableTimes, setBookingData, bookingData} =
-    useAppointmentsStore();
+  // Keep store for setBookingData and bookingData (client state)
+  const {setBookingData, bookingData} = useAppointmentsStore();
 
   // Calendar month state
   const today = useMemo(() => new Date(), []);
@@ -165,6 +166,19 @@ export default function SelectScheduleScreen() {
     () => Intl.DateTimeFormat().resolvedOptions().timeZone,
   );
   const [showTimezones, setShowTimezones] = useState(false);
+
+  // React Query for available times
+  const {
+    data: availableTimesRaw,
+    isLoading,
+  } = useAvailableTimesQuery(specialistId, selectedDate || '');
+
+  const availableTimes = useMemo(() => {
+    if (!availableTimesRaw) return [];
+    return Array.isArray(availableTimesRaw)
+      ? availableTimesRaw
+      : availableTimesRaw?.data || availableTimesRaw?.slots || [];
+  }, [availableTimesRaw]);
 
   // Specialist's available days of the week (e.g. ['Monday', 'Wednesday', 'Friday'])
   const availableDayNames: string[] = useMemo(
@@ -219,17 +233,12 @@ export default function SelectScheduleScreen() {
     [viewYear, viewMonth, availableDayNames],
   );
 
-  // Fetch available times when a date is selected
+  // Reset selected time when date changes (React Query auto-fetches via useAvailableTimesQuery)
   useEffect(() => {
     if (selectedDate) {
-      fetchAvailableTimes({
-        specialistId,
-        preferredDates: [{date: selectedDate}],
-        patientId: user?._id,
-      });
       setSelectedTime(null);
     }
-  }, [selectedDate, specialistId, timezone]);
+  }, [selectedDate]);
 
   const handleDateSelect = useCallback((day: CalendarDay) => {
     if (!day.isCurrentMonth || !day.isAvailable) return;
@@ -295,6 +304,9 @@ export default function SelectScheduleScreen() {
                 <TouchableOpacity
                   key={ch.key}
                   onPress={() => setSelectedChannel(ch.key)}
+                  accessibilityRole="tab"
+                  accessibilityLabel={`${ch.label} meeting channel`}
+                  accessibilityState={{selected: isSelected}}
                   activeOpacity={0.7}
                   className={`flex-1 items-center py-3 rounded-xl border ${
                     isSelected ? 'border-primary' : 'border-border'
@@ -371,6 +383,8 @@ export default function SelectScheduleScreen() {
             <TouchableOpacity
               onPress={goToPrevMonth}
               disabled={!canGoPrev}
+              accessibilityRole="button"
+              accessibilityLabel="Previous month"
               activeOpacity={0.7}
               className="p-2 rounded-xl"
               style={{
@@ -387,6 +401,8 @@ export default function SelectScheduleScreen() {
             <TouchableOpacity
               onPress={goToNextMonth}
               disabled={!canGoNext}
+              accessibilityRole="button"
+              accessibilityLabel="Next month"
               activeOpacity={0.7}
               className="p-2 rounded-xl"
               style={{
@@ -419,6 +435,9 @@ export default function SelectScheduleScreen() {
                   key={`${day.dateString}-${index}`}
                   onPress={() => handleDateSelect(day)}
                   disabled={isDisabled}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${day.dateString}${day.isAvailable ? ', available' : ', unavailable'}${isSelected ? ', selected' : ''}`}
+                  accessibilityState={{selected: isSelected, disabled: isDisabled}}
                   activeOpacity={0.7}
                   style={{width: '14.28%', aspectRatio: 1}}
                   className="items-center justify-center">
@@ -526,6 +545,9 @@ export default function SelectScheduleScreen() {
                   <TouchableOpacity
                     key={time || index}
                     onPress={() => handleTimeSelect(time)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Time slot ${time}`}
+                    accessibilityState={{selected: isSelected}}
                     activeOpacity={0.7}
                     className={`rounded-xl py-3 border items-center justify-center ${
                       isSelected ? 'border-primary' : 'border-border'

@@ -42,6 +42,8 @@ export default function OtpScreen({navigation, route}: Props) {
     <SafeAreaView className="flex-1 bg-background items-center px-6 pt-12">
       <TouchableOpacity
         onPress={() => navigation.goBack()}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
         className="absolute top-14 left-6 w-10 h-10 rounded-full bg-card border border-border items-center justify-center z-10">
         <ArrowLeft size={20} color={colors.foreground} />
       </TouchableOpacity>
@@ -70,7 +72,7 @@ export default function OtpScreen({navigation, route}: Props) {
             Resend in 0:{timer.toString().padStart(2, '0')}
           </Text>
         ) : (
-          <TouchableOpacity onPress={() => setTimer(45)}>
+          <TouchableOpacity onPress={() => setTimer(45)} accessibilityRole="button" accessibilityLabel="Resend verification code">
             <Text className="text-primary font-medium">Resend Code</Text>
           </TouchableOpacity>
         )}

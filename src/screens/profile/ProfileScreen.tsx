@@ -179,6 +179,8 @@ export default function ProfileScreen() {
 
           <TouchableOpacity
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Edit profile"
             onPress={() => navigation.navigate('EditProfile')}
             className="mt-4 bg-card border border-border rounded-full px-5 py-2 flex-row items-center gap-2">
             <Edit3 size={14} color={colors.primary} />
@@ -217,6 +219,8 @@ export default function ProfileScreen() {
         <View className="mx-5 mt-8">
           <TouchableOpacity
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
             onPress={handleLogout}
             className="bg-card border border-border rounded-2xl overflow-hidden">
             <View className="flex-row items-center p-4">
@@ -266,6 +270,9 @@ export default function ProfileScreen() {
                 <TouchableOpacity
                   key={cur.code}
                   activeOpacity={0.7}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`${cur.name} ${cur.code}`}
+                  accessibilityState={{selected: isSelected}}
                   onPress={() => {
                     setCurrency(cur.code);
                     setShowCurrencyModal(false);

@@ -54,6 +54,9 @@ export default function ScreeningHistoryScreen() {
               key={inst.value || 'all'}
               activeOpacity={0.7}
               onPress={() => setFilter(inst.value)}
+              accessibilityRole="tab"
+              accessibilityLabel={inst.label}
+              accessibilityState={{selected: filter === inst.value}}
               style={{
                 paddingHorizontal: 12,
                 paddingVertical: 7,
@@ -104,6 +107,8 @@ export default function ScreeningHistoryScreen() {
                 result: item,
               })
             }
+            accessibilityRole="button"
+            accessibilityLabel={`${item.instrument?.toUpperCase()} screening, score ${item.total_score}`}
             style={{
               backgroundColor: colors.card,
               borderWidth: 1,

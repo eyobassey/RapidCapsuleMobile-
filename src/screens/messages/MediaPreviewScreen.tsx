@@ -19,6 +19,8 @@ export default function MediaPreviewScreen() {
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => navigation.goBack()}
+        accessibilityRole="button"
+        accessibilityLabel="Close preview"
         style={{
           position: 'absolute',
           top: 50,
@@ -39,6 +41,8 @@ export default function MediaPreviewScreen() {
         <Image
           source={{uri: url}}
           style={{width, height, resizeMode: 'contain'}}
+          accessibilityRole="image"
+          accessibilityLabel="Full size image preview"
         />
       )}
     </View>

@@ -40,7 +40,10 @@ function CollapsibleSection({title, items, icon}: {title: string; items: string[
       <TouchableOpacity
         onPress={() => setOpen(!open)}
         className="flex-row items-center justify-between py-3 px-4"
-        activeOpacity={0.7}>
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={`${title}, ${open ? 'expanded' : 'collapsed'}`}
+        accessibilityState={{expanded: open}}>
         <View className="flex-row items-center">
           {icon}
           <Text className="text-sm font-semibold text-foreground ml-2">{title}</Text>
@@ -139,7 +142,9 @@ export default function DrugDetailScreen() {
         rightAction={
           <TouchableOpacity
             onPress={() => navigation.navigate('Cart')}
-            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+            accessibilityRole="button"
+            accessibilityLabel="View cart">
             <ShoppingCart size={22} color={colors.foreground} />
           </TouchableOpacity>
         }
@@ -221,16 +226,20 @@ export default function DrugDetailScreen() {
               <TouchableOpacity
                 onPress={() => setQuantity(q => Math.max(1, q - 1))}
                 className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
-                activeOpacity={0.7}>
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Decrease quantity">
                 <Minus size={18} color={colors.foreground} />
               </TouchableOpacity>
-              <Text className="text-lg font-bold text-foreground mx-5 min-w-[30px] text-center">
+              <Text className="text-lg font-bold text-foreground mx-5 min-w-[30px] text-center" accessibilityRole="text" accessibilityLabel={`Quantity: ${quantity}`}>
                 {quantity}
               </Text>
               <TouchableOpacity
                 onPress={() => setQuantity(q => Math.min(maxQty, q + 1))}
                 className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
-                activeOpacity={0.7}>
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Increase quantity">
                 <Plus size={18} color={colors.foreground} />
               </TouchableOpacity>
               <Text className="text-xs text-muted-foreground ml-3">
@@ -289,7 +298,9 @@ export default function DrugDetailScreen() {
           <TouchableOpacity
             onPress={handleAddToCart}
             className="bg-primary rounded-2xl px-6 py-3.5 flex-row items-center"
-            activeOpacity={0.8}>
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={`Add ${quantity} to cart`}>
             <ShoppingCart size={18} color="#fff" />
             <Text className="text-white font-bold text-base ml-2">Add to Cart</Text>
           </TouchableOpacity>

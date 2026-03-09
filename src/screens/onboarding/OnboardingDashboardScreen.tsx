@@ -83,7 +83,7 @@ export default function OnboardingDashboardScreen({navigation}: Props) {
           </Text>
         </View>
         <ProgressRing progress={progress} size={52} strokeWidth={4}>
-          <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
+          <Text accessibilityLabel={`Profile setup ${progress}% complete`} style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
             {progress}%
           </Text>
         </ProgressRing>
@@ -219,6 +219,9 @@ function StepCard({
   return (
     <TouchableOpacity
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${step.title}, ${isComplete ? 'Completed' : step.subtitle}`}
+      accessibilityHint={isComplete ? 'Double tap to edit' : 'Double tap to start'}
       activeOpacity={0.7}
       style={{
         backgroundColor: colors.card,

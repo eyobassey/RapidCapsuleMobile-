@@ -395,6 +395,8 @@ export default function EkaChatScreen() {
         <View style={{flexDirection: 'row', gap: 8}}>
           <TouchableOpacity
             onPress={() => navigation.navigate('Home')}
+            accessibilityRole="button"
+            accessibilityLabel="Go to home"
             style={{
               width: 40,
               height: 40,
@@ -409,6 +411,8 @@ export default function EkaChatScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={openSidebar}
+            accessibilityRole="button"
+            accessibilityLabel="Open conversation history"
             style={{
               width: 40,
               height: 40,
@@ -446,6 +450,8 @@ export default function EkaChatScreen() {
 
         <TouchableOpacity
           onPress={handleNewChat}
+          accessibilityRole="button"
+          accessibilityLabel="New chat"
           style={{
             width: 40,
             height: 40,
@@ -543,6 +549,8 @@ export default function EkaChatScreen() {
                   key={i}
                   activeOpacity={0.7}
                   onPress={() => handleSuggestionTap(s)}
+                  accessibilityRole="button"
+                  accessibilityLabel={s.label}
                   style={{
                     paddingHorizontal: 14,
                     paddingVertical: 7,
@@ -580,6 +588,9 @@ export default function EkaChatScreen() {
                     setLanguage(lang.label);
                     setLanguageOpen(false);
                   }}
+                  accessibilityRole="radio"
+                  accessibilityLabel={lang.label}
+                  accessibilityState={{selected: language === lang.label}}
                   style={{
                     paddingHorizontal: 10,
                     paddingVertical: 5,
@@ -614,6 +625,8 @@ export default function EkaChatScreen() {
             }}>
             <TouchableOpacity
               onPress={handleUpload}
+              accessibilityRole="button"
+              accessibilityLabel="Upload file"
               style={{width: 38, height: 38, borderRadius: 14, alignItems: 'center', justifyContent: 'center'}}>
               <Plus size={20} color={colors.mutedForeground} />
             </TouchableOpacity>
@@ -636,10 +649,13 @@ export default function EkaChatScreen() {
               onSubmitEditing={handleSend}
               blurOnSubmit={false}
               returnKeyType="send"
+              accessibilityLabel="Ask Eka anything"
             />
 
             <TouchableOpacity
               onPress={() => setLanguageOpen(!languageOpen)}
+              accessibilityRole="button"
+              accessibilityLabel="Change language"
               style={{width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center'}}>
               <Globe size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
@@ -647,6 +663,8 @@ export default function EkaChatScreen() {
             <TouchableOpacity
               onPress={handleSend}
               disabled={isStreaming || !inputText.trim()}
+              accessibilityRole="button"
+              accessibilityLabel="Send message"
               style={{
                 width: 38,
                 height: 38,
@@ -678,7 +696,7 @@ export default function EkaChatScreen() {
               backgroundColor: 'rgba(0,0,0,0.5)',
               opacity: backdropAnim,
             }}>
-            <TouchableOpacity style={{flex: 1}} onPress={closeSidebar} activeOpacity={1} />
+            <TouchableOpacity style={{flex: 1}} onPress={closeSidebar} activeOpacity={1} accessibilityRole="button" accessibilityLabel="Close sidebar" />
           </Animated.View>
 
           <Animated.View
@@ -711,6 +729,8 @@ export default function EkaChatScreen() {
                 <View style={{flexDirection: 'row', gap: 8}}>
                   <TouchableOpacity
                     onPress={handleNewChat}
+                    accessibilityRole="button"
+                    accessibilityLabel="New conversation"
                     style={{
                       width: 36,
                       height: 36,
@@ -723,6 +743,8 @@ export default function EkaChatScreen() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={closeSidebar}
+                    accessibilityRole="button"
+                    accessibilityLabel="Close sidebar"
                     style={{
                       width: 36,
                       height: 36,
@@ -780,6 +802,8 @@ export default function EkaChatScreen() {
                     closeSidebar();
                     navigation.navigate('Home');
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Back to dashboard"
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -837,6 +861,9 @@ function ConversationGroup({
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setOpen(!open)}
+        accessibilityRole="button"
+        accessibilityLabel={`${label}, ${count} conversations`}
+        accessibilityState={{expanded: open}}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -882,6 +909,8 @@ function ConversationGroup({
               activeOpacity={0.7}
               onPress={() => onTap(convo)}
               onLongPress={() => onLongPress(convo)}
+              accessibilityRole="button"
+              accessibilityLabel={convo.title || 'Untitled conversation'}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -921,7 +950,9 @@ function ConversationGroup({
                     },
                   ]);
                 }}
-                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                accessibilityRole="button"
+                accessibilityLabel={`Delete ${convo.title || 'conversation'}`}>
                 <Trash2 size={14} color={colors.mutedForeground} />
               </TouchableOpacity>
             </TouchableOpacity>
@@ -979,6 +1010,8 @@ function WelcomeScreen({onAction}: {onAction: (a: typeof QUICK_ACTIONS[number]) 
               key={i}
               activeOpacity={0.7}
               onPress={() => onAction(action)}
+              accessibilityRole="button"
+              accessibilityLabel={action.label}
               style={{
                 width: (SCREEN_WIDTH - 72) / 4,
                 alignItems: 'center',
@@ -1345,7 +1378,7 @@ function HealthCheckupStartCard({data}: {data: any}) {
             <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>
               Symptoms for: {tappedPart}
             </Text>
-            <TouchableOpacity onPress={dismissBodyPartResults}>
+            <TouchableOpacity onPress={dismissBodyPartResults} accessibilityRole="button" accessibilityLabel="Dismiss body part results">
               <X size={16} color={colors.mutedForeground} />
             </TouchableOpacity>
           </View>
@@ -1407,6 +1440,7 @@ function HealthCheckupStartCard({data}: {data: any}) {
           onChangeText={onSearchChange}
           placeholder="Or search symptoms by name..."
           placeholderTextColor={colors.mutedForeground}
+          accessibilityLabel="Search symptoms"
           style={{
             flex: 1,
             fontSize: 13,
@@ -1415,7 +1449,7 @@ function HealthCheckupStartCard({data}: {data: any}) {
           }}
         />
         {searchText.length > 0 && (
-          <TouchableOpacity onPress={() => { setSearchText(''); setResults([]); }}>
+          <TouchableOpacity onPress={() => { setSearchText(''); setResults([]); }} accessibilityRole="button" accessibilityLabel="Clear search">
             <X size={14} color={colors.mutedForeground} />
           </TouchableOpacity>
         )}
@@ -1506,6 +1540,8 @@ function HealthCheckupStartCard({data}: {data: any}) {
         <TouchableOpacity
           onPress={onContinue}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={`Continue with ${selected.length} selected symptom${selected.length !== 1 ? 's' : ''}`}
           style={{
             backgroundColor: colors.accent,
             borderRadius: 10,
@@ -1585,6 +1621,9 @@ function ArtifactCard({artifact}: {artifact: EkaArtifact}) {
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => setExpanded(!expanded)}
+        accessibilityRole="button"
+        accessibilityLabel={`${title}, ${expanded ? 'collapse' : 'expand'}`}
+        accessibilityState={{expanded}}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -1836,6 +1875,8 @@ function CheckupReportCard({data}: {data: any}) {
             onPress={generateAISummary}
             disabled={generating}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={generating ? 'Generating AI summary' : 'Generate AI summary, costs 1 credit'}
             style={{
               backgroundColor: generating ? colors.muted : colors.accent,
               borderRadius: 10,
@@ -1867,6 +1908,8 @@ function CheckupReportCard({data}: {data: any}) {
         onPress={handleShareReport}
         disabled={pdfLoading}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="Download and share report"
         style={{
           flexDirection: 'row',
           alignItems: 'center',

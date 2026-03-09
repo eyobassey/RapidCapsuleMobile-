@@ -181,6 +181,9 @@ export default function InterviewScreen() {
                 key={opt.value}
                 activeOpacity={0.7}
                 disabled={isLoading}
+                accessibilityRole="button"
+                accessibilityLabel={`${opt.label}`}
+                accessibilityState={{disabled: isLoading}}
                 onPress={() => handleSingleAnswer(opt.value)}
                 style={{
                   backgroundColor: colors.card,
@@ -212,6 +215,9 @@ export default function InterviewScreen() {
                 key={item.id}
                 activeOpacity={0.7}
                 disabled={isLoading}
+                accessibilityRole="radio"
+                accessibilityLabel={item.name || item.common_name}
+                accessibilityState={{disabled: isLoading}}
                 onPress={() => handleGroupSingleAnswer(item.id)}
                 style={{
                   backgroundColor: colors.card,
@@ -228,6 +234,9 @@ export default function InterviewScreen() {
             <TouchableOpacity
               activeOpacity={0.7}
               disabled={isLoading}
+              accessibilityRole="radio"
+              accessibilityLabel="None of the above"
+              accessibilityState={{disabled: isLoading}}
               onPress={() => {
                 // Mark all as absent (none apply)
                 const newEvidence = items.map((item: any) => ({
@@ -259,6 +268,9 @@ export default function InterviewScreen() {
                 <TouchableOpacity
                   key={item.id}
                   activeOpacity={0.7}
+                  accessibilityRole="checkbox"
+                  accessibilityLabel={item.name || item.common_name}
+                  accessibilityState={{checked: isSelected}}
                   onPress={() => {
                     setSelectedMultiple(prev => {
                       const next = new Set(prev);
@@ -314,6 +326,8 @@ export default function InterviewScreen() {
             onPress={handleStopEarly}
             activeOpacity={0.7}
             disabled={isLoading}
+            accessibilityRole="button"
+            accessibilityLabel="Stop interview and get results now"
             style={{marginTop: 24, alignItems: 'center'}}>
             <Text className="text-xs text-muted-foreground">
               Answered enough?{' '}

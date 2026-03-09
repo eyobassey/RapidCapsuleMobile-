@@ -19,7 +19,7 @@ export default function ProfileBridgeScreen({navigation}: Props) {
       {/* Avatar placeholder */}
       <View className="w-24 h-24 rounded-full border-4 border-card bg-muted items-center justify-center mb-6 relative">
         <User size={40} color={colors.mutedForeground} />
-        <TouchableOpacity className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full border-2 border-background items-center justify-center">
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Add profile photo" className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full border-2 border-background items-center justify-center">
           <Plus size={16} color={colors.white} />
         </TouchableOpacity>
       </View>

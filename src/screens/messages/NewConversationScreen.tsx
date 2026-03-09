@@ -81,6 +81,8 @@ export default function NewConversationScreen() {
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => startConversation(item)}
+        accessibilityRole="button"
+        accessibilityLabel={`Start conversation with ${name || 'User'}`}
         style={{
           flexDirection: 'row',
           alignItems: 'center',

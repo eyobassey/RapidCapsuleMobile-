@@ -129,6 +129,8 @@ export default function ScreeningResultScreen() {
             activeOpacity={0.7}
             onPress={handleGenerateAI}
             disabled={generating}
+            accessibilityRole="button"
+            accessibilityLabel="Generate AI interpretation"
             style={{
               backgroundColor: colors.card,
               borderWidth: 1,

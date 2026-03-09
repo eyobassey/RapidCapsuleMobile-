@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {View, Text, RefreshControl, TextInput} from 'react-native';
 import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -6,7 +6,7 @@ import {useNavigation} from '@react-navigation/native';
 import {Pill, Search, X, Upload} from 'lucide-react-native';
 import {TouchableOpacity} from 'react-native';
 
-import {usePrescriptionsStore} from '../../store/prescriptions';
+import {usePrescriptionsQuery} from '../../hooks/queries';
 import {Header, TabBar, EmptyState, Skeleton} from '../../components/ui';
 import PrescriptionCard from '../../components/prescriptions/PrescriptionCard';
 import {colors} from '../../theme/colors';
@@ -23,28 +23,19 @@ const FILTER_TABS = [
 
 export default function PrescriptionsListScreen() {
   const navigation = useNavigation<any>();
-  const [refreshing, setRefreshing] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [filter, setFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const {
-    prescriptions,
+    data: prescriptions = [],
     isLoading,
-    filter,
-    searchQuery,
-    setFilter,
-    setSearchQuery,
-    fetchPrescriptions,
-  } = usePrescriptionsStore();
-
-  useEffect(() => {
-    fetchPrescriptions();
-  }, [fetchPrescriptions]);
+    refetch,
+  } = usePrescriptionsQuery();
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchPrescriptions();
-    setRefreshing(false);
-  }, [fetchPrescriptions]);
+    await refetch();
+  }, [refetch]);
 
   const filteredPrescriptions = useMemo(() => {
     let result = [...prescriptions];
@@ -167,7 +158,9 @@ export default function PrescriptionsListScreen() {
           <View className="flex-row items-center gap-3">
             <TouchableOpacity
               onPress={() => setShowSearch(!showSearch)}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+              accessibilityRole="button"
+              accessibilityLabel={showSearch ? 'Close search' : 'Search prescriptions'}>
               {showSearch ? (
                 <X size={22} color={colors.foreground} />
               ) : (
@@ -176,7 +169,9 @@ export default function PrescriptionsListScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => navigation.navigate('Pharmacy', {screen: 'UploadPrescription'})}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+              accessibilityRole="button"
+              accessibilityLabel="Upload prescription">
               <Upload size={22} color={colors.primary} />
             </TouchableOpacity>
           </View>
@@ -196,9 +191,10 @@ export default function PrescriptionsListScreen() {
               onChangeText={setSearchQuery}
               autoFocus
               returnKeyType="search"
+              accessibilityLabel="Search prescriptions"
             />
             {searchQuery ? (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <TouchableOpacity onPress={() => setSearchQuery('')} accessibilityRole="button" accessibilityLabel="Clear search">
                 <X size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
             ) : null}
@@ -240,7 +236,7 @@ export default function PrescriptionsListScreen() {
         estimatedItemSize={120}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={false}
             onRefresh={onRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}

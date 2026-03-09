@@ -19,6 +19,8 @@ export default function Header({title, onBack, rightAction, right, center}: Head
         {onBack ? (
           <TouchableOpacity
             onPress={onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
             activeOpacity={0.7}
             hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
             <ArrowLeft size={24} color={colors.foreground} />
@@ -31,6 +33,7 @@ export default function Header({title, onBack, rightAction, right, center}: Head
       ) : (
         <Text
           className="text-lg font-bold text-foreground flex-1 text-center"
+          accessibilityRole="header"
           numberOfLines={1}>
           {title}
         </Text>

@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -30,7 +30,7 @@ import {
 } from 'lucide-react-native';
 import Svg, {Path, Circle as SvgCircle, Line, Text as SvgText} from 'react-native-svg';
 
-import {useVitalsStore} from '../../store/vitals';
+import {useVitalsQuery, useVitalChartQuery} from '../../hooks/queries';
 import {Header, TabBar, StatusBadge, Skeleton, EmptyState} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {VITAL_TYPES} from '../../utils/constants';
@@ -175,10 +175,22 @@ export default function VitalDetailScreen() {
   const vitalType = route.params.vitalType;
 
   const [period, setPeriod] = useState('7d');
-  const [refreshing, setRefreshing] = useState(false);
   const [chartWidth, setChartWidth] = useState(340);
 
-  const {vitalsData, chartData, isLoading, fetchVitals, fetchChartData} = useVitalsStore();
+  // React Query hooks
+  const {
+    data: vitalsData = {},
+    isLoading: vitalsLoading,
+    refetch: refetchVitals,
+  } = useVitalsQuery();
+
+  const {
+    data: chartData,
+    isLoading: chartLoading,
+    refetch: refetchChart,
+  } = useVitalChartQuery(vitalType, '90d');
+
+  const isLoading = vitalsLoading || chartLoading;
 
   const config = useMemo(
     () => VITAL_TYPES.find(v => v.key === vitalType),
@@ -187,25 +199,9 @@ export default function VitalDetailScreen() {
 
   const IconComponent = config ? (ICON_MAP[config.icon] || Activity) : Activity;
 
-  useEffect(() => {
-    fetchVitals();
-  }, [fetchVitals]);
-
-  useEffect(() => {
-    if (vitalType) {
-      // Backend ignores duration — always returns ~6 months. Fetch once, filter client-side.
-      fetchChartData({vitalToSelect: vitalType, duration: '90d'});
-    }
-  }, [vitalType, fetchChartData]);
-
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await Promise.allSettled([
-      fetchVitals(),
-      fetchChartData({vitalToSelect: vitalType, duration: '90d'}),
-    ]);
-    setRefreshing(false);
-  }, [fetchVitals, fetchChartData, vitalType]);
+    await Promise.allSettled([refetchVitals(), refetchChart()]);
+  }, [refetchVitals, refetchChart]);
 
   // Extract history entries for this vital from the merged vitals object
   const history = useMemo(() => {
@@ -345,7 +341,7 @@ export default function VitalDetailScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={false}
             onRefresh={onRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
@@ -461,6 +457,8 @@ export default function VitalDetailScreen() {
       <View className="absolute bottom-6 left-5 right-5">
         <TouchableOpacity
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={`Log ${config?.name || 'vital'} reading`}
           onPress={() => navigation.navigate('LogVitals', {vitalType})}
           className="bg-primary rounded-2xl h-14 flex-row items-center justify-center shadow-lg">
           <Plus size={20} color={colors.white} />

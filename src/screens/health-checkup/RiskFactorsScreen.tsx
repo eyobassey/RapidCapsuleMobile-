@@ -21,6 +21,9 @@ function FactorItem({
   return (
     <TouchableOpacity
       activeOpacity={0.7}
+      accessibilityRole="checkbox"
+      accessibilityLabel={factor.common_name || factor.name}
+      accessibilityState={{checked: isSelected}}
       onPress={onToggle}
       style={{
         flexDirection: 'row',
@@ -177,6 +180,8 @@ export default function RiskFactorsScreen() {
             {hasMore && !query && (
               <TouchableOpacity
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={showAll ? 'Show less risk factors' : `Show all ${riskFactors.length} risk factors`}
                 onPress={() => setShowAll(v => !v)}
                 style={{
                   flexDirection: 'row',
@@ -226,9 +231,10 @@ export default function RiskFactorsScreen() {
                     value={query}
                     onChangeText={setQuery}
                     autoCapitalize="none"
+                    accessibilityLabel="Search risk factors"
                   />
                   {query.length > 0 && (
-                    <TouchableOpacity onPress={() => setQuery('')}>
+                    <TouchableOpacity onPress={() => setQuery('')} accessibilityRole="button" accessibilityLabel="Clear search">
                       <X size={18} color={colors.mutedForeground} />
                     </TouchableOpacity>
                   )}

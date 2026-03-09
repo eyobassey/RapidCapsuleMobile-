@@ -21,6 +21,8 @@ export default function SplashScreen({navigation}: Props) {
           <View className="absolute w-full h-full bg-primary/30 rounded-3xl opacity-50" />
           <Image
             source={require('../../../assets/logo.png')}
+            accessibilityRole="image"
+            accessibilityLabel="RapidCapsule logo"
             className="w-24 h-24"
             resizeMode="contain"
           />

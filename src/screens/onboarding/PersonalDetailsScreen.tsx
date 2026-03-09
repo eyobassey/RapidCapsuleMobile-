@@ -1,11 +1,17 @@
 import React, {useState, useEffect} from 'react';
 import {View, Alert} from 'react-native';
-import {Input} from '../../components/ui';
+import {useForm, Controller} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {FormInput} from '../../components/ui';
 import SectionScreenLayout from '../../components/onboarding/SectionScreenLayout';
 import SelectPicker from '../../components/onboarding/SelectPicker';
 import {useAuthStore} from '../../store/auth';
 import {useOnboardingStore} from '../../store/onboarding';
 import {usersService} from '../../services/users.service';
+import {
+  personalDetailsSchema,
+  type PersonalDetailsFormData,
+} from '../../utils/validation';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
 
@@ -28,51 +34,57 @@ export default function PersonalDetailsScreen({navigation}: Props) {
   const fetchUser = useAuthStore(s => s.fetchUser);
   const clearDraft = useOnboardingStore(s => s.clearDraft);
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [dob, setDob] = useState('');
-  const [gender, setGender] = useState('');
-  const [phone, setPhone] = useState('');
-  const [maritalStatus, setMaritalStatus] = useState('');
-  const [occupation, setOccupation] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const {
+    control,
+    handleSubmit,
+    formState: {errors},
+    reset,
+  } = useForm<PersonalDetailsFormData>({
+    resolver: zodResolver(personalDetailsSchema),
+    defaultValues: {
+      first_name: '',
+      last_name: '',
+      date_of_birth: '',
+      gender: '',
+      phone_number: '',
+      marital_status: '',
+      occupation: '',
+    },
+  });
+
   // Pre-fill from user data
-  // Backend nests phone under profile.contact.phone, address under profile.contact
   useEffect(() => {
     if (user?.profile) {
       const p = user.profile as any;
-      setFirstName(p.first_name || '');
-      setLastName(p.last_name || '');
-      // Strip ISO datetime to just date (e.g. "1990-05-15T00:00:00.000Z" → "1990-05-15")
-      setDob(p.date_of_birth ? p.date_of_birth.split('T')[0] : '');
-      setGender(p.gender || '');
-      // Phone: profile.contact.phone.number → profile.phone.number → profile.phone_number
-      setPhone(
-        p.contact?.phone?.number || p.phone?.number || p.phone_number || '',
-      );
-      setMaritalStatus(p.marital_status || '');
-      setOccupation(p.occupation || '');
+      reset({
+        first_name: p.first_name || '',
+        last_name: p.last_name || '',
+        date_of_birth: p.date_of_birth ? p.date_of_birth.split('T')[0] : '',
+        gender: p.gender || '',
+        phone_number:
+          p.contact?.phone?.number || p.phone?.number || p.phone_number || '',
+        marital_status: p.marital_status || '',
+        occupation: p.occupation || '',
+      });
     }
-  }, [user]);
+  }, [user, reset]);
 
-  const isValid = !!(firstName.trim() && lastName.trim() && dob.trim());
-
-  const handleSave = async () => {
-    if (!isValid) return;
+  const onSubmit = async (data: PersonalDetailsFormData) => {
     setLoading(true);
     try {
       await usersService.updateProfile({
         profile: {
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          date_of_birth: dob.trim() || undefined,
-          gender: gender || undefined,
-          marital_status: maritalStatus || undefined,
-          occupation: occupation.trim() || undefined,
+          first_name: data.first_name.trim(),
+          last_name: data.last_name.trim(),
+          date_of_birth: data.date_of_birth.trim() || undefined,
+          gender: data.gender || undefined,
+          marital_status: data.marital_status || undefined,
+          occupation: data.occupation?.trim() || undefined,
         },
-        ...(phone.trim()
-          ? {phone: {country_code: '+234', number: phone.trim()}}
+        ...(data.phone_number?.trim()
+          ? {phone: {country_code: '+234', number: data.phone_number.trim()}}
           : {}),
       });
       clearDraft('personalDetails');
@@ -93,66 +105,85 @@ export default function PersonalDetailsScreen({navigation}: Props) {
       title="Personal Details"
       description="Basic information to set up your health profile. Name and date of birth are required."
       onBack={() => navigation.goBack()}
-      onSave={handleSave}
-      saveDisabled={!isValid}
+      onSave={handleSubmit(onSubmit)}
+      saveDisabled={false}
       loading={loading}>
       <View style={{gap: 16}}>
-        <Input
+        <FormInput
+          control={control}
+          name="first_name"
           label="First Name"
           required
           placeholder="Enter first name"
-          value={firstName}
-          onChangeText={setFirstName}
+          error={errors.first_name?.message}
           autoCapitalize="words"
         />
 
-        <Input
+        <FormInput
+          control={control}
+          name="last_name"
           label="Last Name"
           required
           placeholder="Enter last name"
-          value={lastName}
-          onChangeText={setLastName}
+          error={errors.last_name?.message}
           autoCapitalize="words"
         />
 
-        <Input
+        <FormInput
+          control={control}
+          name="date_of_birth"
           label="Date of Birth"
           required
           placeholder="YYYY-MM-DD"
-          value={dob}
-          onChangeText={setDob}
+          error={errors.date_of_birth?.message}
           keyboardType="numbers-and-punctuation"
         />
 
-        <SelectPicker
-          label="Gender"
-          placeholder="Select gender"
-          value={gender}
-          options={GENDER_OPTIONS}
-          onChange={setGender}
+        <Controller
+          control={control}
+          name="gender"
+          render={({field: {onChange, value}}) => (
+            <SelectPicker
+              label="Gender"
+              placeholder="Select gender"
+              value={value || ''}
+              options={GENDER_OPTIONS}
+              onChange={onChange}
+              error={errors.gender?.message}
+            />
+          )}
         />
 
-        <Input
+        <FormInput
+          control={control}
+          name="phone_number"
           label="Phone Number"
           placeholder="08012345678"
-          value={phone}
-          onChangeText={setPhone}
+          error={errors.phone_number?.message}
           keyboardType="phone-pad"
         />
 
-        <SelectPicker
-          label="Marital Status"
-          placeholder="Select status"
-          value={maritalStatus}
-          options={MARITAL_OPTIONS}
-          onChange={setMaritalStatus}
+        <Controller
+          control={control}
+          name="marital_status"
+          render={({field: {onChange, value}}) => (
+            <SelectPicker
+              label="Marital Status"
+              placeholder="Select status"
+              value={value || ''}
+              options={MARITAL_OPTIONS}
+              onChange={onChange}
+              error={errors.marital_status?.message}
+            />
+          )}
         />
 
-        <Input
+        <FormInput
+          control={control}
+          name="occupation"
           label="Occupation"
           placeholder="e.g. Software Engineer"
-          value={occupation}
-          onChangeText={setOccupation}
+          error={errors.occupation?.message}
           autoCapitalize="words"
         />
       </View>

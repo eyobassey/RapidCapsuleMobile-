@@ -137,6 +137,9 @@ export default function RecoveryPlanScreen() {
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setExpandedStage(isExpanded ? null : stage._id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${stage.name}, ${statusCfg.label}, ${completedGoals} of ${totalGoals} goals`}
+                    accessibilityState={{expanded: isExpanded}}
                     style={{padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12}}>
                     <View
                       style={{
@@ -189,6 +192,9 @@ export default function RecoveryPlanScreen() {
                           key={goal._id}
                           activeOpacity={0.7}
                           onPress={() => handleGoalToggle(stage, goal)}
+                          accessibilityRole="checkbox"
+                          accessibilityLabel={goal.description}
+                          accessibilityState={{checked: goal.status === 'completed'}}
                           style={{flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6}}>
                           {goal.status === 'completed' ? (
                             <CheckCircle2 size={18} color={colors.success} />

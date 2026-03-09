@@ -370,6 +370,8 @@ export default function TrackOrderScreen() {
                 <TouchableOpacity
                   onPress={handleCallDriver}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Call delivery person ${deliveryPerson.name}`}
                   style={{
                     width: 44,
                     height: 44,

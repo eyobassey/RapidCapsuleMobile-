@@ -524,7 +524,7 @@ export default function ChatScreen() {
                 {replyTo.content || replyTo.type}
               </Text>
             </View>
-            <TouchableOpacity hitSlop={8} onPress={() => setReplyTo(null)}>
+            <TouchableOpacity hitSlop={8} onPress={() => setReplyTo(null)} accessibilityRole="button" accessibilityLabel="Cancel reply">
               <X size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
           </View>
@@ -544,6 +544,8 @@ export default function ChatScreen() {
             }}>
             <TouchableOpacity
               onPress={handlePickImage}
+              accessibilityRole="button"
+              accessibilityLabel="Send a photo"
               style={{alignItems: 'center', gap: 4}}>
               <View
                 style={{
@@ -560,6 +562,8 @@ export default function ChatScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handlePickVideo}
+              accessibilityRole="button"
+              accessibilityLabel="Send a video"
               style={{alignItems: 'center', gap: 4}}>
               <View
                 style={{
@@ -575,6 +579,8 @@ export default function ChatScreen() {
               <Text style={{fontSize: 10, color: colors.mutedForeground}}>Video</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Take a photo"
               onPress={() => {
                 setShowAttachMenu(false);
                 launchImageLibrary({mediaType: 'photo', selectionLimit: 1}).then(r => {
@@ -607,6 +613,8 @@ export default function ChatScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowAttachMenu(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Send a file"
               style={{alignItems: 'center', gap: 4}}>
               <View
                 style={{
@@ -642,6 +650,8 @@ export default function ChatScreen() {
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={handleCancelRecording}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel recording"
               style={{
                 width: 40,
                 height: 40,
@@ -676,6 +686,8 @@ export default function ChatScreen() {
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={handleStopAndSend}
+              accessibilityRole="button"
+              accessibilityLabel="Stop recording and send voice message"
               style={{
                 width: 40,
                 height: 40,
@@ -703,6 +715,8 @@ export default function ChatScreen() {
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => setShowAttachMenu(!showAttachMenu)}
+              accessibilityRole="button"
+              accessibilityLabel="Attach file"
               style={{
                 width: 40,
                 height: 40,
@@ -731,6 +745,7 @@ export default function ChatScreen() {
                 placeholder="Type a message..."
                 placeholderTextColor={colors.mutedForeground}
                 multiline
+                accessibilityLabel="Type a message"
                 style={{
                   fontSize: 14,
                   color: colors.foreground,
@@ -745,6 +760,8 @@ export default function ChatScreen() {
                 activeOpacity={0.7}
                 onPress={handleSend}
                 disabled={sending}
+                accessibilityRole="button"
+                accessibilityLabel="Send message"
                 style={{
                   width: 40,
                   height: 40,
@@ -765,6 +782,8 @@ export default function ChatScreen() {
                 activeOpacity={0.7}
                 onPress={handleStartRecording}
                 disabled={sending}
+                accessibilityRole="button"
+                accessibilityLabel="Record voice message"
                 style={{
                   width: 40,
                   height: 40,

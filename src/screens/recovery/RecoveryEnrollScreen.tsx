@@ -154,6 +154,9 @@ export default function RecoveryEnrollScreen() {
                         toggleSubstance(s);
                       }
                     }}
+                    accessibilityRole="checkbox"
+                    accessibilityLabel={`${s.replace('_', ' ')}${isPrimary ? ', primary' : ''}`}
+                    accessibilityState={{checked: isSelected}}
                     style={{
                       backgroundColor: isPrimary
                         ? colors.accent
@@ -222,6 +225,9 @@ export default function RecoveryEnrollScreen() {
                       key={preset.days}
                       activeOpacity={0.7}
                       onPress={() => setSobrietyDate(presetDate)}
+                      accessibilityRole="radio"
+                      accessibilityLabel={preset.label}
+                      accessibilityState={{selected: isSelected}}
                       style={{
                         backgroundColor: isSelected ? `${colors.accent}15` : colors.card,
                         borderWidth: 1,
@@ -254,6 +260,9 @@ export default function RecoveryEnrollScreen() {
                   key={cl.value}
                   activeOpacity={0.7}
                   onPress={() => setCareLevel(cl.value)}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`${cl.label}, ${cl.desc}`}
+                  accessibilityState={{selected: careLevel === cl.value}}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',

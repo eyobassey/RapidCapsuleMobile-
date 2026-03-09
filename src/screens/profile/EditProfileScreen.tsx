@@ -171,6 +171,8 @@ export default function EditProfileScreen() {
           ) : (
             <TouchableOpacity
               onPress={handleSave}
+              accessibilityRole="button"
+              accessibilityLabel="Save profile"
               hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
               <Check size={24} color={colors.primary} />
             </TouchableOpacity>
@@ -188,7 +190,7 @@ export default function EditProfileScreen() {
           keyboardShouldPersistTaps="handled">
           {/* Avatar with camera overlay */}
           <View className="items-center mb-8">
-            <TouchableOpacity activeOpacity={0.7} className="relative">
+            <TouchableOpacity activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Change profile photo" className="relative">
               <Avatar
                 uri={profileImage}
                 firstName={firstName}
@@ -301,6 +303,9 @@ export default function EditProfileScreen() {
                   <TouchableOpacity
                     key={option}
                     activeOpacity={0.7}
+                    accessibilityRole="radio"
+                    accessibilityLabel={option}
+                    accessibilityState={{selected: isSelected}}
                     onPress={() => setGender(option)}
                     className={`flex-1 h-12 rounded-2xl items-center justify-center border ${
                       isSelected

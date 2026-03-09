@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useRef, useCallback} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
+import {useForm, Controller} from 'react-hook-form';
 import {
   Heart,
   HeartPulse,
@@ -32,7 +33,6 @@ import {useVitalsStore} from '../../store/vitals';
 import {Header, Input, Button} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {VITAL_TYPES} from '../../utils/constants';
-import type {VitalTypeConfig} from '../../types/vital.types';
 import type {HomeStackParamList} from '../../navigation/stacks/HomeStack';
 
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
@@ -40,81 +40,144 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Scale, Footprints, Moon, Flame, Brain, Percent, GlassWater, Zap,
 };
 
+// Form values: keyed by vital type key, plus bp_systolic, bp_diastolic, notes
+type VitalsFormValues = Record<string, string>;
+
+/** Returns an error message if the value is not a valid positive number, or undefined if valid/empty */
+function validateNumericField(value: string | undefined): string | undefined {
+  if (!value || !value.trim()) return undefined; // empty is OK — optional
+  const num = Number(value.trim());
+  if (isNaN(num) || num <= 0) return 'Must be a positive number';
+  return undefined;
+}
+
 export default function LogVitalsScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<HomeStackParamList, 'LogVitals'>>();
   const focusedVitalType = route.params?.vitalType;
-  const {logVital, isLoading} = useVitalsStore();
+  const {logVital} = useVitalsStore();
   const bpDiastolicRef = useRef<TextInput>(null);
 
-  // Form state: keyed by vital type key
-  const [values, setValues] = useState<Record<string, string>>({});
-  // Blood pressure needs systolic and diastolic
-  const [bpSystolic, setBpSystolic] = useState('');
-  const [bpDiastolic, setBpDiastolic] = useState('');
-  const [notes, setNotes] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const updateValue = (key: string, val: string) => {
-    setValues(prev => ({...prev, [key]: val}));
-  };
-
-  const handleSave = async () => {
-    // Build a single payload object: { blood_pressure: {value, unit}, pulse_rate: {value, unit}, ... }
-    const payload: Record<string, {value: string; unit: string}> = {};
-    let count = 0;
-
-    for (const config of VITAL_TYPES) {
-      if (config.key === 'blood_pressure') {
-        if (bpSystolic && bpDiastolic) {
-          payload.blood_pressure = {
-            value: `${bpSystolic}/${bpDiastolic}`,
-            unit: config.unit,
-          };
-          count++;
-        }
-      } else {
-        const val = values[config.key];
-        if (val && val.trim()) {
-          payload[config.key] = {
-            value: val.trim(),
-            unit: config.unit,
-          };
-          count++;
-        }
-      }
-    }
-
-    if (count === 0) {
-      Alert.alert('No Data', 'Please enter at least one vital reading before saving.');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      await logVital(payload);
-      Alert.alert(
-        'Vitals Logged',
-        `Successfully recorded ${count} vital${count > 1 ? 's' : ''}.`,
-        [{text: 'OK', onPress: () => navigation.goBack()}],
-      );
-    } catch (err: any) {
-      Alert.alert(
-        'Error',
-        err?.response?.data?.message || err?.message || 'Failed to save vitals. Please try again.',
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
+  const {
+    control,
+    handleSubmit,
+    formState: {errors},
+    setError,
+    clearErrors,
+    watch,
+  } = useForm<VitalsFormValues>({
+    defaultValues: {},
+  });
 
   // If navigated from VitalDetail, only show that vital's input
   const displayedVitals = focusedVitalType
     ? VITAL_TYPES.filter(v => v.key === focusedVitalType)
     : VITAL_TYPES;
 
-  const filledCount = Object.values(values).filter(v => v?.trim()).length +
-    (bpSystolic && bpDiastolic ? 1 : 0);
+  const watchedValues = watch();
+
+  // Count filled vitals
+  const filledCount = (() => {
+    let count = 0;
+    for (const config of displayedVitals) {
+      if (config.key === 'blood_pressure') {
+        if (watchedValues.bp_systolic?.trim() && watchedValues.bp_diastolic?.trim()) {
+          count++;
+        }
+      } else if (watchedValues[config.key]?.trim()) {
+        count++;
+      }
+    }
+    return count;
+  })();
+
+  const [saving, setSaving] = React.useState(false);
+
+  const onSubmit = useCallback(
+    async (data: VitalsFormValues) => {
+      // Validate all filled fields are positive numbers
+      let hasError = false;
+
+      for (const config of displayedVitals) {
+        if (config.key === 'blood_pressure') {
+          const sysErr = validateNumericField(data.bp_systolic);
+          const diaErr = validateNumericField(data.bp_diastolic);
+          if (sysErr) {
+            setError('bp_systolic', {message: sysErr});
+            hasError = true;
+          }
+          if (diaErr) {
+            setError('bp_diastolic', {message: diaErr});
+            hasError = true;
+          }
+          // If only one BP field is filled
+          const hasSys = !!data.bp_systolic?.trim();
+          const hasDia = !!data.bp_diastolic?.trim();
+          if (hasSys !== hasDia) {
+            if (!hasSys) setError('bp_systolic', {message: 'Required with diastolic'});
+            if (!hasDia) setError('bp_diastolic', {message: 'Required with systolic'});
+            hasError = true;
+          }
+        } else {
+          const err = validateNumericField(data[config.key]);
+          if (err) {
+            setError(config.key, {message: err});
+            hasError = true;
+          }
+        }
+      }
+
+      if (hasError) return;
+
+      // Build payload
+      const payload: Record<string, {value: string; unit: string}> = {};
+      let count = 0;
+
+      for (const config of VITAL_TYPES) {
+        if (config.key === 'blood_pressure') {
+          if (data.bp_systolic?.trim() && data.bp_diastolic?.trim()) {
+            payload.blood_pressure = {
+              value: `${data.bp_systolic.trim()}/${data.bp_diastolic.trim()}`,
+              unit: config.unit,
+            };
+            count++;
+          }
+        } else {
+          const val = data[config.key];
+          if (val && val.trim()) {
+            payload[config.key] = {
+              value: val.trim(),
+              unit: config.unit,
+            };
+            count++;
+          }
+        }
+      }
+
+      if (count === 0) {
+        Alert.alert('No Data', 'Please enter at least one vital reading before saving.');
+        return;
+      }
+
+      setSaving(true);
+      try {
+        await logVital(payload);
+        Alert.alert(
+          'Vitals Logged',
+          `Successfully recorded ${count} vital${count > 1 ? 's' : ''}.`,
+          [{text: 'OK', onPress: () => navigation.goBack()}],
+        );
+      } catch (err: any) {
+        Alert.alert(
+          'Error',
+          err?.response?.data?.message || err?.message || 'Failed to save vitals. Please try again.',
+        );
+      } finally {
+        setSaving(false);
+      }
+    },
+    [displayedVitals, logVital, navigation, setError],
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -159,28 +222,50 @@ export default function LogVitalsScreen() {
                   </View>
                   <View className="flex-row gap-3">
                     <View className="flex-1">
-                      <Input
-                        placeholder="Systolic"
-                        value={bpSystolic}
-                        onChangeText={setBpSystolic}
-                        keyboardType="numeric"
-                        returnKeyType="next"
-                        autoFocus={!!focusedVitalType}
-                        onSubmitEditing={() => bpDiastolicRef.current?.focus()}
+                      <Controller
+                        control={control}
+                        name="bp_systolic"
+                        render={({field: {onChange, onBlur, value}}) => (
+                          <Input
+                            placeholder="Systolic"
+                            value={value || ''}
+                            onChangeText={v => {
+                              clearErrors('bp_systolic');
+                              onChange(v);
+                            }}
+                            onBlur={onBlur}
+                            keyboardType="numeric"
+                            returnKeyType="next"
+                            autoFocus={!!focusedVitalType}
+                            onSubmitEditing={() => bpDiastolicRef.current?.focus()}
+                            error={errors.bp_systolic?.message as string}
+                          />
+                        )}
                       />
                     </View>
                     <View className="items-center justify-center">
                       <Text className="text-lg text-muted-foreground font-bold">/</Text>
                     </View>
                     <View className="flex-1">
-                      <Input
-                        ref={bpDiastolicRef}
-                        placeholder="Diastolic"
-                        value={bpDiastolic}
-                        onChangeText={setBpDiastolic}
-                        keyboardType="numeric"
-                        returnKeyType="done"
-                        onSubmitEditing={focusedVitalType ? handleSave : undefined}
+                      <Controller
+                        control={control}
+                        name="bp_diastolic"
+                        render={({field: {onChange, onBlur, value}}) => (
+                          <Input
+                            ref={bpDiastolicRef}
+                            placeholder="Diastolic"
+                            value={value || ''}
+                            onChangeText={v => {
+                              clearErrors('bp_diastolic');
+                              onChange(v);
+                            }}
+                            onBlur={onBlur}
+                            keyboardType="numeric"
+                            returnKeyType="done"
+                            onSubmitEditing={focusedVitalType ? handleSubmit(onSubmit) : undefined}
+                            error={errors.bp_diastolic?.message as string}
+                          />
+                        )}
                       />
                     </View>
                   </View>
@@ -190,19 +275,30 @@ export default function LogVitalsScreen() {
 
             return (
               <View key={config.key} className="mb-4">
-                <Input
-                  label={config.name}
-                  placeholder={`Enter ${config.name.toLowerCase()}`}
-                  value={values[config.key] || ''}
-                  onChangeText={val => updateValue(config.key, val)}
-                  keyboardType="numeric"
-                  returnKeyType="done"
-                  autoFocus={!!focusedVitalType}
-                  onSubmitEditing={focusedVitalType ? handleSave : undefined}
-                  icon={<IconComponent size={18} color={config.color} />}
-                  rightIcon={
-                    <Text className="text-xs text-muted-foreground">{config.unit}</Text>
-                  }
+                <Controller
+                  control={control}
+                  name={config.key}
+                  render={({field: {onChange, onBlur, value}}) => (
+                    <Input
+                      label={config.name}
+                      placeholder={`Enter ${config.name.toLowerCase()}`}
+                      value={value || ''}
+                      onChangeText={v => {
+                        clearErrors(config.key);
+                        onChange(v);
+                      }}
+                      onBlur={onBlur}
+                      keyboardType="numeric"
+                      returnKeyType="done"
+                      autoFocus={!!focusedVitalType}
+                      onSubmitEditing={focusedVitalType ? handleSubmit(onSubmit) : undefined}
+                      icon={<IconComponent size={18} color={config.color} />}
+                      rightIcon={
+                        <Text className="text-xs text-muted-foreground">{config.unit}</Text>
+                      }
+                      error={errors[config.key]?.message as string}
+                    />
+                  )}
                 />
               </View>
             );
@@ -211,15 +307,21 @@ export default function LogVitalsScreen() {
           {/* Notes — hidden in single-vital mode for quick logging */}
           {!focusedVitalType && (
             <View className="mb-6">
-              <Input
-                label="Notes (Optional)"
-                placeholder="Any additional notes..."
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                numberOfLines={3}
-                icon={<StickyNote size={18} color={colors.mutedForeground} />}
-                className="h-24 items-start pt-3"
+              <Controller
+                control={control}
+                name="notes"
+                render={({field: {onChange, value}}) => (
+                  <Input
+                    label="Notes (Optional)"
+                    placeholder="Any additional notes..."
+                    value={value || ''}
+                    onChangeText={onChange}
+                    multiline
+                    numberOfLines={3}
+                    icon={<StickyNote size={18} color={colors.mutedForeground} />}
+                    className="h-24 items-start pt-3"
+                  />
+                )}
               />
             </View>
           )}
@@ -230,7 +332,7 @@ export default function LogVitalsScreen() {
       <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
         <Button
           variant="primary"
-          onPress={handleSave}
+          onPress={handleSubmit(onSubmit)}
           loading={saving}
           disabled={filledCount === 0}>
           {`Save ${filledCount > 0 ? `(${filledCount} vital${filledCount > 1 ? 's' : ''})` : 'Vitals'}`}

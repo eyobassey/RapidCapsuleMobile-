@@ -328,6 +328,8 @@ function StringListSection({
               </Text>
               <TouchableOpacity
                 onPress={() => setItems(prev => prev.filter((_, i) => i !== index))}
+                accessibilityRole="button"
+                accessibilityLabel={`Remove ${item}`}
                 hitSlop={{top: 6, bottom: 6, left: 6, right: 6}}>
                 <X size={12} color={colors.primary} />
               </TouchableOpacity>
@@ -350,6 +352,7 @@ function StringListSection({
               fontSize: 14,
               color: colors.foreground,
             }}
+            accessibilityLabel={`Add ${title.toLowerCase()}`}
             placeholder={placeholder}
             placeholderTextColor={colors.mutedForeground}
             value={inputValue}
@@ -360,6 +363,8 @@ function StringListSection({
         </View>
         <TouchableOpacity
           onPress={handleAdd}
+          accessibilityRole="button"
+          accessibilityLabel={addLabel}
           activeOpacity={0.7}
           style={{
             width: 48,

@@ -343,6 +343,9 @@ export default function HealthRecordsScreen() {
                     <TouchableOpacity
                       key={checkup._id || index}
                       activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Health checkup: ${topCondition?.common_name || topCondition?.name || 'Health Checkup'}, ${getTriageLabel(triageLevel)}`}
+                      accessibilityHint="Double tap to view details"
                       onPress={() => {
                         if (checkup._id) {
                           navigation.navigate('Home' as any, {
@@ -453,6 +456,9 @@ function SectionCard({
     <TouchableOpacity
       activeOpacity={onPress ? 0.7 : 1}
       onPress={onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={title}
+      accessibilityHint={onPress ? 'Double tap to view details' : undefined}
       style={{
         backgroundColor: colors.card,
         borderWidth: 1,

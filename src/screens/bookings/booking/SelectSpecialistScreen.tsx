@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback, useMemo} from 'react';
+import React, {useState, useMemo} from 'react';
 import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
 import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import type {RouteProp} from '@react-navigation/native';
 import {Users, ChevronDown, X} from 'lucide-react-native';
 import {Header, EmptyState, Skeleton} from '../../../components/ui';
 import SpecialistCard from '../../../components/appointments/SpecialistCard';
+import {useSpecialistsQuery} from '../../../hooks/queries';
 import {useAppointmentsStore} from '../../../store/appointments';
 import {colors} from '../../../theme/colors';
 import type {BookingsStackParamList} from '../../../navigation/stacks/BookingsStack';
@@ -46,6 +47,9 @@ function FilterChip({
   return (
     <TouchableOpacity
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Filter by ${label}`}
+      accessibilityState={{selected: active}}
       activeOpacity={0.7}
       className={`flex-row items-center gap-1 px-3 py-2 rounded-xl border ${
         active ? 'border-primary' : 'border-border'
@@ -127,8 +131,8 @@ export default function SelectSpecialistScreen() {
   const route = useRoute<Route>();
   const {professionalCategory, specialistCategory} = route.params;
 
-  const {specialists, isLoading, fetchSpecialists, setBookingData} =
-    useAppointmentsStore();
+  // Keep store for setBookingData (client state)
+  const {setBookingData} = useAppointmentsStore();
 
   const [gender, setGender] = useState('');
   const [rating, setRating] = useState('');
@@ -137,19 +141,26 @@ export default function SelectSpecialistScreen() {
 
   const hasFilters = !!gender || !!rating || !!channel;
 
-  const loadSpecialists = useCallback(() => {
+  // Build query params — React Query auto-refetches when params change
+  const queryParams = useMemo(() => {
     const payload: any = {
       professional_category: professionalCategory,
       specialist_category: specialistCategory,
     };
     if (gender) payload.gender = gender;
     if (rating) payload.rating = rating;
-    fetchSpecialists(payload);
+    return payload;
   }, [professionalCategory, specialistCategory, gender, rating]);
 
-  useEffect(() => {
-    loadSpecialists();
-  }, [loadSpecialists]);
+  const {
+    data: specialistsRaw,
+    isLoading,
+  } = useSpecialistsQuery(queryParams);
+
+  const specialists = useMemo(() => {
+    if (!specialistsRaw) return [];
+    return Array.isArray(specialistsRaw) ? specialistsRaw : specialistsRaw?.data || [];
+  }, [specialistsRaw]);
 
   // Client-side meeting channel filter (backend returns meeting_channels per specialist)
   const filteredSpecialists = useMemo(() => {
@@ -268,6 +279,8 @@ export default function SelectSpecialistScreen() {
           {hasFilters && (
             <TouchableOpacity
               onPress={clearFilters}
+              accessibilityRole="button"
+              accessibilityLabel="Clear all filters"
               className="flex-row items-center gap-1 px-3 py-2 rounded-xl"
               style={{backgroundColor: `${colors.destructive}15`}}>
               <X size={12} color={colors.destructive} />

@@ -106,6 +106,9 @@ export default function RiskHistoryScreen() {
               key={p}
               activeOpacity={0.7}
               onPress={() => setPeriod(p)}
+              accessibilityRole="tab"
+              accessibilityLabel={p === '7d' ? '7 Days' : p === '30d' ? '30 Days' : '90 Days'}
+              accessibilityState={{selected: period === p}}
               style={{
                 flex: 1,
                 paddingVertical: 8,
@@ -157,6 +160,9 @@ export default function RiskHistoryScreen() {
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setExpandedReport(isOpen ? null : report._id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Risk assessment, score ${report.risk_score}`}
+                    accessibilityState={{expanded: isOpen}}
                     style={{padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10}}>
                     <View style={{flex: 1}}>
                       <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>

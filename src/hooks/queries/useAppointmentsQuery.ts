@@ -43,7 +43,11 @@ export function useSpecialistsQuery(params: Record<string, any>) {
   return useQuery({
     queryKey: appointmentKeys.specialistSearch(params),
     queryFn: () => appointmentsService.getAvailableSpecialists(params),
-    enabled: !!params.category || !!params.specialization,
+    enabled:
+      !!params.category ||
+      !!params.specialization ||
+      !!params.specialist_category ||
+      !!params.professional_category,
   });
 }
 

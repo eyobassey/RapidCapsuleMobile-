@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback} from 'react';
 import {
   View,
   Text,
@@ -35,40 +35,46 @@ import {Header} from '../../components/ui';
 import RiskBadge from '../../components/recovery/RiskBadge';
 import LineChart from '../../components/charts/LineChart';
 import {colors} from '../../theme/colors';
+import {
+  useRecoveryDashboardQuery,
+  useRecoveryProfileQuery,
+} from '../../hooks/queries';
 import {useRecoveryStore} from '../../store/recovery';
 
 export default function RecoveryDashboardScreen() {
   const navigation = useNavigation<any>();
-  const [refreshing, setRefreshing] = useState(false);
 
-  const dashboard = useRecoveryStore(s => s.dashboard);
-  const profile = useRecoveryStore(s => s.profile);
+  // React Query hooks
+  const {
+    data: dashboard,
+    refetch: refetchDashboard,
+  } = useRecoveryDashboardQuery();
+
+  const {
+    data: profile,
+    refetch: refetchProfile,
+  } = useRecoveryProfileQuery();
+
+  // Keep store for activePlan and recentConversations (no dedicated query hooks)
   const activePlan = useRecoveryStore(s => s.activePlan);
   const recentConversations = useRecoveryStore(s => s.recentConversations);
-  const fetchDashboard = useRecoveryStore(s => s.fetchDashboard);
-  const fetchProfile = useRecoveryStore(s => s.fetchProfile);
   const fetchActivePlan = useRecoveryStore(s => s.fetchActivePlan);
   const fetchRecentConversations = useRecoveryStore(s => s.fetchRecentConversations);
 
-  const loadAll = useCallback(async () => {
-    await Promise.allSettled([
-      fetchProfile(),
-      fetchDashboard(),
-      fetchActivePlan(),
-      fetchRecentConversations(),
-    ]);
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
-      loadAll();
+      fetchActivePlan();
+      fetchRecentConversations();
     }, []),
   );
 
   const onRefresh = async () => {
-    setRefreshing(true);
-    await loadAll();
-    setRefreshing(false);
+    await Promise.allSettled([
+      refetchDashboard(),
+      refetchProfile(),
+      fetchActivePlan(),
+      fetchRecentConversations(),
+    ]);
   };
 
   const sobrietyDays = dashboard?.sobriety_days ?? 0;
@@ -166,7 +172,9 @@ export default function RecoveryDashboardScreen() {
         right={
           <TouchableOpacity
             onPress={() => navigation.navigate('ScreeningHistory')}
-            hitSlop={8}>
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Screening history">
             <History size={20} color={colors.foreground} />
           </TouchableOpacity>
         }
@@ -176,7 +184,7 @@ export default function RecoveryDashboardScreen() {
         contentContainerStyle={{padding: 16, paddingBottom: 40, gap: 16}}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={colors.primary} />
         }>
         {/* ─── New User Welcome ─── */}
         {isNewUser && (
@@ -343,6 +351,8 @@ export default function RecoveryDashboardScreen() {
                     key={i}
                     activeOpacity={0.7}
                     onPress={action.onPress}
+                    accessibilityRole="button"
+                    accessibilityLabel={action.label}
                     style={{
                       width: '31%',
                       backgroundColor: colors.card,

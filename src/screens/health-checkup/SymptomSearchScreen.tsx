@@ -157,6 +157,9 @@ export default function SymptomSearchScreen() {
           <View className="flex-row bg-muted rounded-2xl p-1 mb-3">
             <TouchableOpacity
               activeOpacity={0.7}
+              accessibilityRole="tab"
+              accessibilityLabel="Search symptoms"
+              accessibilityState={{selected: tab === 'search'}}
               onPress={() => setTab('search')}
               style={{
                 flex: 1,
@@ -180,6 +183,9 @@ export default function SymptomSearchScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.7}
+              accessibilityRole="tab"
+              accessibilityLabel="Body map"
+              accessibilityState={{selected: tab === 'body'}}
               onPress={() => setTab('body')}
               style={{
                 flex: 1,
@@ -211,6 +217,8 @@ export default function SymptomSearchScreen() {
                   key={s.id}
                   onPress={() => toggleSymptom(s)}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove ${s.common_name || s.name || s.label}`}
                   className="flex-row items-center gap-1 bg-primary/10 border border-primary/30 rounded-full px-3 py-1.5">
                   <Text className="text-xs font-medium text-primary">
                     {s.common_name || s.name || s.label}
@@ -233,9 +241,10 @@ export default function SymptomSearchScreen() {
                     value={query}
                     onChangeText={handleSearch}
                     autoCapitalize="none"
+                    accessibilityLabel="Search symptoms"
                   />
                   {query.length > 0 && (
-                    <TouchableOpacity onPress={() => {setQuery(''); setResults([]);}}>
+                    <TouchableOpacity onPress={() => {setQuery(''); setResults([]);}} accessibilityRole="button" accessibilityLabel="Clear search">
                       <X size={18} color={colors.mutedForeground} />
                     </TouchableOpacity>
                   )}
@@ -249,6 +258,9 @@ export default function SymptomSearchScreen() {
                   <TouchableOpacity
                     key={symptom.id}
                     activeOpacity={0.7}
+                    accessibilityRole="checkbox"
+                    accessibilityLabel={symptom.common_name || symptom.name || symptom.label}
+                    accessibilityState={{checked: isSelected}}
                     onPress={() => toggleSymptom(symptom)}
                     style={{
                       flexDirection: 'row',
@@ -411,6 +423,8 @@ export default function SymptomSearchScreen() {
               <TouchableOpacity
                 onPress={dismissSheet}
                 activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Close symptom list"
                 style={{
                   width: 32,
                   height: 32,
@@ -440,6 +454,9 @@ export default function SymptomSearchScreen() {
                       <TouchableOpacity
                         key={symptom.id}
                         activeOpacity={0.7}
+                        accessibilityRole="checkbox"
+                        accessibilityLabel={symptom.common_name || symptom.name || symptom.label}
+                        accessibilityState={{checked: isSelected}}
                         onPress={() => toggleSymptom(symptom)}
                         style={{
                           flexDirection: 'row',

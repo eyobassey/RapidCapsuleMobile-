@@ -45,6 +45,8 @@ function SliderRow({label, value, onChange, max = 10, lowLabel = '', highLabel =
           <TouchableOpacity
             key={v}
             onPress={() => onChange(v)}
+            accessibilityRole="button"
+            accessibilityLabel={`${label} ${v} of ${max}`}
             style={{
               flex: 1,
               height: 28,

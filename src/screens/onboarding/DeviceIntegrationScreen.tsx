@@ -382,6 +382,9 @@ export default function DeviceIntegrationScreen({navigation}: any) {
                     <Switch
                       value={isConnected}
                       onValueChange={() => handleToggle(app.id)}
+                      accessibilityRole="switch"
+                      accessibilityLabel={`Connect ${app.name}`}
+                      accessibilityState={{checked: isConnected}}
                       trackColor={{false: colors.border, true: app.color}}
                       thumbColor={colors.white}
                       style={{transform: [{scaleX: 0.85}, {scaleY: 0.85}]}}
@@ -395,6 +398,8 @@ export default function DeviceIntegrationScreen({navigation}: any) {
                     <TouchableOpacity
                       onPress={() => handleSync(app.id)}
                       disabled={isSyncing}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Sync ${app.name} data`}
                       activeOpacity={0.7}
                       style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
                       {isSyncing ? (
@@ -520,6 +525,8 @@ export default function DeviceIntegrationScreen({navigation}: any) {
                 setOauthProvider(null);
                 loadIntegrations();
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
               hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
               <X size={24} color={colors.foreground} />
             </TouchableOpacity>
@@ -577,6 +584,9 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onToggle}
+        accessibilityRole="switch"
+        accessibilityLabel={label}
+        accessibilityState={{checked: value}}
         trackColor={{false: colors.border, true: colors.primary}}
         thumbColor={colors.white}
         style={{transform: [{scaleX: 0.85}, {scaleY: 0.85}]}}

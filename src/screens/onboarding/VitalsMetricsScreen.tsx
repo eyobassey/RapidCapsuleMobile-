@@ -130,6 +130,8 @@ export default function VitalsMetricsScreen({navigation}: Props) {
         {/* BMI display */}
         {bmi ? (
           <View
+            accessibilityRole="text"
+            accessibilityLabel={`BMI ${bmi}, ${bmiCategory?.label || ''}`}
             style={{
               backgroundColor: `${bmiCategory?.color || colors.primary}15`,
               borderWidth: 1,

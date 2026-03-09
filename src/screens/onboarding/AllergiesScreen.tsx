@@ -151,6 +151,9 @@ export default function AllergiesScreen({navigation}: Props) {
           <TouchableOpacity
             key={opt.label}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={`${opt.label}, ${opt.label === 'Yes' ? 'I have allergies' : 'No known allergies'}`}
+            accessibilityState={{selected: hasAllergies === opt.value}}
             onPress={() => setHasAllergies(opt.value)}
             style={{
               flex: 1,

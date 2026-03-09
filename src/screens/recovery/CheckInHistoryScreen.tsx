@@ -60,6 +60,9 @@ export default function CheckInHistoryScreen() {
             key={metric}
             activeOpacity={0.7}
             onPress={() => setChartMetric(metric)}
+            accessibilityRole="tab"
+            accessibilityLabel={metric === 'mood_score' ? 'Mood' : 'Cravings'}
+            accessibilityState={{selected: chartMetric === metric}}
             style={{
               flex: 1,
               paddingVertical: 8,

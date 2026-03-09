@@ -12,7 +12,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'VerifyEmail'>;
 export default function VerifyEmailScreen({navigation}: Props) {
   return (
     <SafeAreaView className="flex-1 bg-background items-center justify-center px-6">
-      <View className="w-24 h-24 bg-primary/10 rounded-full items-center justify-center mb-6">
+      <View className="w-24 h-24 bg-primary/10 rounded-full items-center justify-center mb-6" accessibilityRole="image" accessibilityLabel="Email icon">
         <Mail size={40} color={colors.primary} />
       </View>
 
@@ -29,6 +29,8 @@ export default function VerifyEmailScreen({navigation}: Props) {
 
       <TouchableOpacity
         onPress={() => navigation.navigate('Splash')}
+        accessibilityRole="button"
+        accessibilityLabel="Back to home"
         className="mt-6">
         <Text className="text-sm text-muted-foreground">Back to home</Text>
       </TouchableOpacity>

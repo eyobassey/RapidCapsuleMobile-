@@ -48,6 +48,8 @@ export default function EmergencyContactScreen({navigation}: Props) {
       <View className="pt-2 pb-4 px-4 bg-card border-b border-border flex-row items-center">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
           className="w-10 h-10 rounded-full items-center justify-center">
           <ArrowLeft size={20} color={colors.foreground} />
         </TouchableOpacity>
@@ -58,7 +60,7 @@ export default function EmergencyContactScreen({navigation}: Props) {
           <View className="w-2 h-2 rounded-full bg-border" />
           <View className="w-2 h-2 rounded-full bg-border" />
         </View>
-        <TouchableOpacity onPress={handleSave}>
+        <TouchableOpacity onPress={handleSave} accessibilityRole="button" accessibilityLabel="Save">
           <Text className="text-sm font-medium text-primary">Save</Text>
         </TouchableOpacity>
       </View>
@@ -138,6 +140,9 @@ export default function EmergencyContactScreen({navigation}: Props) {
               trackColor={{false: colors.border, true: colors.primary}}
               thumbColor={colors.white}
               style={{transform: [{scaleX: 0.8}, {scaleY: 0.8}]}}
+              accessibilityRole="switch"
+              accessibilityLabel="Same address as patient"
+              accessibilityState={{checked: sameAddress}}
             />
             <Text className="text-sm text-foreground">Same address as patient</Text>
           </View>

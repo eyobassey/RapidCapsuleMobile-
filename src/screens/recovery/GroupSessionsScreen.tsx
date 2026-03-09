@@ -134,6 +134,8 @@ export default function GroupSessionsScreen() {
           activeOpacity={0.7}
           disabled={isActionLoading}
           onPress={() => isMember ? handleLeave(item._id) : handleJoin(item._id)}
+          accessibilityRole="button"
+          accessibilityLabel={isMember ? `Leave ${item.title}` : `Join ${item.title}`}
           style={{
             marginTop: 12,
             paddingVertical: 10,
@@ -179,6 +181,9 @@ export default function GroupSessionsScreen() {
             key={t}
             activeOpacity={0.7}
             onPress={() => setTab(t)}
+            accessibilityRole="tab"
+            accessibilityLabel={t === 'mine' ? 'My Sessions' : 'Available'}
+            accessibilityState={{selected: tab === t}}
             style={{
               flex: 1,
               paddingVertical: 10,

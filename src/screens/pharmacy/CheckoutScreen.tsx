@@ -233,7 +233,10 @@ export default function CheckoutScreen() {
         <TouchableOpacity
           onPress={() => setShowOrderSummary(!showOrderSummary)}
           className="bg-card border border-border rounded-2xl p-4 flex-row items-center justify-between mb-4"
-          activeOpacity={0.7}>
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`Order summary, ${showOrderSummary ? 'expanded' : 'collapsed'}`}
+          accessibilityState={{expanded: showOrderSummary}}>
           <Text className="text-sm font-semibold text-foreground">
             Order Summary ({cartItems.length} item{cartItems.length > 1 ? 's' : ''})
           </Text>
@@ -269,7 +272,10 @@ export default function CheckoutScreen() {
             className={`flex-1 rounded-2xl p-4 border items-center ${
               deliveryMethod === 'DELIVERY' ? 'bg-primary/10 border-primary' : 'bg-card border-border'
             }`}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            accessibilityRole="radio"
+            accessibilityLabel="Delivery"
+            accessibilityState={{selected: deliveryMethod === 'DELIVERY'}}>
             <Truck size={22} color={deliveryMethod === 'DELIVERY' ? colors.primary : colors.mutedForeground} />
             <Text className={`text-sm font-medium mt-1 ${deliveryMethod === 'DELIVERY' ? 'text-primary' : 'text-foreground'}`}>
               Delivery
@@ -280,7 +286,10 @@ export default function CheckoutScreen() {
             className={`flex-1 rounded-2xl p-4 border items-center ${
               deliveryMethod === 'PICKUP' ? 'bg-primary/10 border-primary' : 'bg-card border-border'
             }`}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            accessibilityRole="radio"
+            accessibilityLabel="Pickup"
+            accessibilityState={{selected: deliveryMethod === 'PICKUP'}}>
             <Store size={22} color={deliveryMethod === 'PICKUP' ? colors.primary : colors.mutedForeground} />
             <Text className={`text-sm font-medium mt-1 ${deliveryMethod === 'PICKUP' ? 'text-primary' : 'text-foreground'}`}>
               Pickup
@@ -457,7 +466,10 @@ export default function CheckoutScreen() {
             className={`flex-1 rounded-2xl p-4 border items-center ${
               paymentMethod === 'card' ? 'bg-primary/10 border-primary' : 'bg-card border-border'
             }`}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            accessibilityRole="radio"
+            accessibilityLabel="Pay with card"
+            accessibilityState={{selected: paymentMethod === 'card'}}>
             <CreditCard size={22} color={paymentMethod === 'card' ? colors.primary : colors.mutedForeground} />
             <Text className={`text-sm font-medium mt-1 ${paymentMethod === 'card' ? 'text-primary' : 'text-foreground'}`}>
               Card
@@ -468,7 +480,10 @@ export default function CheckoutScreen() {
             className={`flex-1 rounded-2xl p-4 border items-center ${
               paymentMethod === 'wallet' ? 'bg-primary/10 border-primary' : 'bg-card border-border'
             }`}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            accessibilityRole="radio"
+            accessibilityLabel="Pay with wallet"
+            accessibilityState={{selected: paymentMethod === 'wallet'}}>
             <Wallet size={22} color={paymentMethod === 'wallet' ? colors.primary : colors.mutedForeground} />
             <Text className={`text-sm font-medium mt-1 ${paymentMethod === 'wallet' ? 'text-primary' : 'text-foreground'}`}>
               Wallet
@@ -549,7 +564,7 @@ export default function CheckoutScreen() {
               borderBottomWidth: 1,
               borderBottomColor: colors.border,
             }}>
-            <TouchableOpacity onPress={handleClosePaystack} style={{padding: 4}}>
+            <TouchableOpacity onPress={handleClosePaystack} style={{padding: 4}} accessibilityRole="button" accessibilityLabel="Close payment">
               <X size={24} color={colors.foreground} />
             </TouchableOpacity>
             <Text

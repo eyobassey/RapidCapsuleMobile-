@@ -210,7 +210,7 @@ export default function CompanionChatScreen() {
         title="AI Companion"
         onBack={handleEnd}
         right={
-          <TouchableOpacity onPress={handleEnd} hitSlop={8}>
+          <TouchableOpacity onPress={handleEnd} hitSlop={8} accessibilityRole="button" accessibilityLabel="End companion session">
             <Text style={{fontSize: 13, fontWeight: '600', color: colors.destructive}}>End</Text>
           </TouchableOpacity>
         }
@@ -277,6 +277,7 @@ export default function CompanionChatScreen() {
               onChangeText={setText}
               placeholder="How are you feeling..."
               placeholderTextColor={colors.mutedForeground}
+              accessibilityLabel="Message to AI companion"
               multiline
               style={{
                 fontSize: 14,
@@ -290,6 +291,8 @@ export default function CompanionChatScreen() {
             activeOpacity={0.7}
             onPress={handleSend}
             disabled={!text.trim() || sending}
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
             style={{
               width: 40,
               height: 40,

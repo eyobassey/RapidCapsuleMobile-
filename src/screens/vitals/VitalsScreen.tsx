@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useMemo} from 'react';
 import {
   View,
   Text,
@@ -29,7 +29,7 @@ import {
   CheckCircle,
 } from 'lucide-react-native';
 
-import {useVitalsStore} from '../../store/vitals';
+import {useVitalsQuery, useRecentVitalsQuery} from '../../hooks/queries';
 import {Header, StatusBadge, Skeleton, EmptyState} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {VITAL_TYPES} from '../../utils/constants';
@@ -108,22 +108,25 @@ function getLatestReading(
 
 export default function VitalsScreen() {
   const navigation = useNavigation<any>();
-  const [refreshing, setRefreshing] = useState(false);
 
-  const {vitalsData, recentVitals, isLoading, fetchVitals, fetchRecentVitals} = useVitalsStore();
+  const {
+    data: vitalsData = {},
+    isLoading: vitalsLoading,
+    refetch: refetchVitals,
+  } = useVitalsQuery();
 
-  useEffect(() => {
-    fetchVitals();
-    fetchRecentVitals();
-  }, [fetchVitals, fetchRecentVitals]);
+  const {
+    data: recentVitals = {},
+    isLoading: recentLoading,
+    refetch: refetchRecent,
+  } = useRecentVitalsQuery();
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await Promise.allSettled([fetchVitals(), fetchRecentVitals()]);
-    setRefreshing(false);
-  }, [fetchVitals, fetchRecentVitals]);
-
+  const isLoading = vitalsLoading || recentLoading;
   const hasData = Object.keys(vitalsData).length > 0;
+
+  const onRefresh = async () => {
+    await Promise.allSettled([refetchVitals(), refetchRecent()]);
+  };
 
   // Compute stats
   const stats = useMemo(() => {
@@ -149,7 +152,7 @@ export default function VitalsScreen() {
     });
 
     return {totalTracked, normalCount, alertCount};
-  }, [vitalsData]);
+  }, [vitalsData, recentVitals]);
 
   if (isLoading && !hasData) {
     return (
@@ -192,7 +195,7 @@ export default function VitalsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={false}
             onRefresh={onRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
@@ -261,6 +264,9 @@ export default function VitalsScreen() {
             <TouchableOpacity
               key={config.key}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`${config.name}${reading?.value != null ? `, ${formatVitalValue(String(reading.value), config.key)} ${config.unit}` : ', no data recorded'}${status ? `, Status: ${status}` : ''}`}
+              accessibilityHint="Double tap to view details"
               onPress={() =>
                 navigation.navigate('VitalDetail', {vitalType: config.key})
               }
@@ -314,6 +320,8 @@ export default function VitalsScreen() {
       <View className="absolute bottom-6 left-5 right-5">
         <TouchableOpacity
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Log vitals"
           onPress={() => navigation.navigate('LogVitals')}
           className="bg-primary rounded-2xl h-14 flex-row items-center justify-center shadow-lg">
           <Plus size={20} color={colors.white} />

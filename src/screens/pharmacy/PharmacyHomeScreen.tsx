@@ -67,6 +67,8 @@ export default function PharmacyHomeScreen() {
         <TouchableOpacity
           onPress={() => navigation.navigate('Cart')}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`Shopping cart${cartCount > 0 ? `, ${cartCount} items` : ''}`}
           hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
           <ShoppingCart size={24} color={colors.foreground} />
           {cartCount > 0 && (
@@ -90,6 +92,8 @@ export default function PharmacyHomeScreen() {
         <TouchableOpacity
           onPress={() => navigation.navigate('DrugSearch')}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Search drugs"
           className="mx-5 mt-4 flex-row items-center bg-card border border-border rounded-2xl px-4 h-12">
           <Search size={18} color={colors.mutedForeground} />
           <Text className="flex-1 text-muted-foreground text-base ml-3">
@@ -161,6 +165,8 @@ export default function PharmacyHomeScreen() {
           <TouchableOpacity
             onPress={() => navigation.navigate('UploadPrescription')}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Upload prescription"
             className="p-4 flex-row items-center justify-between">
             <View className="flex-row items-center">
               <Upload size={20} color={colors.primary} />
@@ -176,6 +182,8 @@ export default function PharmacyHomeScreen() {
           <TouchableOpacity
             onPress={() => navigation.navigate('MyUploads')}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="My prescriptions"
             className="p-4 flex-row items-center justify-between">
             <View className="flex-row items-center">
               <FileText size={20} color={colors.primary} />
@@ -191,6 +199,8 @@ export default function PharmacyHomeScreen() {
           <TouchableOpacity
             onPress={() => navigation.navigate('MyOrders')}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="My orders"
             className="p-4 flex-row items-center justify-between">
             <View className="flex-row items-center">
               <ClipboardList size={20} color={colors.primary} />
@@ -208,6 +218,8 @@ export default function PharmacyHomeScreen() {
         <TouchableOpacity
           onPress={() => navigation.navigate('Cart')}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={`View cart, ${cartCount} items`}
           className="absolute bottom-24 right-5 bg-primary rounded-full w-14 h-14 items-center justify-center"
           style={{elevation: 6, shadowColor: '#000', shadowOffset: {width: 0, height: 3}, shadowOpacity: 0.2, shadowRadius: 4}}>
           <ShoppingCart size={22} color="#fff" />

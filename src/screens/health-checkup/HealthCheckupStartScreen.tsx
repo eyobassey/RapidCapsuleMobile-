@@ -94,7 +94,7 @@ export default function HealthCheckupStartScreen() {
           <>
             <View className="flex-row items-center justify-between mt-6 mb-3 px-1">
               <Text className="text-sm font-bold text-foreground">Recent Checkups</Text>
-              <TouchableOpacity onPress={handleViewHistory} activeOpacity={0.7}>
+              <TouchableOpacity onPress={handleViewHistory} activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="View all checkup history">
                 <Text className="text-xs font-semibold text-primary">View All</Text>
               </TouchableOpacity>
             </View>
@@ -106,6 +106,9 @@ export default function HealthCheckupStartScreen() {
                 <TouchableOpacity
                   key={checkup._id}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${topCondition?.common_name || topCondition?.name || 'Health Checkup'}${triage ? `, ${triage.replace('_', ' ')}` : ''}`}
+                  accessibilityHint="Double tap to view checkup details"
                   onPress={() => navigation.navigate('HealthCheckupDetail', {id: checkup._id})}
                   className="bg-card border border-border rounded-2xl p-4 mb-2 flex-row items-center gap-3">
                   <View className="w-10 h-10 rounded-full bg-muted items-center justify-center">

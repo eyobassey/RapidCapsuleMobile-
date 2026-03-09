@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect} from 'react';
+import React, {useCallback, useState} from 'react';
 import {View, Text, TouchableOpacity, Linking} from 'react-native';
 import {FlashList} from '@shopify/flash-list';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -7,7 +7,7 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {Plus, CalendarPlus, CalendarX, CalendarCheck, Clock, AlertTriangle} from 'lucide-react-native';
 import {Header, TabBar, EmptyState, Skeleton} from '../../components/ui';
 import AppointmentCard from '../../components/appointments/AppointmentCard';
-import {useAppointmentsStore} from '../../store/appointments';
+import {useAppointmentsQuery} from '../../hooks/queries';
 import {colors} from '../../theme/colors';
 import type {BookingsStackParamList} from '../../navigation/stacks/BookingsStack';
 
@@ -65,25 +65,18 @@ const emptyConfig: Record<string, {icon: React.ReactNode; title: string; subtitl
 
 export default function AppointmentsListScreen() {
   const navigation = useNavigation<Nav>();
-  const {
-    appointments,
-    isLoading,
-    filter,
-    setFilter,
-    fetchAppointments,
-  } = useAppointmentsStore();
+  const [filter, setFilter] = useState<'upcoming' | 'past' | 'missed' | 'cancelled'>('upcoming');
 
-  useEffect(() => {
-    fetchAppointments();
-  }, [filter]);
+  const {
+    data: appointments = [],
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useAppointmentsQuery(filter);
 
   const handleTabChange = useCallback((value: string) => {
-    setFilter(value as 'upcoming' | 'past' | 'cancelled');
-  }, [setFilter]);
-
-  const handleRefresh = useCallback(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+    setFilter(value as 'upcoming' | 'past' | 'missed' | 'cancelled');
+  }, []);
 
   const navigateToBook = useCallback(() => {
     navigation.navigate('SelectSpecialty');
@@ -105,6 +98,8 @@ export default function AppointmentsListScreen() {
         rightAction={
           <TouchableOpacity
             onPress={navigateToBook}
+            accessibilityRole="button"
+            accessibilityLabel="Book new appointment"
             activeOpacity={0.7}
             hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
             <Plus size={24} color={colors.foreground} />
@@ -143,8 +138,8 @@ export default function AppointmentsListScreen() {
               onAction={navigateToBook}
             />
           }
-          refreshing={isLoading}
-          onRefresh={handleRefresh}
+          refreshing={isRefetching}
+          onRefresh={refetch}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -152,6 +147,8 @@ export default function AppointmentsListScreen() {
       {/* FAB */}
       <TouchableOpacity
         onPress={navigateToBook}
+        accessibilityRole="button"
+        accessibilityLabel="Book new appointment"
         activeOpacity={0.8}
         style={{
           position: 'absolute',

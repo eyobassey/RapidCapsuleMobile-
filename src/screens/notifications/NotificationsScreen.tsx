@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,12 @@ import {
   Trophy,
 } from 'lucide-react-native';
 
+import {
+  useNotificationsQuery,
+  useUnreadCountQuery,
+  useMarkReadMutation,
+  useMarkAllReadMutation,
+} from '../../hooks/queries';
 import {useNotificationsStore} from '../../store/notifications';
 import {Header, EmptyState} from '../../components/ui';
 import {colors} from '../../theme/colors';
@@ -135,6 +141,8 @@ function NotificationItem({
   return (
     <TouchableOpacity
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`${isUnread ? 'Unread: ' : ''}${notification.title}`}
       onPress={() => onPress(notification._id)}
       className={`mx-5 mb-2 rounded-2xl border border-border p-4 flex-row items-start gap-3 ${
         isUnread ? 'bg-card' : 'bg-card/60'
@@ -186,7 +194,9 @@ function NotificationItem({
           <TouchableOpacity
             onPress={() => onRemove(notification._id)}
             hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-            activeOpacity={0.6}>
+            activeOpacity={0.6}
+            accessibilityRole="button"
+            accessibilityLabel="Remove notification">
             <Trash2 size={14} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
@@ -209,41 +219,35 @@ function SectionHeader({title}: {title: string}) {
 // ---- Main Screen ----
 export default function NotificationsScreen() {
   const navigation = useNavigation<any>();
-  const [refreshing, setRefreshing] = useState(false);
 
+  // React Query hooks
   const {
-    notifications,
+    data: notifications = [],
     isLoading,
-    unreadCount,
-    fetchNotifications,
-    markAsRead,
-    markAllRead,
-    removeNotification,
-  } = useNotificationsStore();
+    refetch,
+  } = useNotificationsQuery();
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+  const {data: unreadCount = 0} = useUnreadCountQuery();
+
+  const markReadMutation = useMarkReadMutation();
+  const markAllReadMutation = useMarkAllReadMutation();
+
+  // Keep store's removeNotification for optimistic local removal
+  const {removeNotification} = useNotificationsStore();
 
   const sections = useMemo(
     () => groupByDate(notifications),
     [notifications],
   );
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchNotifications();
-    setRefreshing(false);
-  }, [fetchNotifications]);
-
   const handlePress = useCallback(
     (id: string) => {
       const notif = notifications.find((n: any) => n._id === id);
       if (notif && !notif.is_read) {
-        markAsRead(id);
+        markReadMutation.mutate(id);
       }
     },
-    [notifications, markAsRead],
+    [notifications, markReadMutation],
   );
 
   const handleRemove = useCallback(
@@ -253,6 +257,10 @@ export default function NotificationsScreen() {
     [removeNotification],
   );
 
+  const handleMarkAllRead = useCallback(() => {
+    markAllReadMutation.mutate();
+  }, [markAllReadMutation]);
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header
@@ -261,9 +269,11 @@ export default function NotificationsScreen() {
         rightAction={
           unreadCount > 0 ? (
             <TouchableOpacity
-              onPress={markAllRead}
+              onPress={handleMarkAllRead}
               hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-              activeOpacity={0.7}>
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Mark all notifications as read">
               <Text className="text-xs font-semibold text-primary">Read All</Text>
             </TouchableOpacity>
           ) : undefined
@@ -297,8 +307,8 @@ export default function NotificationsScreen() {
         }
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={false}
+            onRefresh={refetch}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />

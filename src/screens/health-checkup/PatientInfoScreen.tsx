@@ -100,6 +100,9 @@ export default function PatientInfoScreen() {
               <TouchableOpacity
                 key={option}
                 activeOpacity={0.7}
+                accessibilityRole="radio"
+                accessibilityLabel={option}
+                accessibilityState={{selected: isSelected}}
                 onPress={() => setGender(option.toLowerCase())}
                 style={{
                   flex: 1,

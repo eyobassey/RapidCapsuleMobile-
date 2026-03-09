@@ -52,6 +52,9 @@ export default function HistoryScreen() {
           return (
             <TouchableOpacity
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`${topCondition?.common_name || topCondition?.name || 'Health Checkup'}${triage ? `, ${triage.replace('_', ' ')}` : ''}`}
+              accessibilityHint="Double tap to view checkup details"
               onPress={() => navigation.navigate('HealthCheckupDetail', {id: item._id})}
               className="bg-card border border-border rounded-2xl p-4 mb-2 flex-row items-center gap-3">
               <View className="w-11 h-11 rounded-full bg-muted items-center justify-center">

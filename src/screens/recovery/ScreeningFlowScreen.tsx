@@ -133,6 +133,9 @@ export default function ScreeningFlowScreen() {
                 key={option.value}
                 activeOpacity={0.7}
                 onPress={() => selectAnswer(option.value)}
+                accessibilityRole="radio"
+                accessibilityLabel={option.label}
+                accessibilityState={{selected: isSelected}}
                 style={{
                   backgroundColor: isSelected ? `${colors.primary}12` : colors.card,
                   borderWidth: 2,

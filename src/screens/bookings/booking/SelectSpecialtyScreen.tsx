@@ -207,6 +207,8 @@ export default function SelectSpecialtyScreen() {
               <View className="flex-row gap-3 mt-3">
                 <TouchableOpacity
                   onPress={handleStartCheckup}
+                  accessibilityRole="button"
+                  accessibilityLabel="Start health checkup"
                   activeOpacity={0.7}
                   className="flex-1 py-2.5 rounded-xl items-center"
                   style={{backgroundColor: colors.primary}}>
@@ -216,6 +218,8 @@ export default function SelectSpecialtyScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setShowSuggestion(false)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Dismiss health checkup suggestion"
                   activeOpacity={0.7}
                   className="flex-1 py-2.5 rounded-xl items-center border"
                   style={{borderColor: colors.border, backgroundColor: colors.card}}>
@@ -257,6 +261,9 @@ export default function SelectSpecialtyScreen() {
                 <TouchableOpacity
                   key={category._id || category.id || index}
                   onPress={() => handleSelect(category)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${category.name} specialty`}
+                  accessibilityHint="Double tap to select this specialty"
                   activeOpacity={0.7}
                   className="bg-card border border-border rounded-2xl p-4 items-center justify-center"
                   style={{width: '47%', minHeight: 120}}>

@@ -2,6 +2,8 @@ import React, {useState, useCallback, useEffect, useMemo} from 'react';
 import {View, Text, ScrollView, TextInput, Alert, TouchableOpacity, Modal, ActivityIndicator} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
+import {useForm, Controller} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {WebView} from 'react-native-webview';
 import {
@@ -27,6 +29,7 @@ import {colors} from '../../../theme/colors';
 import {formatDate} from '../../../utils/formatters';
 import {useCurrency} from '../../../hooks/useCurrency';
 import {MEETING_CHANNEL_LABELS} from '../../../utils/constants';
+import {bookingConfirmSchema, type BookingConfirmFormData} from '../../../utils/validation';
 import type {BookingsStackParamList} from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
@@ -114,9 +117,25 @@ export default function ConfirmBookingScreen() {
   } = useAppointmentsStore();
   const {balance, fetchBalance} = useWalletStore();
 
-  const [personalNotes, setPersonalNotes] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'card'>('wallet');
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: {errors},
+  } = useForm<BookingConfirmFormData>({
+    resolver: zodResolver(bookingConfirmSchema),
+    defaultValues: {
+      notes: '',
+      agreedToTerms: false as any,
+      paymentMethod: 'wallet',
+    },
+  });
+
+  const personalNotes = watch('notes') || '';
+  const paymentMethod = watch('paymentMethod');
+  const agreedToTerms = watch('agreedToTerms');
+
   const [selectedCheckupId, setSelectedCheckupId] = useState<string | null>(
     bookingData.health_checkup_id || null,
   );
@@ -187,14 +206,7 @@ export default function ConfirmBookingScreen() {
     setShowCheckupPicker(false);
   };
 
-  const handleConfirm = useCallback(async () => {
-    if (!agreedToTerms) {
-      Alert.alert(
-        'Terms Required',
-        'Please agree to the terms and conditions before proceeding.',
-      );
-      return;
-    }
+  const onSubmit = useCallback(async (data: BookingConfirmFormData) => {
     if (insufficientBalance) {
       Alert.alert(
         'Insufficient Balance',
@@ -211,7 +223,7 @@ export default function ConfirmBookingScreen() {
         time: bookingData.time,
         meeting_channel: channel,
         timezone,
-        paymentMethod,
+        paymentMethod: data.paymentMethod,
         ...(combinedNotes ? {patient_notes: combinedNotes} : {}),
         ...(selectedCheckupId ? {health_checkup_id: selectedCheckupId} : {}),
       });
@@ -238,8 +250,6 @@ export default function ConfirmBookingScreen() {
     bookingData,
     combinedNotes,
     selectedCheckupId,
-    paymentMethod,
-    agreedToTerms,
     insufficientBalance,
     bookAppointment,
     clearBookingData,
@@ -247,6 +257,8 @@ export default function ConfirmBookingScreen() {
     channel,
     timezone,
     balance,
+    format,
+    specialty,
   ]);
 
   const showBookingSuccess = useCallback(
@@ -616,15 +628,22 @@ export default function ConfirmBookingScreen() {
             Additional notes for specialist (optional)
           </Text>
           <View className="bg-card border border-border rounded-2xl p-4">
-            <TextInput
-              value={personalNotes}
-              onChangeText={setPersonalNotes}
-              placeholder="Describe your symptoms or reason for visit..."
-              placeholderTextColor={colors.mutedForeground}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-              className="text-foreground text-sm min-h-[100px]"
+            <Controller
+              control={control}
+              name="notes"
+              render={({field: {onChange, value}}) => (
+                <TextInput
+                  value={value}
+                  onChangeText={onChange}
+                  accessibilityLabel="Additional notes for specialist"
+                  placeholder="Describe your symptoms or reason for visit..."
+                  placeholderTextColor={colors.mutedForeground}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                  className="text-foreground text-sm min-h-[100px]"
+                />
+              )}
             />
           </View>
         </View>
@@ -637,7 +656,10 @@ export default function ConfirmBookingScreen() {
 
           {/* Wallet option */}
           <TouchableOpacity
-            onPress={() => setPaymentMethod('wallet')}
+            onPress={() => setValue('paymentMethod', 'wallet')}
+            accessibilityRole="radio"
+            accessibilityLabel="Pay with wallet"
+            accessibilityState={{selected: paymentMethod === 'wallet'}}
             activeOpacity={0.7}
             className={`flex-row items-center gap-3 p-3 rounded-xl mb-3 ${
               paymentMethod === 'wallet' ? 'bg-muted' : 'bg-muted/50'
@@ -675,7 +697,10 @@ export default function ConfirmBookingScreen() {
 
           {/* Card option */}
           <TouchableOpacity
-            onPress={() => setPaymentMethod('card')}
+            onPress={() => setValue('paymentMethod', 'card')}
+            accessibilityRole="radio"
+            accessibilityLabel="Pay with card"
+            accessibilityState={{selected: paymentMethod === 'card'}}
             activeOpacity={0.7}
             className={`flex-row items-center gap-3 p-3 rounded-xl ${
               paymentMethod === 'card' ? 'bg-muted' : 'bg-muted/50'
@@ -722,19 +747,33 @@ export default function ConfirmBookingScreen() {
 
         {/* Terms checkbox */}
         <TouchableOpacity
-          onPress={() => setAgreedToTerms(!agreedToTerms)}
+          onPress={() => setValue('agreedToTerms', !agreedToTerms as any, {shouldValidate: true})}
+          accessibilityRole="checkbox"
+          accessibilityLabel="Agree to terms and conditions"
+          accessibilityState={{checked: !!agreedToTerms}}
           activeOpacity={0.7}
           className="flex-row items-start gap-3 mb-4">
           <View
             className={`w-5 h-5 rounded border-2 items-center justify-center mt-0.5 ${
-              agreedToTerms ? 'border-primary bg-primary' : 'border-border'
+              agreedToTerms
+                ? 'border-primary bg-primary'
+                : errors.agreedToTerms
+                  ? 'border-destructive'
+                  : 'border-border'
             }`}>
             {agreedToTerms && <CheckCircle size={12} color={colors.white} />}
           </View>
-          <Text className="text-muted-foreground text-xs flex-1 leading-relaxed">
-            I agree to the terms and conditions. I understand that my wallet will be
-            debited and the amount held in escrow until the appointment is completed.
-          </Text>
+          <View className="flex-1">
+            <Text className="text-muted-foreground text-xs leading-relaxed">
+              I agree to the terms and conditions. I understand that my wallet will be
+              debited and the amount held in escrow until the appointment is completed.
+            </Text>
+            {errors.agreedToTerms?.message && (
+              <Text className="text-xs text-destructive mt-1">
+                {errors.agreedToTerms.message}
+              </Text>
+            )}
+          </View>
         </TouchableOpacity>
       </ScrollView>
 
@@ -742,11 +781,9 @@ export default function ConfirmBookingScreen() {
       <View className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
         <Button
           variant="primary"
-          onPress={handleConfirm}
+          onPress={handleSubmit(onSubmit)}
           loading={isLoading}
-          disabled={
-            !agreedToTerms || (paymentMethod === 'wallet' && insufficientBalance)
-          }>
+          disabled={paymentMethod === 'wallet' && insufficientBalance}>
           Confirm & Pay {format(totalFee)}
         </Button>
       </View>
@@ -766,7 +803,7 @@ export default function ConfirmBookingScreen() {
               borderBottomWidth: 1,
               borderBottomColor: colors.border,
             }}>
-            <TouchableOpacity onPress={handleClosePaystack} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+            <TouchableOpacity onPress={handleClosePaystack} accessibilityRole="button" accessibilityLabel="Close payment" hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
               <X size={24} color={colors.foreground} />
             </TouchableOpacity>
             <Text

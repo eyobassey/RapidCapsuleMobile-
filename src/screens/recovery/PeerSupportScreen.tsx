@@ -171,6 +171,8 @@ export default function PeerSupportScreen() {
                 <TouchableOpacity
                   key={val}
                   onPress={() => setCheckInMood(val)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Mood ${val} of 10`}
                   style={{
                     flex: 1,
                     height: 28,
@@ -197,6 +199,7 @@ export default function PeerSupportScreen() {
             onChangeText={setCheckInNote}
             placeholder="Add notes about your check-in..."
             placeholderTextColor={colors.mutedForeground}
+            accessibilityLabel="Peer check-in notes"
             multiline
             style={{
               backgroundColor: colors.muted,
@@ -214,6 +217,8 @@ export default function PeerSupportScreen() {
             activeOpacity={0.7}
             disabled={submitting}
             onPress={handleCheckIn}
+            accessibilityRole="button"
+            accessibilityLabel="Log peer check-in"
             style={{
               backgroundColor: colors.primary,
               borderRadius: 10,

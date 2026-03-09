@@ -2,6 +2,8 @@ import React, {useState, useEffect, useCallback} from 'react';
 import {View, Text, ScrollView, TextInput, Alert, TouchableOpacity} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
+import {useForm, Controller} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {RouteProp} from '@react-navigation/native';
 import {Star} from 'lucide-react-native';
@@ -9,6 +11,7 @@ import {Header, Avatar, Button, Skeleton} from '../../components/ui';
 import {useAppointmentsStore} from '../../store/appointments';
 import {colors} from '../../theme/colors';
 import {formatDate, formatTime} from '../../utils/formatters';
+import {ratingSchema, type RatingFormData} from '../../utils/validation';
 import type {BookingsStackParamList} from '../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
@@ -28,9 +31,20 @@ export default function RateAppointmentScreen() {
     rateAppointment,
   } = useAppointmentsStore();
 
-  const [rating, setRating] = useState(0);
-  const [review, setReview] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: {errors},
+  } = useForm<RatingFormData>({
+    resolver: zodResolver(ratingSchema),
+    defaultValues: {rating: 0, feedback: ''},
+  });
+
+  const rating = watch('rating');
 
   useEffect(() => {
     if (!appointment || (appointment._id !== id && appointment.id !== id)) {
@@ -44,34 +58,35 @@ export default function RateAppointmentScreen() {
     ? `Dr. ${profile.first_name} ${profile.last_name || ''}`
     : specialist.name || 'Specialist';
 
-  const handleSubmit = useCallback(async () => {
-    if (rating === 0) {
-      Alert.alert('Rating Required', 'Please select a star rating before submitting.');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      await rateAppointment(id, {rating, review: review.trim() || undefined});
-      Alert.alert(
-        'Thank You!',
-        'Your review has been submitted successfully.',
-        [
-          {
-            text: 'Done',
-            onPress: () => navigation.goBack(),
-          },
-        ],
-      );
-    } catch (err: any) {
-      Alert.alert(
-        'Error',
-        err?.response?.data?.message || err?.message || 'Failed to submit rating.',
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }, [id, rating, review, rateAppointment, navigation]);
+  const onSubmit = useCallback(
+    async (data: RatingFormData) => {
+      setSubmitting(true);
+      try {
+        await rateAppointment(id, {
+          rating: data.rating,
+          review: data.feedback?.trim() || undefined,
+        });
+        Alert.alert(
+          'Thank You!',
+          'Your review has been submitted successfully.',
+          [
+            {
+              text: 'Done',
+              onPress: () => navigation.goBack(),
+            },
+          ],
+        );
+      } catch (err: any) {
+        Alert.alert(
+          'Error',
+          err?.response?.data?.message || err?.message || 'Failed to submit rating.',
+        );
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [id, rateAppointment, navigation],
+  );
 
   if (isLoading && !appointment) {
     return (
@@ -124,7 +139,10 @@ export default function RateAppointmentScreen() {
             {[1, 2, 3, 4, 5].map(i => (
               <TouchableOpacity
                 key={i}
-                onPress={() => setRating(i)}
+                onPress={() => setValue('rating', i, {shouldValidate: true})}
+                accessibilityRole="button"
+                accessibilityLabel={`Rate ${i} star${i > 1 ? 's' : ''}, ${RATING_LABELS[i]}`}
+                accessibilityState={{selected: i <= rating}}
                 activeOpacity={0.7}
                 hitSlop={{top: 8, bottom: 8, left: 4, right: 4}}>
                 <Star
@@ -143,6 +161,12 @@ export default function RateAppointmentScreen() {
               {RATING_LABELS[rating]}
             </Text>
           )}
+
+          {errors.rating?.message && (
+            <Text className="text-xs text-destructive mt-2">
+              {errors.rating.message}
+            </Text>
+          )}
         </View>
 
         {/* Review input */}
@@ -151,19 +175,26 @@ export default function RateAppointmentScreen() {
             Write a review (optional)
           </Text>
           <View className="bg-card border border-border rounded-2xl p-4">
-            <TextInput
-              value={review}
-              onChangeText={setReview}
-              placeholder="Share your experience with this specialist..."
-              placeholderTextColor={colors.mutedForeground}
-              multiline
-              numberOfLines={5}
-              textAlignVertical="top"
-              className="text-foreground text-sm min-h-[120px]"
+            <Controller
+              control={control}
+              name="feedback"
+              render={({field: {onChange, value}}) => (
+                <TextInput
+                  value={value}
+                  onChangeText={onChange}
+                  accessibilityLabel="Write a review"
+                  placeholder="Share your experience with this specialist..."
+                  placeholderTextColor={colors.mutedForeground}
+                  multiline
+                  numberOfLines={5}
+                  textAlignVertical="top"
+                  className="text-foreground text-sm min-h-[120px]"
+                />
+              )}
             />
           </View>
           <Text className="text-muted-foreground text-xs mt-2 ml-1">
-            {review.length}/500 characters
+            {(watch('feedback') || '').length}/500 characters
           </Text>
         </View>
       </ScrollView>
@@ -172,7 +203,7 @@ export default function RateAppointmentScreen() {
       <View className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
         <Button
           variant="primary"
-          onPress={handleSubmit}
+          onPress={handleSubmit(onSubmit)}
           loading={submitting}
           disabled={rating === 0}
           icon={<Star size={18} color={colors.white} fill={colors.white} />}>

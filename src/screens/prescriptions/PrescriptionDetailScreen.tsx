@@ -375,6 +375,8 @@ export default function PrescriptionDetailScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => navigation.navigate('AppointmentDetail', {id: typeof rx.appointment_id === 'object' ? rx.appointment_id._id : rx.appointment_id})}
+            accessibilityRole="button"
+            accessibilityLabel="View linked appointment"
             className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3">
             <Calendar size={18} color={colors.primary} />
             <Text className="text-sm text-primary font-medium flex-1">
@@ -660,6 +662,8 @@ export default function PrescriptionDetailScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => navigation.navigate('OrderDetail', {orderId: rx.linked_pharmacy_order})}
+            accessibilityRole="button"
+            accessibilityLabel="View pharmacy order"
             className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3">
             <Package size={18} color={colors.primary} />
             <View className="flex-1">
@@ -691,6 +695,8 @@ export default function PrescriptionDetailScreen() {
             <TouchableOpacity
               className="mt-3 pt-3 border-t border-border flex-row items-center gap-2"
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Download prescription PDF"
               onPress={() => {/* Could open PDF in browser */}}>
               <FileText size={16} color={colors.primary} />
               <Text className="text-sm text-primary font-medium">Download PDF</Text>
@@ -792,6 +798,8 @@ export default function PrescriptionDetailScreen() {
             <TouchableOpacity
               onPress={handlePayWithCard}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Pay with card"
               style={{flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.background, borderRadius: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 12}}>
               <CreditCard size={22} color={colors.primary} />
               <View style={{marginLeft: 12, flex: 1}}>
@@ -807,6 +815,8 @@ export default function PrescriptionDetailScreen() {
             <TouchableOpacity
               onPress={handlePayWithWallet}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Pay with wallet"
               style={{flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.background, borderRadius: 16, borderWidth: 1, borderColor: colors.border}}>
               <Wallet size={22} color={colors.primary} />
               <View style={{marginLeft: 12, flex: 1}}>
@@ -846,7 +856,10 @@ export default function PrescriptionDetailScreen() {
                   <TouchableOpacity
                     key={s}
                     onPress={() => setRatingValue(s)}
-                    hitSlop={{top: 8, bottom: 8, left: 4, right: 4}}>
+                    hitSlop={{top: 8, bottom: 8, left: 4, right: 4}}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`${s} star${s !== 1 ? 's' : ''}`}
+                    accessibilityState={{selected: ratingValue === s}}>
                     <Star
                       size={36}
                       color={s <= ratingValue ? '#f59e0b' : colors.border}
@@ -874,6 +887,7 @@ export default function PrescriptionDetailScreen() {
                 value={reviewText}
                 onChangeText={setReviewText}
                 multiline
+                accessibilityLabel="Write a review"
               />
 
               <Button
@@ -897,7 +911,7 @@ export default function PrescriptionDetailScreen() {
             <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground}}>
               Complete Payment
             </Text>
-            <TouchableOpacity onPress={handleClosePaystack} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+            <TouchableOpacity onPress={handleClosePaystack} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}} accessibilityRole="button" accessibilityLabel="Close payment">
               <X size={24} color={colors.foreground} />
             </TouchableOpacity>
           </View>

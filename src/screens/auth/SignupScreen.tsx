@@ -65,6 +65,8 @@ export default function SignupScreen({navigation}: Props) {
         <View className="absolute -top-12 -right-12 w-48 h-48 bg-primary/20 rounded-full opacity-60" />
         <TouchableOpacity
           onPress={() => navigation.goBack()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
           className="absolute top-4 left-6 w-10 h-10 rounded-full bg-background border border-border items-center justify-center z-10">
           <ArrowLeft size={20} color={colors.foreground} />
         </TouchableOpacity>
@@ -156,6 +158,9 @@ export default function SignupScreen({navigation}: Props) {
           <Switch
             value={agreeTerms}
             onValueChange={setAgreeTerms}
+            accessibilityRole="switch"
+            accessibilityLabel="Agree to Terms of Service and Privacy Policy"
+            accessibilityState={{checked: agreeTerms}}
             trackColor={{false: colors.border, true: colors.primary}}
             thumbColor={colors.white}
             style={{transform: [{scaleX: 0.8}, {scaleY: 0.8}]}}

@@ -85,6 +85,8 @@ export default function CrisisScreen() {
           activeOpacity={0.7}
           onPress={handlePanicButton}
           disabled={alerting}
+          accessibilityRole="button"
+          accessibilityLabel="Panic button, alert care team immediately"
           style={{
             backgroundColor: colors.destructive,
             borderRadius: 24,
@@ -109,6 +111,9 @@ export default function CrisisScreen() {
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => setShowGrounding(!showGrounding)}
+          accessibilityRole="button"
+          accessibilityLabel="5-4-3-2-1 Grounding Exercise"
+          accessibilityState={{expanded: showGrounding}}
           style={{
             backgroundColor: colors.card,
             borderWidth: 1,

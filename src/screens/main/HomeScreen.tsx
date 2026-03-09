@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -26,12 +26,15 @@ import {
 } from 'lucide-react-native';
 
 import {useAuthStore} from '../../store/auth';
-import {useHealthScoreStore} from '../../store/healthScore';
-import {useAppointmentsStore} from '../../store/appointments';
-import {useWalletStore} from '../../store/wallet';
 import {useCreditsStore} from '../../store/credits';
-import {useNotificationsStore} from '../../store/notifications';
 import {useMessagingStore} from '../../store/messaging';
+
+import {
+  useHealthScoreQuery,
+  useAppointmentsQuery,
+  useWalletBalanceQuery,
+  useUnreadCountQuery,
+} from '../../hooks/queries';
 
 import {Avatar, ProgressRing, StatusBadge, Skeleton} from '../../components/ui';
 import RecoveryHomeCard from '../../components/recovery/RecoveryHomeCard';
@@ -73,26 +76,47 @@ function MeetingChannelIcon({channel}: {channel?: string}) {
 export default function HomeScreen() {
   const {format} = useCurrency();
   const navigation = useNavigation<any>();
-  const [refreshing, setRefreshing] = useState(false);
 
-  // ---------- stores ----------
+  // ---------- auth (client state) ----------
   const user = useAuthStore(s => s.user);
-  const {score, status: healthStatus, isLoading: scoreLoading, fetchScore} = useHealthScoreStore();
+
+  // ---------- React Query hooks ----------
   const {
-    appointments,
+    data: healthScoreData,
+    isLoading: scoreLoading,
+    refetch: refetchScore,
+  } = useHealthScoreQuery();
+
+  const {
+    data: appointments = [],
     isLoading: aptsLoading,
-    fetchAppointments,
-    setFilter,
-  } = useAppointmentsStore();
-  const {balance, fetchBalance} = useWalletStore();
+    refetch: refetchAppointments,
+  } = useAppointmentsQuery('upcoming');
+
+  const {
+    data: walletData,
+    refetch: refetchBalance,
+  } = useWalletBalanceQuery();
+
+  const {
+    data: unreadCount = 0,
+    refetch: refetchUnreadCount,
+  } = useUnreadCountQuery();
+
+  // ---------- credits store (kept — has plans/purchase logic) ----------
   const {totalAvailable, hasUnlimited, isLoading: creditsLoading, fetchCredits} = useCreditsStore();
-  const {unreadCount, fetchUnreadCount} = useNotificationsStore();
+
+  // ---------- messaging store (client state) ----------
   const msgUnread = useMessagingStore(s => s.unreadTotal);
   const checkConsent = useMessagingStore(s => s.checkConsent);
   const fetchConversations = useMessagingStore(s => s.fetchConversations);
   const computeUnreadTotal = useMessagingStore(s => s.computeUnreadTotal);
 
   // ---------- derived ----------
+  const score = healthScoreData?.score ?? null;
+  const healthStatus = healthScoreData?.status ?? null;
+  const balance = walletData?.currentBalance ?? walletData?.balance ?? 0;
+
   const firstName = user?.profile?.first_name || 'User';
   const lastName = user?.profile?.last_name || '';
   const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
@@ -100,7 +124,7 @@ export default function HomeScreen() {
 
   const upcomingAppointments = useMemo(
     () =>
-      appointments.filter(
+      (appointments || []).filter(
         (a: any) =>
           a.status === 'OPEN' || a.status === 'ONGOING' || a.status === 'RESCHEDULED',
       ),
@@ -110,18 +134,6 @@ export default function HomeScreen() {
   const nextAppointment = upcomingAppointments[0] ?? null;
 
   // ---------- data fetching ----------
-  const loadData = useCallback(async () => {
-    setFilter('upcoming');
-    await Promise.allSettled([
-      fetchScore(),
-      fetchAppointments(),
-      fetchBalance(),
-      fetchCredits(),
-      fetchUnreadCount(),
-      fetchConversations(1).then(() => computeUnreadTotal(user?._id || '')),
-    ]);
-  }, [fetchScore, fetchAppointments, fetchBalance, fetchCredits, fetchUnreadCount, setFilter]);
-
   const handleMessages = useCallback(async () => {
     const hasConsent = await checkConsent();
     if (hasConsent) {
@@ -131,15 +143,26 @@ export default function HomeScreen() {
     }
   }, [checkConsent, navigation]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
+  // Pull-to-refresh: refetch all queries + non-query data
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  }, [loadData]);
+    await Promise.allSettled([
+      refetchScore(),
+      refetchAppointments(),
+      refetchBalance(),
+      refetchUnreadCount(),
+      fetchCredits(),
+      fetchConversations(1).then(() => computeUnreadTotal(user?._id || '')),
+    ]);
+  }, [refetchScore, refetchAppointments, refetchBalance, refetchUnreadCount, fetchCredits, fetchConversations, computeUnreadTotal, user?._id]);
+
+  // Fetch non-query data on mount
+  React.useEffect(() => {
+    fetchCredits();
+    fetchConversations(1).then(() => computeUnreadTotal(user?._id || ''));
+  }, []);
+
+  // ---------- check if any query is refreshing ----------
+  const isRefreshing = false; // RefreshControl managed by React Query's isFetching in onRefresh
 
   // ---------- quick actions config ----------
   const quickActions = [
@@ -246,7 +269,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
+            refreshing={false}
             onRefresh={onRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}

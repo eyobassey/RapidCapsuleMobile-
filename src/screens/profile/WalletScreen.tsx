@@ -39,6 +39,7 @@ import {
 import {useWalletStore} from '../../store/wallet';
 import {useCreditsStore, type CreditPlan} from '../../store/credits';
 import {creditsService} from '../../services/credits.service';
+import {useWalletBalanceQuery, useTransactionsQuery} from '../../hooks/queries';
 import {Header, Button, Skeleton, TabBar} from '../../components/ui';
 import {colors} from '../../theme/colors';
 import {formatDate, formatDateTime} from '../../utils/formatters';
@@ -71,14 +72,26 @@ export default function WalletScreen() {
   const [creditsToSend, setCreditsToSend] = useState(1);
   const searchDebounceRef = useRef<any>(null);
 
+  // React Query for wallet balance & transactions
   const {
-    balance,
-    currency,
-    transactions,
-    isLoading: walletLoading,
+    data: walletBalanceData,
+    isLoading: balanceLoading,
+    refetch: refetchBalance,
+  } = useWalletBalanceQuery();
+
+  const {
+    data: transactions = [],
+    isLoading: txLoading,
+    refetch: refetchTransactions,
+  } = useTransactionsQuery();
+
+  const balance = walletBalanceData?.currentBalance ?? walletBalanceData?.balance ?? 0;
+  const currency = walletBalanceData?.currency || 'NGN';
+  const walletLoading = balanceLoading || txLoading;
+
+  // Keep store for mutations (fundWallet, verifyFunding)
+  const {
     funding,
-    fetchBalance,
-    fetchTransactions,
     fundWallet,
     verifyFunding,
   } = useWalletStore();
@@ -113,8 +126,7 @@ export default function WalletScreen() {
   ];
 
   useEffect(() => {
-    fetchBalance();
-    fetchTransactions({limit: 100});
+    // Only fetch non-query data on mount (balance & transactions handled by React Query)
     fetchCredits();
     fetchPlans();
     fetchCreditTransactions();
@@ -131,14 +143,14 @@ export default function WalletScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.allSettled([
-      fetchBalance(),
-      fetchTransactions({limit: 100}),
+      refetchBalance(),
+      refetchTransactions(),
       fetchCredits(),
       fetchPlans(),
       fetchCreditTransactions(),
     ]);
     setRefreshing(false);
-  }, [fetchBalance, fetchTransactions, fetchCredits, fetchPlans, fetchCreditTransactions]);
+  }, [refetchBalance, refetchTransactions, fetchCredits, fetchPlans, fetchCreditTransactions]);
 
   // Wallet stats
   const stats = useMemo(() => {
@@ -560,6 +572,8 @@ export default function WalletScreen() {
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => setActiveTab('plans')}
+                accessibilityRole="button"
+                accessibilityLabel="Buy more credits"
                 style={{
                   marginTop: 16,
                   backgroundColor: colors.accent,
@@ -588,6 +602,8 @@ export default function WalletScreen() {
                     setCreditsToSend(sharingSettings?.min_amount || 1);
                     setShowShareModal(true);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share credits"
                   style={{
                     marginTop: 8,
                     backgroundColor: 'transparent',
@@ -782,6 +798,8 @@ export default function WalletScreen() {
                           setSelectedPlan(plan);
                           setShowPurchaseModal(true);
                         }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Purchase ${plan.name}`}
                         style={{
                           backgroundColor: colors.primary,
                           borderRadius: 14,
@@ -925,7 +943,9 @@ export default function WalletScreen() {
                     onPress={() => {
                       setShowPurchaseModal(false);
                       setActiveTab('wallet');
-                    }}>
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add funds to wallet">
                     <Text style={{fontSize: 12, fontWeight: '700', color: colors.primary}}>
                       Add Funds
                     </Text>
@@ -942,6 +962,8 @@ export default function WalletScreen() {
                     setSelectedPlan(null);
                   }}
                   disabled={purchasing}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel purchase"
                   style={{
                     flex: 1,
                     paddingVertical: 14,
@@ -958,6 +980,8 @@ export default function WalletScreen() {
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={handlePurchase}
+                  accessibilityRole="button"
+                  accessibilityLabel={selectedPlan ? `Pay ${format(getPlanPrice(selectedPlan))}` : 'Pay'}
                   disabled={
                     purchasing ||
                     !selectedPlan ||
@@ -1032,6 +1056,7 @@ export default function WalletScreen() {
                   keyboardType="numeric"
                   value={fundAmount}
                   onChangeText={setFundAmount}
+                  accessibilityLabel="Enter amount to fund"
                 />
               </View>
 
@@ -1044,6 +1069,8 @@ export default function WalletScreen() {
                       key={amt}
                       activeOpacity={0.7}
                       onPress={() => setFundAmount(String(amt))}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${amt.toLocaleString()} naira`}
                       style={{
                         paddingHorizontal: 16,
                         paddingVertical: 10,
@@ -1069,12 +1096,16 @@ export default function WalletScreen() {
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => {setShowFundModal(false); setFundAmount('');}}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel"
                   style={{flex: 1, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, alignItems: 'center'}}>
                   <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={handleFundWallet}
+                  accessibilityRole="button"
+                  accessibilityLabel="Continue to payment"
                   disabled={!fundAmount || parseFloat(fundAmount) < 100 || funding}
                   style={{
                     flex: 1,
@@ -1137,9 +1168,10 @@ export default function WalletScreen() {
                       value={searchQuery}
                       onChangeText={handleRecipientSearch}
                       autoCapitalize="none"
+                      accessibilityLabel="Search patients by name or email"
                     />
                     {searchQuery.length > 0 && (
-                      <TouchableOpacity onPress={() => {setSearchQuery(''); setSearchResults([]);}}>
+                      <TouchableOpacity onPress={() => {setSearchQuery(''); setSearchResults([]);}} accessibilityRole="button" accessibilityLabel="Clear search">
                         <X size={18} color={colors.mutedForeground} />
                       </TouchableOpacity>
                     )}
@@ -1155,6 +1187,9 @@ export default function WalletScreen() {
                         key={patient.id || patient._id}
                         activeOpacity={0.7}
                         onPress={() => setSelectedRecipient(isSelected ? null : patient)}
+                        accessibilityRole="radio"
+                        accessibilityLabel={patient.name || patient.email}
+                        accessibilityState={{selected: isSelected}}
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
@@ -1188,6 +1223,8 @@ export default function WalletScreen() {
                       <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
                         <TouchableOpacity
                           onPress={() => setCreditsToSend(Math.max(sharingSettings?.min_amount || 1, creditsToSend - 1))}
+                          accessibilityRole="button"
+                          accessibilityLabel="Decrease credits"
                           style={{width: 40, height: 40, borderRadius: 12, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center'}}>
                           <Minus size={18} color={colors.foreground} />
                         </TouchableOpacity>
@@ -1196,6 +1233,8 @@ export default function WalletScreen() {
                         </View>
                         <TouchableOpacity
                           onPress={() => setCreditsToSend(Math.min(maxTransfer, creditsToSend + 1))}
+                          accessibilityRole="button"
+                          accessibilityLabel="Increase credits"
                           style={{width: 40, height: 40, borderRadius: 12, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center'}}>
                           <Plus size={18} color={colors.foreground} />
                         </TouchableOpacity>
@@ -1353,7 +1392,7 @@ export default function WalletScreen() {
               borderBottomWidth: 1,
               borderBottomColor: colors.border,
             }}>
-            <TouchableOpacity onPress={handleClosePaystack} style={{padding: 4}}>
+            <TouchableOpacity onPress={handleClosePaystack} style={{padding: 4}} accessibilityRole="button" accessibilityLabel="Close payment">
               <X size={24} color={colors.foreground} />
             </TouchableOpacity>
             <Text

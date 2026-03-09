@@ -91,3 +91,72 @@ export const vitalLogSchema = z.object({
   notes: z.string().optional(),
 });
 export type VitalLogFormData = z.infer<typeof vitalLogSchema>;
+
+/** Schema for the multi-vital log form (all fields optional, validated when present) */
+const optionalPositiveNumber = z
+  .string()
+  .optional()
+  .transform(v => (v && v.trim() ? v.trim() : undefined))
+  .pipe(
+    z
+      .string()
+      .regex(/^\d+(\.\d+)?$/, 'Must be a positive number')
+      .optional(),
+  );
+
+export const multiVitalLogSchema = z
+  .object({
+    bp_systolic: optionalPositiveNumber,
+    bp_diastolic: optionalPositiveNumber,
+    pulse_rate: optionalPositiveNumber,
+    temperature: optionalPositiveNumber,
+    respiratory_rate: optionalPositiveNumber,
+    oxygen_saturation: optionalPositiveNumber,
+    weight: optionalPositiveNumber,
+    height: optionalPositiveNumber,
+    steps: optionalPositiveNumber,
+    sleep_hours: optionalPositiveNumber,
+    calories: optionalPositiveNumber,
+    stress_level: optionalPositiveNumber,
+    water_intake: optionalPositiveNumber,
+    blood_glucose: optionalPositiveNumber,
+    notes: z.string().optional(),
+  })
+  .refine(
+    data => {
+      const {bp_systolic, bp_diastolic, notes, ...rest} = data;
+      const hasBP = bp_systolic && bp_diastolic;
+      const hasOther = Object.values(rest).some(v => v !== undefined);
+      return hasBP || hasOther;
+    },
+    {message: 'Please enter at least one vital reading', path: ['_form']},
+  )
+  .refine(
+    data => {
+      // If one BP field is set, both must be
+      const hasSys = !!data.bp_systolic;
+      const hasDia = !!data.bp_diastolic;
+      return hasSys === hasDia;
+    },
+    {message: 'Both systolic and diastolic are required for blood pressure', path: ['bp_systolic']},
+  );
+export type MultiVitalLogFormData = z.infer<typeof multiVitalLogSchema>;
+
+// ─── Rating schema ──────────────────────────────────────────────────────────
+
+export const ratingSchema = z.object({
+  rating: z.number().min(1, 'Please select a rating').max(5),
+  feedback: z.string().optional(),
+});
+export type RatingFormData = z.infer<typeof ratingSchema>;
+
+// ─── Booking confirm schema ─────────────────────────────────────────────────
+
+export const bookingConfirmSchema = z.object({
+  notes: z.string().optional(),
+  agreedToTerms: z.literal(true, {
+    errorMap: () => ({message: 'You must agree to the terms'}),
+  }),
+  paymentMethod: z.enum(['wallet', 'card']),
+});
+export type BookingConfirmFormData = z.infer<typeof bookingConfirmSchema>;

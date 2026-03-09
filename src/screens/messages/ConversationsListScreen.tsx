@@ -81,6 +81,8 @@ export default function ConversationsListScreen() {
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => navigation.navigate('NewConversation')}
+            accessibilityRole="button"
+            accessibilityLabel="New conversation"
             style={{
               width: 36,
               height: 36,

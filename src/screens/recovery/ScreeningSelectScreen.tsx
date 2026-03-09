@@ -101,6 +101,8 @@ export default function ScreeningSelectScreen() {
               activeOpacity={0.7}
               onPress={() => startScreening(inst.id)}
               disabled={starting !== null}
+              accessibilityRole="button"
+              accessibilityLabel={`${inst.name}, ${inst.full}, ${inst.time}${isRecommended ? ', recommended' : ''}`}
               style={{
                 backgroundColor: colors.card,
                 borderWidth: 1,

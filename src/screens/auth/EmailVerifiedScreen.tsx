@@ -12,7 +12,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'EmailVerified'>;
 export default function EmailVerifiedScreen({navigation}: Props) {
   return (
     <SafeAreaView className="flex-1 bg-background items-center justify-center px-6">
-      <View className="w-24 h-24 bg-success/10 rounded-full items-center justify-center mb-6">
+      <View className="w-24 h-24 bg-success/10 rounded-full items-center justify-center mb-6" accessibilityRole="image" accessibilityLabel="Email verified successfully">
         <CheckCircle2 size={48} color={colors.success} />
       </View>
 

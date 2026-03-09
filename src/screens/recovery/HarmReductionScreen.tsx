@@ -88,6 +88,8 @@ export default function HarmReductionScreen() {
               key={i}
               activeOpacity={0.7}
               onPress={() => Linking.openURL(`tel:${line.number.replace(/\s/g, '')}`)}
+              accessibilityRole="button"
+              accessibilityLabel={`Call ${line.name}, ${line.number}`}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
@@ -167,6 +169,9 @@ export default function HarmReductionScreen() {
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => toggleSubstance(sub.substance)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${sub.display_name || sub.substance} safety guide`}
+                    accessibilityState={{expanded: isOpen}}
                     style={{padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10}}>
                     <View
                       style={{

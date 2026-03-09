@@ -337,6 +337,8 @@ export default function UploadPrescriptionScreen() {
             <TouchableOpacity
               onPress={pickFromCamera}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Take a photo of prescription"
               className="flex-1 bg-card border border-border rounded-2xl p-6 items-center">
               <Camera size={32} color={colors.primary} />
               <Text className="text-sm font-semibold text-foreground mt-3">
@@ -350,6 +352,8 @@ export default function UploadPrescriptionScreen() {
             <TouchableOpacity
               onPress={pickFromGallery}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Choose image from gallery"
               className="flex-1 bg-card border border-border rounded-2xl p-6 items-center">
               <ImageIcon size={32} color={colors.primary} />
               <Text className="text-sm font-semibold text-foreground mt-3">
@@ -372,7 +376,9 @@ export default function UploadPrescriptionScreen() {
             />
             <TouchableOpacity
               onPress={() => setImageUri(null)}
-              className="mt-2 self-center">
+              className="mt-2 self-center"
+              accessibilityRole="button"
+              accessibilityLabel="Change prescription image">
               <Text className="text-sm text-primary font-semibold">
                 Change Image
               </Text>

@@ -106,11 +106,14 @@ export default function DrugSearchScreen() {
             placeholderTextColor={colors.mutedForeground}
             returnKeyType="search"
             autoCorrect={false}
+            accessibilityLabel="Search drugs"
           />
           {query.length > 0 && (
             <TouchableOpacity
               onPress={() => setQuery('')}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search">
               <X size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
           )}
@@ -129,7 +132,7 @@ export default function DrugSearchScreen() {
                     Recent
                   </Text>
                 </View>
-                <TouchableOpacity onPress={clearRecentSearches}>
+                <TouchableOpacity onPress={clearRecentSearches} accessibilityRole="button" accessibilityLabel="Clear recent searches">
                   <Text className="text-xs text-primary">Clear</Text>
                 </TouchableOpacity>
               </View>
@@ -138,6 +141,8 @@ export default function DrugSearchScreen() {
                   <TouchableOpacity
                     key={term}
                     onPress={() => handleRecentPress(term)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Search for ${term}`}
                     className="bg-card border border-border rounded-full px-3 py-1.5">
                     <Text className="text-sm text-foreground">{term}</Text>
                   </TouchableOpacity>
@@ -159,6 +164,8 @@ export default function DrugSearchScreen() {
                 <TouchableOpacity
                   key={tag}
                   onPress={() => handleTagPress(tag)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Search for ${tag}`}
                   className="bg-primary/10 rounded-full px-3 py-1.5">
                   <Text className="text-sm text-primary font-medium">{tag}</Text>
                 </TouchableOpacity>

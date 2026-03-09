@@ -55,17 +55,23 @@ function CartItemRow({
             onPress={() => onUpdateQuantity(item.drugId, item.quantity - 1)}
             className="w-8 h-8 rounded-lg bg-muted items-center justify-center"
             disabled={item.quantity <= 1}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={`Decrease quantity of ${item.name}`}
+            accessibilityState={{disabled: item.quantity <= 1}}>
             <Minus size={14} color={item.quantity <= 1 ? colors.muted : colors.foreground} />
           </TouchableOpacity>
-          <Text className="text-sm font-bold text-foreground mx-2 min-w-[20px] text-center">
+          <Text className="text-sm font-bold text-foreground mx-2 min-w-[20px] text-center" accessibilityLabel={`Quantity: ${item.quantity}`}>
             {item.quantity}
           </Text>
           <TouchableOpacity
             onPress={() => onUpdateQuantity(item.drugId, item.quantity + 1)}
             className="w-8 h-8 rounded-lg bg-muted items-center justify-center"
             disabled={item.quantity >= item.maxQuantityPerOrder}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={`Increase quantity of ${item.name}`}
+            accessibilityState={{disabled: item.quantity >= item.maxQuantityPerOrder}}>
             <Plus size={14} color={item.quantity >= item.maxQuantityPerOrder ? colors.muted : colors.foreground} />
           </TouchableOpacity>
         </View>
@@ -73,7 +79,9 @@ function CartItemRow({
         <TouchableOpacity
           onPress={() => onRemove(item.drugId)}
           className="mt-1.5"
-          hitSlop={{top: 4, bottom: 4, left: 4, right: 4}}>
+          hitSlop={{top: 4, bottom: 4, left: 4, right: 4}}
+          accessibilityRole="button"
+          accessibilityLabel={`Remove ${item.name} from cart`}>
           <X size={16} color={colors.destructive} />
         </TouchableOpacity>
       </View>
@@ -124,7 +132,7 @@ export default function CartScreen() {
         title={`Cart (${cartItems.length})`}
         onBack={() => navigation.goBack()}
         rightAction={
-          <TouchableOpacity onPress={handleClearCart}>
+          <TouchableOpacity onPress={handleClearCart} accessibilityRole="button" accessibilityLabel="Clear cart">
             <Text className="text-xs text-destructive font-medium">Clear</Text>
           </TouchableOpacity>
         }
