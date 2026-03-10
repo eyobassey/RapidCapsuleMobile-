@@ -64,8 +64,7 @@ export async function signInWithGoogle(): Promise<string> {
   }
 
   const apiRes = await api.post('/auth/google/alt-login', {
-    idToken,
-    user_type: 'Patient',
+    id_token: idToken,
   });
   const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
   if (!token || typeof token !== 'string') {
