@@ -38,6 +38,7 @@ local.properties
 # node.js
 #
 node_modules/
+ecosystem.config.js
 npm-debug.log
 yarn-error.log
 
