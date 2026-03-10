@@ -40,6 +40,7 @@ if (ENV.GOOGLE_WEB_CLIENT_ID) {
 // Configure Google Sign-In
 GoogleSignin.configure({
   webClientId: ENV.GOOGLE_WEB_CLIENT_ID,
+  iosClientId: ENV.GOOGLE_IOS_CLIENT_ID,
   offlineAccess: true,
 });
 
