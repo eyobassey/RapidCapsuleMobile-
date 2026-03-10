@@ -1,11 +1,11 @@
 /**
  * Social auth (Google, Apple) - obtains tokens and exchanges with backend
  */
-import { Platform } from 'react-native';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { appleAuth, appleAuthAndroid } from '@invertase/react-native-apple-authentication';
-import api from './api';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { Platform } from 'react-native';
 import ENV from '../config/env';
+import api from './api';
 
 /** User cancelled the sign-in flow - no alert should be shown */
 export const USER_CANCELLED = 'USER_CANCELLED';
