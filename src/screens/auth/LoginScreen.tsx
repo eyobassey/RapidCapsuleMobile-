@@ -1,15 +1,61 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Switch, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, EyeOff, Eye, Shield } from 'lucide-react-native';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { ArrowLeft, Eye, EyeOff, Shield, X } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, FormInput } from '../../components/ui';
+import type { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuthStore } from '../../store/auth';
 import { colors } from '../../theme/colors';
-import { loginSchema, type LoginFormData } from '../../utils/validation';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import type { AuthStackParamList } from '../../navigation/AuthStack';
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  type ForgotPasswordFormData,
+  type LoginFormData,
+} from '../../utils/validation';
+
+const styles = StyleSheet.create({
+  switchScale: {
+    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+  },
+  handleBar: {
+    backgroundColor: colors.border,
+  },
+});
+
+function getErrorDetail(err: unknown): string {
+  if (err && typeof err === 'object' && 'response' in err) {
+    const res = (err as { response?: { data?: unknown } }).response;
+    if (res?.data != null) return JSON.stringify(res.data, null, 2);
+  }
+  if (err instanceof Error) return err.message;
+  return String(err ?? 'Unknown error');
+}
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -17,7 +63,10 @@ export default function LoginScreen({ navigation }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showForgotPasswordSheet, setShowForgotPasswordSheet] = useState(false);
+  const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
   const login = useAuthStore((s) => s.login);
+  const forgotPassword = useAuthStore((s) => s.forgotPassword);
 
   const {
     control,
@@ -29,6 +78,11 @@ export default function LoginScreen({ navigation }: Props) {
     defaultValues: { email: '', password: '' },
   });
 
+  const forgotPasswordForm = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
+  });
+
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     try {
@@ -37,14 +91,31 @@ export default function LoginScreen({ navigation }: Props) {
         navigation.navigate('Otp', { email: data.email });
       }
       // If no 2FA, the auth store automatically routes via RootNavigator
-    } catch (err: any) {
-      const detail = err?.response?.data
-        ? JSON.stringify(err.response.data, null, 2)
-        : err?.message || 'Unknown error';
-      Alert.alert('Login Error', detail);
+    } catch (err: unknown) {
+      Alert.alert('Login Error', getErrorDetail(err));
     } finally {
       setLoading(false);
     }
+  };
+
+  const onForgotPasswordPress = () => {
+    setForgotPasswordSuccess(false);
+    forgotPasswordForm.reset({ email: getValues('email') });
+    setShowForgotPasswordSheet(true);
+  };
+
+  const onForgotPasswordSubmit = async (data: ForgotPasswordFormData) => {
+    try {
+      await forgotPassword(data.email);
+      setForgotPasswordSuccess(true);
+    } catch (err: unknown) {
+      Alert.alert('Forgot Password', getErrorDetail(err));
+    }
+  };
+
+  const closeForgotPasswordSheet = () => {
+    setShowForgotPasswordSheet(false);
+    setForgotPasswordSuccess(false);
   };
 
   return (
@@ -111,14 +182,18 @@ export default function LoginScreen({ navigation }: Props) {
               onValueChange={setRememberMe}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={colors.white}
-              style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
+              style={styles.switchScale}
               accessibilityRole="switch"
               accessibilityLabel="Remember me"
               accessibilityState={{ checked: rememberMe }}
             />
             <Text className="text-sm text-foreground/80">Remember me</Text>
           </View>
-          <TouchableOpacity accessibilityRole="link" accessibilityLabel="Forgot password">
+          <TouchableOpacity
+            accessibilityRole="link"
+            accessibilityLabel="Forgot password"
+            onPress={onForgotPasswordPress}
+          >
             <Text className="text-sm font-semibold text-primary">Forgot password?</Text>
           </TouchableOpacity>
         </View>
@@ -137,6 +212,70 @@ export default function LoginScreen({ navigation }: Props) {
           </Button>
         </View>
       </View>
+
+      {/* Forgot Password Sheet */}
+      <Modal
+        visible={showForgotPasswordSheet}
+        transparent
+        animationType="slide"
+        onRequestClose={closeForgotPasswordSheet}
+      >
+        <Pressable onPress={closeForgotPasswordSheet} style={styles.modalOverlay}>
+          <Pressable onPress={(e) => e.stopPropagation()} style={styles.modalSheet}>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              {/* Handle + Close */}
+              <View className="flex-row items-center justify-between pt-4 pb-2">
+                <View className="flex-1 items-center">
+                  <View className="w-10 h-1 rounded-full" style={styles.handleBar} />
+                </View>
+                <TouchableOpacity
+                  onPress={closeForgotPasswordSheet}
+                  accessibilityRole="button"
+                  hitSlop={10}
+                  accessibilityLabel="Close"
+                  className="absolute right-0 top-2 w-10 h-10 rounded-full bg-background border border-border items-center justify-center"
+                >
+                  <X size={20} color={colors.foreground} />
+                </TouchableOpacity>
+              </View>
+
+              <Text className="text-xl font-bold text-foreground mb-1">Forgot Password</Text>
+              <Text className="text-sm text-muted-foreground mb-6">
+                Enter your email and we&apos;ll send you a link to reset your password.
+              </Text>
+
+              {forgotPasswordSuccess ? (
+                <View className="py-4">
+                  <Text className="text-base text-foreground mb-4">
+                    Check your email for a password reset link. You can close this and return to
+                    sign in.
+                  </Text>
+                  <Button onPress={closeForgotPasswordSheet}>Done</Button>
+                </View>
+              ) : (
+                <>
+                  <FormInput
+                    control={forgotPasswordForm.control}
+                    name="email"
+                    label="Email Address"
+                    placeholder="you@example.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    error={forgotPasswordForm.formState.errors.email?.message}
+                    containerClassName="mb-6"
+                  />
+                  <Button
+                    onPress={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)}
+                    loading={forgotPasswordForm.formState.isSubmitting}
+                  >
+                    Send Reset Link
+                  </Button>
+                </>
+              )}
+            </KeyboardAvoidingView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

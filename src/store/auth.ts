@@ -71,6 +71,7 @@ interface AuthState {
   loginWithApple: () => Promise<void>;
   verify2FA: (code: string, method: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
   fetchUser: () => Promise<void>;
   logout: () => Promise<void>;
   setToken: (token: string) => Promise<void>;
@@ -125,6 +126,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signup: async (data) => {
     await api.post('/users', data);
+  },
+
+  forgotPassword: async (email) => {
+    await api.post('/auth/forgot-password', { email });
   },
 
   fetchUser: async () => {
