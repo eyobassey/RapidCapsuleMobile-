@@ -76,7 +76,12 @@ interface AuthState {
   loginWithApple: () => Promise<void>;
   verify2FA: (code: string, method: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
+<<<<<<< HEAD
   forgotPassword: (email: string) => Promise<void>;
+=======
+  googleLogin: (idToken: string, user_type?: string) => Promise<void>;
+  appleLogin: (identityToken: string, authorizationCode: string, user_type?: string, fullName?: {givenName?: string | null; familyName?: string | null} | null, email?: string | null) => Promise<void>;
+>>>>>>> 2301e5f (Implement Google and Apple Sign-In authentication)
   fetchUser: () => Promise<void>;
   logout: () => Promise<void>;
   setToken: (token: string) => Promise<void>;
@@ -140,8 +145,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await api.post('/users', data);
   },
 
+<<<<<<< HEAD
   forgotPassword: async (email) => {
     await api.post('/auth/forgot-password', { email });
+=======
+  googleLogin: async (idToken, user_type = 'Patient') => {
+    const res = await api.post('/auth/google', {token: idToken, user_type});
+    const token = res.data?.data || res.data?.result || res.data?.token;
+    if (!token || typeof token !== 'string') {
+      throw new Error('Google login succeeded but no token received');
+    }
+    await get().setToken(token);
+    await get().fetchUser();
+    useCurrencyStore.getState().initCurrency();
+  },
+
+  appleLogin: async (identityToken, authorizationCode, user_type = 'Patient', fullName, email) => {
+    const payload: any = {
+      authorization: {
+        id_token: identityToken,
+        code: authorizationCode,
+        state: user_type,
+      },
+    };
+    if (fullName?.givenName || email) {
+      payload.user = {
+        email: email || '',
+        name: {
+          firstName: fullName?.givenName || '',
+          lastName: fullName?.familyName || '',
+        },
+      };
+    }
+    const res = await api.post('/auth/apple', payload);
+    const token = res.data?.data || res.data?.result || res.data?.token;
+    if (!token || typeof token !== 'string') {
+      throw new Error('Apple login succeeded but no token received');
+    }
+    await get().setToken(token);
+    await get().fetchUser();
+    useCurrencyStore.getState().initCurrency();
+>>>>>>> 2301e5f (Implement Google and Apple Sign-In authentication)
   },
 
   fetchUser: async () => {
