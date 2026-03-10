@@ -63,7 +63,10 @@ export async function signInWithGoogle(): Promise<string> {
     throw new Error('No ID token from Google');
   }
 
-  const apiRes = await api.post('/auth/google/alt-login', { idToken });
+  const apiRes = await api.post('/auth/google/alt-login', {
+    idToken,
+    user_type: 'Patient',
+  });
   const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
   if (!token || typeof token !== 'string') {
     throw new Error('Backend did not return auth token');
@@ -72,16 +75,57 @@ export async function signInWithGoogle(): Promise<string> {
   return token;
 }
 
+/** Backend Apple auth payload format */
+interface AppleAuthPayload {
+  authorization: {
+    id_token: string;
+    code: string;
+    state: string;
+  };
+  user?: {
+    email?: string;
+    name?: { firstName?: string; lastName?: string };
+  };
+}
+
+function buildAppleAuthPayload(params: {
+  idToken: string;
+  code: string;
+  state: string;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+}): AppleAuthPayload {
+  const { idToken, code, state, email, firstName, lastName } = params;
+  const payload: AppleAuthPayload = {
+    authorization: { id_token: idToken, code, state },
+  };
+  if (email || firstName || lastName) {
+    payload.user = {};
+    if (email) payload.user.email = email;
+    if (firstName || lastName) {
+      payload.user.name = {
+        firstName: firstName ?? undefined,
+        lastName: lastName ?? undefined,
+      };
+    }
+  }
+  return payload;
+}
+
 /**
  * Sign in with Apple and exchange token with backend
  */
 export async function signInWithApple(): Promise<string> {
+  const STATE = 'Patient';
+
   if (Platform.OS === 'ios') {
     let requestResponse;
     try {
       requestResponse = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
         requestedScopes: [appleAuth.Scope.FULL_NAME, appleAuth.Scope.EMAIL],
+        state: STATE,
       });
     } catch (e) {
       if (isAppleCancelError(e)) {
@@ -91,27 +135,21 @@ export async function signInWithApple(): Promise<string> {
     }
 
     const idToken = requestResponse.identityToken;
-    if (!idToken) {
-      throw new Error('No identity token from Apple');
+    const code = requestResponse.authorizationCode;
+    if (!idToken || !code) {
+      throw new Error('No identity token or authorization code from Apple');
     }
 
-    const userPayload =
-      requestResponse.fullName?.givenName || requestResponse.email
-        ? {
-            email: requestResponse.email ?? undefined,
-            fullName: requestResponse.fullName
-              ? {
-                  givenName: requestResponse.fullName.givenName ?? undefined,
-                  familyName: requestResponse.fullName.familyName ?? undefined,
-                }
-              : undefined,
-          }
-        : undefined;
-
-    const apiRes = await api.post('/auth/apple', {
-      id_token: idToken,
-      user: userPayload,
+    const payload = buildAppleAuthPayload({
+      idToken,
+      code,
+      state: requestResponse.state ?? STATE,
+      email: requestResponse.email,
+      firstName: requestResponse.fullName?.givenName,
+      lastName: requestResponse.fullName?.familyName,
     });
+
+    const apiRes = await api.post('/auth/apple', payload);
     const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
     if (!token || typeof token !== 'string') {
       throw new Error('Backend did not return auth token');
@@ -121,17 +159,13 @@ export async function signInWithApple(): Promise<string> {
   }
 
   if (Platform.OS === 'android' && appleAuthAndroid?.isSupported) {
-    // Android requires configure() before signIn - needs Service ID, redirect URI from Apple dev console
-    const rawNonce = String(Math.random()).slice(2);
-    const state = String(Math.random()).slice(2);
-
     appleAuthAndroid.configure({
       clientId: ENV.APPLE_CLIENT_ID,
       redirectUri: ENV.APPLE_REDIRECT_URI,
       responseType: appleAuthAndroid.ResponseType.ALL,
       scope: appleAuthAndroid.Scope.ALL,
-      nonce: rawNonce,
-      state,
+      nonce: String(Math.random()).slice(2),
+      state: STATE,
     });
 
     let response;
@@ -144,12 +178,23 @@ export async function signInWithApple(): Promise<string> {
       }
       throw e;
     }
+
     const idToken = response.id_token;
-    if (!idToken) {
-      throw new Error('No identity token from Apple');
+    const code = response.code;
+    if (!idToken || !code) {
+      throw new Error('No identity token or authorization code from Apple');
     }
 
-    const apiRes = await api.post('/auth/apple', { id_token: idToken });
+    const payload = buildAppleAuthPayload({
+      idToken,
+      code,
+      state: response.state,
+      email: response.user?.email,
+      firstName: response.user?.name?.firstName,
+      lastName: response.user?.name?.lastName,
+    });
+
+    const apiRes = await api.post('/auth/apple', payload);
     const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
     if (!token || typeof token !== 'string') {
       throw new Error('Backend did not return auth token');
