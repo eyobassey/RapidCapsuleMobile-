@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "RapidCapsuleMobile.app"
-               BlueprintName = "RapidCapsuleMobile"
-               ReferencedContainer = "container:RapidCapsuleMobile.xcodeproj">
+               BuildableName = "RapidCapsules.app"
+               BlueprintName = "RapidCapsules"
+               ReferencedContainer = "container:RapidCapsules.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "RapidCapsuleMobileTests.xctest"
-               BlueprintName = "RapidCapsuleMobileTests"
-               ReferencedContainer = "container:RapidCapsuleMobile.xcodeproj">
+               BuildableName = "RapidCapsulesTests.xctest"
+               BlueprintName = "RapidCapsulesTests"
+               ReferencedContainer = "container:RapidCapsules.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "RapidCapsuleMobile.app"
-            BlueprintName = "RapidCapsuleMobile"
-            ReferencedContainer = "container:RapidCapsuleMobile.xcodeproj">
+            BuildableName = "RapidCapsules.app"
+            BlueprintName = "RapidCapsules"
+            ReferencedContainer = "container:RapidCapsules.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "RapidCapsuleMobile.app"
-            BlueprintName = "RapidCapsuleMobile"
-            ReferencedContainer = "container:RapidCapsuleMobile.xcodeproj">
+            BuildableName = "RapidCapsules.app"
+            BlueprintName = "RapidCapsules"
+            ReferencedContainer = "container:RapidCapsules.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

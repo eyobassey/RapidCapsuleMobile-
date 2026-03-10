@@ -1,4 +1,4 @@
-package com.rapidcapsulemobile
+package com.rapidcapsules.app
 
 import android.app.Application
 import com.facebook.react.PackageList
