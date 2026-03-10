@@ -140,14 +140,15 @@ export default function HomeScreen() {
 
   const nextAppointment = upcomingAppointments[0] ?? null;
 
-  const activeRxCount = useMemo(
-    () =>
-      (prescriptions || []).filter(
-        (rx: any) =>
-          rx.status === 'active' || rx.status === 'processing' || rx.status === 'paid' || rx.status === 'dispensed' || rx.status === 'shipped',
-      ).length,
-    [prescriptions],
-  );
+  const activeRxCount = useMemo(() => {
+    const activeStatuses = new Set([
+      'active', 'paid', 'dispensed', 'shipped', 'processing', 'draft',
+      'pending', 'confirmed', 'pending_payment', 'pending_acceptance',
+    ]);
+    return (prescriptions || []).filter(
+      (rx: any) => activeStatuses.has((rx.status || '').toLowerCase()),
+    ).length;
+  }, [prescriptions]);
 
   // ---------- data fetching ----------
   const handleMessages = useCallback(async () => {
