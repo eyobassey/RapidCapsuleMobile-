@@ -1,4 +1,4 @@
-package com.rapidcapsules.app
+package com.rapidcapsule.mobileapp
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
