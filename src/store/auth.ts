@@ -113,7 +113,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   googleLogin: async (idToken, user_type = 'Patient') => {
-    const res = await api.post('/auth/google', {token: idToken, user_type});
+    const res = await api.post('/auth/google/alt-login', {token: idToken, user_type});
     const token = res.data?.data || res.data?.result || res.data?.token;
     if (!token || typeof token !== 'string') {
       throw new Error('Google login succeeded but no token received');
