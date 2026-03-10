@@ -34,6 +34,7 @@ import {
   useAppointmentsQuery,
   useWalletBalanceQuery,
   useUnreadCountQuery,
+  usePrescriptionsQuery,
 } from '../../hooks/queries';
 
 import {Avatar, ProgressRing, StatusBadge, Skeleton} from '../../components/ui';
@@ -103,6 +104,12 @@ export default function HomeScreen() {
     refetch: refetchUnreadCount,
   } = useUnreadCountQuery();
 
+  const {
+    data: prescriptions = [],
+    isLoading: rxLoading,
+    refetch: refetchPrescriptions,
+  } = usePrescriptionsQuery();
+
   // ---------- credits store (kept — has plans/purchase logic) ----------
   const {totalAvailable, hasUnlimited, isLoading: creditsLoading, fetchCredits} = useCreditsStore();
 
@@ -133,6 +140,15 @@ export default function HomeScreen() {
 
   const nextAppointment = upcomingAppointments[0] ?? null;
 
+  const activeRxCount = useMemo(
+    () =>
+      (prescriptions || []).filter(
+        (rx: any) =>
+          rx.status === 'active' || rx.status === 'processing' || rx.status === 'paid' || rx.status === 'dispensed' || rx.status === 'shipped',
+      ).length,
+    [prescriptions],
+  );
+
   // ---------- data fetching ----------
   const handleMessages = useCallback(async () => {
     const hasConsent = await checkConsent();
@@ -150,6 +166,7 @@ export default function HomeScreen() {
       refetchAppointments(),
       refetchBalance(),
       refetchUnreadCount(),
+      refetchPrescriptions(),
       fetchCredits(),
       fetchConversations(1).then(() => computeUnreadTotal(user?._id || '')),
     ]);
@@ -352,7 +369,9 @@ export default function HomeScreen() {
             <View className="w-8 h-8 rounded-full bg-emerald-500/10 items-center justify-center mb-1.5">
               <Pill size={16} color="#10b981" />
             </View>
-            <Text className="text-xl font-bold text-foreground">{'\u2013'}</Text>
+            <Text className="text-xl font-bold text-foreground">
+              {rxLoading ? '--' : activeRxCount}
+            </Text>
             <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
               Active Rx
             </Text>
