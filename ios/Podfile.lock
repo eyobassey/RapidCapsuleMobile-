@@ -1,7 +1,35 @@
 PODS:
+  - AppAuth (2.0.0):
+    - AppAuth/Core (= 2.0.0)
+    - AppAuth/ExternalUserAgent (= 2.0.0)
+  - AppAuth/Core (2.0.0)
+  - AppAuth/ExternalUserAgent (2.0.0):
+    - AppAuth/Core
+  - AppCheckCore (11.2.0):
+    - GoogleUtilities/Environment (~> 8.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - PromisesObjC (~> 2.4)
   - BVLinearGradient (2.8.3):
     - React-Core
   - FBLazyVector (0.84.1)
+  - GoogleSignIn (9.1.0):
+    - AppAuth (~> 2.0)
+    - AppCheckCore (~> 11.0)
+    - GTMAppAuth (~> 5.0)
+    - GTMSessionFetcher/Core (~> 3.3)
+  - GoogleUtilities/Environment (8.1.0):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Logger (8.1.0):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/UserDefaults (8.1.0):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GTMAppAuth (5.0.0):
+    - AppAuth/Core (~> 2.0)
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3)
+  - GTMSessionFetcher/Core (3.5.0)
   - hermes-engine (250829098.0.9):
     - hermes-engine/Pre-built (= 250829098.0.9)
   - hermes-engine/Pre-built (250829098.0.9)
@@ -100,6 +128,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - PromisesObjC (2.4.0)
   - RCTDeprecation (0.84.1)
   - RCTRequired (0.84.1)
   - RCTSwiftUI (0.84.1)
@@ -2017,6 +2046,8 @@ PODS:
     - React-utils (= 0.84.1)
     - ReactNativeDependencies
   - ReactNativeDependencies (0.84.1)
+  - RNAppleAuthentication (2.5.1):
+    - React-Core
   - RNAppleHealthKit (1.7.0):
     - React
   - RNFlashList (1.8.3):
@@ -2042,6 +2073,29 @@ PODS:
     - ReactNativeDependencies
     - Yoga
   - RNGestureHandler (2.30.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
+  - RNGoogleSignin (16.1.2):
+    - GoogleSignIn (~> 9.0)
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2429,9 +2483,11 @@ DEPENDENCIES:
   - ReactCodegen (from `build/generated/ios/ReactCodegen`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
+  - "RNAppleAuthentication (from `../node_modules/@invertase/react-native-apple-authentication`)"
   - RNAppleHealthKit (from `../node_modules/react-native-health`)
   - "RNFlashList (from `../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
   - RNKeychain (from `../node_modules/react-native-keychain`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -2442,7 +2498,14 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - AppAuth
+    - AppCheckCore
+    - GoogleSignIn
+    - GoogleUtilities
+    - GTMAppAuth
+    - GTMSessionFetcher
     - MMKVCore
+    - PromisesObjC
 
 EXTERNAL SOURCES:
   BVLinearGradient:
@@ -2608,12 +2671,16 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   ReactNativeDependencies:
     :podspec: "../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
+  RNAppleAuthentication:
+    :path: "../node_modules/@invertase/react-native-apple-authentication"
   RNAppleHealthKit:
     :path: "../node_modules/react-native-health"
   RNFlashList:
     :path: "../node_modules/@shopify/flash-list"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNGoogleSignin:
+    :path: "../node_modules/@react-native-google-signin/google-signin"
   RNKeychain:
     :path: "../node_modules/react-native-keychain"
   RNReanimated:
@@ -2630,14 +2697,21 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  AppAuth: 1c1a8afa7e12f2ec3a294d9882dfa5ab7d3cb063
+  AppCheckCore: cc8fd0a3a230ddd401f326489c99990b013f0c4f
   BVLinearGradient: cb006ba232a1f3e4f341bb62c42d1098c284da70
   FBLazyVector: e97c19a5a442429d1988f182a1940fb08df514da
+  GoogleSignIn: fcee2257188d5eda57a5e2b6a715550ffff9206d
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
+  GTMAppAuth: 217a876b249c3c585a54fd6f73e6b58c4f5c4238
+  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   hermes-engine: 37507499b53c31c7755ba9f1f69142cd984bfdea
   HtmlToPdf: 9721ff8ee35b34262c801bfd04b7c0d877d589e6
   MMKVCore: f2dd4c9befea04277a55e84e7812f930537993df
   NitroAudioRecorderPlayer: 3d0f51dcf18faf4a55cf607deab58b5fe92a9bb1
   NitroMmkv: c9fd61d98afd00a6e4e1656a415c28f7be0fd74e
   NitroModules: 1cebf8f4ba098b9f950a3d18127bb741325d9849
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCTDeprecation: af44b104091a34482596cd9bd7e8d90c4e9b4bd7
   RCTRequired: bb77b070f75f53398ce43c0aaaa58337cebe2bf6
   RCTSwiftUI: afc0a0a635860da1040a0b894bfd529da06d7810
@@ -2712,9 +2786,11 @@ SPEC CHECKSUMS:
   ReactCodegen: 797de5178718324c6eba3327b07f9a423fbd5787
   ReactCommon: 07572bf9e687c8a52fbe4a3641e9e3a1a477c78e
   ReactNativeDependencies: e40446f98134e18e90fdcc15c258e94e350632b1
+  RNAppleAuthentication: a89c9804592b38ed4ab11f0aee68d05ba12ad432
   RNAppleHealthKit: 86ef7ab70f762b802f5c5289372de360cca701f9
   RNFlashList: aac2d79a6008ddb058507178a2dd8d179c498978
   RNGestureHandler: 07de6f059e0ee5744ae9a56feb07ee345338cc31
+  RNGoogleSignin: 104dd7238c56fe354e4b0a8fd267f866039ffdf3
   RNKeychain: 1bd9c3e52f71e954437e6429e95d801b190c15fa
   RNReanimated: 66fa99647173f254f731e6aa59a0a2cc8c838ac1
   RNScreens: 6cb648bdad8fe9bee9259fe144df95b6d1d5b707
