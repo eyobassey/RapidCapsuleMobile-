@@ -1,11 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, Image, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+  Image,
+  StyleSheet,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, FormInput } from '../../components/ui';
 import { useAuthStore } from '../../store/auth';
+import { isAppleAuthAvailable, USER_CANCELLED } from '../../services/socialAuth.service';
 import { colors } from '../../theme/colors';
 import { signupSchema, type SignupFormData } from '../../utils/validation';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -17,7 +27,10 @@ export default function SignupScreen({ navigation }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
   const signup = useAuthStore((s) => s.signup);
+  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+  const loginWithApple = useAuthStore((s) => s.loginWithApple);
 
   const {
     control,
@@ -53,6 +66,49 @@ export default function SignupScreen({ navigation }: Props) {
       // TODO: show error toast
     } finally {
       setLoading(false);
+    }
+  };
+
+  const isCancelError = (e: unknown): boolean => {
+    const msg = e instanceof Error ? e.message : String(e);
+    const msgLower = msg.toLowerCase();
+    const code = (e as { code?: number | string })?.code;
+    return (
+      msg === USER_CANCELLED ||
+      msgLower.includes('cancel') ||
+      msgLower.includes('cancelled') ||
+      msgLower.includes('dismissed') ||
+      code === 1001 ||
+      code === '1001' ||
+      code === -5
+    );
+  };
+
+  const handleGoogleSignIn = async () => {
+    setSocialLoading('google');
+    try {
+      await loginWithGoogle();
+    } catch (e) {
+      if (!isCancelError(e)) {
+        const msg = e instanceof Error ? e.message : 'Google sign-in failed';
+        Alert.alert('Sign-in Failed', msg);
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setSocialLoading('apple');
+    try {
+      await loginWithApple();
+    } catch (e) {
+      if (!isCancelError(e)) {
+        const msg = e instanceof Error ? e.message : 'Apple sign-in failed';
+        Alert.alert('Sign-in Failed', msg);
+      }
+    } finally {
+      setSocialLoading(null);
     }
   };
 
@@ -196,6 +252,9 @@ export default function SignupScreen({ navigation }: Props) {
           <View className="flex-1">
             <Button
               variant="outline"
+              onPress={handleGoogleSignIn}
+              loading={socialLoading === 'google'}
+              disabled={!!socialLoading}
               icon={
                 <Image
                   source={require('../../../assets/google.png')}
@@ -207,20 +266,25 @@ export default function SignupScreen({ navigation }: Props) {
               Google
             </Button>
           </View>
-          <View className="flex-1">
-            <Button
-              variant="outline"
-              icon={
-                <Image
-                  source={require('../../../assets/apple.png')}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-              }
-            >
-              Apple
-            </Button>
-          </View>
+          {isAppleAuthAvailable() && (
+            <View className="flex-1">
+              <Button
+                variant="outline"
+                onPress={handleAppleSignIn}
+                loading={socialLoading === 'apple'}
+                disabled={!!socialLoading}
+                icon={
+                  <Image
+                    source={require('../../../assets/apple.png')}
+                    style={styles.socialIcon}
+                    resizeMode="contain"
+                  />
+                }
+              >
+                Apple
+              </Button>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

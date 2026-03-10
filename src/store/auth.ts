@@ -1,14 +1,15 @@
-import {create} from 'zustand';
+import { create } from 'zustand';
 import api from '../services/api';
-import {storage} from '../utils/storage';
-import {useOnboardingStore} from './onboarding';
-import {useCurrencyStore} from './currency';
+import { signInWithGoogle, signInWithApple } from '../services/socialAuth.service';
+import { storage } from '../utils/storage';
+import { useOnboardingStore } from './onboarding';
+import { useCurrencyStore } from './currency';
 
 interface UserProfile {
   first_name: string;
   last_name: string;
   phone_number?: string;
-  phone?: {country_code?: string; number?: string};
+  phone?: { country_code?: string; number?: string };
   date_of_birth?: string;
   gender?: string;
   profile_image?: string;
@@ -17,14 +18,14 @@ interface UserProfile {
   occupation?: string;
   blood_type?: string;
   genotype?: string;
-  height?: {value?: number; unit?: string};
-  weight?: {value?: number; unit?: string};
+  height?: { value?: number; unit?: string };
+  weight?: { value?: number; unit?: string };
   basic_health_info?: {
-    height?: {value?: number; unit?: string};
-    weight?: {value?: number; unit?: string};
+    height?: { value?: number; unit?: string };
+    weight?: { value?: number; unit?: string };
   };
   contact?: {
-    phone?: {country_code?: string; number?: string};
+    phone?: { country_code?: string; number?: string };
     email?: string;
     address1?: string;
     address2?: string;
@@ -65,7 +66,9 @@ interface AuthState {
   isAuthenticated: boolean;
   needsOnboarding: boolean;
 
-  login: (email: string, password: string, user_type?: string) => Promise<{requires2FA: boolean}>;
+  login: (email: string, password: string, user_type?: string) => Promise<{ requires2FA: boolean }>;
+  loginWithGoogle: () => Promise<void>;
+  loginWithApple: () => Promise<void>;
   verify2FA: (code: string, method: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -82,31 +85,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   needsOnboarding: false,
 
   login: async (email, password, user_type = 'Patient') => {
-    const res = await api.post('/auth/login', {email, password, user_type});
+    const res = await api.post('/auth/login', { email, password, user_type });
     const data = res.data;
     if (data.requires_2fa) {
-      return {requires2FA: true};
+      return { requires2FA: true };
     }
     const token = data.data || data.result || data.token;
     if (!token || typeof token !== 'string') {
       throw new Error(
-        `Login succeeded but no token found. Response keys: ${Object.keys(data).join(', ')}`,
+        `Login succeeded but no token found. Response keys: ${Object.keys(data).join(', ')}`
       );
     }
     await get().setToken(token);
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
-    return {requires2FA: false};
+    return { requires2FA: false };
   },
 
   verify2FA: async (code, _method) => {
-    const res = await api.post('/auth/2fa/verify', {code});
+    const res = await api.post('/auth/2fa/verify', { code });
     await get().setToken(res.data.data || res.data.result);
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
   },
 
-  signup: async data => {
+  loginWithGoogle: async () => {
+    const token = await signInWithGoogle();
+    await get().setToken(token);
+    await get().fetchUser();
+    useCurrencyStore.getState().initCurrency();
+  },
+
+  loginWithApple: async () => {
+    const token = await signInWithApple();
+    await get().setToken(token);
+    await get().fetchUser();
+    useCurrencyStore.getState().initCurrency();
+  },
+
+  signup: async (data) => {
     await api.post('/users', data);
   },
 
@@ -125,34 +142,34 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const needsOnboarding = !hasPersonal || !hasEmergency;
 
       await storage.setUser(user);
-      set({user, isAuthenticated: true, needsOnboarding, isLoading: false});
+      set({ user, isAuthenticated: true, needsOnboarding, isLoading: false });
     } catch (err: any) {
       const msg = err?.response?.data
         ? JSON.stringify(err.response.data)
         : err?.message || 'Unknown';
       console.warn('fetchUser failed:', msg);
-      set({isLoading: false});
+      set({ isLoading: false });
     }
   },
 
   logout: async () => {
     await storage.clear();
-    set({user: null, token: null, isAuthenticated: false, needsOnboarding: false});
+    set({ user: null, token: null, isAuthenticated: false, needsOnboarding: false });
   },
 
-  setToken: async token => {
+  setToken: async (token) => {
     await storage.setToken(token);
-    set({token});
+    set({ token });
   },
 
   hydrate: async () => {
     const token = await storage.getToken();
     if (token) {
-      set({token});
+      set({ token });
       await get().fetchUser();
       useCurrencyStore.getState().initCurrency();
     } else {
-      set({isLoading: false});
+      set({ isLoading: false });
     }
   },
 }));
