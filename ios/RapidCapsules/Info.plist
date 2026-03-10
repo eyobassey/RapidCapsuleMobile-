@@ -40,7 +40,7 @@
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>RapidCapsule may write health data from your consultations back to Apple Health.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>RapidCapsule needs microphone access to send voice messages.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
@@ -66,5 +66,12 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>OpenRunde-Regular.otf</string>
+		<string>OpenRunde-Semibold.otf</string>
+		<string>OpenRunde-Bold.otf</string>
+		<string>OpenRunde-Medium.otf</string>
+	</array>
 </dict>
 </plist>

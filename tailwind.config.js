@@ -42,11 +42,12 @@ module.exports = {
         ring: 'hsl(199, 89%, 48%)',
       },
       fontFamily: {
-        display: ['Inter-Bold'],
-        sans: ['Inter-Regular'],
-        'sans-medium': ['Inter-Medium'],
-        'sans-semibold': ['Inter-SemiBold'],
-        'sans-bold': ['Inter-Bold'],
+        // iOS: ui-rounded (system) | Android: Open Runde (assets/fonts)
+        display: ['ui-rounded', 'OpenRunde-Bold'],
+        sans: ['ui-rounded', 'OpenRunde-Regular'],
+        'sans-medium': ['ui-rounded', 'OpenRunde-Medium'],
+        'sans-semibold': ['ui-rounded', 'OpenRunde-SemiBold'],
+        'sans-bold': ['ui-rounded', 'OpenRunde-Bold'],
       },
       borderRadius: {
         '2xl': 16,
