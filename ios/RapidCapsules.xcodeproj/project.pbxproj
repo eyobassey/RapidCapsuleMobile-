@@ -9,14 +9,14 @@
 /* Begin PBXBuildFile section */
 		0C80B921A6F3F58F76C31292 /* libPods-RapidCapsules.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-RapidCapsules.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		19E714AFF26D4F88895A5B75 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 23E5DEC8839B4FAFB505EE24 /* README.md */; };
 		1BECE8A84F4046ABC4886A80 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
+		2FB225A7C56C49C59ECD2FB5 /* OpenRunde-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 9FA9067AA8954F30AB54BB3B /* OpenRunde-Regular.otf */; };
+		4C3D405B212F46D1B42E1019 /* OpenRunde-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 60B11BB9DB834DB7AF307A34 /* OpenRunde-Medium.otf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		2FB225A7C56C49C59ECD2FB5 /* OpenRunde-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 9FA9067AA8954F30AB54BB3B /* OpenRunde-Regular.otf */; };
-		F15F3A77396F4C7D967758C5 /* OpenRunde-Semibold.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB696C3952414B72B47C5414 /* OpenRunde-Semibold.otf */; };
 		B30B79DB86DC4689AA97860A /* OpenRunde-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = DD0737BE4AF84ED793E08C4E /* OpenRunde-Bold.otf */; };
-		4C3D405B212F46D1B42E1019 /* OpenRunde-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 60B11BB9DB834DB7AF307A34 /* OpenRunde-Medium.otf */; };
-		19E714AFF26D4F88895A5B75 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 23E5DEC8839B4FAFB505EE24 /* README.md */; };
+		F15F3A77396F4C7D967758C5 /* OpenRunde-Semibold.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB696C3952414B72B47C5414 /* OpenRunde-Semibold.otf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,17 +24,17 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = RapidCapsules/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = RapidCapsules/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = RapidCapsules/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		23E5DEC8839B4FAFB505EE24 /* README.md */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = README.md; path = ../assets/fonts/README.md; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-RapidCapsules.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RapidCapsules.debug.xcconfig"; path = "Target Support Files/Pods-RapidCapsules/Pods-RapidCapsules.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-RapidCapsules.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RapidCapsules.release.xcconfig"; path = "Target Support Files/Pods-RapidCapsules/Pods-RapidCapsules.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-RapidCapsules.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-RapidCapsules.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		60B11BB9DB834DB7AF307A34 /* OpenRunde-Medium.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenRunde-Medium.otf"; path = "../assets/fonts/OpenRunde-Medium.otf"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = RapidCapsules/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = RapidCapsules/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		9FA9067AA8954F30AB54BB3B /* OpenRunde-Regular.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenRunde-Regular.otf"; path = "../assets/fonts/OpenRunde-Regular.otf"; sourceTree = "<group>"; };
+		AB696C3952414B72B47C5414 /* OpenRunde-Semibold.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenRunde-Semibold.otf"; path = "../assets/fonts/OpenRunde-Semibold.otf"; sourceTree = "<group>"; };
+		DD0737BE4AF84ED793E08C4E /* OpenRunde-Bold.otf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "OpenRunde-Bold.otf"; path = "../assets/fonts/OpenRunde-Bold.otf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		9FA9067AA8954F30AB54BB3B /* OpenRunde-Regular.otf */ = {isa = PBXFileReference; name = "OpenRunde-Regular.otf"; path = "../assets/fonts/OpenRunde-Regular.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		AB696C3952414B72B47C5414 /* OpenRunde-Semibold.otf */ = {isa = PBXFileReference; name = "OpenRunde-Semibold.otf"; path = "../assets/fonts/OpenRunde-Semibold.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		DD0737BE4AF84ED793E08C4E /* OpenRunde-Bold.otf */ = {isa = PBXFileReference; name = "OpenRunde-Bold.otf"; path = "../assets/fonts/OpenRunde-Bold.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		60B11BB9DB834DB7AF307A34 /* OpenRunde-Medium.otf */ = {isa = PBXFileReference; name = "OpenRunde-Medium.otf"; path = "../assets/fonts/OpenRunde-Medium.otf"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
-		23E5DEC8839B4FAFB505EE24 /* README.md */ = {isa = PBXFileReference; name = "README.md"; path = "../assets/fonts/README.md"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +49,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		08222A0E11324E3E8DA48208 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9FA9067AA8954F30AB54BB3B /* OpenRunde-Regular.otf */,
+				AB696C3952414B72B47C5414 /* OpenRunde-Semibold.otf */,
+				DD0737BE4AF84ED793E08C4E /* OpenRunde-Bold.otf */,
+				60B11BB9DB834DB7AF307A34 /* OpenRunde-Medium.otf */,
+				23E5DEC8839B4FAFB505EE24 /* README.md */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* RapidCapsules */ = {
 			isa = PBXGroup;
 			children = (
@@ -108,19 +120,6 @@
 			);
 			path = Pods;
 			sourceTree = "<group>";
-		};
-		08222A0E11324E3E8DA48208 /* Resources */ = {
-			isa = "PBXGroup";
-			children = (
-				9FA9067AA8954F30AB54BB3B /* OpenRunde-Regular.otf */,
-				AB696C3952414B72B47C5414 /* OpenRunde-Semibold.otf */,
-				DD0737BE4AF84ED793E08C4E /* OpenRunde-Bold.otf */,
-				60B11BB9DB834DB7AF307A34 /* OpenRunde-Medium.otf */,
-				23E5DEC8839B4FAFB505EE24 /* README.md */,
-			);
-			name = Resources;
-			sourceTree = "<group>";
-			path = "";
 		};
 /* End PBXGroup section */
 
@@ -290,6 +289,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = RapidCapsules/RapidCapsules.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NS5XW2Q4P8;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = RapidCapsules/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = RapidCapsules;
@@ -322,6 +322,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = RapidCapsules/RapidCapsules.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = NS5XW2Q4P8;
 				INFOPLIST_FILE = RapidCapsules/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = RapidCapsules;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
