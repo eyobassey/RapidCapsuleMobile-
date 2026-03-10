@@ -5,11 +5,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  Alert,
+  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {ArrowLeft, Eye, EyeOff} from 'lucide-react-native';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import appleAuth from '@invertase/react-native-apple-authentication';
 import {Button, FormInput} from '../../components/ui';
 import {useAuthStore} from '../../store/auth';
 import {colors} from '../../theme/colors';
@@ -23,7 +27,10 @@ export default function SignupScreen({navigation}: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(false);
   const signup = useAuthStore(s => s.signup);
+  const googleLogin = useAuthStore(s => s.googleLogin);
+  const appleLogin = useAuthStore(s => s.appleLogin);
 
   const {control, handleSubmit, formState: {errors}} = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
@@ -191,11 +198,66 @@ export default function SignupScreen({navigation}: Props) {
         {/* Social buttons */}
         <View className="flex-row gap-4 mb-12">
           <View className="flex-1">
-            <Button variant="outline">Google</Button>
+            <Button
+              variant="outline"
+              loading={socialLoading}
+              onPress={async () => {
+                setSocialLoading(true);
+                try {
+                  await GoogleSignin.hasPlayServices();
+                  const response = await GoogleSignin.signIn();
+                  const idToken = response.data?.idToken;
+                  if (!idToken) throw new Error('No ID token from Google');
+                  await googleLogin(idToken, 'Patient');
+                } catch (err: any) {
+                  if (err?.code !== 'SIGN_IN_CANCELLED') {
+                    Alert.alert('Google Sign-In', err?.message || 'Failed');
+                  }
+                } finally {
+                  setSocialLoading(false);
+                }
+              }}>
+              Google
+            </Button>
           </View>
-          <View className="flex-1">
-            <Button variant="outline">Apple</Button>
-          </View>
+          {Platform.OS === 'ios' && (
+            <View className="flex-1">
+              <Button
+                variant="outline"
+                loading={socialLoading}
+                onPress={async () => {
+                  setSocialLoading(true);
+                  try {
+                    const credential = await appleAuth.performRequest({
+                      requestedOperation: appleAuth.Operation.LOGIN,
+                      requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+                    });
+                    const credentialState = await appleAuth.getCredentialStateForUser(credential.user);
+                    if (credentialState !== appleAuth.State.AUTHORIZED) {
+                      throw new Error('Apple Sign-In not authorized');
+                    }
+                    if (!credential.identityToken || !credential.authorizationCode) {
+                      throw new Error('Missing Apple credentials');
+                    }
+                    await appleLogin(
+                      credential.identityToken,
+                      credential.authorizationCode,
+                      'Patient',
+                      credential.fullName,
+                      credential.email,
+                    );
+                  } catch (err: any) {
+                    if (err?.code !== 'ERR_REQUEST_CANCELED') {
+                      Alert.alert('Apple Sign-In', err?.message || 'Failed');
+                    }
+                  } finally {
+                    setSocialLoading(false);
+                  }
+                }}>
+                Apple
+              </Button>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

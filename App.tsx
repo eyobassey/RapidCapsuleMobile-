@@ -12,8 +12,15 @@ import {PaystackProvider} from 'react-native-paystack-webview';
 import RootNavigator from './src/navigation/RootNavigator';
 import ENV from './src/config/env';
 import {queryClient} from './src/config/queryClient';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import ErrorBoundary from './src/components/ui/ErrorBoundary';
 import OfflineBanner from './src/components/ui/OfflineBanner';
+
+// Configure Google Sign-In
+GoogleSignin.configure({
+  webClientId: ENV.GOOGLE_WEB_CLIENT_ID,
+  offlineAccess: true,
+});
 
 export default function App() {
   return (
