@@ -1,31 +1,29 @@
-import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Switch,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {ArrowLeft, Eye, EyeOff} from 'lucide-react-native';
-import {useForm} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {Button, FormInput} from '../../components/ui';
-import {useAuthStore} from '../../store/auth';
-import {colors} from '../../theme/colors';
-import {signupSchema, type SignupFormData} from '../../utils/validation';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {AuthStackParamList} from '../../navigation/AuthStack';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Switch, Image, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, FormInput } from '../../components/ui';
+import { useAuthStore } from '../../store/auth';
+import { colors } from '../../theme/colors';
+import { signupSchema, type SignupFormData } from '../../utils/validation';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { AuthStackParamList } from '../../navigation/AuthStack';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 
-export default function SignupScreen({navigation}: Props) {
+export default function SignupScreen({ navigation }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const signup = useAuthStore(s => s.signup);
+  const signup = useAuthStore((s) => s.signup);
 
-  const {control, handleSubmit, formState: {errors}} = useForm<SignupFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
       first_name: '',
@@ -50,8 +48,8 @@ export default function SignupScreen({navigation}: Props) {
         email: data.email,
         password: data.password,
       });
-      navigation.navigate('VerifyEmail', {email: data.email});
-    } catch (err: any) {
+      navigation.navigate('VerifyEmail', { email: data.email });
+    } catch {
       // TODO: show error toast
     } finally {
       setLoading(false);
@@ -67,7 +65,8 @@ export default function SignupScreen({navigation}: Props) {
           onPress={() => navigation.goBack()}
           accessibilityRole="button"
           accessibilityLabel="Go back"
-          className="absolute top-4 left-6 w-10 h-10 rounded-full bg-background border border-border items-center justify-center z-10">
+          className="absolute top-4 left-6 w-10 h-10 rounded-full bg-background border border-border items-center justify-center z-10"
+        >
           <ArrowLeft size={20} color={colors.foreground} />
         </TouchableOpacity>
         <View className="ml-14">
@@ -145,9 +144,17 @@ export default function SignupScreen({navigation}: Props) {
           error={errors.password?.message}
           rightIcon={
             showPassword ? (
-              <Eye size={18} color={colors.mutedForeground} onPress={() => setShowPassword(false)} />
+              <Eye
+                size={18}
+                color={colors.mutedForeground}
+                onPress={() => setShowPassword(false)}
+              />
             ) : (
-              <EyeOff size={18} color={colors.mutedForeground} onPress={() => setShowPassword(true)} />
+              <EyeOff
+                size={18}
+                color={colors.mutedForeground}
+                onPress={() => setShowPassword(true)}
+              />
             )
           }
           containerClassName="mb-5"
@@ -160,22 +167,18 @@ export default function SignupScreen({navigation}: Props) {
             onValueChange={setAgreeTerms}
             accessibilityRole="switch"
             accessibilityLabel="Agree to Terms of Service and Privacy Policy"
-            accessibilityState={{checked: agreeTerms}}
-            trackColor={{false: colors.border, true: colors.primary}}
+            accessibilityState={{ checked: agreeTerms }}
+            trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor={colors.white}
-            style={{transform: [{scaleX: 0.8}, {scaleY: 0.8}]}}
+            style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
           />
           <Text className="flex-1 text-xs text-foreground/80 leading-tight">
-            I agree to the{' '}
-            <Text className="text-primary">Terms of Service</Text> and{' '}
+            I agree to the <Text className="text-primary">Terms of Service</Text> and{' '}
             <Text className="text-primary">Privacy Policy</Text>.
           </Text>
         </View>
 
-        <Button
-          onPress={handleSubmit(onSubmit)}
-          loading={loading}
-          disabled={!agreeTerms}>
+        <Button onPress={handleSubmit(onSubmit)} loading={loading} disabled={!agreeTerms}>
           Create Account
         </Button>
 
@@ -191,13 +194,39 @@ export default function SignupScreen({navigation}: Props) {
         {/* Social buttons */}
         <View className="flex-row gap-4 mb-12">
           <View className="flex-1">
-            <Button variant="outline">Google</Button>
+            <Button
+              variant="outline"
+              icon={
+                <Image
+                  source={require('../../../assets/google.png')}
+                  style={styles.socialIcon}
+                  resizeMode="contain"
+                />
+              }
+            >
+              Google
+            </Button>
           </View>
           <View className="flex-1">
-            <Button variant="outline">Apple</Button>
+            <Button
+              variant="outline"
+              icon={
+                <Image
+                  source={require('../../../assets/apple.png')}
+                  style={styles.socialIcon}
+                  resizeMode="contain"
+                />
+              }
+            >
+              Apple
+            </Button>
           </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  socialIcon: { width: 20, height: 20 },
+});
