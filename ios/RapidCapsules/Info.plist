@@ -24,6 +24,9 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<!-- Google Sign-In: URL scheme MUST match your iOS OAuth client ID (reversed).
+	     Create iOS client in console.cloud.google.com → APIs & Services → Credentials → Create OAuth client ID → iOS.
+	     If iOS client ID is XXX-YYY.apps.googleusercontent.com, scheme = com.googleusercontent.apps.XXX-YYY -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -31,7 +34,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.963693127130-tejh2eddf09e2vt72dnusqvm1p28c2ub</string>
+				<string>com.googleusercontent.apps.963693127130-778nldm94hsldij2vklks22k3i1koreq</string>
 			</array>
 		</dict>
 	</array>

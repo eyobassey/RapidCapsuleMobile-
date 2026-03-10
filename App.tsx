@@ -15,7 +15,8 @@ import RootNavigator from './src/navigation/RootNavigator';
 if (ENV.GOOGLE_WEB_CLIENT_ID) {
   GoogleSignin.configure({
     webClientId: ENV.GOOGLE_WEB_CLIENT_ID,
-    iosClientId: ENV.GOOGLE_IOS_CLIENT_ID ?? ENV.GOOGLE_WEB_CLIENT_ID,
+    // Use iOS client when set; fallback to web avoids configure crash but causes "Custom scheme" error on sign-in
+    iosClientId: ENV.GOOGLE_IOS_CLIENT_ID || ENV.GOOGLE_WEB_CLIENT_ID,
     offlineAccess: true,
   });
 }

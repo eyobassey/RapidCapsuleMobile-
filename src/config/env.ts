@@ -6,8 +6,11 @@ const ENV = {
   SOCKET_URL: 'https://api.rapidcapsule.com',
   REQUEST_TIMEOUT: 30000,
 
-  // Google Sign-In (GOOGLE_CLIENT_ID from ecosystem)
+  // Google Sign-In
+  // webClientId: Web OAuth client (for backend id_token verification)
+  // iosClientId: iOS OAuth client (required for native flow - create in GC Console → iOS)
   GOOGLE_WEB_CLIENT_ID: '963693127130-tejh2eddf09e2vt72dnusqvm1p28c2ub.apps.googleusercontent.com',
+  GOOGLE_IOS_CLIENT_ID: '963693127130-778nldm94hsldij2vklks22k3i1koreq.apps.googleusercontent.com',
 
   // Apple Sign-In (APPLE_CLIENT_ID, APPLE_CALLBACK from ecosystem)
   APPLE_CLIENT_ID: 'com.rapidcapsules.login',
