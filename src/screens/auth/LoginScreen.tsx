@@ -1,42 +1,40 @@
-import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Switch,
-  Alert,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {ArrowLeft, EyeOff, Eye, Shield} from 'lucide-react-native';
-import {useForm} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {Button, FormInput} from '../../components/ui';
-import {useAuthStore} from '../../store/auth';
-import {colors} from '../../theme/colors';
-import {loginSchema, type LoginFormData} from '../../utils/validation';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {AuthStackParamList} from '../../navigation/AuthStack';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Switch, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, EyeOff, Eye, Shield } from 'lucide-react-native';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button, FormInput } from '../../components/ui';
+import { useAuthStore } from '../../store/auth';
+import { colors } from '../../theme/colors';
+import { loginSchema, type LoginFormData } from '../../utils/validation';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { AuthStackParamList } from '../../navigation/AuthStack';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
-export default function LoginScreen({navigation}: Props) {
-  const [activeTab, setActiveTab] = useState<'Patient' | 'Specialist'>('Patient');
+export default function LoginScreen({ navigation }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-  const login = useAuthStore(s => s.login);
+  const login = useAuthStore((s) => s.login);
 
-  const {control, handleSubmit, formState: {errors}, getValues} = useForm<LoginFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {email: '', password: ''},
+    defaultValues: { email: '', password: '' },
   });
 
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     try {
-      const {requires2FA} = await login(data.email, data.password, activeTab);
+      const { requires2FA } = await login(data.email, data.password);
       if (requires2FA) {
-        navigation.navigate('Otp', {email: data.email});
+        navigation.navigate('Otp', { email: data.email });
       }
       // If no 2FA, the auth store automatically routes via RootNavigator
     } catch (err: any) {
@@ -58,7 +56,8 @@ export default function LoginScreen({navigation}: Props) {
           onPress={() => navigation.goBack()}
           accessibilityRole="button"
           accessibilityLabel="Go back"
-          className="absolute top-4 left-6 w-10 h-10 rounded-full bg-background border border-border items-center justify-center z-10">
+          className="absolute top-4 left-6 w-10 h-10 rounded-full bg-background border border-border items-center justify-center z-10"
+        >
           <ArrowLeft size={20} color={colors.foreground} />
         </TouchableOpacity>
         <View className="ml-14">
@@ -68,30 +67,6 @@ export default function LoginScreen({navigation}: Props) {
       </View>
 
       <View className="flex-1 px-6 pt-6">
-        {/* Tab Switcher */}
-        <View className="flex-row bg-card border border-border rounded-xl p-1 mb-8">
-          {(['Patient', 'Specialist'] as const).map(tab => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              accessibilityRole="tab"
-              accessibilityLabel={`${tab} login`}
-              accessibilityState={{selected: activeTab === tab}}
-              className={`flex-1 py-2.5 rounded-lg items-center ${
-                activeTab === tab ? 'bg-background shadow-sm' : ''
-              }`}>
-              <Text
-                className={`text-sm ${
-                  activeTab === tab
-                    ? 'font-bold text-foreground'
-                    : 'font-medium text-muted-foreground'
-                }`}>
-                {tab}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         <FormInput
           control={control}
           name="email"
@@ -112,9 +87,17 @@ export default function LoginScreen({navigation}: Props) {
           error={errors.password?.message}
           rightIcon={
             showPassword ? (
-              <Eye size={20} color={colors.mutedForeground} onPress={() => setShowPassword(false)} />
+              <Eye
+                size={20}
+                color={colors.mutedForeground}
+                onPress={() => setShowPassword(false)}
+              />
             ) : (
-              <EyeOff size={20} color={colors.mutedForeground} onPress={() => setShowPassword(true)} />
+              <EyeOff
+                size={20}
+                color={colors.mutedForeground}
+                onPress={() => setShowPassword(true)}
+              />
             )
           }
           containerClassName="mb-4"
@@ -126,12 +109,12 @@ export default function LoginScreen({navigation}: Props) {
             <Switch
               value={rememberMe}
               onValueChange={setRememberMe}
-              trackColor={{false: colors.border, true: colors.primary}}
+              trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={colors.white}
-              style={{transform: [{scaleX: 0.7}, {scaleY: 0.7}]}}
+              style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
               accessibilityRole="switch"
               accessibilityLabel="Remember me"
-              accessibilityState={{checked: rememberMe}}
+              accessibilityState={{ checked: rememberMe }}
             />
             <Text className="text-sm text-foreground/80">Remember me</Text>
           </View>
@@ -147,8 +130,9 @@ export default function LoginScreen({navigation}: Props) {
         <View className="mt-6">
           <Button
             variant="outline"
-            onPress={() => navigation.navigate('Otp', {email: getValues('email')})}
-            icon={<Shield size={16} color={colors.primary} />}>
+            onPress={() => navigation.navigate('Otp', { email: getValues('email') })}
+            icon={<Shield size={16} color={colors.primary} />}
+          >
             Sign in with Passkey
           </Button>
         </View>
