@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import { Text } from './Text';
 import { ArrowLeft } from 'lucide-react-native';
+import React from 'react';
+import { TouchableOpacity, View } from 'react-native';
 import { colors } from '../../theme/colors';
+import { Text } from './Text';
 
 interface HeaderProps {
   title: string;
