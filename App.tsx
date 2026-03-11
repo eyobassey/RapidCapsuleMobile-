@@ -1,7 +1,7 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { StatusBar, StyleSheet } from 'react-native';
+import { Appearance, StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaystackProvider } from 'react-native-paystack-webview';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -11,6 +11,8 @@ import OfflineBanner from './src/components/ui/OfflineBanner';
 import ENV from './src/config/env';
 import { queryClient } from './src/config/queryClient';
 import RootNavigator from './src/navigation/RootNavigator';
+
+Appearance.setColorScheme('dark');
 
 if (ENV.GOOGLE_WEB_CLIENT_ID) {
   GoogleSignin.configure({
