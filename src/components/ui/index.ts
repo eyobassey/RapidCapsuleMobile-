@@ -14,3 +14,4 @@ export { default as SearchInput } from './SearchInput';
 export { default as ProgressRing } from './ProgressRing';
 export { default as Skeleton } from './Skeleton';
 export { default as FormInput } from './FormInput';
+export { default as DatePickerInput } from './DatePickerInput';
