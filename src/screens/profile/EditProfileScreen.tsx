@@ -1,53 +1,53 @@
-import React, {useState, useMemo} from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {
-  Camera,
-  Check,
-  User,
-  Phone,
-  Calendar,
-  Users,
-  ChevronRight,
-  MapPin,
   Activity,
   AlertTriangle,
-  Stethoscope,
   Briefcase,
+  Calendar,
+  Camera,
+  Check,
+  ChevronRight,
+  MapPin,
+  Phone,
   Smartphone,
+  Stethoscope,
+  User,
+  Users,
 } from 'lucide-react-native';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {useAuthStore} from '../../store/auth';
-import {useOnboardingStore} from '../../store/onboarding';
-import {usersService} from '../../services/users.service';
-import {Header, Avatar, Input, Button, ProgressRing} from '../../components/ui';
 import SelectPicker from '../../components/onboarding/SelectPicker';
-import {colors} from '../../theme/colors';
+import { Avatar, Button, Header, Input, ProgressRing } from '../../components/ui';
+import { usersService } from '../../services/users.service';
+import { useAuthStore } from '../../store/auth';
+import { useOnboardingStore } from '../../store/onboarding';
+import { colors } from '../../theme/colors';
 
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'] as const;
 
 const MARITAL_OPTIONS = [
-  {label: 'Single', value: 'Single'},
-  {label: 'Married', value: 'Married'},
-  {label: 'Divorced', value: 'Divorced'},
-  {label: 'Widowed', value: 'Widowed'},
+  { label: 'Single', value: 'Single' },
+  { label: 'Married', value: 'Married' },
+  { label: 'Divorced', value: 'Divorced' },
+  { label: 'Widowed', value: 'Widowed' },
 ];
 
 export default function EditProfileScreen() {
   const navigation = useNavigation<any>();
-  const user = useAuthStore(s => s.user);
-  const fetchUser = useAuthStore(s => s.fetchUser);
-  const {progress, completedSections} = useOnboardingStore();
+  const user = useAuthStore((s) => s.user);
+  const fetchUser = useAuthStore((s) => s.fetchUser);
+  const { progress, completedSections } = useOnboardingStore();
   const completedCount = Object.values(completedSections).filter(Boolean).length;
   const totalSections = Object.keys(completedSections).length;
 
@@ -59,48 +59,32 @@ export default function EditProfileScreen() {
   // Phone: profile.contact.phone.number → profile.phone.number → profile.phone_number
   const [phoneNumber, setPhoneNumber] = useState(
     (user?.profile as any)?.contact?.phone?.number ||
-    user?.profile?.phone?.number ||
-    user?.profile?.phone_number || '',
+      user?.profile?.phone?.number ||
+      user?.profile?.phone_number ||
+      ''
   );
   // Strip ISO date format for DOB
   const rawDob = user?.profile?.date_of_birth || '';
   const [dateOfBirth, setDateOfBirth] = useState(rawDob ? rawDob.split('T')[0] : '');
   const [gender, setGender] = useState<string>(user?.profile?.gender || '');
-  const [maritalStatus, setMaritalStatus] = useState(
-    (user?.profile as any)?.marital_status || '',
-  );
-  const [occupation, setOccupation] = useState(
-    (user?.profile as any)?.occupation || '',
-  );
+  const [maritalStatus, setMaritalStatus] = useState((user?.profile as any)?.marital_status || '');
+  const [occupation, setOccupation] = useState((user?.profile as any)?.occupation || '');
 
   // Emergency contact (first one if exists)
   // Backend stores: {first_name, last_name, relationship, phone: {country_code, number}}
   const emergencyContact = user?.emergency_contacts?.[0] || null;
   const ecFullName = emergencyContact
     ? [emergencyContact.first_name, emergencyContact.last_name].filter(Boolean).join(' ') ||
-      emergencyContact.name || ''
+      emergencyContact.name ||
+      ''
     : '';
   const [ecName, setEcName] = useState(ecFullName);
   const [ecRelationship, setEcRelationship] = useState(emergencyContact?.relationship || '');
   const [ecPhone, setEcPhone] = useState(
-    emergencyContact?.phone?.number || emergencyContact?.phone_number || '',
+    emergencyContact?.phone?.number || emergencyContact?.phone_number || ''
   );
 
   const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
-
-  const hasChanges = useMemo(() => {
-    const original = user?.profile as any;
-    if (!original) return true;
-    const origPhone = original?.contact?.phone?.number || original?.phone?.number || original?.phone_number || '';
-    const origDob = original?.date_of_birth ? original.date_of_birth.split('T')[0] : '';
-    return (
-      firstName !== (original.first_name || '') ||
-      lastName !== (original.last_name || '') ||
-      phoneNumber !== origPhone ||
-      dateOfBirth !== origDob ||
-      gender !== (original.gender || '')
-    );
-  }, [firstName, lastName, phoneNumber, dateOfBirth, gender, user]);
 
   const handleSave = async () => {
     if (!firstName.trim()) {
@@ -148,12 +132,12 @@ export default function EditProfileScreen() {
       await fetchUser();
 
       Alert.alert('Success', 'Your profile has been updated.', [
-        {text: 'OK', onPress: () => navigation.goBack()},
+        { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (err: any) {
       Alert.alert(
         'Error',
-        err?.response?.data?.message || err?.message || 'Failed to update profile.',
+        err?.response?.data?.message || err?.message || 'Failed to update profile.'
       );
     } finally {
       setSaving(false);
@@ -173,7 +157,8 @@ export default function EditProfileScreen() {
               onPress={handleSave}
               accessibilityRole="button"
               accessibilityLabel="Save profile"
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
               <Check size={24} color={colors.primary} />
             </TouchableOpacity>
           )
@@ -182,30 +167,31 @@ export default function EditProfileScreen() {
 
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView
           className="flex-1"
           contentContainerClassName="px-5 pt-6 pb-32"
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Avatar with camera overlay */}
           <View className="items-center mb-8">
-            <TouchableOpacity activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Change profile photo" className="relative">
-              <Avatar
-                uri={profileImage}
-                firstName={firstName}
-                lastName={lastName}
-                size="lg"
-              />
+            <TouchableOpacity
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Change profile photo"
+              className="relative"
+            >
+              <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="lg" />
               <View
                 className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary items-center justify-center border-2"
-                style={{borderColor: colors.background}}>
+                style={{ borderColor: colors.background }}
+              >
                 <Camera size={14} color={colors.white} />
               </View>
             </TouchableOpacity>
-            <Text className="text-xs text-muted-foreground mt-2">
-              Tap to change photo
-            </Text>
+            <Text className="text-xs text-muted-foreground mt-2">Tap to change photo</Text>
           </View>
 
           {/* Profile Completion Card */}
@@ -223,17 +209,18 @@ export default function EditProfileScreen() {
                 padding: 16,
                 marginBottom: 20,
                 gap: 14,
-              }}>
+              }}
+            >
               <ProgressRing progress={progress} size={48} strokeWidth={4}>
-                <Text style={{fontSize: 11, fontWeight: '700', color: colors.foreground}}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.foreground }}>
                   {progress}%
                 </Text>
               </ProgressRing>
-              <View style={{flex: 1}}>
-                <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>
                   Profile Completion
                 </Text>
-                <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 2}}>
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
                   {completedCount}/{totalSections} sections complete
                 </Text>
               </View>
@@ -297,7 +284,7 @@ export default function EditProfileScreen() {
               Gender
             </Text>
             <View className="flex-row gap-3">
-              {GENDER_OPTIONS.map(option => {
+              {GENDER_OPTIONS.map((option) => {
                 const isSelected = gender.toLowerCase() === option.toLowerCase();
                 return (
                   <TouchableOpacity
@@ -305,17 +292,17 @@ export default function EditProfileScreen() {
                     activeOpacity={0.7}
                     accessibilityRole="radio"
                     accessibilityLabel={option}
-                    accessibilityState={{selected: isSelected}}
+                    accessibilityState={{ selected: isSelected }}
                     onPress={() => setGender(option)}
                     className={`flex-1 h-12 rounded-2xl items-center justify-center border ${
-                      isSelected
-                        ? 'bg-primary/10 border-primary'
-                        : 'bg-card border-border'
-                    }`}>
+                      isSelected ? 'bg-primary/10 border-primary' : 'bg-card border-border'
+                    }`}
+                  >
                     <Text
                       className={`text-sm font-medium ${
                         isSelected ? 'text-primary' : 'text-muted-foreground'
-                      }`}>
+                      }`}
+                    >
                       {option}
                     </Text>
                   </TouchableOpacity>
@@ -395,7 +382,8 @@ export default function EditProfileScreen() {
                 onPress={() => navigation.navigate(item.screen as any)}
                 className={`flex-row items-center p-4 gap-3 ${
                   index < arr.length - 1 ? 'border-b border-border' : ''
-                }`}>
+                }`}
+              >
                 <View className="w-9 h-9 rounded-full bg-muted items-center justify-center">
                   {item.icon}
                 </View>
@@ -449,10 +437,7 @@ export default function EditProfileScreen() {
 
       {/* Bottom Save Button */}
       <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
-        <Button
-          variant="primary"
-          onPress={handleSave}
-          loading={saving}>
+        <Button variant="primary" onPress={handleSave} loading={saving}>
           Save Changes
         </Button>
       </View>
