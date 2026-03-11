@@ -23,17 +23,11 @@
     ]
   },
   "dependencies": {
-<<<<<<< HEAD
     "@hookform/resolvers": "^5.0.1",
     "@invertase/react-native-apple-authentication": "^2.5.1",
     "@react-native-community/datetimepicker": "^8.6.0",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-native-google-signin/google-signin": "^16.1.2",
-=======
-    "@invertase/react-native-apple-authentication": "^2.5.1",
-    "@react-native-community/netinfo": "^11.4.1",
-    "@react-native-google-signin/google-signin": "^13.4.0",
->>>>>>> 2301e5f (Implement Google and Apple Sign-In authentication)
     "@react-native/new-app-screen": "0.84.1",
     "@react-navigation/bottom-tabs": "^7.15.5",
     "@react-navigation/native": "^7.1.33",
