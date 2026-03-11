@@ -15,7 +15,6 @@ import {
   Switch,
   Text,
   TouchableOpacity,
-<<<<<<< HEAD
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,24 +38,6 @@ function getErrorDetail(err: unknown): string {
   if (err instanceof Error) return err.message;
   return String(err ?? 'Unknown error');
 }
-=======
-  Switch,
-  Alert,
-  Platform,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {ArrowLeft, EyeOff, Eye, Shield} from 'lucide-react-native';
-import {useForm} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
-import appleAuth from '@invertase/react-native-apple-authentication';
-import {Button, FormInput} from '../../components/ui';
-import {useAuthStore} from '../../store/auth';
-import {colors} from '../../theme/colors';
-import {loginSchema, type LoginFormData} from '../../utils/validation';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {AuthStackParamList} from '../../navigation/AuthStack';
->>>>>>> 2301e5f (Implement Google and Apple Sign-In authentication)
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -64,7 +45,6 @@ export default function LoginScreen({ navigation }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-<<<<<<< HEAD
   const [showForgotPasswordSheet, setShowForgotPasswordSheet] = useState(false);
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
@@ -72,12 +52,6 @@ export default function LoginScreen({ navigation }: Props) {
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
   const loginWithApple = useAuthStore((s) => s.loginWithApple);
   const forgotPassword = useAuthStore((s) => s.forgotPassword);
-=======
-  const login = useAuthStore(s => s.login);
-  const googleLogin = useAuthStore(s => s.googleLogin);
-  const appleLogin = useAuthStore(s => s.appleLogin);
-  const [socialLoading, setSocialLoading] = useState(false);
->>>>>>> 2301e5f (Implement Google and Apple Sign-In authentication)
 
   const {
     control,
@@ -274,7 +248,6 @@ export default function LoginScreen({ navigation }: Props) {
         </View>
 
         {/* Social buttons */}
-<<<<<<< HEAD
         <View className="flex-row gap-4 mb-4">
           <View className="flex-1">
             <Button
@@ -308,72 +281,11 @@ export default function LoginScreen({ navigation }: Props) {
                   />
                 }
               >
-=======
-        <View className="flex-row gap-4 mb-6">
-          <View className="flex-1">
-            <Button
-              variant="outline"
-              loading={socialLoading}
-              onPress={async () => {
-                setSocialLoading(true);
-                try {
-                  await GoogleSignin.hasPlayServices();
-                  const response = await GoogleSignin.signIn();
-                  const idToken = response.data?.idToken;
-                  if (!idToken) throw new Error('No ID token from Google');
-                  await googleLogin(idToken, activeTab);
-                } catch (err: any) {
-                  if (err?.code !== 'SIGN_IN_CANCELLED') {
-                    Alert.alert('Google Sign-In', err?.message || 'Failed');
-                  }
-                } finally {
-                  setSocialLoading(false);
-                }
-              }}>
-              Google
-            </Button>
-          </View>
-          {Platform.OS === 'ios' && (
-            <View className="flex-1">
-              <Button
-                variant="outline"
-                loading={socialLoading}
-                onPress={async () => {
-                  setSocialLoading(true);
-                  try {
-                    const credential = await appleAuth.performRequest({
-                      requestedOperation: appleAuth.Operation.LOGIN,
-                      requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
-                    });
-                    const credentialState = await appleAuth.getCredentialStateForUser(credential.user);
-                    if (credentialState !== appleAuth.State.AUTHORIZED) {
-                      throw new Error('Apple Sign-In not authorized');
-                    }
-                    if (!credential.identityToken || !credential.authorizationCode) {
-                      throw new Error('Missing Apple credentials');
-                    }
-                    await appleLogin(
-                      credential.identityToken,
-                      credential.authorizationCode,
-                      activeTab,
-                      credential.fullName,
-                      credential.email,
-                    );
-                  } catch (err: any) {
-                    if (err?.code !== 'ERR_REQUEST_CANCELED') {
-                      Alert.alert('Apple Sign-In', err?.message || 'Failed');
-                    }
-                  } finally {
-                    setSocialLoading(false);
-                  }
-                }}>
->>>>>>> 2301e5f (Implement Google and Apple Sign-In authentication)
                 Apple
               </Button>
             </View>
           )}
         </View>
-<<<<<<< HEAD
 
         {/* Create account link */}
         <View className="flex-row justify-center items-center py-6">
@@ -451,9 +363,6 @@ export default function LoginScreen({ navigation }: Props) {
           </Pressable>
         </Pressable>
       </Modal>
-=======
-      </View>
->>>>>>> 2301e5f (Implement Google and Apple Sign-In authentication)
     </SafeAreaView>
   );
 }
