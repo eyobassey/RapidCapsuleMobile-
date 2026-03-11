@@ -93,12 +93,6 @@ export default function HomeScreen() {
     refetch: refetchPrescriptions,
   } = usePrescriptionsQuery();
 
-  const {
-    data: prescriptions = [],
-    isLoading: rxLoading,
-    refetch: refetchPrescriptions,
-  } = usePrescriptionsQuery();
-
   // ---------- credits store (kept — has plans/purchase logic) ----------
   const {
     totalAvailable,
