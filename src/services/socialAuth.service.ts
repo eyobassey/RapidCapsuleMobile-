@@ -64,7 +64,56 @@ export async function signInWithGoogle(): Promise<string> {
   }
 
   const apiRes = await api.post('/auth/google/alt-login', {
-    id_token: idToken,
+    token: idToken,
+    user_type: 'Patient',
+  });
+  const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
+  if (!token || typeof token !== 'string') {
+    throw new Error('Backend did not return auth token');
+  }
+
+  return token;
+}
+
+/**
+ * Sign up with Google - payload { token, user_type: "Patient" }
+ */
+export async function signUpWithGoogle(): Promise<string> {
+  if (Platform.OS === 'android' && !ENV.GOOGLE_WEB_CLIENT_ID) {
+    throw new Error(
+      'Google Sign-In requires GOOGLE_WEB_CLIENT_ID in env. Add your Web client ID from Google Cloud Console.'
+    );
+  }
+
+  await GoogleSignin.hasPlayServices({
+    showPlayServicesUpdateDialog: true,
+  });
+
+  let res;
+  try {
+    res = await GoogleSignin.signIn();
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.toLowerCase().includes('cancel')) {
+      throw new Error(USER_CANCELLED);
+    }
+    throw e;
+  }
+  if (res.type !== 'success' || !res.data) {
+    if (res.type === 'cancelled') {
+      throw new Error(USER_CANCELLED);
+    }
+    throw new Error('Google Sign-In failed');
+  }
+
+  const { idToken } = await GoogleSignin.getTokens();
+  if (!idToken) {
+    throw new Error('No ID token from Google');
+  }
+
+  const apiRes = await api.post('/auth/google/alt-login', {
+    token: idToken,
+    user_type: 'Patient',
   });
   const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
   if (!token || typeof token !== 'string') {

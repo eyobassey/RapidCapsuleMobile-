@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import api from '../services/api';
-import { signInWithGoogle, signInWithApple } from '../services/socialAuth.service';
+import {
+  signInWithGoogle,
+  signInWithApple,
+  signUpWithGoogle,
+} from '../services/socialAuth.service';
 import { storage } from '../utils/storage';
 import { useOnboardingStore } from './onboarding';
 import { useCurrencyStore } from './currency';
@@ -68,6 +72,7 @@ interface AuthState {
 
   login: (email: string, password: string, user_type?: string) => Promise<{ requires2FA: boolean }>;
   loginWithGoogle: () => Promise<void>;
+  signupWithGoogle: () => Promise<void>;
   loginWithApple: () => Promise<void>;
   verify2FA: (code: string, method: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
@@ -112,6 +117,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   loginWithGoogle: async () => {
     const token = await signInWithGoogle();
+    await get().setToken(token);
+    await get().fetchUser();
+    useCurrencyStore.getState().initCurrency();
+  },
+
+  signupWithGoogle: async () => {
+    const token = await signUpWithGoogle();
     await get().setToken(token);
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
