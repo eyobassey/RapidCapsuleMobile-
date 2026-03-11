@@ -1,14 +1,7 @@
-import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  Pressable,
-} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {Check, ChevronDown} from 'lucide-react-native';
-import {colors} from '../../theme/colors';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, Pressable, FlatList } from 'react-native';
+import { Check, ChevronDown } from 'lucide-react-native';
+import { colors } from '../../theme/colors';
 
 interface SelectOption {
   label: string;
@@ -36,7 +29,7 @@ export default function SelectPicker({
 }: SelectPickerProps) {
   const [visible, setVisible] = useState(false);
   const selected = options.find(
-    o => o.value === value || o.value.toLowerCase() === value?.toLowerCase?.(),
+    (o) => o.value === value || o.value.toLowerCase() === value?.toLowerCase?.()
   );
 
   return (
@@ -51,11 +44,10 @@ export default function SelectPicker({
             letterSpacing: 0.8,
             marginBottom: 8,
             marginLeft: 4,
-          }}>
+          }}
+        >
           {label}
-          {required ? (
-            <Text style={{color: colors.destructive}}> *</Text>
-          ) : null}
+          {required ? <Text style={{ color: colors.destructive }}> *</Text> : null}
         </Text>
       ) : null}
 
@@ -71,21 +63,23 @@ export default function SelectPicker({
           borderWidth: 1,
           borderColor: error ? colors.destructive : colors.border,
           paddingHorizontal: 16,
-        }}>
+        }}
+      >
         <Text
           style={{
             flex: 1,
             fontSize: 15,
             color: selected ? colors.foreground : colors.mutedForeground,
           }}
-          numberOfLines={1}>
+          numberOfLines={1}
+        >
           {selected?.label || placeholder}
         </Text>
         <ChevronDown size={18} color={colors.mutedForeground} />
       </TouchableOpacity>
 
       {error ? (
-        <Text style={{fontSize: 11, color: colors.destructive, marginTop: 4, marginLeft: 4}}>
+        <Text style={{ fontSize: 11, color: colors.destructive, marginTop: 4, marginLeft: 4 }}>
           {error}
         </Text>
       ) : null}
@@ -94,10 +88,12 @@ export default function SelectPicker({
         visible={visible}
         transparent
         animationType="slide"
-        onRequestClose={() => setVisible(false)}>
+        onRequestClose={() => setVisible(false)}
+      >
         <Pressable
-          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}
-          onPress={() => setVisible(false)}>
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          onPress={() => setVisible(false)}
+        >
           <Pressable
             style={{
               backgroundColor: colors.card,
@@ -106,9 +102,10 @@ export default function SelectPicker({
               maxHeight: '60%',
               paddingBottom: 34,
             }}
-            onPress={() => {}}>
+            onPress={() => {}}
+          >
             {/* Handle bar */}
-            <View style={{alignItems: 'center', paddingTop: 12, paddingBottom: 8}}>
+            <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 8 }}>
               <View
                 style={{
                   width: 40,
@@ -126,18 +123,19 @@ export default function SelectPicker({
                 color: colors.foreground,
                 paddingHorizontal: 20,
                 paddingBottom: 12,
-              }}>
+              }}
+            >
               {label || 'Select'}
             </Text>
 
-            <FlashList
+            <FlatList
               data={options}
-              keyExtractor={item => item.value}
-              estimatedItemSize={50}
-              renderItem={({item}) => {
+              keyExtractor={(item) => item.value}
+              style={{ maxHeight: 280 }}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => {
                 const isSelected =
-                  item.value === value ||
-                  item.value.toLowerCase() === value?.toLowerCase?.();
+                  item.value === value || item.value.toLowerCase() === value?.toLowerCase?.();
                 return (
                   <TouchableOpacity
                     activeOpacity={0.7}
@@ -150,22 +148,20 @@ export default function SelectPicker({
                       alignItems: 'center',
                       paddingHorizontal: 20,
                       paddingVertical: 14,
-                      backgroundColor: isSelected
-                        ? `${colors.primary}15`
-                        : 'transparent',
-                    }}>
+                      backgroundColor: isSelected ? `${colors.primary}15` : 'transparent',
+                    }}
+                  >
                     <Text
                       style={{
                         flex: 1,
                         fontSize: 15,
                         color: isSelected ? colors.primary : colors.foreground,
                         fontWeight: isSelected ? '600' : '400',
-                      }}>
+                      }}
+                    >
                       {item.label}
                     </Text>
-                    {isSelected ? (
-                      <Check size={18} color={colors.primary} />
-                    ) : null}
+                    {isSelected ? <Check size={18} color={colors.primary} /> : null}
                   </TouchableOpacity>
                 );
               }}

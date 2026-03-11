@@ -1,8 +1,8 @@
 import React from 'react';
 import {
-  TouchableOpacity,
-  Text,
   ActivityIndicator,
+  Text,
+  TouchableOpacity,
   View,
   type TouchableOpacityProps,
 } from 'react-native';
@@ -12,12 +12,12 @@ type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'highContra
 interface ButtonProps extends TouchableOpacityProps {
   variant?: ButtonVariant;
   loading?: boolean;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   icon?: React.ReactNode;
   fullWidth?: boolean;
 }
 
-const variantStyles: Record<ButtonVariant, {container: string; text: string}> = {
+const variantStyles: Record<ButtonVariant, { container: string; text: string }> = {
   primary: {
     container: 'bg-primary shadow-lg',
     text: 'text-white',
@@ -56,9 +56,7 @@ export default function Button({
   const width = fullWidth ? 'w-full' : '';
 
   // Derive accessible label from children if not explicitly provided
-  const derivedLabel =
-    accessibilityLabel ||
-    (typeof children === 'string' ? children : undefined);
+  const derivedLabel = accessibilityLabel || (typeof children === 'string' ? children : undefined);
 
   return (
     <TouchableOpacity
@@ -66,9 +64,12 @@ export default function Button({
       disabled={disabled || loading}
       accessibilityRole="button"
       accessibilityLabel={derivedLabel}
-      accessibilityState={{disabled: !!(disabled || loading)}}
-      className={`${width} rounded-2xl h-14 flex-row items-center justify-center ${styles.container} ${opacity} ${className || ''}`}
-      {...props}>
+      accessibilityState={{ disabled: !!(disabled || loading) }}
+      className={`${width} rounded-2xl h-14 flex-row items-center justify-center ${
+        styles.container
+      } ${opacity} ${className || ''}`}
+      {...props}
+    >
       {loading ? (
         <ActivityIndicator color={variant === 'highContrast' ? '#151c2c' : '#fff'} />
       ) : (

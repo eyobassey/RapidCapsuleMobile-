@@ -1,6 +1,6 @@
 import React from 'react';
-import {ScrollView, TouchableOpacity, Text, StyleSheet} from 'react-native';
-import {colors} from '../../theme/colors';
+import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { colors } from '../../theme/colors';
 
 interface Tab {
   label: string;
@@ -13,14 +13,15 @@ interface TabBarProps {
   onChange: (value: string) => void;
 }
 
-export default function TabBar({tabs, activeTab, onChange}: TabBarProps) {
+export default function TabBar({ tabs, activeTab, onChange }: TabBarProps) {
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.container}
-      contentContainerStyle={styles.contentContainer}>
-      {tabs.map(tab => {
+      contentContainerStyle={styles.contentContainer}
+    >
+      {tabs.map((tab) => {
         const isActive = tab.value === activeTab;
 
         return (
@@ -30,11 +31,10 @@ export default function TabBar({tabs, activeTab, onChange}: TabBarProps) {
             activeOpacity={0.7}
             accessibilityRole="tab"
             accessibilityLabel={tab.label}
-            accessibilityState={{selected: isActive}}
-            style={[styles.tab, isActive && styles.tabActive]}>
-            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
-              {tab.label}
-            </Text>
+            accessibilityState={{ selected: isActive }}
+            style={[styles.tab, isActive && styles.tabActive]}
+          >
+            <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{tab.label}</Text>
           </TouchableOpacity>
         );
       })}
@@ -52,18 +52,22 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 4,
   },
   tab: {
-    flex: 1,
     paddingVertical: 10,
+    paddingHorizontal: 14,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
   tabActive: {
     backgroundColor: colors.background,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 1,

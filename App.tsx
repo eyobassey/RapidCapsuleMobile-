@@ -1,20 +1,27 @@
-import './global.css';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import {StatusBar, Text} from 'react-native';
-
-// Force Text module initialization to prevent ReadOnlyText class error (RN 0.84)
-// See: https://github.com/facebook/react-native/issues/54832
-Text; // eslint-disable-line no-unused-expressions
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {QueryClientProvider} from '@tanstack/react-query';
-import {PaystackProvider} from 'react-native-paystack-webview';
-import RootNavigator from './src/navigation/RootNavigator';
-import ENV from './src/config/env';
-import {queryClient} from './src/config/queryClient';
-import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import { Appearance, StatusBar, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { PaystackProvider } from 'react-native-paystack-webview';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import './global.css';
 import ErrorBoundary from './src/components/ui/ErrorBoundary';
 import OfflineBanner from './src/components/ui/OfflineBanner';
+import ENV from './src/config/env';
+import { queryClient } from './src/config/queryClient';
+import RootNavigator from './src/navigation/RootNavigator';
+
+Appearance.setColorScheme('dark');
+
+if (ENV.GOOGLE_WEB_CLIENT_ID) {
+  GoogleSignin.configure({
+    webClientId: ENV.GOOGLE_WEB_CLIENT_ID,
+    // Use iOS client when set; fallback to web avoids configure crash but causes "Custom scheme" error on sign-in
+    iosClientId: ENV.GOOGLE_IOS_CLIENT_ID || ENV.GOOGLE_WEB_CLIENT_ID,
+    offlineAccess: true,
+  });
+}
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -25,7 +32,7 @@ GoogleSignin.configure({
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={styles.container}>
       <QueryClientProvider client={queryClient}>
         <PaystackProvider publicKey={ENV.PAYSTACK_PUBLIC_KEY}>
           <SafeAreaProvider>
@@ -40,3 +47,9 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

@@ -1,12 +1,12 @@
-import React, {useEffect} from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {View, ActivityIndicator} from 'react-native';
-import {useAuthStore} from '../store/auth';
+import React, { useEffect } from 'react';
+import { DarkTheme, NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, ActivityIndicator } from 'react-native';
+import { useAuthStore } from '../store/auth';
 import AuthStack from './AuthStack';
 import OnboardingStack from './OnboardingStack';
 import MainTabs from './MainTabs';
-import {colors} from '../theme/colors';
+import { colors } from '../theme/colors';
 import linking from '../config/linking';
 
 export type RootStackParamList = {
@@ -18,20 +18,20 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-  const {isLoading, isAuthenticated, needsOnboarding, hydrate} = useAuthStore();
+  const { isLoading, isAuthenticated, needsOnboarding, hydrate } = useAuthStore();
 
   useEffect(() => {
     hydrate();
-  }, []);
+  }, [hydrate]);
 
   return (
-    <NavigationContainer linking={linking}>
+    <NavigationContainer linking={linking} theme={DarkTheme}>
       {isLoading ? (
         <View className="flex-1 bg-background items-center justify-center">
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <Stack.Navigator screenOptions={{headerShown: false}}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
           {!isAuthenticated ? (
             <Stack.Screen name="Auth" component={AuthStack} />
           ) : needsOnboarding ? (

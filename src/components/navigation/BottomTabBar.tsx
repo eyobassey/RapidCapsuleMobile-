@@ -1,14 +1,10 @@
 import React from 'react';
-import {View, TouchableOpacity, Text} from 'react-native';
-import {
-  Home,
-  Calendar,
-  BrainCircuit,
-  Pill,
-  User,
-} from 'lucide-react-native';
-import {colors} from '../../theme/colors';
-import {usePharmacyStore} from '../../store/pharmacy';
+import { View, TouchableOpacity, Text } from 'react-native';
+import { Home, Calendar, BrainCircuit, Pill } from 'lucide-react-native';
+import { Avatar } from '../ui';
+import { colors } from '../../theme/colors';
+import { useAuthStore } from '../../store/auth';
+import { usePharmacyStore } from '../../store/pharmacy';
 
 interface BottomTabBarProps {
   state: any;
@@ -21,11 +17,11 @@ const TAB_ICONS: Record<string, any> = {
   Bookings: Calendar,
   Eka: BrainCircuit,
   Pharmacy: Pill,
-  Profile: User,
 };
 
-export default function BottomTabBar({state, descriptors, navigation}: BottomTabBarProps) {
-  const cartCount = usePharmacyStore(s => s.cartCount);
+export default function BottomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const cartCount = usePharmacyStore((s) => s.cartCount);
+  const user = useAuthStore((s) => s.user);
 
   // Check if the focused tab wants to hide the tab bar
   const focusedRoute = state.routes[state.index];
@@ -34,12 +30,16 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
     return null;
   }
 
+  const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
+  const firstName = user?.profile?.first_name || 'User';
+  const lastName = user?.profile?.last_name || '';
+
   return (
     <View className="absolute bottom-0 left-0 right-0 bg-card/95 border-t border-border px-4 pt-3 pb-8 flex-row justify-between items-center">
       {state.routes.map((route: any, index: number) => {
-        const {options} = descriptors[route.key];
         const isFocused = state.index === index;
         const isEka = route.name === 'Eka';
+        const isProfile = route.name === 'Profile';
         const Icon = TAB_ICONS[route.name];
 
         const onPress = () => {
@@ -53,10 +53,13 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
             const initialScreen = route.name === 'Profile' ? 'ProfileHome' : route.name;
             if (isFocused) {
               // Already on this tab — reset to initial screen
-              navigation.navigate(route.name, {screen: initialScreen});
+              navigation.navigate(route.name, { screen: initialScreen });
             } else {
               // Switch tab and reset its stack to initial screen
-              navigation.navigate(route.name, route.name !== 'Eka' ? {screen: initialScreen} : undefined);
+              navigation.navigate(
+                route.name,
+                route.name !== 'Eka' ? { screen: initialScreen } : undefined
+              );
             }
           }
         };
@@ -72,7 +75,7 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
               activeOpacity={0.8}
               accessibilityRole="tab"
               accessibilityLabel={tabLabel}
-              accessibilityState={{selected: isFocused}}
+              accessibilityState={{ selected: isFocused }}
               style={{
                 position: 'relative',
                 top: -20,
@@ -85,17 +88,50 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
                 borderColor: colors.background,
                 backgroundColor: colors.primary,
                 shadowColor: colors.primary,
-                shadowOffset: {width: 0, height: 4},
+                shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 8,
                 elevation: 8,
-              }}>
+              }}
+            >
               <Icon size={24} color={colors.white} />
             </TouchableOpacity>
           );
         }
 
         const showBadge = route.name === 'Pharmacy' && cartCount > 0;
+
+        // Profile tab: show avatar instead of icon
+        if (isProfile) {
+          return (
+            <TouchableOpacity
+              key={route.key}
+              onPress={onPress}
+              activeOpacity={0.7}
+              accessibilityRole="tab"
+              accessibilityLabel="Profile"
+              accessibilityState={{ selected: isFocused }}
+              className="items-center gap-1 flex-1"
+            >
+              <View
+                style={{
+                  borderWidth: 2,
+                  borderRadius: 14,
+                  borderColor: isFocused ? colors.primary : 'transparent',
+                }}
+              >
+                <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="sm" />
+              </View>
+              <Text
+                className={`text-[10px] ${
+                  isFocused ? 'font-bold text-primary' : 'font-medium text-muted-foreground'
+                }`}
+              >
+                {route.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        }
 
         return (
           <TouchableOpacity
@@ -104,13 +140,11 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
             activeOpacity={0.7}
             accessibilityRole="tab"
             accessibilityLabel={`${tabLabel}${showBadge ? `, ${cartCount} items in cart` : ''}`}
-            accessibilityState={{selected: isFocused}}
-            className="items-center gap-1 flex-1">
-            <View style={{position: 'relative'}}>
-              <Icon
-                size={24}
-                color={isFocused ? colors.primary : colors.mutedForeground}
-              />
+            accessibilityState={{ selected: isFocused }}
+            className="items-center gap-1 flex-1"
+          >
+            <View style={{ position: 'relative' }}>
+              <Icon size={24} color={isFocused ? colors.primary : colors.mutedForeground} />
               {showBadge && (
                 <View
                   style={{
@@ -123,8 +157,9 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
                     height: 16,
                     alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
-                  <Text style={{color: '#fff', fontSize: 9, fontWeight: '700'}}>
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>
                     {cartCount > 9 ? '9+' : cartCount}
                   </Text>
                 </View>
@@ -133,7 +168,8 @@ export default function BottomTabBar({state, descriptors, navigation}: BottomTab
             <Text
               className={`text-[10px] ${
                 isFocused ? 'font-bold text-primary' : 'font-medium text-muted-foreground'
-              }`}>
+              }`}
+            >
               {route.name}
             </Text>
           </TouchableOpacity>

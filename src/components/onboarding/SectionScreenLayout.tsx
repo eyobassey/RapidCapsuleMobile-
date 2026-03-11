@@ -1,14 +1,8 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {Header, Button} from '../ui';
-import {colors} from '../../theme/colors';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors } from '../../theme/colors';
+import { Button, Header } from '../ui';
 
 interface SectionScreenLayoutProps {
   title: string;
@@ -32,18 +26,24 @@ export default function SectionScreenLayout({
   children,
 }: SectionScreenLayoutProps) {
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title={title} onBack={onBack} />
 
       <KeyboardAvoidingView
-        style={{flex: 1}}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}>
+        keyboardVerticalOffset={0}
+      >
         <ScrollView
-          style={{flex: 1}}
-          contentContainerStyle={{paddingHorizontal: 20, paddingTop: 20, paddingBottom: 100}}
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 20,
+            paddingBottom: 100,
+          }}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+        >
           {description ? (
             <Text
               style={{
@@ -51,7 +51,8 @@ export default function SectionScreenLayout({
                 color: colors.mutedForeground,
                 marginBottom: 20,
                 lineHeight: 18,
-              }}>
+              }}
+            >
               {description}
             </Text>
           ) : null}
@@ -72,12 +73,9 @@ export default function SectionScreenLayout({
             backgroundColor: colors.background,
             borderTopWidth: 1,
             borderTopColor: colors.border,
-          }}>
-          <Button
-            variant="primary"
-            onPress={onSave}
-            disabled={saveDisabled}
-            loading={loading}>
+          }}
+        >
+          <Button variant="primary" onPress={onSave} disabled={saveDisabled} loading={loading}>
             {saveLabel}
           </Button>
         </View>

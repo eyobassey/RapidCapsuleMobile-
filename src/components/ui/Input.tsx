@@ -1,5 +1,12 @@
-import React, {useState, forwardRef} from 'react';
-import {View, TextInput, Text, TouchableOpacity, type TextInputProps} from 'react-native';
+import React, { useState, forwardRef } from 'react';
+import {
+  View,
+  TouchableOpacity,
+  TextInput as RNTextInput,
+  type TextInputProps,
+} from 'react-native';
+import { Text } from './Text';
+import { TextInput } from './TextInput';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -10,9 +17,19 @@ interface InputProps extends TextInputProps {
   containerClassName?: string;
 }
 
-const Input = forwardRef<TextInput, InputProps>(function Input(
-  {label, required, icon, rightIcon, error, containerClassName, className, accessibilityLabel, ...props},
-  ref,
+const Input = forwardRef<RNTextInput, InputProps>(function Input(
+  {
+    label,
+    required,
+    icon,
+    rightIcon,
+    error,
+    containerClassName,
+    className,
+    accessibilityLabel,
+    ...props
+  },
+  ref
 ) {
   const [focused, setFocused] = useState(false);
 
@@ -29,7 +46,8 @@ const Input = forwardRef<TextInput, InputProps>(function Input(
       <View
         className={`flex-row items-center h-14 rounded-2xl bg-card border ${
           error ? 'border-destructive' : focused ? 'border-primary' : 'border-border'
-        } ${className || ''}`}>
+        } ${className || ''}`}
+      >
         {icon && <View className="pl-4">{icon}</View>}
         <TextInput
           ref={ref}
@@ -41,13 +59,9 @@ const Input = forwardRef<TextInput, InputProps>(function Input(
           accessibilityLabel={derivedAccessibilityLabel}
           {...props}
         />
-        {rightIcon && (
-          <TouchableOpacity className="pr-4">{rightIcon}</TouchableOpacity>
-        )}
+        {rightIcon && <TouchableOpacity className="pr-4">{rightIcon}</TouchableOpacity>}
       </View>
-      {error && (
-        <Text className="text-xs text-destructive mt-1 ml-1">{error}</Text>
-      )}
+      {error && <Text className="text-xs text-destructive mt-1 ml-1">{error}</Text>}
     </View>
   );
 });

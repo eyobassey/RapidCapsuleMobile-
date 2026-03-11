@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,63 +8,50 @@ import {
   ActivityIndicator,
   TextInput,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
-import {
-  Package,
-  MapPin,
-  CreditCard,
-  Star,
-  XCircle,
-  RotateCcw,
-  Check,
-} from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { Package, MapPin, CreditCard, Star, XCircle, Check } from 'lucide-react-native';
 
-import {usePharmacyStore} from '../../store/pharmacy';
-import {Header, StatusBadge, Button} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {formatDateTime} from '../../utils/formatters';
-import {useCurrency} from '../../hooks/useCurrency';
-import {ORDER_STATUS_SEQUENCE_DELIVERY, ORDER_STATUS_SEQUENCE_PICKUP, ORDER_STATUS_LABELS} from '../../utils/constants';
-import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
+import { useOrderQuery, useCancelOrderMutation, useRateOrderMutation } from '../../hooks/queries';
+import { Header, StatusBadge, Button } from '../../components/ui';
+import { colors } from '../../theme/colors';
+import { formatDateTime } from '../../utils/formatters';
+import { useCurrency } from '../../hooks/useCurrency';
+import {
+  ORDER_STATUS_SEQUENCE_DELIVERY,
+  ORDER_STATUS_SEQUENCE_PICKUP,
+  ORDER_STATUS_LABELS,
+} from '../../utils/constants';
+import type { OrderItem } from '../../types/pharmacy.types';
+import type { PharmacyStackParamList } from '../../navigation/stacks/PharmacyStack';
 
 export default function OrderDetailScreen() {
-  const {format} = useCurrency();
+  const { format } = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<PharmacyStackParamList, 'OrderDetail'>>();
-  const {orderId} = route.params;
+  const { orderId } = route.params;
 
-  const {currentOrder, ordersLoading, fetchOrderById, cancelOrder, rateOrder, addToCart} =
-    usePharmacyStore();
+  const { data: order, isLoading: ordersLoading, isFetching, refetch } = useOrderQuery(orderId);
+  const cancelMutation = useCancelOrderMutation();
+  const rateMutation = useRateOrderMutation();
 
-  const [cancelling, setCancelling] = useState(false);
   const [showRating, setShowRating] = useState(false);
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
-  const [submittingRating, setSubmittingRating] = useState(false);
 
-  useEffect(() => {
-    fetchOrderById(orderId);
-  }, [orderId, fetchOrderById]);
-
-  const onRefresh = useCallback(() => {
-    fetchOrderById(orderId);
-  }, [orderId, fetchOrderById]);
+  const onRefresh = useCallback(() => refetch(), [refetch]);
 
   const handleCancel = () => {
     Alert.alert('Cancel Order', 'Are you sure you want to cancel this order?', [
-      {text: 'No', style: 'cancel'},
+      { text: 'No', style: 'cancel' },
       {
         text: 'Yes, Cancel',
         style: 'destructive',
         onPress: async () => {
-          setCancelling(true);
           try {
-            await cancelOrder(orderId, 'Cancelled by patient');
+            await cancelMutation.mutateAsync({ id: orderId, reason: 'Cancelled by patient' });
           } catch (err: any) {
             Alert.alert('Error', err?.response?.data?.message || 'Failed to cancel order');
-          } finally {
-            setCancelling(false);
           }
         },
       },
@@ -72,24 +59,21 @@ export default function OrderDetailScreen() {
   };
 
   const handleRate = async () => {
-    setSubmittingRating(true);
     try {
-      await rateOrder(orderId, rating, review || undefined);
+      await rateMutation.mutateAsync({ id: orderId, rating, review: review || undefined });
       setShowRating(false);
       Alert.alert('Thank you!', 'Your rating has been submitted.');
     } catch (err: any) {
       Alert.alert('Error', err?.response?.data?.message || 'Failed to submit rating');
-    } finally {
-      setSubmittingRating(false);
     }
   };
 
   const handleReorder = () => {
-    if (!currentOrder) return;
+    if (!order) return;
     // This is a simple reorder — add items back. In reality, we'd want
     // to fetch fresh drug data, but for now this works.
     Alert.alert('Reorder', 'Items will be added to your cart.', [
-      {text: 'Cancel', style: 'cancel'},
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Add to Cart',
         onPress: () => {
@@ -99,8 +83,6 @@ export default function OrderDetailScreen() {
       },
     ]);
   };
-
-  const order = currentOrder;
 
   if (ordersLoading && !order) {
     return (
@@ -126,7 +108,9 @@ export default function OrderDetailScreen() {
 
   const canCancel = ['PENDING', 'CONFIRMED'].includes(order.status);
   const canRate = ['DELIVERED', 'COMPLETED'].includes(order.status) && !order.rating;
-  const canTrack = ['CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'].includes(order.status);
+  const canTrack = ['CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY'].includes(
+    order.status
+  );
 
   // Status timeline — pick sequence based on delivery method
   const isPickup = order.delivery_method === 'PICKUP';
@@ -142,9 +126,8 @@ export default function OrderDetailScreen() {
         className="flex-1"
         contentContainerClassName="px-5 pt-4 pb-32"
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={false} onRefresh={onRefresh} />
-        }>
+        refreshControl={<RefreshControl refreshing={isFetching} onRefresh={onRefresh} />}
+      >
         {/* Order Header */}
         <View className="bg-card border border-border rounded-2xl p-4 mb-4">
           <View className="flex-row items-center justify-between mb-2">
@@ -186,7 +169,8 @@ export default function OrderDetailScreen() {
                         backgroundColor: isActive ? colors.primary : 'transparent',
                         borderWidth: isActive ? 0 : 2,
                         borderColor: isActive ? colors.primary : colors.mutedForeground,
-                      }}>
+                      }}
+                    >
                       {isActive && <Check size={14} color="#fff" />}
                     </View>
                     {!isLast && (
@@ -194,7 +178,8 @@ export default function OrderDetailScreen() {
                         style={{
                           width: 2,
                           height: 24,
-                          backgroundColor: isActive && !isCurrent ? colors.primary : colors.mutedForeground,
+                          backgroundColor:
+                            isActive && !isCurrent ? colors.primary : colors.mutedForeground,
                         }}
                       />
                     )}
@@ -203,7 +188,8 @@ export default function OrderDetailScreen() {
                     <Text
                       className={`text-sm ${
                         isActive ? 'font-semibold text-foreground' : 'text-muted-foreground'
-                      }`}>
+                      }`}
+                    >
                       {label}
                     </Text>
                   </View>
@@ -228,12 +214,13 @@ export default function OrderDetailScreen() {
           <Text className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-3">
             Items
           </Text>
-          {order.items.map((item, idx) => (
+          {order.items.map((item: OrderItem, idx: number) => (
             <View
               key={idx}
               className={`flex-row justify-between py-2 ${
                 idx < order.items.length - 1 ? 'border-b border-border' : ''
-              }`}>
+              }`}
+            >
               <View className="flex-1">
                 <Text className="text-sm text-foreground">{item.drug_name}</Text>
                 <Text className="text-xs text-muted-foreground">
@@ -287,9 +274,7 @@ export default function OrderDetailScreen() {
             <Text className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-2">
               Pickup Code
             </Text>
-            <Text className="text-2xl font-bold text-primary text-center">
-              {order.pickup_code}
-            </Text>
+            <Text className="text-2xl font-bold text-primary text-center">{order.pickup_code}</Text>
             <Text className="text-xs text-muted-foreground text-center mt-1">
               Show this code when you pick up your order
             </Text>
@@ -325,18 +310,13 @@ export default function OrderDetailScreen() {
           )}
           <View className="border-t border-border pt-2 mt-1 flex-row justify-between">
             <Text className="text-base font-bold text-foreground">Total</Text>
-            <Text className="text-base font-bold text-primary">
-              {format(order.total_amount)}
-            </Text>
+            <Text className="text-base font-bold text-primary">{format(order.total_amount)}</Text>
           </View>
         </View>
 
         {/* Rating Section */}
         {canRate && !showRating && (
-          <Button
-            variant="outline"
-            onPress={() => setShowRating(true)}
-            className="mb-4">
+          <Button variant="outline" onPress={() => setShowRating(true)} className="mb-4">
             Rate this Order
           </Button>
         )}
@@ -347,7 +327,7 @@ export default function OrderDetailScreen() {
               Rate Your Experience
             </Text>
             <View className="flex-row justify-center mb-3">
-              {[1, 2, 3, 4, 5].map(n => (
+              {[1, 2, 3, 4, 5].map((n) => (
                 <View key={n} className="mx-1">
                   <Star
                     size={28}
@@ -370,8 +350,9 @@ export default function OrderDetailScreen() {
             <Button
               variant="primary"
               onPress={handleRate}
-              loading={submittingRating}
-              className="mt-3">
+              loading={rateMutation.isPending}
+              className="mt-3"
+            >
               Submit Rating
             </Button>
           </View>
@@ -384,7 +365,7 @@ export default function OrderDetailScreen() {
               Your Rating
             </Text>
             <View className="flex-row items-center">
-              {[1, 2, 3, 4, 5].map(n => (
+              {[1, 2, 3, 4, 5].map((n) => (
                 <Star
                   key={n}
                   size={18}
@@ -406,8 +387,9 @@ export default function OrderDetailScreen() {
           {canTrack && (
             <Button
               variant="primary"
-              onPress={() => navigation.navigate('TrackOrder', {orderNumber: order.order_number})}
-              className="flex-1">
+              onPress={() => navigation.navigate('TrackOrder', { orderNumber: order.order_number })}
+              className="flex-1"
+            >
               Track Order
             </Button>
           )}
@@ -415,16 +397,14 @@ export default function OrderDetailScreen() {
             <Button
               variant="secondary"
               onPress={handleCancel}
-              loading={cancelling}
-              className="flex-1">
+              loading={cancelMutation.isPending}
+              className="flex-1"
+            >
               Cancel Order
             </Button>
           )}
           {!isCancelled && !canTrack && (
-            <Button
-              variant="outline"
-              onPress={handleReorder}
-              className="flex-1">
+            <Button variant="outline" onPress={handleReorder} className="flex-1">
               Reorder
             </Button>
           )}

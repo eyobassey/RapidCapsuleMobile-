@@ -1,0 +1,61 @@
+diff --git a/node_modules/react-native-css-interop/dist/runtime/components.js b/node_modules/react-native-css-interop/dist/runtime/components.js
+index 8835a2d..a9bfd68 100644
+--- a/node_modules/react-native-css-interop/dist/runtime/components.js
++++ b/node_modules/react-native-css-interop/dist/runtime/components.js
+@@ -2,10 +2,11 @@
+ "use client";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ const react_native_1 = require("react-native");
++const react_native_safe_area_context_1 = require("react-native-safe-area-context");
+ const api_1 = require("./api");
+ (0, api_1.cssInterop)(react_native_1.Image, { className: "style" });
+ (0, api_1.cssInterop)(react_native_1.Pressable, { className: "style" });
+-(0, api_1.cssInterop)(react_native_1.SafeAreaView, { className: "style" });
++(0, api_1.cssInterop)(react_native_safe_area_context_1.SafeAreaView, { className: "style" });
+ (0, api_1.cssInterop)(react_native_1.Switch, { className: "style" });
+ (0, api_1.cssInterop)(react_native_1.Text, { className: "style" });
+ (0, api_1.cssInterop)(react_native_1.TouchableHighlight, { className: "style" });
+@@ -46,11 +47,4 @@ const api_1 = require("./api");
+     ListHeaderComponentClassName: "ListHeaderComponentStyle",
+     contentContainerClassName: "contentContainerStyle",
+ });
+-try {
+-    const SafeAreaView = require("react-native-safe-area-context").SafeAreaView;
+-    (0, api_1.cssInterop)(SafeAreaView, {
+-        className: "style",
+-    });
+-}
+-catch { }
+ //# sourceMappingURL=components.js.map
+\ No newline at end of file
+diff --git a/node_modules/react-native-css-interop/src/runtime/components.ts b/node_modules/react-native-css-interop/src/runtime/components.ts
+index c46327e..c2764f5 100644
+--- a/node_modules/react-native-css-interop/src/runtime/components.ts
++++ b/node_modules/react-native-css-interop/src/runtime/components.ts
+@@ -7,7 +7,6 @@ import {
+   ImageBackground,
+   KeyboardAvoidingView,
+   Pressable,
+-  SafeAreaView,
+   ScrollView,
+   StatusBar,
+   Switch,
+@@ -20,6 +19,7 @@ import {
+   VirtualizedList,
+ } from "react-native";
+ 
++import { SafeAreaView } from "react-native-safe-area-context";
+ import { cssInterop, remapProps } from "./api";
+ 
+ cssInterop(Image, { className: "style" });
+@@ -66,10 +66,3 @@ remapProps(VirtualizedList, {
+   ListHeaderComponentClassName: "ListHeaderComponentStyle",
+   contentContainerClassName: "contentContainerStyle",
+ });
+-
+-try {
+-  const SafeAreaView = require("react-native-safe-area-context").SafeAreaView;
+-  cssInterop(SafeAreaView, {
+-    className: "style",
+-  });
+-} catch {}

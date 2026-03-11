@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useMemo} from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,68 +9,32 @@ import {
   Linking,
   Image,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
-import {
-  CheckCircle,
-  Settings,
-  Truck,
-  Store,
-  Package,
-  Phone,
-  Clock,
-  MapPin,
-  User,
-  ChevronRight,
-} from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { CheckCircle, Settings, Truck, Package, Phone, Clock, User } from 'lucide-react-native';
 
-import {usePharmacyStore} from '../../store/pharmacy';
-import {Header, StatusBadge, Button} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {formatDateTime} from '../../utils/formatters';
-import {useCurrency} from '../../hooks/useCurrency';
-import {ORDER_STATUS_LABELS} from '../../utils/constants';
-import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
-
-const TRACKABLE_STATUSES = [
-  'CONFIRMED',
-  'PROCESSING',
-  'READY_FOR_PICKUP',
-  'OUT_FOR_DELIVERY',
-  'DELIVERED',
-  'COMPLETED',
-];
+import { useTrackOrderQuery } from '../../hooks/queries';
+import { Header, StatusBadge, Button } from '../../components/ui';
+import { colors } from '../../theme/colors';
+import { formatDateTime } from '../../utils/formatters';
+import { useCurrency } from '../../hooks/useCurrency';
+import { ORDER_STATUS_LABELS } from '../../utils/constants';
+import type { PharmacyStackParamList } from '../../navigation/stacks/PharmacyStack';
 
 export default function TrackOrderScreen() {
-  const {format} = useCurrency();
+  const { format } = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<PharmacyStackParamList, 'TrackOrder'>>();
-  const {orderNumber} = route.params;
+  const { orderNumber } = route.params;
 
-  const {trackingOrder, ordersLoading, trackOrder} = usePharmacyStore();
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const {
+    data: order,
+    isLoading: ordersLoading,
+    isFetching,
+    refetch,
+  } = useTrackOrderQuery(orderNumber, 30000);
 
-  // Initial fetch
-  useEffect(() => {
-    trackOrder(orderNumber);
-  }, [orderNumber, trackOrder]);
-
-  // Auto-refresh every 30s for active orders
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      trackOrder(orderNumber);
-    }, 30000);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [orderNumber, trackOrder]);
-
-  const onRefresh = useCallback(() => {
-    trackOrder(orderNumber);
-  }, [orderNumber, trackOrder]);
-
-  const order = trackingOrder;
+  const onRefresh = useCallback(() => refetch(), [refetch]);
 
   // Delivery steps
   const deliverySteps = useMemo(() => {
@@ -83,21 +47,36 @@ export default function TrackOrderScreen() {
         icon: CheckCircle,
         title: 'Order Confirmed',
         description: 'Your order has been confirmed',
-        completed: ['CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(status),
+        completed: [
+          'CONFIRMED',
+          'PROCESSING',
+          'READY_FOR_PICKUP',
+          'OUT_FOR_DELIVERY',
+          'DELIVERED',
+          'COMPLETED',
+        ].includes(status),
         current: status === 'CONFIRMED',
       },
       {
         icon: Settings,
         title: 'Preparing Order',
         description: 'The pharmacy is preparing your medications',
-        completed: ['PROCESSING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(status),
+        completed: [
+          'PROCESSING',
+          'READY_FOR_PICKUP',
+          'OUT_FOR_DELIVERY',
+          'DELIVERED',
+          'COMPLETED',
+        ].includes(status),
         current: status === 'PROCESSING',
       },
       {
         icon: isPickup ? Package : Truck,
         title: isPickup ? 'Ready for Pickup' : 'Out for Delivery',
         description: isPickup ? 'Your order is ready at the pharmacy' : 'Your order is on its way',
-        completed: ['READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(status),
+        completed: ['READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED'].includes(
+          status
+        ),
         current: status === 'READY_FOR_PICKUP' || status === 'OUT_FOR_DELIVERY',
       },
       {
@@ -110,11 +89,11 @@ export default function TrackOrderScreen() {
     ];
 
     // Find timestamp from status_history for each step
-    return steps.map(step => {
+    return steps.map((step) => {
       let time: string | undefined;
       if (step.completed && order.status_history?.length) {
         // Find matching history entry
-        const entry = order.status_history.find(h => {
+        const entry = order.status_history.find((h: { status: string; timestamp?: string }) => {
           if (step.title === 'Order Confirmed') return h.status === 'CONFIRMED';
           if (step.title === 'Preparing Order') return h.status === 'PROCESSING';
           if (step.title === 'Ready for Pickup') return h.status === 'READY_FOR_PICKUP';
@@ -125,7 +104,7 @@ export default function TrackOrderScreen() {
         });
         if (entry?.timestamp) time = formatDateTime(entry.timestamp);
       }
-      return {...step, time};
+      return { ...step, time };
     });
   }, [order]);
 
@@ -160,7 +139,7 @@ export default function TrackOrderScreen() {
   };
 
   const handleViewDetails = () => {
-    if (order) navigation.navigate('OrderDetail', {orderId: order._id});
+    if (order) navigation.navigate('OrderDetail', { orderId: order._id });
   };
 
   // Loading state
@@ -199,16 +178,13 @@ export default function TrackOrderScreen() {
         className="flex-1"
         contentContainerClassName="px-5 pt-4 pb-32"
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={false} onRefresh={onRefresh} />
-        }>
+        refreshControl={<RefreshControl refreshing={isFetching} onRefresh={onRefresh} />}
+      >
         {/* Order Header */}
         <View className="bg-card border border-border rounded-2xl p-4 mb-4">
           <View className="flex-row items-center justify-between">
             <View>
-              <Text className="text-base font-bold text-foreground">
-                #{order.order_number}
-              </Text>
+              <Text className="text-base font-bold text-foreground">#{order.order_number}</Text>
               <Text className="text-xs text-muted-foreground mt-0.5">
                 {ORDER_STATUS_LABELS[order.status] || order.status}
               </Text>
@@ -295,7 +271,8 @@ export default function TrackOrderScreen() {
                         : step.current
                         ? colors.primary
                         : colors.muted,
-                    }}>
+                    }}
+                  >
                     <IconComponent
                       size={18}
                       color={step.completed || step.current ? '#fff' : colors.mutedForeground}
@@ -321,16 +298,13 @@ export default function TrackOrderScreen() {
                         : step.completed
                         ? 'text-foreground'
                         : 'text-muted-foreground'
-                    }`}>
+                    }`}
+                  >
                     {step.title}
                   </Text>
-                  <Text className="text-xs text-muted-foreground mt-0.5">
-                    {step.description}
-                  </Text>
+                  <Text className="text-xs text-muted-foreground mt-0.5">{step.description}</Text>
                   {step.time && (
-                    <Text className="text-[10px] text-muted-foreground mt-1">
-                      {step.time}
-                    </Text>
+                    <Text className="text-[10px] text-muted-foreground mt-1">{step.time}</Text>
                   )}
                 </View>
               </View>
@@ -348,8 +322,8 @@ export default function TrackOrderScreen() {
               <View className="w-12 h-12 rounded-full bg-muted items-center justify-center overflow-hidden">
                 {deliveryPerson.photo ? (
                   <Image
-                    source={{uri: deliveryPerson.photo}}
-                    style={{width: 48, height: 48}}
+                    source={{ uri: deliveryPerson.photo }}
+                    style={{ width: 48, height: 48 }}
                     resizeMode="cover"
                   />
                 ) : (
@@ -357,13 +331,9 @@ export default function TrackOrderScreen() {
                 )}
               </View>
               <View className="flex-1 ml-3">
-                <Text className="text-sm font-semibold text-foreground">
-                  {deliveryPerson.name}
-                </Text>
+                <Text className="text-sm font-semibold text-foreground">{deliveryPerson.name}</Text>
                 {deliveryPerson.vehicle && (
-                  <Text className="text-xs text-muted-foreground">
-                    {deliveryPerson.vehicle}
-                  </Text>
+                  <Text className="text-xs text-muted-foreground">{deliveryPerson.vehicle}</Text>
                 )}
               </View>
               {deliveryPerson.phone && (
@@ -379,7 +349,8 @@ export default function TrackOrderScreen() {
                     backgroundColor: colors.success,
                     alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
+                  }}
+                >
                   <Phone size={20} color="#fff" />
                 </TouchableOpacity>
               )}
@@ -400,9 +371,7 @@ export default function TrackOrderScreen() {
           </View>
           <View className="flex-row justify-between py-2 border-b border-border">
             <Text className="text-sm text-muted-foreground">Total Amount</Text>
-            <Text className="text-sm font-bold text-primary">
-              {format(order.total_amount)}
-            </Text>
+            <Text className="text-sm font-bold text-primary">{format(order.total_amount)}</Text>
           </View>
           <View className="flex-row justify-between py-2">
             <Text className="text-sm text-muted-foreground">Payment</Text>
@@ -411,10 +380,7 @@ export default function TrackOrderScreen() {
             </Text>
           </View>
 
-          <Button
-            variant="outline"
-            onPress={handleViewDetails}
-            className="mt-3">
+          <Button variant="outline" onPress={handleViewDetails} className="mt-3">
             View Full Order Details
           </Button>
         </View>
