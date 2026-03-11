@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,9 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {WebView} from 'react-native-webview';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { WebView } from 'react-native-webview';
 import {
   MapPin,
   Store,
@@ -24,25 +24,32 @@ import {
   Phone,
 } from 'lucide-react-native';
 
-import {usePharmacyStore} from '../../store/pharmacy';
-import {Header, Input, Button} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {useCurrency} from '../../hooks/useCurrency';
-import {DEFAULT_PHARMACY_ID} from '../../utils/constants';
-import {pharmacyService} from '../../services/pharmacy.service';
-import type {DeliveryAddress, DeliveryMethod} from '../../types/pharmacy.types';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  useAddressesQuery,
+  useAddAddressMutation,
+  usePharmacyQuery,
+  usePharmacyWalletBalanceQuery,
+} from '../../hooks/queries';
+import { usePharmacyStore } from '../../store/pharmacy';
+import { Header, Input, Button, FormInput } from '../../components/ui';
+import { checkoutAddressSchema, type CheckoutAddressFormData } from '../../utils/validation';
+import { colors } from '../../theme/colors';
+import { useCurrency } from '../../hooks/useCurrency';
+import { DEFAULT_PHARMACY_ID } from '../../utils/constants';
+import { pharmacyService } from '../../services/pharmacy.service';
+import type { DeliveryAddress, DeliveryMethod } from '../../types/pharmacy.types';
 
 export default function CheckoutScreen() {
-  const {format} = useCurrency();
+  const { format } = useCurrency();
   const navigation = useNavigation<any>();
-  const {
-    cartItems,
-    addresses,
-    addressesLoading,
-    clearCart,
-    fetchAddresses,
-    addAddress,
-  } = usePharmacyStore();
+  const { cartItems, clearCart } = usePharmacyStore();
+  const { data: addresses = [] } = useAddressesQuery();
+  const addAddressMutation = useAddAddressMutation();
+  const { data: pickupPharmacy } = usePharmacyQuery(DEFAULT_PHARMACY_ID);
+  const { data: walletBalanceData } = usePharmacyWalletBalanceQuery();
+  const walletBalance = walletBalanceData ?? null;
 
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('DELIVERY');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'wallet'>('card');
@@ -53,20 +60,25 @@ export default function CheckoutScreen() {
   // Address form
   const [selectedAddress, setSelectedAddress] = useState<DeliveryAddress | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [newAddress, setNewAddress] = useState({
-    label: 'Home',
-    recipient_name: '',
-    phone: '',
-    street: '',
-    city: '',
-    state: '',
+  const addressForm = useForm<CheckoutAddressFormData>({
+    resolver: zodResolver(checkoutAddressSchema),
+    defaultValues: {
+      label: 'Home',
+      recipient_name: '',
+      phone: '',
+      street: '',
+      city: '',
+      state: '',
+    },
   });
 
-  // Pickup pharmacy info
-  const [pickupPharmacy, setPickupPharmacy] = useState<any>(null);
-
-  // Wallet balance
-  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  // Auto-select default address
+  useEffect(() => {
+    if (!selectedAddress && addresses.length > 0) {
+      const defaultAddr = addresses.find((a) => a.is_default) || addresses[0];
+      setSelectedAddress(defaultAddr);
+    }
+  }, [addresses, selectedAddress]);
 
   // Paystack WebView
   const [paystackUrl, setPaystackUrl] = useState<string | null>(null);
@@ -76,39 +88,18 @@ export default function CheckoutScreen() {
   const deliveryFee = deliveryMethod === 'DELIVERY' ? 1500 : 0;
   const total = subtotal + deliveryFee;
 
-  useEffect(() => {
-    fetchAddresses();
-    // Fetch pickup pharmacy details
-    pharmacyService.getPharmacyById(DEFAULT_PHARMACY_ID)
-      .then(setPickupPharmacy)
-      .catch(() => {});
-    // Fetch wallet balance
-    pharmacyService.getWalletBalance()
-      .then(data => setWalletBalance(data?.currentBalance ?? 0))
-      .catch(() => {});
-  }, [fetchAddresses]);
-
-  // Auto-select default address
-  useEffect(() => {
-    if (!selectedAddress && addresses.length > 0) {
-      const defaultAddr = addresses.find(a => a.is_default) || addresses[0];
-      setSelectedAddress(defaultAddr);
-    }
-  }, [addresses, selectedAddress]);
-
-  const handleSaveAddress = async () => {
-    const {recipient_name, phone, street, city, state} = newAddress;
-    if (!recipient_name || !phone || !street || !city || !state) {
-      Alert.alert('Missing Fields', 'Please fill in all address fields.');
-      return;
-    }
+  const handleSaveAddress = addressForm.handleSubmit(async (data) => {
     try {
-      await addAddress({...newAddress, is_default: addresses.length === 0});
+      await addAddressMutation.mutateAsync({
+        ...data,
+        is_default: addresses.length === 0,
+      });
       setShowAddressForm(false);
+      addressForm.reset();
     } catch (err: any) {
       Alert.alert('Error', err?.response?.data?.message || 'Failed to save address');
     }
-  };
+  });
 
   const handlePlaceOrder = async () => {
     if (deliveryMethod === 'DELIVERY' && !selectedAddress) {
@@ -120,7 +111,7 @@ export default function CheckoutScreen() {
     try {
       const payload: any = {
         pharmacy: DEFAULT_PHARMACY_ID,
-        items: cartItems.map(i => ({drug: i.drugId, quantity: i.quantity})),
+        items: cartItems.map((i) => ({ drug: i.drugId, quantity: i.quantity })),
         delivery_method: deliveryMethod,
         patient_notes: patientNotes || undefined,
       };
@@ -150,14 +141,14 @@ export default function CheckoutScreen() {
         try {
           await pharmacyService.payWithWallet(orderId, total);
           clearCart();
-          navigation.replace('OrderDetail', {orderId});
+          navigation.replace('OrderDetail', { orderId });
         } catch (err: any) {
           Alert.alert(
             'Payment Failed',
-            err?.response?.data?.message || 'Insufficient wallet balance. Try card payment.',
+            err?.response?.data?.message || 'Insufficient wallet balance. Try card payment.'
           );
           // Order exists but unpaid — navigate to detail
-          navigation.replace('OrderDetail', {orderId});
+          navigation.replace('OrderDetail', { orderId });
         }
       } else {
         // Card payment via Paystack
@@ -168,11 +159,11 @@ export default function CheckoutScreen() {
             setPaystackUrl(paymentData.authorization_url);
           } else {
             Alert.alert('Error', 'Could not initialize payment.');
-            navigation.replace('OrderDetail', {orderId});
+            navigation.replace('OrderDetail', { orderId });
           }
         } catch (err: any) {
           Alert.alert('Payment Error', err?.response?.data?.message || 'Failed to start payment.');
-          navigation.replace('OrderDetail', {orderId});
+          navigation.replace('OrderDetail', { orderId });
         }
       }
     } catch (err: any) {
@@ -192,7 +183,7 @@ export default function CheckoutScreen() {
 
   // ── Paystack WebView handlers ──
   const handlePaystackNavigation = useCallback(
-    (navState: {url: string}) => {
+    (navState: { url: string }) => {
       const url = navState.url || '';
       if (
         paystackUrl &&
@@ -203,19 +194,19 @@ export default function CheckoutScreen() {
         setPaystackUrl(null);
         clearCart();
         if (pendingOrderId) {
-          navigation.replace('OrderDetail', {orderId: pendingOrderId});
+          navigation.replace('OrderDetail', { orderId: pendingOrderId });
           setPendingOrderId(null);
         }
       }
     },
-    [paystackUrl, pendingOrderId, clearCart, navigation],
+    [paystackUrl, pendingOrderId, clearCart, navigation]
   );
 
   const handleClosePaystack = useCallback(() => {
     setPaystackUrl(null);
     clearCart();
     if (pendingOrderId) {
-      navigation.replace('OrderDetail', {orderId: pendingOrderId});
+      navigation.replace('OrderDetail', { orderId: pendingOrderId });
       setPendingOrderId(null);
     }
   }, [pendingOrderId, clearCart, navigation]);
@@ -228,7 +219,8 @@ export default function CheckoutScreen() {
         className="flex-1"
         contentContainerClassName="px-5 pt-4 pb-36"
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Order Summary (Collapsible) */}
         <TouchableOpacity
           onPress={() => setShowOrderSummary(!showOrderSummary)}
@@ -236,7 +228,8 @@ export default function CheckoutScreen() {
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={`Order summary, ${showOrderSummary ? 'expanded' : 'collapsed'}`}
-          accessibilityState={{expanded: showOrderSummary}}>
+          accessibilityState={{ expanded: showOrderSummary }}
+        >
           <Text className="text-sm font-semibold text-foreground">
             Order Summary ({cartItems.length} item{cartItems.length > 1 ? 's' : ''})
           </Text>
@@ -249,7 +242,7 @@ export default function CheckoutScreen() {
 
         {showOrderSummary && (
           <View className="bg-card border border-border rounded-2xl p-4 mb-4 -mt-2">
-            {cartItems.map(item => (
+            {cartItems.map((item) => (
               <View key={item.drugId} className="flex-row justify-between mb-2">
                 <Text className="text-sm text-foreground flex-1" numberOfLines={1}>
                   {item.name} x{item.quantity}
@@ -270,14 +263,24 @@ export default function CheckoutScreen() {
           <TouchableOpacity
             onPress={() => setDeliveryMethod('DELIVERY')}
             className={`flex-1 rounded-2xl p-4 border items-center ${
-              deliveryMethod === 'DELIVERY' ? 'bg-primary/10 border-primary' : 'bg-card border-border'
+              deliveryMethod === 'DELIVERY'
+                ? 'bg-primary/10 border-primary'
+                : 'bg-card border-border'
             }`}
             activeOpacity={0.7}
             accessibilityRole="radio"
             accessibilityLabel="Delivery"
-            accessibilityState={{selected: deliveryMethod === 'DELIVERY'}}>
-            <Truck size={22} color={deliveryMethod === 'DELIVERY' ? colors.primary : colors.mutedForeground} />
-            <Text className={`text-sm font-medium mt-1 ${deliveryMethod === 'DELIVERY' ? 'text-primary' : 'text-foreground'}`}>
+            accessibilityState={{ selected: deliveryMethod === 'DELIVERY' }}
+          >
+            <Truck
+              size={22}
+              color={deliveryMethod === 'DELIVERY' ? colors.primary : colors.mutedForeground}
+            />
+            <Text
+              className={`text-sm font-medium mt-1 ${
+                deliveryMethod === 'DELIVERY' ? 'text-primary' : 'text-foreground'
+              }`}
+            >
               Delivery
             </Text>
           </TouchableOpacity>
@@ -289,9 +292,17 @@ export default function CheckoutScreen() {
             activeOpacity={0.7}
             accessibilityRole="radio"
             accessibilityLabel="Pickup"
-            accessibilityState={{selected: deliveryMethod === 'PICKUP'}}>
-            <Store size={22} color={deliveryMethod === 'PICKUP' ? colors.primary : colors.mutedForeground} />
-            <Text className={`text-sm font-medium mt-1 ${deliveryMethod === 'PICKUP' ? 'text-primary' : 'text-foreground'}`}>
+            accessibilityState={{ selected: deliveryMethod === 'PICKUP' }}
+          >
+            <Store
+              size={22}
+              color={deliveryMethod === 'PICKUP' ? colors.primary : colors.mutedForeground}
+            />
+            <Text
+              className={`text-sm font-medium mt-1 ${
+                deliveryMethod === 'PICKUP' ? 'text-primary' : 'text-foreground'
+              }`}
+            >
               Pickup
             </Text>
           </TouchableOpacity>
@@ -312,7 +323,8 @@ export default function CheckoutScreen() {
                   </Text>
                   {pickupPharmacy.address && (
                     <Text className="text-xs text-muted-foreground mt-0.5">
-                      {pickupPharmacy.address.street}, {pickupPharmacy.address.city}, {pickupPharmacy.address.state}
+                      {pickupPharmacy.address.street}, {pickupPharmacy.address.city},{' '}
+                      {pickupPharmacy.address.state}
                     </Text>
                   )}
                 </View>
@@ -325,19 +337,39 @@ export default function CheckoutScreen() {
                 </View>
               )}
 
-              {pickupPharmacy.operating_hours && (() => {
-                const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-                const today = days[new Date().getDay()];
-                const todayHours = pickupPharmacy.operating_hours.find((h: any) => h.day === today);
-                return todayHours ? (
-                  <View className="flex-row items-center gap-2 mt-1">
-                    <Clock size={13} color={todayHours.is_open ? colors.success : colors.destructive} />
-                    <Text className={`text-xs ${todayHours.is_open ? 'text-success' : 'text-destructive'}`}>
-                      {todayHours.is_open ? `Open today: ${todayHours.open_time} - ${todayHours.close_time}` : 'Closed today'}
-                    </Text>
-                  </View>
-                ) : null;
-              })()}
+              {pickupPharmacy.operating_hours &&
+                (() => {
+                  const days = [
+                    'SUNDAY',
+                    'MONDAY',
+                    'TUESDAY',
+                    'WEDNESDAY',
+                    'THURSDAY',
+                    'FRIDAY',
+                    'SATURDAY',
+                  ];
+                  const today = days[new Date().getDay()];
+                  const todayHours = pickupPharmacy.operating_hours.find(
+                    (h: any) => h.day === today
+                  );
+                  return todayHours ? (
+                    <View className="flex-row items-center gap-2 mt-1">
+                      <Clock
+                        size={13}
+                        color={todayHours.is_open ? colors.success : colors.destructive}
+                      />
+                      <Text
+                        className={`text-xs ${
+                          todayHours.is_open ? 'text-success' : 'text-destructive'
+                        }`}
+                      >
+                        {todayHours.is_open
+                          ? `Open today: ${todayHours.open_time} - ${todayHours.close_time}`
+                          : 'Closed today'}
+                      </Text>
+                    </View>
+                  ) : null;
+                })()}
 
               {pickupPharmacy.pickup_instructions && (
                 <View className="mt-2 pt-2 border-t border-border">
@@ -377,11 +409,12 @@ export default function CheckoutScreen() {
                 {addresses.length > 1 && (
                   <TouchableOpacity
                     onPress={() => {
-                      const idx = addresses.findIndex(a => a._id === selectedAddress._id);
+                      const idx = addresses.findIndex((a) => a._id === selectedAddress._id);
                       const next = addresses[(idx + 1) % addresses.length];
                       setSelectedAddress(next);
                     }}
-                    className="mt-2">
+                    className="mt-2"
+                  >
                     <Text className="text-xs text-primary font-medium">Change address</Text>
                   </TouchableOpacity>
                 )}
@@ -390,7 +423,8 @@ export default function CheckoutScreen() {
               <TouchableOpacity
                 onPress={() => setShowAddressForm(true)}
                 className="bg-card border border-border rounded-2xl p-4 items-center"
-                activeOpacity={0.7}>
+                activeOpacity={0.7}
+              >
                 <MapPin size={20} color={colors.mutedForeground} />
                 <Text className="text-sm text-primary font-medium mt-1">Add Delivery Address</Text>
               </TouchableOpacity>
@@ -399,41 +433,46 @@ export default function CheckoutScreen() {
             {/* Inline Address Form */}
             {showAddressForm && (
               <View className="bg-card border border-border rounded-2xl p-4 mt-2">
-                <Input
+                <FormInput
+                  control={addressForm.control}
+                  name="recipient_name"
                   label="Recipient Name"
                   placeholder="Full name"
-                  value={newAddress.recipient_name}
-                  onChangeText={v => setNewAddress(p => ({...p, recipient_name: v}))}
+                  error={addressForm.formState.errors.recipient_name?.message}
                   containerClassName="mb-3"
                 />
-                <Input
+                <FormInput
+                  control={addressForm.control}
+                  name="phone"
                   label="Phone"
                   placeholder="Phone number"
-                  value={newAddress.phone}
-                  onChangeText={v => setNewAddress(p => ({...p, phone: v}))}
+                  error={addressForm.formState.errors.phone?.message}
                   keyboardType="phone-pad"
                   containerClassName="mb-3"
                 />
-                <Input
+                <FormInput
+                  control={addressForm.control}
+                  name="street"
                   label="Street"
                   placeholder="Street address"
-                  value={newAddress.street}
-                  onChangeText={v => setNewAddress(p => ({...p, street: v}))}
+                  error={addressForm.formState.errors.street?.message}
                   containerClassName="mb-3"
                 />
                 <View className="flex-row gap-3 mb-3">
-                  <Input
+                  <FormInput
+                    control={addressForm.control}
+                    name="city"
                     label="City"
                     placeholder="City"
-                    value={newAddress.city}
-                    onChangeText={v => setNewAddress(p => ({...p, city: v}))}
+                    error={addressForm.formState.errors.city?.message}
                     containerClassName="flex-1"
                   />
-                  <Input
+                  <FormInput
+                    control={addressForm.control}
+                    name="state"
                     label="State"
                     placeholder="State"
-                    value={newAddress.state}
-                    onChangeText={v => setNewAddress(p => ({...p, state: v}))}
+                    error={addressForm.formState.errors.state?.message}
                     containerClassName="flex-1"
                   />
                 </View>
@@ -441,13 +480,11 @@ export default function CheckoutScreen() {
                   <Button
                     variant="outline"
                     onPress={() => setShowAddressForm(false)}
-                    className="flex-1">
+                    className="flex-1"
+                  >
                     Cancel
                   </Button>
-                  <Button
-                    variant="primary"
-                    onPress={handleSaveAddress}
-                    className="flex-1">
+                  <Button variant="primary" onPress={handleSaveAddress} className="flex-1">
                     Save
                   </Button>
                 </View>
@@ -469,9 +506,17 @@ export default function CheckoutScreen() {
             activeOpacity={0.7}
             accessibilityRole="radio"
             accessibilityLabel="Pay with card"
-            accessibilityState={{selected: paymentMethod === 'card'}}>
-            <CreditCard size={22} color={paymentMethod === 'card' ? colors.primary : colors.mutedForeground} />
-            <Text className={`text-sm font-medium mt-1 ${paymentMethod === 'card' ? 'text-primary' : 'text-foreground'}`}>
+            accessibilityState={{ selected: paymentMethod === 'card' }}
+          >
+            <CreditCard
+              size={22}
+              color={paymentMethod === 'card' ? colors.primary : colors.mutedForeground}
+            />
+            <Text
+              className={`text-sm font-medium mt-1 ${
+                paymentMethod === 'card' ? 'text-primary' : 'text-foreground'
+              }`}
+            >
               Card
             </Text>
           </TouchableOpacity>
@@ -483,9 +528,17 @@ export default function CheckoutScreen() {
             activeOpacity={0.7}
             accessibilityRole="radio"
             accessibilityLabel="Pay with wallet"
-            accessibilityState={{selected: paymentMethod === 'wallet'}}>
-            <Wallet size={22} color={paymentMethod === 'wallet' ? colors.primary : colors.mutedForeground} />
-            <Text className={`text-sm font-medium mt-1 ${paymentMethod === 'wallet' ? 'text-primary' : 'text-foreground'}`}>
+            accessibilityState={{ selected: paymentMethod === 'wallet' }}
+          >
+            <Wallet
+              size={22}
+              color={paymentMethod === 'wallet' ? colors.primary : colors.mutedForeground}
+            />
+            <Text
+              className={`text-sm font-medium mt-1 ${
+                paymentMethod === 'wallet' ? 'text-primary' : 'text-foreground'
+              }`}
+            >
               Wallet
             </Text>
           </TouchableOpacity>
@@ -493,16 +546,25 @@ export default function CheckoutScreen() {
 
         {/* Wallet Balance */}
         {paymentMethod === 'wallet' && walletBalance !== null && (
-          <View className={`rounded-2xl p-3 mb-4 ${walletBalance >= total ? 'bg-success/10' : 'bg-destructive/10'}`}>
+          <View
+            className={`rounded-2xl p-3 mb-4 ${
+              walletBalance >= total ? 'bg-success/10' : 'bg-destructive/10'
+            }`}
+          >
             <View className="flex-row items-center justify-between">
               <Text className="text-sm text-foreground">Wallet Balance</Text>
-              <Text className={`text-sm font-bold ${walletBalance >= total ? 'text-success' : 'text-destructive'}`}>
+              <Text
+                className={`text-sm font-bold ${
+                  walletBalance >= total ? 'text-success' : 'text-destructive'
+                }`}
+              >
                 {format(walletBalance)}
               </Text>
             </View>
             {walletBalance < total && (
               <Text className="text-xs text-destructive mt-1">
-                Insufficient balance. You need {format(total - walletBalance)} more. Consider using card payment.
+                Insufficient balance. You need {format(total - walletBalance)} more. Consider using
+                card payment.
               </Text>
             )}
           </View>
@@ -544,17 +606,15 @@ export default function CheckoutScreen() {
           variant="primary"
           onPress={handlePlaceOrder}
           loading={placing}
-          disabled={cartItems.length === 0}>
+          disabled={cartItems.length === 0}
+        >
           Place Order - {format(total)}
         </Button>
       </View>
 
       {/* ═══════ PAYSTACK WEBVIEW MODAL ═══════ */}
-      <Modal
-        visible={!!paystackUrl}
-        animationType="slide"
-        onRequestClose={handleClosePaystack}>
-        <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+      <Modal visible={!!paystackUrl} animationType="slide" onRequestClose={handleClosePaystack}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
           <View
             style={{
               flexDirection: 'row',
@@ -563,8 +623,14 @@ export default function CheckoutScreen() {
               paddingVertical: 12,
               borderBottomWidth: 1,
               borderBottomColor: colors.border,
-            }}>
-            <TouchableOpacity onPress={handleClosePaystack} style={{padding: 4}} accessibilityRole="button" accessibilityLabel="Close payment">
+            }}
+          >
+            <TouchableOpacity
+              onPress={handleClosePaystack}
+              style={{ padding: 4 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close payment"
+            >
               <X size={24} color={colors.foreground} />
             </TouchableOpacity>
             <Text
@@ -574,17 +640,18 @@ export default function CheckoutScreen() {
                 fontSize: 16,
                 fontWeight: '700',
                 color: colors.foreground,
-              }}>
+              }}
+            >
               Complete Payment
             </Text>
-            <View style={{width: 32}} />
+            <View style={{ width: 32 }} />
           </View>
 
           {paystackUrl && (
             <WebView
-              source={{uri: paystackUrl}}
+              source={{ uri: paystackUrl }}
               onNavigationStateChange={handlePaystackNavigation}
-              style={{flex: 1}}
+              style={{ flex: 1 }}
               startInLoadingState
               renderLoading={() => (
                 <View
@@ -597,9 +664,10 @@ export default function CheckoutScreen() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     backgroundColor: colors.background,
-                  }}>
+                  }}
+                >
                   <ActivityIndicator size="large" color={colors.primary} />
-                  <Text style={{marginTop: 12, fontSize: 14, color: colors.mutedForeground}}>
+                  <Text style={{ marginTop: 12, fontSize: 14, color: colors.mutedForeground }}>
                     Loading payment page...
                   </Text>
                 </View>

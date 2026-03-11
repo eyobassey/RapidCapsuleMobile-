@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import {
   Pill,
   ShieldAlert,
@@ -22,16 +22,25 @@ import {
   Info,
 } from 'lucide-react-native';
 
-import {usePharmacyStore} from '../../store/pharmacy';
+import { useDrugQuery, useSimilarDrugsQuery } from '../../hooks/queries';
+import { usePharmacyStore } from '../../store/pharmacy';
 import DrugCard from '../../components/pharmacy/DrugCard';
-import {Header} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {useCurrency} from '../../hooks/useCurrency';
-import type {Drug} from '../../types/pharmacy.types';
-import {getDrugPrice, getDrugImage} from '../../types/pharmacy.types';
-import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
+import { Header } from '../../components/ui';
+import { colors } from '../../theme/colors';
+import { useCurrency } from '../../hooks/useCurrency';
+import type { Drug } from '../../types/pharmacy.types';
+import { getDrugPrice, getDrugImage } from '../../types/pharmacy.types';
+import type { PharmacyStackParamList } from '../../navigation/stacks/PharmacyStack';
 
-function CollapsibleSection({title, items, icon}: {title: string; items: string[]; icon: React.ReactNode}) {
+function CollapsibleSection({
+  title,
+  items,
+  icon,
+}: {
+  title: string;
+  items: string[];
+  icon: React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   if (!items || items.length === 0) return null;
 
@@ -43,7 +52,8 @@ function CollapsibleSection({title, items, icon}: {title: string; items: string[
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={`${title}, ${open ? 'expanded' : 'collapsed'}`}
-        accessibilityState={{expanded: open}}>
+        accessibilityState={{ expanded: open }}
+      >
         <View className="flex-row items-center">
           {icon}
           <Text className="text-sm font-semibold text-foreground ml-2">{title}</Text>
@@ -68,30 +78,22 @@ function CollapsibleSection({title, items, icon}: {title: string; items: string[
 }
 
 export default function DrugDetailScreen() {
-  const {format} = useCurrency();
+  const { format } = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<PharmacyStackParamList, 'DrugDetail'>>();
-  const {drugId} = route.params;
+  const { drugId } = route.params;
 
-  const {
-    currentDrug,
-    similarDrugs,
-    catalogLoading,
-    fetchDrugById,
-    fetchSimilarDrugs,
-    addToCart,
-  } = usePharmacyStore();
+  const addToCart = usePharmacyStore((s) => s.addToCart);
+  const { data: drug, isLoading: catalogLoading } = useDrugQuery(drugId);
+  const { data: similarDrugs = [] } = useSimilarDrugsQuery(drugId);
 
   const [quantity, setQuantity] = useState(1);
-
-  useEffect(() => {
-    fetchDrugById(drugId);
-    fetchSimilarDrugs(drugId);
-  }, [drugId, fetchDrugById, fetchSimilarDrugs]);
-
-  const drug = currentDrug;
   const maxQty = drug?.max_quantity_per_order || 10;
-  const dosageForm = drug ? (typeof drug.dosage_form === 'object' ? drug.dosage_form?.name : drug.dosage_form) : '';
+  const dosageForm = drug
+    ? typeof drug.dosage_form === 'object'
+      ? drug.dosage_form?.name
+      : drug.dosage_form
+    : '';
   const drugImage = drug ? getDrugImage(drug) : null;
   const drugPrice = drug ? getDrugPrice(drug) : 0;
 
@@ -100,16 +102,15 @@ export default function DrugDetailScreen() {
     for (let i = 0; i < quantity; i++) {
       addToCart(drug);
     }
-    Alert.alert(
-      'Added to Cart',
-      `${quantity}x ${drug.name} added to your cart.`,
-      [{text: 'Continue Shopping'}, {text: 'View Cart', onPress: () => navigation.navigate('Cart')}],
-    );
+    Alert.alert('Added to Cart', `${quantity}x ${drug.name} added to your cart.`, [
+      { text: 'Continue Shopping' },
+      { text: 'View Cart', onPress: () => navigation.navigate('Cart') },
+    ]);
     setQuantity(1);
   };
 
   const handleSimilarPress = (d: Drug) => {
-    navigation.push('DrugDetail', {drugId: d._id});
+    navigation.push('DrugDetail', { drugId: d._id });
   };
 
   if (catalogLoading && !drug) {
@@ -142,9 +143,10 @@ export default function DrugDetailScreen() {
         rightAction={
           <TouchableOpacity
             onPress={() => navigation.navigate('Cart')}
-            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             accessibilityRole="button"
-            accessibilityLabel="View cart">
+            accessibilityLabel="View cart"
+          >
             <ShoppingCart size={22} color={colors.foreground} />
           </TouchableOpacity>
         }
@@ -153,14 +155,11 @@ export default function DrugDetailScreen() {
       <ScrollView
         className="flex-1"
         contentContainerClassName="pb-32"
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         {/* Image */}
         {drugImage ? (
-          <Image
-            source={{uri: drugImage}}
-            className="w-full h-56"
-            resizeMode="cover"
-          />
+          <Image source={{ uri: drugImage }} className="w-full h-56" resizeMode="cover" />
         ) : (
           <View className="w-full h-56 bg-muted items-center justify-center">
             <Pill size={56} color={colors.mutedForeground} />
@@ -183,10 +182,8 @@ export default function DrugDetailScreen() {
           )}
 
           <View className="flex-row items-center justify-between mt-3">
-            <Text className="text-xl font-bold text-primary">
-              {format(drugPrice)}
-            </Text>
-            {(drug.is_available !== false && drug.is_active !== false) ? (
+            <Text className="text-xl font-bold text-primary">{format(drugPrice)}</Text>
+            {drug.is_available !== false && drug.is_active !== false ? (
               <Text className="text-xs text-success font-medium">In Stock</Text>
             ) : (
               <Text className="text-xs text-destructive font-medium">Out of Stock</Text>
@@ -210,9 +207,7 @@ export default function DrugDetailScreen() {
             <Text className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-1">
               Description
             </Text>
-            <Text className="text-sm text-muted-foreground leading-5">
-              {drug.description}
-            </Text>
+            <Text className="text-sm text-muted-foreground leading-5">{drug.description}</Text>
           </View>
         )}
 
@@ -224,27 +219,31 @@ export default function DrugDetailScreen() {
             </Text>
             <View className="flex-row items-center">
               <TouchableOpacity
-                onPress={() => setQuantity(q => Math.max(1, q - 1))}
+                onPress={() => setQuantity((q) => Math.max(1, q - 1))}
                 className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Decrease quantity">
+                accessibilityLabel="Decrease quantity"
+              >
                 <Minus size={18} color={colors.foreground} />
               </TouchableOpacity>
-              <Text className="text-lg font-bold text-foreground mx-5 min-w-[30px] text-center" accessibilityRole="text" accessibilityLabel={`Quantity: ${quantity}`}>
+              <Text
+                className="text-lg font-bold text-foreground mx-5 min-w-[30px] text-center"
+                accessibilityRole="text"
+                accessibilityLabel={`Quantity: ${quantity}`}
+              >
                 {quantity}
               </Text>
               <TouchableOpacity
-                onPress={() => setQuantity(q => Math.min(maxQty, q + 1))}
+                onPress={() => setQuantity((q) => Math.min(maxQty, q + 1))}
                 className="w-10 h-10 rounded-xl bg-card border border-border items-center justify-center"
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel="Increase quantity">
+                accessibilityLabel="Increase quantity"
+              >
                 <Plus size={18} color={colors.foreground} />
               </TouchableOpacity>
-              <Text className="text-xs text-muted-foreground ml-3">
-                Max {maxQty} per order
-              </Text>
+              <Text className="text-xs text-muted-foreground ml-3">Max {maxQty} per order</Text>
             </View>
           </View>
         )}
@@ -271,14 +270,13 @@ export default function DrugDetailScreen() {
         {/* Similar Drugs */}
         {similarDrugs.length > 0 && (
           <View className="mt-6">
-            <Text className="text-base font-bold text-foreground px-5 mb-3">
-              Similar Drugs
-            </Text>
+            <Text className="text-base font-bold text-foreground px-5 mb-3">Similar Drugs</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{paddingHorizontal: 20}}>
-              {similarDrugs.map(d => (
+              contentContainerStyle={{ paddingHorizontal: 20 }}
+            >
+              {similarDrugs.map((d) => (
                 <DrugCard key={d._id} drug={d} variant="compact" onPress={handleSimilarPress} />
               ))}
             </ScrollView>
@@ -291,16 +289,15 @@ export default function DrugDetailScreen() {
         <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8 flex-row items-center">
           <View className="flex-1">
             <Text className="text-xs text-muted-foreground">Total</Text>
-            <Text className="text-lg font-bold text-primary">
-              {format(drugPrice * quantity)}
-            </Text>
+            <Text className="text-lg font-bold text-primary">{format(drugPrice * quantity)}</Text>
           </View>
           <TouchableOpacity
             onPress={handleAddToCart}
             className="bg-primary rounded-2xl px-6 py-3.5 flex-row items-center"
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={`Add ${quantity} to cart`}>
+            accessibilityLabel={`Add ${quantity} to cart`}
+          >
             <ShoppingCart size={18} color="#fff" />
             <Text className="text-white font-bold text-base ml-2">Add to Cart</Text>
           </TouchableOpacity>

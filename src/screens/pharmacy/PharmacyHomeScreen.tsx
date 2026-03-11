@@ -8,37 +8,38 @@ import {
   ShoppingCart,
   Upload,
 } from 'lucide-react-native';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CategoryCard from '../../components/pharmacy/CategoryCard';
 import DrugCard from '../../components/pharmacy/DrugCard';
 import { Skeleton } from '../../components/ui';
+import { usePharmacyCategoriesQuery, useFeaturedDrugsQuery } from '../../hooks/queries';
 import { usePharmacyStore } from '../../store/pharmacy';
 import { colors } from '../../theme/colors';
 import type { Drug, DrugCategory } from '../../types/pharmacy.types';
 
 export default function PharmacyHomeScreen() {
   const navigation = useNavigation<any>();
+  const cartCount = usePharmacyStore((s) => s.cartCount);
   const {
-    categories,
-    featuredDrugs,
-    catalogLoading,
-    cartCount,
-    fetchCategories,
-    fetchFeaturedDrugs,
-  } = usePharmacyStore();
+    data: categories = [],
+    isLoading: categoriesLoading,
+    refetch: refetchCategories,
+  } = usePharmacyCategoriesQuery();
+  const {
+    data: featuredDrugs = [],
+    isLoading: featuredLoading,
+    refetch: refetchFeatured,
+  } = useFeaturedDrugsQuery();
 
-  useEffect(() => {
-    fetchCategories();
-    fetchFeaturedDrugs();
-  }, [fetchCategories, fetchFeaturedDrugs]);
+  const catalogLoading = categoriesLoading || featuredLoading;
 
   const onRefresh = useCallback(() => {
-    fetchCategories();
-    fetchFeaturedDrugs();
-  }, [fetchCategories, fetchFeaturedDrugs]);
+    refetchCategories();
+    refetchFeatured();
+  }, [refetchCategories, refetchFeatured]);
 
   const handleDrugPress = (drug: Drug) => {
     navigation.navigate('DrugDetail', { drugId: drug._id });

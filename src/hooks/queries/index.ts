@@ -24,10 +24,7 @@ export {
   useFundWalletMutation,
 } from './useWalletQuery';
 
-export {
-  healthScoreKeys,
-  useHealthScoreQuery,
-} from './useHealthScoreQuery';
+export { healthScoreKeys, useHealthScoreQuery } from './useHealthScoreQuery';
 
 export {
   prescriptionKeys,
@@ -44,6 +41,26 @@ export {
   useMarkReadMutation,
   useMarkAllReadMutation,
 } from './useNotificationsQuery';
+
+export {
+  pharmacyKeys,
+  usePharmacyCategoriesQuery,
+  useFeaturedDrugsQuery,
+  useDrugSearchQuery,
+  useDrugsByCategoryQuery,
+  useDrugQuery,
+  useSimilarDrugsQuery,
+  useMyOrdersQuery,
+  useOrderQuery,
+  useTrackOrderQuery,
+  useAddressesQuery,
+  usePharmacyQuery,
+  usePharmacyWalletBalanceQuery,
+  useAddAddressMutation,
+  useSetDefaultAddressMutation,
+  useCancelOrderMutation,
+  useRateOrderMutation,
+} from './usePharmacyQuery';
 
 export {
   recoveryKeys,
