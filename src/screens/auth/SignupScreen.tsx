@@ -29,7 +29,7 @@ export default function SignupScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
   const signup = useAuthStore((s) => s.signup);
-  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+  const signupWithGoogle = useAuthStore((s) => s.signupWithGoogle);
   const loginWithApple = useAuthStore((s) => s.loginWithApple);
 
   const {
@@ -87,7 +87,7 @@ export default function SignupScreen({ navigation }: Props) {
   const handleGoogleSignIn = async () => {
     setSocialLoading('google');
     try {
-      await loginWithGoogle();
+      await signupWithGoogle();
     } catch (e) {
       if (!isCancelError(e)) {
         const msg = e instanceof Error ? e.message : 'Google sign-in failed';
@@ -248,7 +248,7 @@ export default function SignupScreen({ navigation }: Props) {
         </View>
 
         {/* Social buttons */}
-        <View className="flex-row gap-4 mb-12">
+        <View className="flex-row gap-4 mb-4">
           <View className="flex-1">
             <Button
               variant="outline"
@@ -285,6 +285,18 @@ export default function SignupScreen({ navigation }: Props) {
               </Button>
             </View>
           )}
+        </View>
+
+        {/* Sign in link */}
+        <View className="flex-row justify-center items-center py-6 mb-6">
+          <Text className="text-sm text-muted-foreground">Already a member? </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Login')}
+            accessibilityRole="link"
+            accessibilityLabel="Sign in"
+          >
+            <Text className="text-sm font-semibold text-primary">Sign in</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -5,10 +5,12 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Switch,
   Text,
@@ -17,6 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, FormInput } from '../../components/ui';
+import { isAppleAuthAvailable, USER_CANCELLED } from '../../services/socialAuth.service';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuthStore } from '../../store/auth';
 import { colors } from '../../theme/colors';
@@ -26,27 +29,6 @@ import {
   type ForgotPasswordFormData,
   type LoginFormData,
 } from '../../utils/validation';
-
-const styles = StyleSheet.create({
-  switchScale: {
-    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
-  },
-  handleBar: {
-    backgroundColor: colors.border,
-  },
-});
 
 function getErrorDetail(err: unknown): string {
   if (err && typeof err === 'object' && 'response' in err) {
@@ -65,7 +47,10 @@ export default function LoginScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [showForgotPasswordSheet, setShowForgotPasswordSheet] = useState(false);
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
   const login = useAuthStore((s) => s.login);
+  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+  const loginWithApple = useAuthStore((s) => s.loginWithApple);
   const forgotPassword = useAuthStore((s) => s.forgotPassword);
 
   const {
@@ -118,6 +103,47 @@ export default function LoginScreen({ navigation }: Props) {
     setForgotPasswordSuccess(false);
   };
 
+  const isCancelError = (e: unknown): boolean => {
+    const msg = e instanceof Error ? e.message : String(e);
+    const msgLower = msg.toLowerCase();
+    const code = (e as { code?: number | string })?.code;
+    return (
+      msg === USER_CANCELLED ||
+      msgLower.includes('cancel') ||
+      msgLower.includes('cancelled') ||
+      msgLower.includes('dismissed') ||
+      code === 1001 ||
+      code === '1001' ||
+      code === -5
+    );
+  };
+
+  const handleGoogleSignIn = async () => {
+    setSocialLoading('google');
+    try {
+      await loginWithGoogle();
+    } catch (e) {
+      if (!isCancelError(e)) {
+        Alert.alert('Sign-in Failed', getErrorDetail(e));
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setSocialLoading('apple');
+    try {
+      await loginWithApple();
+    } catch (e) {
+      if (!isCancelError(e)) {
+        Alert.alert('Sign-in Failed', getErrorDetail(e));
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       {/* Header */}
@@ -137,7 +163,7 @@ export default function LoginScreen({ navigation }: Props) {
         </View>
       </View>
 
-      <View className="flex-1 px-6 pt-6">
+      <ScrollView className="flex-1 px-6 pt-6" showsVerticalScrollIndicator={false}>
         <FormInput
           control={control}
           name="email"
@@ -211,7 +237,68 @@ export default function LoginScreen({ navigation }: Props) {
             Sign in with Passkey
           </Button>
         </View>
-      </View>
+
+        {/* Divider */}
+        <View className="flex-row items-center my-6">
+          <View className="flex-1 h-px bg-border" />
+          <Text className="px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Or continue with
+          </Text>
+          <View className="flex-1 h-px bg-border" />
+        </View>
+
+        {/* Social buttons */}
+        <View className="flex-row gap-4 mb-4">
+          <View className="flex-1">
+            <Button
+              variant="outline"
+              onPress={handleGoogleSignIn}
+              loading={socialLoading === 'google'}
+              disabled={!!socialLoading}
+              icon={
+                <Image
+                  source={require('../../../assets/google.png')}
+                  style={styles.socialIcon}
+                  resizeMode="contain"
+                />
+              }
+            >
+              Google
+            </Button>
+          </View>
+          {isAppleAuthAvailable() && (
+            <View className="flex-1">
+              <Button
+                variant="outline"
+                onPress={handleAppleSignIn}
+                loading={socialLoading === 'apple'}
+                disabled={!!socialLoading}
+                icon={
+                  <Image
+                    source={require('../../../assets/apple.png')}
+                    style={styles.socialIcon}
+                    resizeMode="contain"
+                  />
+                }
+              >
+                Apple
+              </Button>
+            </View>
+          )}
+        </View>
+
+        {/* Create account link */}
+        <View className="flex-row justify-center items-center py-6">
+          <Text className="text-sm text-muted-foreground">New to the platform? </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Signup')}
+            accessibilityRole="link"
+            accessibilityLabel="Create account"
+          >
+            <Text className="text-sm font-semibold text-primary">Create account</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       {/* Forgot Password Sheet */}
       <Modal
@@ -279,3 +366,25 @@ export default function LoginScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  switchScale: {
+    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
+  },
+  handleBar: {
+    backgroundColor: colors.border,
+  },
+  socialIcon: { width: 20, height: 20 },
+});
