@@ -31,7 +31,7 @@ import {
   usePrescriptionsQuery,
 } from '../../hooks/queries';
 
-import { Avatar, ProgressRing, Skeleton } from '../../components/ui';
+import { ProgressRing, Skeleton } from '../../components/ui';
 import RecoveryHomeCard from '../../components/recovery/RecoveryHomeCard';
 import { colors } from '../../theme/colors';
 import { getGreeting, formatTime, formatRelativeDate } from '../../utils/formatters';
@@ -113,8 +113,6 @@ export default function HomeScreen() {
   const balance = walletData?.currentBalance ?? walletData?.balance ?? 0;
 
   const firstName = user?.profile?.first_name || 'User';
-  const lastName = user?.profile?.last_name || '';
-  const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
   const greeting = getGreeting();
 
   const upcomingAppointments = useMemo(
@@ -269,15 +267,6 @@ export default function HomeScreen() {
                 </Text>
               </View>
             )}
-          </TouchableOpacity>
-
-          {/* Avatar */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Profile"
-          >
-            <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="md" />
           </TouchableOpacity>
         </View>
       </View>
