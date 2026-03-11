@@ -1,13 +1,7 @@
-import React, {useCallback, useMemo} from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
+import React, { useCallback, useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import {
   Bell,
   MessageCircle,
@@ -25,9 +19,9 @@ import {
   MapPin,
 } from 'lucide-react-native';
 
-import {useAuthStore} from '../../store/auth';
-import {useCreditsStore} from '../../store/credits';
-import {useMessagingStore} from '../../store/messaging';
+import { useAuthStore } from '../../store/auth';
+import { useCreditsStore } from '../../store/credits';
+import { useMessagingStore } from '../../store/messaging';
 
 import {
   useHealthScoreQuery,
@@ -37,17 +31,12 @@ import {
   usePrescriptionsQuery,
 } from '../../hooks/queries';
 
-import {Avatar, ProgressRing, StatusBadge, Skeleton} from '../../components/ui';
+import { Avatar, ProgressRing, Skeleton } from '../../components/ui';
 import RecoveryHomeCard from '../../components/recovery/RecoveryHomeCard';
-import {colors} from '../../theme/colors';
-import {
-  getGreeting,
-  formatDate,
-  formatTime,
-  formatRelativeDate,
-} from '../../utils/formatters';
-import {useCurrency} from '../../hooks/useCurrency';
-import {MEETING_CHANNEL_LABELS} from '../../utils/constants';
+import { colors } from '../../theme/colors';
+import { getGreeting, formatTime, formatRelativeDate } from '../../utils/formatters';
+import { useCurrency } from '../../hooks/useCurrency';
+import { MEETING_CHANNEL_LABELS } from '../../utils/constants';
 
 // Score thresholds → ring color
 function getScoreColor(score: number): string {
@@ -58,7 +47,7 @@ function getScoreColor(score: number): string {
 }
 
 // Meeting channel → icon component
-function MeetingChannelIcon({channel}: {channel?: string}) {
+function MeetingChannelIcon({ channel }: { channel?: string }) {
   switch (channel) {
     case 'zoom':
     case 'google_meet':
@@ -75,11 +64,11 @@ function MeetingChannelIcon({channel}: {channel?: string}) {
 }
 
 export default function HomeScreen() {
-  const {format} = useCurrency();
+  const { format } = useCurrency();
   const navigation = useNavigation<any>();
 
   // ---------- auth (client state) ----------
-  const user = useAuthStore(s => s.user);
+  const user = useAuthStore((s) => s.user);
 
   // ---------- React Query hooks ----------
   const {
@@ -94,15 +83,9 @@ export default function HomeScreen() {
     refetch: refetchAppointments,
   } = useAppointmentsQuery('upcoming');
 
-  const {
-    data: walletData,
-    refetch: refetchBalance,
-  } = useWalletBalanceQuery();
+  const { data: walletData, refetch: refetchBalance } = useWalletBalanceQuery();
 
-  const {
-    data: unreadCount = 0,
-    refetch: refetchUnreadCount,
-  } = useUnreadCountQuery();
+  const { data: unreadCount = 0, refetch: refetchUnreadCount } = useUnreadCountQuery();
 
   const {
     data: prescriptions = [],
@@ -111,13 +94,18 @@ export default function HomeScreen() {
   } = usePrescriptionsQuery();
 
   // ---------- credits store (kept — has plans/purchase logic) ----------
-  const {totalAvailable, hasUnlimited, isLoading: creditsLoading, fetchCredits} = useCreditsStore();
+  const {
+    totalAvailable,
+    hasUnlimited,
+    isLoading: creditsLoading,
+    fetchCredits,
+  } = useCreditsStore();
 
   // ---------- messaging store (client state) ----------
-  const msgUnread = useMessagingStore(s => s.unreadTotal);
-  const checkConsent = useMessagingStore(s => s.checkConsent);
-  const fetchConversations = useMessagingStore(s => s.fetchConversations);
-  const computeUnreadTotal = useMessagingStore(s => s.computeUnreadTotal);
+  const msgUnread = useMessagingStore((s) => s.unreadTotal);
+  const checkConsent = useMessagingStore((s) => s.checkConsent);
+  const fetchConversations = useMessagingStore((s) => s.fetchConversations);
+  const computeUnreadTotal = useMessagingStore((s) => s.computeUnreadTotal);
 
   // ---------- derived ----------
   const score = healthScoreData?.score ?? null;
@@ -132,22 +120,30 @@ export default function HomeScreen() {
   const upcomingAppointments = useMemo(
     () =>
       (appointments || []).filter(
-        (a: any) =>
-          a.status === 'OPEN' || a.status === 'ONGOING' || a.status === 'RESCHEDULED',
+        (a: any) => a.status === 'OPEN' || a.status === 'ONGOING' || a.status === 'RESCHEDULED'
       ),
-    [appointments],
+    [appointments]
   );
 
   const nextAppointment = upcomingAppointments[0] ?? null;
 
-  const activeRxCount = useMemo(
-    () =>
-      (prescriptions || []).filter(
-        (rx: any) =>
-          rx.status === 'active' || rx.status === 'processing' || rx.status === 'paid' || rx.status === 'dispensed' || rx.status === 'shipped',
-      ).length,
-    [prescriptions],
-  );
+  const activeRxCount = useMemo(() => {
+    const activeStatuses = new Set([
+      'active',
+      'paid',
+      'dispensed',
+      'shipped',
+      'processing',
+      'draft',
+      'pending',
+      'confirmed',
+      'pending_payment',
+      'pending_acceptance',
+    ]);
+    return (prescriptions || []).filter((rx: any) =>
+      activeStatuses.has((rx.status || '').toLowerCase())
+    ).length;
+  }, [prescriptions]);
 
   // ---------- data fetching ----------
   const handleMessages = useCallback(async () => {
@@ -170,16 +166,23 @@ export default function HomeScreen() {
       fetchCredits(),
       fetchConversations(1).then(() => computeUnreadTotal(user?._id || '')),
     ]);
-  }, [refetchScore, refetchAppointments, refetchBalance, refetchUnreadCount, fetchCredits, fetchConversations, computeUnreadTotal, user?._id]);
+  }, [
+    refetchScore,
+    refetchAppointments,
+    refetchBalance,
+    refetchUnreadCount,
+    refetchPrescriptions,
+    fetchCredits,
+    fetchConversations,
+    computeUnreadTotal,
+    user?._id,
+  ]);
 
   // Fetch non-query data on mount
   React.useEffect(() => {
     fetchCredits();
     fetchConversations(1).then(() => computeUnreadTotal(user?._id || ''));
-  }, []);
-
-  // ---------- check if any query is refreshing ----------
-  const isRefreshing = false; // RefreshControl managed by React Query's isFetching in onRefresh
+  }, [fetchCredits, fetchConversations, computeUnreadTotal, user?._id]);
 
   // ---------- quick actions config ----------
   const quickActions = [
@@ -226,9 +229,7 @@ export default function HomeScreen() {
           <Text className="text-base font-bold text-foreground">
             {greeting}, {firstName}
           </Text>
-          <Text className="text-xs text-muted-foreground mt-0.5">
-            How are you feeling today?
-          </Text>
+          <Text className="text-xs text-muted-foreground mt-0.5">How are you feeling today?</Text>
         </View>
 
         <View className="flex-row items-center gap-3">
@@ -239,7 +240,8 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={`Messages${msgUnread > 0 ? `, ${msgUnread} unread` : ''}`}
             accessibilityHint="Double tap to open messages"
-            className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center">
+            className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center"
+          >
             <MessageCircle size={20} color={colors.foreground} />
             {msgUnread > 0 && (
               <View className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-primary items-center justify-center px-1">
@@ -257,7 +259,8 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
             accessibilityHint="Double tap to view notifications"
-            className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center">
+            className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center"
+          >
             <Bell size={20} color={colors.foreground} />
             {unreadCount > 0 && (
               <View className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-destructive items-center justify-center px-1">
@@ -269,13 +272,12 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           {/* Avatar */}
-          <TouchableOpacity activeOpacity={0.7} accessibilityRole="button" accessibilityLabel="Profile">
-            <Avatar
-              uri={profileImage}
-              firstName={firstName}
-              lastName={lastName}
-              size="md"
-            />
+          <TouchableOpacity
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Profile"
+          >
+            <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="md" />
           </TouchableOpacity>
         </View>
       </View>
@@ -291,11 +293,17 @@ export default function HomeScreen() {
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
-        }>
+        }
+      >
         {/* ---- Health Score Card ---- */}
         <View
           className="mx-5 mt-2 bg-card border border-border rounded-3xl p-5 overflow-hidden relative"
-          accessibilityLabel={score != null ? `Health score ${score}, ${healthStatus || ''}` : 'Health score not available'}>
+          accessibilityLabel={
+            score != null
+              ? `Health score ${score}, ${healthStatus || ''}`
+              : 'Health score not available'
+          }
+        >
           {/* Subtle decorative orb */}
           <View className="absolute -top-10 -right-10 w-40 h-40 bg-success/5 rounded-full" />
 
@@ -310,14 +318,14 @@ export default function HomeScreen() {
                 progress={score}
                 size={130}
                 strokeWidth={8}
-                color={getScoreColor(score)}>
+                color={getScoreColor(score)}
+              >
                 <View className="items-center">
-                  <Text className="text-3xl font-bold text-foreground leading-none">
-                    {score}
-                  </Text>
+                  <Text className="text-3xl font-bold text-foreground leading-none">{score}</Text>
                   <Text
                     className="text-[10px] font-bold uppercase tracking-wider mt-0.5"
-                    style={{color: getScoreColor(score)}}>
+                    style={{ color: getScoreColor(score) }}
+                  >
                     {healthStatus || 'Score'}
                   </Text>
                 </View>
@@ -330,20 +338,17 @@ export default function HomeScreen() {
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => navigation.navigate('Vitals')}
-              className="items-center py-4">
+              className="items-center py-4"
+            >
               <View className="w-20 h-20 rounded-full bg-muted items-center justify-center mb-3">
                 <HeartPulse size={32} color={colors.mutedForeground} />
               </View>
-              <Text className="text-sm font-semibold text-foreground">
-                No health data yet
-              </Text>
+              <Text className="text-sm font-semibold text-foreground">No health data yet</Text>
               <Text className="text-xs text-muted-foreground mt-1 text-center">
                 Complete a checkup or log vitals to see your score
               </Text>
               <View className="mt-3 bg-primary/10 rounded-full px-4 py-1.5">
-                <Text className="text-xs font-bold text-primary">
-                  Get Started
-                </Text>
+                <Text className="text-xs font-bold text-primary">Get Started</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -397,7 +402,7 @@ export default function HomeScreen() {
           onPress={() =>
             navigation
               .getParent()
-              ?.navigate('Profile', {screen: 'Wallet', params: {initialTab: 'credits'}})
+              ?.navigate('Profile', { screen: 'Wallet', params: { initialTab: 'credits' } })
           }
           style={{
             marginHorizontal: 20,
@@ -410,7 +415,8 @@ export default function HomeScreen() {
             flexDirection: 'row',
             alignItems: 'center',
             gap: 12,
-          }}>
+          }}
+        >
           <View
             style={{
               width: 40,
@@ -419,22 +425,23 @@ export default function HomeScreen() {
               backgroundColor: `${colors.accent}15`,
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
+            }}
+          >
             <Sparkles size={18} color={colors.accent} />
           </View>
-          <View style={{flex: 1}}>
-            <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
               AI Health Credits
             </Text>
-            <Text style={{fontSize: 10, color: colors.mutedForeground, marginTop: 1}}>
+            <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 1 }}>
               Generate detailed health reports
             </Text>
           </View>
-          <View style={{alignItems: 'flex-end'}}>
-            <Text style={{fontSize: 20, fontWeight: '700', color: colors.foreground}}>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.foreground }}>
               {creditsLoading ? '--' : hasUnlimited ? '\u221E' : totalAvailable}
             </Text>
-            <Text style={{fontSize: 10, color: colors.mutedForeground}}>
+            <Text style={{ fontSize: 10, color: colors.mutedForeground }}>
               {hasUnlimited ? 'Unlimited' : 'credits'}
             </Text>
           </View>
@@ -443,9 +450,7 @@ export default function HomeScreen() {
 
         {/* ---- Quick Actions Grid ---- */}
         <View className="mx-5 mt-6">
-          <Text className="text-sm font-bold text-foreground mb-3 px-1">
-            Quick Actions
-          </Text>
+          <Text className="text-sm font-bold text-foreground mb-3 px-1">Quick Actions</Text>
           <View className="flex-row flex-wrap gap-3">
             {quickActions.map((action, i) => (
               <TouchableOpacity
@@ -455,17 +460,15 @@ export default function HomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`${action.title}, ${action.subtitle}`}
                 className="bg-card border border-border rounded-2xl p-4"
-                style={{width: '48%', flexGrow: 1}}>
+                style={{ width: '48%', flexGrow: 1 }}
+              >
                 <View
-                  className={`w-10 h-10 rounded-full items-center justify-center ${action.bg} mb-2.5`}>
+                  className={`w-10 h-10 rounded-full items-center justify-center ${action.bg} mb-2.5`}
+                >
                   {action.icon}
                 </View>
-                <Text className="text-sm font-semibold text-foreground">
-                  {action.title}
-                </Text>
-                <Text className="text-[10px] text-muted-foreground mt-0.5">
-                  {action.subtitle}
-                </Text>
+                <Text className="text-sm font-semibold text-foreground">{action.title}</Text>
+                <Text className="text-[10px] text-muted-foreground mt-0.5">{action.subtitle}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -481,7 +484,8 @@ export default function HomeScreen() {
           accessibilityRole="button"
           accessibilityLabel="Ask Eka AI, your personal health assistant"
           accessibilityHint="Double tap to open AI health assistant"
-          className="mx-5 mt-6 bg-card border border-primary/20 rounded-3xl p-5 overflow-hidden relative">
+          className="mx-5 mt-6 bg-card border border-primary/20 rounded-3xl p-5 overflow-hidden relative"
+        >
           {/* Decorative orb */}
           <View className="absolute -top-6 -right-6 w-28 h-28 bg-primary/10 rounded-full" />
           <View className="absolute bottom-0 left-0 w-20 h-20 bg-primary/5 rounded-full" />
@@ -489,13 +493,12 @@ export default function HomeScreen() {
           <View className="flex-row items-center gap-4 relative z-10">
             <View
               className="w-14 h-14 rounded-2xl items-center justify-center"
-              style={{backgroundColor: colors.primary}}>
+              style={{ backgroundColor: colors.primary }}
+            >
               <BrainCircuit size={28} color={colors.white} />
             </View>
             <View className="flex-1">
-              <Text className="font-bold text-base text-foreground mb-0.5">
-                Ask Eka AI
-              </Text>
+              <Text className="font-bold text-base text-foreground mb-0.5">Ask Eka AI</Text>
               <Text className="text-[11px] text-muted-foreground leading-relaxed">
                 Your personal health assistant. Check symptoms, analyze prescriptions, and more.
               </Text>
@@ -507,15 +510,14 @@ export default function HomeScreen() {
         {/* ---- Next Appointment ---- */}
         {nextAppointment && (
           <View className="mx-5 mt-6">
-            <Text className="text-sm font-bold text-foreground mb-3 px-1">
-              Next Appointment
-            </Text>
+            <Text className="text-sm font-bold text-foreground mb-3 px-1">Next Appointment</Text>
             <TouchableOpacity
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Next appointment"
               accessibilityHint="Double tap to view appointment details"
-              className="bg-card border border-border rounded-2xl p-4 overflow-hidden relative">
+              className="bg-card border border-border rounded-2xl p-4 overflow-hidden relative"
+            >
               {/* Decorative accent strip */}
               <View
                 style={{
@@ -533,11 +535,33 @@ export default function HomeScreen() {
               <View className="flex-row gap-4 items-center">
                 {/* Date block */}
                 <View className="w-14 h-14 rounded-2xl bg-background border border-border items-center justify-center">
-                  <Text style={{fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase', color: colors.accent}}>
-                    {new Date(nextAppointment.start_time || nextAppointment.date || nextAppointment.appointment_date).toLocaleDateString('en-US', {month: 'short'})}
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      color: colors.accent,
+                    }}
+                  >
+                    {new Date(
+                      nextAppointment.start_time ||
+                        nextAppointment.date ||
+                        nextAppointment.appointment_date
+                    ).toLocaleDateString('en-US', { month: 'short' })}
                   </Text>
-                  <Text style={{fontSize: 18, fontWeight: 'bold', lineHeight: 20, color: colors.accent}}>
-                    {new Date(nextAppointment.start_time || nextAppointment.date || nextAppointment.appointment_date).getDate()}
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 'bold',
+                      lineHeight: 20,
+                      color: colors.accent,
+                    }}
+                  >
+                    {new Date(
+                      nextAppointment.start_time ||
+                        nextAppointment.date ||
+                        nextAppointment.appointment_date
+                    ).getDate()}
                   </Text>
                 </View>
 
@@ -545,24 +569,35 @@ export default function HomeScreen() {
                 <View className="flex-1">
                   <Text className="font-semibold text-sm text-foreground" numberOfLines={1}>
                     {nextAppointment.specialist?.profile?.first_name
-                      ? `Dr. ${nextAppointment.specialist.profile.first_name} ${nextAppointment.specialist.profile.last_name || ''}`
+                      ? `Dr. ${nextAppointment.specialist.profile.first_name} ${
+                          nextAppointment.specialist.profile.last_name || ''
+                        }`
                       : 'Specialist'}
                   </Text>
                   <Text className="text-xs text-muted-foreground mt-0.5" numberOfLines={1}>
-                    {nextAppointment.specialist_category?.name || nextAppointment.category || 'Consultation'}
+                    {nextAppointment.specialist_category?.name ||
+                      nextAppointment.category ||
+                      'Consultation'}
                   </Text>
 
                   <View className="flex-row items-center gap-2 mt-1.5">
-                    <Text style={{fontSize: 12, fontWeight: '500', color: colors.accent}}>
-                      {formatRelativeDate(nextAppointment.start_time || nextAppointment.date || nextAppointment.appointment_date)}
-                      {(nextAppointment.start_time || nextAppointment.time) ? `, ${formatTime(nextAppointment.start_time || nextAppointment.time)}` : ''}
+                    <Text style={{ fontSize: 12, fontWeight: '500', color: colors.accent }}>
+                      {formatRelativeDate(
+                        nextAppointment.start_time ||
+                          nextAppointment.date ||
+                          nextAppointment.appointment_date
+                      )}
+                      {nextAppointment.start_time || nextAppointment.time
+                        ? `, ${formatTime(nextAppointment.start_time || nextAppointment.time)}`
+                        : ''}
                     </Text>
 
                     {nextAppointment.meeting_channel && (
                       <View className="flex-row items-center gap-1 bg-primary/10 rounded-full px-2 py-0.5">
                         <MeetingChannelIcon channel={nextAppointment.meeting_channel} />
                         <Text className="text-[10px] font-medium text-primary">
-                          {MEETING_CHANNEL_LABELS[nextAppointment.meeting_channel] || nextAppointment.meeting_channel}
+                          {MEETING_CHANNEL_LABELS[nextAppointment.meeting_channel] ||
+                            nextAppointment.meeting_channel}
                         </Text>
                       </View>
                     )}
