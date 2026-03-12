@@ -1,8 +1,8 @@
-import React, { useState, forwardRef } from 'react';
+import React, { forwardRef, useState } from 'react';
 import {
-  View,
-  TouchableOpacity,
   TextInput as RNTextInput,
+  TouchableOpacity,
+  View,
   type TextInputProps,
 } from 'react-native';
 import { Text } from './Text';

@@ -1,5 +1,6 @@
-import React, {Component, ErrorInfo, ReactNode} from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { View, TouchableOpacity } from 'react-native';
+import { Text } from './Text';
 
 interface Props {
   children: ReactNode;
@@ -14,11 +15,11 @@ interface State {
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = {hasError: false, error: null};
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return {hasError: true, error};
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
@@ -26,7 +27,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   handleRetry = () => {
-    this.setState({hasError: false, error: null});
+    this.setState({ hasError: false, error: null });
   };
 
   render() {
@@ -43,14 +44,16 @@ class ErrorBoundary extends Component<Props, State> {
             alignItems: 'center',
             backgroundColor: '#151c2c',
             padding: 24,
-          }}>
+          }}
+        >
           <Text
             style={{
               color: '#f8fafc',
               fontSize: 20,
               fontFamily: 'Inter-SemiBold',
               marginBottom: 8,
-            }}>
+            }}
+          >
             Something went wrong
           </Text>
           <Text
@@ -60,7 +63,8 @@ class ErrorBoundary extends Component<Props, State> {
               fontFamily: 'Inter-Regular',
               textAlign: 'center',
               marginBottom: 24,
-            }}>
+            }}
+          >
             An unexpected error occurred. Please try again.
           </Text>
           <TouchableOpacity
@@ -70,13 +74,15 @@ class ErrorBoundary extends Component<Props, State> {
               paddingHorizontal: 24,
               paddingVertical: 12,
               borderRadius: 12,
-            }}>
+            }}
+          >
             <Text
               style={{
                 color: '#ffffff',
                 fontSize: 16,
                 fontFamily: 'Inter-SemiBold',
-              }}>
+              }}
+            >
               Try Again
             </Text>
           </TouchableOpacity>

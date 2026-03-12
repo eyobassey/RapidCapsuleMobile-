@@ -1,14 +1,15 @@
-import React, {useRef, useState} from 'react';
-import {View, TextInput} from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, TextInput as RNTextInput } from 'react-native';
+import { TextInput } from './TextInput';
 
 interface OtpInputProps {
   length?: number;
   onComplete: (code: string) => void;
 }
 
-export default function OtpInput({length = 6, onComplete}: OtpInputProps) {
+export default function OtpInput({ length = 6, onComplete }: OtpInputProps) {
   const [values, setValues] = useState<string[]>(Array(length).fill(''));
-  const refs = useRef<(TextInput | null)[]>([]);
+  const refs = useRef<(RNTextInput | null)[]>([]);
 
   const handleChange = (text: string, index: number) => {
     const newValues = [...values];
@@ -19,7 +20,7 @@ export default function OtpInput({length = 6, onComplete}: OtpInputProps) {
       refs.current[index + 1]?.focus();
     }
 
-    if (newValues.every(v => v !== '')) {
+    if (newValues.every((v) => v !== '')) {
       onComplete(newValues.join(''));
     }
   };
@@ -35,10 +36,12 @@ export default function OtpInput({length = 6, onComplete}: OtpInputProps) {
       {values.map((val, i) => (
         <TextInput
           key={i}
-          ref={el => { refs.current[i] = el; }}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
           value={val}
-          onChangeText={text => handleChange(text, i)}
-          onKeyPress={e => handleKeyPress(e, i)}
+          onChangeText={(text) => handleChange(text, i)}
+          onKeyPress={(e) => handleKeyPress(e, i)}
           maxLength={1}
           keyboardType="number-pad"
           className="w-12 h-14 bg-card border border-border rounded-xl text-center text-xl font-bold text-foreground"

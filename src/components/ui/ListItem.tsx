@@ -1,7 +1,8 @@
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
-import {ChevronRight} from 'lucide-react-native';
-import {colors} from '../../theme/colors';
+import { View, TouchableOpacity } from 'react-native';
+import { ChevronRight } from 'lucide-react-native';
+import { colors } from '../../theme/colors';
+import { Text } from './Text';
 
 interface ListItemProps {
   icon?: React.ReactNode;
@@ -26,11 +27,7 @@ export default function ListItem({
 
       <View className="flex-1">
         <Text className="text-foreground font-medium">{title}</Text>
-        {subtitle ? (
-          <Text className="text-sm text-muted-foreground mt-0.5">
-            {subtitle}
-          </Text>
-        ) : null}
+        {subtitle ? <Text className="text-sm text-muted-foreground mt-0.5">{subtitle}</Text> : null}
       </View>
 
       {rightElement ? (

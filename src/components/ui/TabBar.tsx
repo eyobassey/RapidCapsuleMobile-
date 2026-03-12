@@ -1,6 +1,7 @@
 import React from 'react';
-import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors } from '../../theme/colors';
+import { Text } from './Text';
 
 interface Tab {
   label: string;

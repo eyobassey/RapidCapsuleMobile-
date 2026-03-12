@@ -1,11 +1,11 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  Text,
   TouchableOpacity,
   View,
   type TouchableOpacityProps,
 } from 'react-native';
+import { Text } from './Text';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'highContrast';
 

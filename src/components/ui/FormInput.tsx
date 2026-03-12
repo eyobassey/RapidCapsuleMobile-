@@ -1,7 +1,7 @@
 import React from 'react';
-import {Controller, Control, FieldPath, FieldValues} from 'react-hook-form';
+import { Control, Controller, FieldPath, FieldValues } from 'react-hook-form';
+import type { TextInputProps } from 'react-native';
 import Input from './Input';
-import type {TextInputProps} from 'react-native';
 
 interface FormInputProps<T extends FieldValues>
   extends Omit<TextInputProps, 'value' | 'onChangeText'> {
@@ -30,7 +30,7 @@ export default function FormInput<T extends FieldValues>({
     <Controller
       control={control}
       name={name}
-      render={({field: {onChange, onBlur, value}}) => (
+      render={({ field: { onChange, onBlur, value } }) => (
         <Input
           label={label}
           required={required}

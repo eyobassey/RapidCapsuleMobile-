@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Platform, Modal, Pressable } from 'react-native';
+import { View, TouchableOpacity, Platform, Modal, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Calendar } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
+import { Text } from './Text';
 
 function toYYYYMMDD(date: Date): string {
   const y = date.getFullYear();

@@ -1,7 +1,8 @@
 import React from 'react';
-import {View, TextInput, TouchableOpacity} from 'react-native';
-import {Search, X} from 'lucide-react-native';
-import {colors} from '../../theme/colors';
+import { View, TouchableOpacity } from 'react-native';
+import { Search, X } from 'lucide-react-native';
+import { colors } from '../../theme/colors';
+import { TextInput } from './TextInput';
 
 interface SearchInputProps {
   value: string;
@@ -37,9 +38,10 @@ export default function SearchInput({
         <TouchableOpacity
           onPress={() => onChangeText('')}
           activeOpacity={0.7}
-          hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityRole="button"
-          accessibilityLabel="Clear search">
+          accessibilityLabel="Clear search"
+        >
           <X size={18} color={colors.mutedForeground} />
         </TouchableOpacity>
       ) : null}

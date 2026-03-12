@@ -1,6 +1,7 @@
 import React from 'react';
-import {View, Text} from 'react-native';
+import { View } from 'react-native';
 import Button from './Button';
+import { Text } from './Text';
 
 interface EmptyStateProps {
   icon: React.ReactNode;
@@ -24,9 +25,7 @@ export default function EmptyState({
       <Text className="text-lg font-bold text-foreground mt-4">{title}</Text>
 
       {subtitle ? (
-        <Text className="text-sm text-muted-foreground mt-1 text-center">
-          {subtitle}
-        </Text>
+        <Text className="text-sm text-muted-foreground mt-1 text-center">{subtitle}</Text>
       ) : null}
 
       {actionLabel && onAction ? (

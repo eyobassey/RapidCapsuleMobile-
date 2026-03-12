@@ -1,10 +1,11 @@
 import React from 'react';
-import {View, Text, Image, TouchableOpacity} from 'react-native';
-import {Pill, ShieldAlert} from 'lucide-react-native';
-import {colors} from '../../theme/colors';
-import {useCurrency} from '../../hooks/useCurrency';
-import type {Drug} from '../../types/pharmacy.types';
-import {getDrugPrice, getDrugImage} from '../../types/pharmacy.types';
+import { View, Image, TouchableOpacity } from 'react-native';
+import { Pill, ShieldAlert } from 'lucide-react-native';
+import { colors } from '../../theme/colors';
+import { useCurrency } from '../../hooks/useCurrency';
+import type { Drug } from '../../types/pharmacy.types';
+import { getDrugPrice, getDrugImage } from '../../types/pharmacy.types';
+import { Text } from '../ui';
 
 interface DrugCardProps {
   drug: Drug;
@@ -12,9 +13,10 @@ interface DrugCardProps {
   onPress: (drug: Drug) => void;
 }
 
-export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProps) {
-  const {format} = useCurrency();
-  const dosageForm = typeof drug.dosage_form === 'object' ? drug.dosage_form?.name : drug.dosage_form;
+export default function DrugCard({ drug, variant = 'full', onPress }: DrugCardProps) {
+  const { format } = useCurrency();
+  const dosageForm =
+    typeof drug.dosage_form === 'object' ? drug.dosage_form?.name : drug.dosage_form;
   const imageUrl = getDrugImage(drug);
   const price = getDrugPrice(drug);
 
@@ -23,13 +25,10 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
       <TouchableOpacity
         onPress={() => onPress(drug)}
         className="w-40 bg-card border border-border rounded-2xl overflow-hidden mr-3"
-        activeOpacity={0.7}>
+        activeOpacity={0.7}
+      >
         {imageUrl ? (
-          <Image
-            source={{uri: imageUrl}}
-            className="w-full h-28"
-            resizeMode="cover"
-          />
+          <Image source={{ uri: imageUrl }} className="w-full h-28" resizeMode="cover" />
         ) : (
           <View className="w-full h-28 bg-muted items-center justify-center">
             <Pill size={32} color={colors.mutedForeground} />
@@ -42,9 +41,7 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
           <Text className="text-xs text-muted-foreground mt-0.5" numberOfLines={1}>
             {drug.strength}
           </Text>
-          <Text className="text-sm font-bold text-primary mt-1">
-            {format(price)}
-          </Text>
+          <Text className="text-sm font-bold text-primary mt-1">{format(price)}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -55,13 +52,10 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
     <TouchableOpacity
       onPress={() => onPress(drug)}
       className="bg-card border border-border rounded-2xl p-3 flex-row items-center mb-3"
-      activeOpacity={0.7}>
+      activeOpacity={0.7}
+    >
       {imageUrl ? (
-        <Image
-          source={{uri: imageUrl}}
-          className="w-16 h-16 rounded-xl"
-          resizeMode="cover"
-        />
+        <Image source={{ uri: imageUrl }} className="w-16 h-16 rounded-xl" resizeMode="cover" />
       ) : (
         <View className="w-16 h-16 rounded-xl bg-muted items-center justify-center">
           <Pill size={24} color={colors.mutedForeground} />
@@ -83,9 +77,7 @@ export default function DrugCard({drug, variant = 'full', onPress}: DrugCardProp
       </View>
 
       <View className="items-end ml-2">
-        <Text className="text-sm font-bold text-primary">
-          {format(price)}
-        </Text>
+        <Text className="text-sm font-bold text-primary">{format(price)}</Text>
         {drug.requires_prescription && (
           <View className="flex-row items-center mt-1">
             <ShieldAlert size={12} color={colors.secondary} />

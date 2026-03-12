@@ -1,7 +1,8 @@
 import React from 'react';
-import {View, Text, Image} from 'react-native';
-import {colors} from '../../theme/colors';
-import {getInitials} from '../../utils/formatters';
+import { View, Image } from 'react-native';
+import { colors } from '../../theme/colors';
+import { getInitials } from '../../utils/formatters';
+import { Text } from './Text';
 
 type AvatarSize = 'sm' | 'md' | 'lg';
 
@@ -24,12 +25,7 @@ const fontSizeMap: Record<AvatarSize, number> = {
   lg: 18,
 };
 
-export default function Avatar({
-  uri,
-  firstName = '',
-  lastName = '',
-  size = 'md',
-}: AvatarProps) {
+export default function Avatar({ uri, firstName = '', lastName = '', size = 'md' }: AvatarProps) {
   const dimension = sizeMap[size];
   const initials = getInitials(firstName, lastName);
 
@@ -39,8 +35,8 @@ export default function Avatar({
   if (uri) {
     return (
       <Image
-        source={{uri}}
-        style={{width: dimension, height: dimension, borderRadius: dimension / 2}}
+        source={{ uri }}
+        style={{ width: dimension, height: dimension, borderRadius: dimension / 2 }}
         resizeMode="cover"
         accessibilityRole="image"
         accessibilityLabel={accessLabel}
@@ -59,13 +55,15 @@ export default function Avatar({
         backgroundColor: `${colors.primary}33`,
         alignItems: 'center',
         justifyContent: 'center',
-      }}>
+      }}
+    >
       <Text
         style={{
           fontSize: fontSizeMap[size],
           fontWeight: 'bold',
           color: colors.primary,
-        }}>
+        }}
+      >
         {initials || '?'}
       </Text>
     </View>
