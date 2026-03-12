@@ -124,3 +124,6 @@ jest.mock('@invertase/react-native-apple-authentication', () => ({
     Scope: { ALL: 0 },
   },
 }));
+
+// NOTE: We rely on built-in matchers from React Native Testing Library v12+,
+// so we intentionally do not import '@testing-library/jest-native/extend-expect'
