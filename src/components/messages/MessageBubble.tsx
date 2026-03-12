@@ -1,44 +1,69 @@
-import React, {useState} from 'react';
-import {View, Text, TouchableOpacity, Image, Linking} from 'react-native';
 import {
   Check,
   CheckCheck,
   File as FileIcon,
-  Play,
+  Image as ImageIcon,
   Mic,
+  Play,
   Reply,
   Trash2,
-  Image as ImageIcon,
 } from 'lucide-react-native';
-import {colors} from '../../theme/colors';
-import {formatTime} from '../../utils/formatters';
-import type {Message, UserSnippet} from '../../types/messaging.types';
+import React, { useState } from 'react';
+import { Image, Linking, TouchableOpacity, View } from 'react-native';
+import { colors } from '../../theme/colors';
+import type { Message, UserSnippet } from '../../types/messaging.types';
+import { formatTime } from '../../utils/formatters';
+import { Text } from '../ui/Text';
 
 // Image with error fallback
-function ImageAttachment({url, name, isMine, hasContent, onPress}: {
-  url: string; name?: string; isMine: boolean; hasContent: boolean; onPress: () => void;
+function ImageAttachment({
+  url,
+  name,
+  isMine,
+  hasContent,
+  onPress,
+}: {
+  url: string;
+  name?: string;
+  isMine: boolean;
+  hasContent: boolean;
+  onPress: () => void;
 }) {
   const [failed, setFailed] = useState(false);
   if (failed || !url) {
     return (
-      <TouchableOpacity onPress={onPress} style={{
-        width: 220, height: 80, borderRadius: 12, backgroundColor: colors.muted,
-        alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8,
-        marginBottom: hasContent ? 6 : 0,
-      }}>
+      <TouchableOpacity
+        onPress={onPress}
+        style={{
+          width: 220,
+          height: 80,
+          borderRadius: 12,
+          backgroundColor: colors.muted,
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'row',
+          gap: 8,
+          marginBottom: hasContent ? 6 : 0,
+        }}
+      >
         <ImageIcon size={20} color={isMine ? 'rgba(255,255,255,0.6)' : colors.mutedForeground} />
-        <Text style={{fontSize: 12, color: isMine ? 'rgba(255,255,255,0.6)' : colors.mutedForeground}}>
+        <Text
+          style={{ fontSize: 12, color: isMine ? 'rgba(255,255,255,0.6)' : colors.mutedForeground }}
+        >
           {name || 'Image'}
         </Text>
       </TouchableOpacity>
     );
   }
   return (
-    <TouchableOpacity activeOpacity={0.8} onPress={onPress}
-      style={{marginBottom: hasContent ? 6 : 0}}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      style={{ marginBottom: hasContent ? 6 : 0 }}
+    >
       <Image
-        source={{uri: url}}
-        style={{width: 220, height: 160, borderRadius: 12, backgroundColor: colors.muted}}
+        source={{ uri: url }}
+        style={{ width: 220, height: 160, borderRadius: 12, backgroundColor: colors.muted }}
         resizeMode="cover"
         onError={() => setFailed(true)}
       />
@@ -54,13 +79,7 @@ interface Props {
   onReply?: (message: Message) => void;
 }
 
-export default function MessageBubble({
-  message,
-  isMine,
-  onImagePress,
-  onDelete,
-  onReply,
-}: Props) {
+export default function MessageBubble({ message, isMine, onImagePress, onDelete, onReply }: Props) {
   if (message.is_deleted) {
     return (
       <View
@@ -72,8 +91,9 @@ export default function MessageBubble({
           borderRadius: 16,
           paddingHorizontal: 14,
           paddingVertical: 8,
-        }}>
-        <Text style={{fontSize: 13, color: colors.mutedForeground, fontStyle: 'italic'}}>
+        }}
+      >
+        <Text style={{ fontSize: 13, color: colors.mutedForeground, fontStyle: 'italic' }}>
           Message deleted
         </Text>
       </View>
@@ -82,8 +102,8 @@ export default function MessageBubble({
 
   if (message.type === 'system') {
     return (
-      <View style={{alignItems: 'center', marginVertical: 8, paddingHorizontal: 40}}>
-        <Text style={{fontSize: 11, color: colors.mutedForeground, textAlign: 'center'}}>
+      <View style={{ alignItems: 'center', marginVertical: 8, paddingHorizontal: 40 }}>
+        <Text style={{ fontSize: 11, color: colors.mutedForeground, textAlign: 'center' }}>
           {message.content}
         </Text>
       </View>
@@ -94,7 +114,7 @@ export default function MessageBubble({
   const replySender = replyTo?.sender as UserSnippet | undefined;
 
   const renderReadStatus = () => {
-    const {status} = message;
+    const { status } = message;
     if (!isMine) return null;
     if (status.read_at) {
       return <CheckCheck size={14} color={colors.primary} />;
@@ -129,7 +149,8 @@ export default function MessageBubble({
             alignItems: 'center',
             gap: 8,
             marginBottom: message.content ? 6 : 0,
-          }}>
+          }}
+        >
           <View
             style={{
               width: 32,
@@ -138,10 +159,11 @@ export default function MessageBubble({
               backgroundColor: isMine ? 'rgba(255,255,255,0.2)' : `${colors.primary}20`,
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
+            }}
+          >
             <Mic size={16} color={isMine ? colors.white : colors.primary} />
           </View>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <View
               style={{
                 height: 4,
@@ -155,7 +177,8 @@ export default function MessageBubble({
               style={{
                 fontSize: 11,
                 color: isMine ? 'rgba(255,255,255,0.7)' : colors.mutedForeground,
-              }}>
+              }}
+            >
               {Math.floor(att.duration_seconds / 60)}:
               {String(Math.floor(att.duration_seconds % 60)).padStart(2, '0')}
             </Text>
@@ -172,11 +195,12 @@ export default function MessageBubble({
           style={{
             marginBottom: message.content ? 6 : 0,
             position: 'relative',
-          }}>
+          }}
+        >
           {att.thumbnail_url ? (
             <Image
-              source={{uri: att.thumbnail_url}}
-              style={{width: 220, height: 140, borderRadius: 12, backgroundColor: colors.muted}}
+              source={{ uri: att.thumbnail_url }}
+              style={{ width: 220, height: 140, borderRadius: 12, backgroundColor: colors.muted }}
               resizeMode="cover"
             />
           ) : (
@@ -188,7 +212,8 @@ export default function MessageBubble({
                 backgroundColor: colors.muted,
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <Play size={32} color={colors.mutedForeground} />
             </View>
           )}
@@ -201,7 +226,8 @@ export default function MessageBubble({
               bottom: 0,
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
+            }}
+          >
             <View
               style={{
                 width: 44,
@@ -210,7 +236,8 @@ export default function MessageBubble({
                 backgroundColor: 'rgba(0,0,0,0.5)',
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <Play size={20} color="#fff" />
             </View>
           </View>
@@ -225,10 +252,11 @@ export default function MessageBubble({
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => att.url && Linking.openURL(att.url)}
-          style={{marginBottom: message.content ? 6 : 0, position: 'relative'}}>
+          style={{ marginBottom: message.content ? 6 : 0, position: 'relative' }}
+        >
           <Image
-            source={{uri: att.thumbnail_url}}
-            style={{width: 220, height: 160, borderRadius: 12, backgroundColor: colors.muted}}
+            source={{ uri: att.thumbnail_url }}
+            style={{ width: 220, height: 160, borderRadius: 12, backgroundColor: colors.muted }}
             resizeMode="cover"
           />
           {/* Badge */}
@@ -241,8 +269,9 @@ export default function MessageBubble({
               borderRadius: 6,
               paddingHorizontal: 8,
               paddingVertical: 3,
-            }}>
-            <Text style={{fontSize: 10, fontWeight: '700', color: '#fff'}}>{ext}</Text>
+            }}
+          >
+            <Text style={{ fontSize: 10, fontWeight: '700', color: '#fff' }}>{ext}</Text>
           </View>
           {/* Bottom bar with name + size */}
           <View
@@ -256,11 +285,12 @@ export default function MessageBubble({
               borderBottomRightRadius: 12,
               paddingHorizontal: 10,
               paddingVertical: 6,
-            }}>
-            <Text numberOfLines={1} style={{fontSize: 11, fontWeight: '600', color: '#fff'}}>
+            }}
+          >
+            <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '600', color: '#fff' }}>
               {att.original_name}
             </Text>
-            <Text style={{fontSize: 9, color: 'rgba(255,255,255,0.7)'}}>
+            <Text style={{ fontSize: 9, color: 'rgba(255,255,255,0.7)' }}>
               {att.size_bytes >= 1048576
                 ? `${(att.size_bytes / 1048576).toFixed(1)} MB`
                 : `${(att.size_bytes / 1024).toFixed(0)} KB`}
@@ -283,23 +313,26 @@ export default function MessageBubble({
           backgroundColor: isMine ? 'rgba(255,255,255,0.1)' : `${colors.primary}08`,
           borderRadius: 10,
           marginBottom: message.content ? 6 : 0,
-        }}>
+        }}
+      >
         <FileIcon size={20} color={isMine ? colors.white : colors.primary} />
-        <View style={{flex: 1}}>
+        <View style={{ flex: 1 }}>
           <Text
             numberOfLines={1}
             style={{
               fontSize: 12,
               fontWeight: '600',
               color: isMine ? colors.white : colors.foreground,
-            }}>
+            }}
+          >
             {att.original_name}
           </Text>
           <Text
             style={{
               fontSize: 10,
               color: isMine ? 'rgba(255,255,255,0.6)' : colors.mutedForeground,
-            }}>
+            }}
+          >
             {att.size_bytes >= 1048576
               ? `${(att.size_bytes / 1048576).toFixed(1)} MB`
               : `${(att.size_bytes / 1024).toFixed(0)} KB`}
@@ -322,10 +355,11 @@ export default function MessageBubble({
           borderLeftColor: isMine ? 'rgba(255,255,255,0.4)' : colors.primary,
           paddingLeft: 8,
           marginTop: 6,
-        }}>
+        }}
+      >
         {preview.image ? (
           <Image
-            source={{uri: preview.image}}
+            source={{ uri: preview.image }}
             style={{
               width: '100%',
               height: 100,
@@ -343,7 +377,8 @@ export default function MessageBubble({
               fontSize: 12,
               fontWeight: '600',
               color: isMine ? colors.white : colors.foreground,
-            }}>
+            }}
+          >
             {preview.title}
           </Text>
         ) : null}
@@ -354,7 +389,8 @@ export default function MessageBubble({
               fontSize: 11,
               color: isMine ? 'rgba(255,255,255,0.7)' : colors.mutedForeground,
               marginTop: 1,
-            }}>
+            }}
+          >
             {preview.description}
           </Text>
         ) : null}
@@ -363,7 +399,8 @@ export default function MessageBubble({
             fontSize: 10,
             color: isMine ? 'rgba(255,255,255,0.5)' : colors.mutedForeground,
             marginTop: 2,
-          }}>
+          }}
+        >
           {preview.domain || preview.site_name}
         </Text>
       </TouchableOpacity>
@@ -377,7 +414,8 @@ export default function MessageBubble({
         maxWidth: '78%',
         marginHorizontal: 12,
         marginVertical: 2,
-      }}>
+      }}
+    >
       <View
         style={{
           backgroundColor: isMine ? colors.primary : colors.card,
@@ -388,7 +426,8 @@ export default function MessageBubble({
           paddingVertical: 8,
           borderWidth: isMine ? 0 : 1,
           borderColor: colors.border,
-        }}>
+        }}
+      >
         {/* Reply reference */}
         {replyTo && (
           <View
@@ -397,13 +436,15 @@ export default function MessageBubble({
               borderLeftColor: isMine ? 'rgba(255,255,255,0.4)' : colors.accent,
               paddingLeft: 8,
               marginBottom: 6,
-            }}>
+            }}
+          >
             <Text
               style={{
                 fontSize: 10,
                 fontWeight: '700',
                 color: isMine ? 'rgba(255,255,255,0.7)' : colors.accent,
-              }}>
+              }}
+            >
               {replySender?.profile?.first_name || 'User'}
             </Text>
             <Text
@@ -411,7 +452,8 @@ export default function MessageBubble({
               style={{
                 fontSize: 11,
                 color: isMine ? 'rgba(255,255,255,0.6)' : colors.mutedForeground,
-              }}>
+              }}
+            >
               {replyTo.content || (replyTo.type !== 'text' ? replyTo.type : '')}
             </Text>
           </View>
@@ -425,7 +467,8 @@ export default function MessageBubble({
               fontSize: 14,
               lineHeight: 20,
               color: isMine ? colors.white : colors.foreground,
-            }}>
+            }}
+          >
             {message.content}
           </Text>
         ) : null}
@@ -440,12 +483,14 @@ export default function MessageBubble({
             justifyContent: 'flex-end',
             gap: 4,
             marginTop: 4,
-          }}>
+          }}
+        >
           <Text
             style={{
               fontSize: 10,
               color: isMine ? 'rgba(255,255,255,0.6)' : colors.mutedForeground,
-            }}>
+            }}
+          >
             {formatTime(message.created_at)}
           </Text>
           {renderReadStatus()}
@@ -461,18 +506,15 @@ export default function MessageBubble({
             marginTop: 2,
             justifyContent: isMine ? 'flex-end' : 'flex-start',
             paddingHorizontal: 4,
-          }}>
+          }}
+        >
           {onReply && (
-            <TouchableOpacity
-              hitSlop={8}
-              onPress={() => onReply(message)}>
+            <TouchableOpacity hitSlop={8} onPress={() => onReply(message)}>
               <Reply size={14} color={colors.mutedForeground} />
             </TouchableOpacity>
           )}
           {isMine && onDelete && (
-            <TouchableOpacity
-              hitSlop={8}
-              onPress={() => onDelete(message._id)}>
+            <TouchableOpacity hitSlop={8} onPress={() => onDelete(message._id)}>
               <Trash2 size={14} color={colors.mutedForeground} />
             </TouchableOpacity>
           )}

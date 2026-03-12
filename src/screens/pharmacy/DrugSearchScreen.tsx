@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -8,7 +8,7 @@ import { Search, X, Clock, TrendingUp } from 'lucide-react-native';
 import { useDrugSearchQuery } from '../../hooks/queries';
 import { usePharmacyStore } from '../../store/pharmacy';
 import DrugCard from '../../components/pharmacy/DrugCard';
-import { Header, EmptyState } from '../../components/ui';
+import { Header, EmptyState, Text, TextInput } from '../../components/ui';
 import { colors } from '../../theme/colors';
 import type { Drug } from '../../types/pharmacy.types';
 
@@ -23,7 +23,7 @@ const POPULAR_TAGS = [
 
 export default function DrugSearchScreen() {
   const navigation = useNavigation<any>();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<React.ElementRef<typeof TextInput>>(null);
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);

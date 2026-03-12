@@ -1,38 +1,38 @@
-import React, {useState, useMemo} from 'react';
-import {View, Text, TouchableOpacity, ScrollView} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import type {RouteProp} from '@react-navigation/native';
-import {Users, ChevronDown, X} from 'lucide-react-native';
-import {Header, EmptyState, Skeleton} from '../../../components/ui';
+import React, { useState, useMemo } from 'react';
+import { View, TouchableOpacity, ScrollView } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
+import { Users, ChevronDown, X } from 'lucide-react-native';
+import { Header, EmptyState, Skeleton, Text } from '../../../components/ui';
 import SpecialistCard from '../../../components/appointments/SpecialistCard';
-import {useSpecialistsQuery} from '../../../hooks/queries';
-import {useAppointmentsStore} from '../../../store/appointments';
-import {colors} from '../../../theme/colors';
-import type {BookingsStackParamList} from '../../../navigation/stacks/BookingsStack';
+import { useSpecialistsQuery } from '../../../hooks/queries';
+import { useAppointmentsStore } from '../../../store/appointments';
+import { colors } from '../../../theme/colors';
+import type { BookingsStackParamList } from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 type Route = RouteProp<BookingsStackParamList, 'SelectSpecialist'>;
 
 const GENDER_OPTIONS = [
-  {label: 'Any Gender', value: ''},
-  {label: 'Male', value: 'Male'},
-  {label: 'Female', value: 'Female'},
+  { label: 'Any Gender', value: '' },
+  { label: 'Male', value: 'Male' },
+  { label: 'Female', value: 'Female' },
 ];
 
 const RATING_OPTIONS = [
-  {label: 'Any Rating', value: ''},
-  {label: '4+ Stars', value: '4 stars and above'},
-  {label: '3+ Stars', value: '3 stars and above'},
+  { label: 'Any Rating', value: '' },
+  { label: '4+ Stars', value: '4 stars and above' },
+  { label: '3+ Stars', value: '3 stars and above' },
 ];
 
 const CHANNEL_OPTIONS = [
-  {label: 'Any Channel', value: ''},
-  {label: 'Zoom', value: 'zoom'},
-  {label: 'Google Meet', value: 'google_meet'},
-  {label: 'Phone', value: 'phone'},
+  { label: 'Any Channel', value: '' },
+  { label: 'Zoom', value: 'zoom' },
+  { label: 'Google Meet', value: 'google_meet' },
+  { label: 'Phone', value: 'phone' },
 ];
 
 function FilterChip({
@@ -49,16 +49,14 @@ function FilterChip({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Filter by ${label}`}
-      accessibilityState={{selected: active}}
+      accessibilityState={{ selected: active }}
       activeOpacity={0.7}
       className={`flex-row items-center gap-1 px-3 py-2 rounded-xl border ${
         active ? 'border-primary' : 'border-border'
       }`}
-      style={{backgroundColor: active ? `${colors.primary}15` : colors.card}}>
-      <Text
-        className={`text-xs font-medium ${
-          active ? 'text-primary' : 'text-muted-foreground'
-        }`}>
+      style={{ backgroundColor: active ? `${colors.primary}15` : colors.card }}
+    >
+      <Text className={`text-xs font-medium ${active ? 'text-primary' : 'text-muted-foreground'}`}>
         {label}
       </Text>
       <ChevronDown size={12} color={active ? colors.primary : colors.mutedForeground} />
@@ -74,7 +72,7 @@ function FilterDropdown({
   onClose,
 }: {
   visible: boolean;
-  options: {label: string; value: string}[];
+  options: { label: string; value: string }[];
   selected: string;
   onSelect: (val: string) => void;
   onClose: () => void;
@@ -83,8 +81,9 @@ function FilterDropdown({
   return (
     <View
       className="absolute top-full left-0 right-0 z-50 bg-card border border-border rounded-xl mt-1 shadow-lg"
-      style={{elevation: 5}}>
-      {options.map(opt => (
+      style={{ elevation: 5 }}
+    >
+      {options.map((opt) => (
         <TouchableOpacity
           key={opt.value}
           onPress={() => {
@@ -93,11 +92,13 @@ function FilterDropdown({
           }}
           className={`px-4 py-3 border-b border-border/50 ${
             selected === opt.value ? 'bg-primary/10' : ''
-          }`}>
+          }`}
+        >
           <Text
             className={`text-sm ${
               selected === opt.value ? 'text-primary font-bold' : 'text-foreground'
-            }`}>
+            }`}
+          >
             {opt.label}
           </Text>
         </TouchableOpacity>
@@ -109,7 +110,7 @@ function FilterDropdown({
 function ListSkeleton() {
   return (
     <View className="p-4 gap-3">
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <View key={i} className="bg-card border border-border rounded-2xl p-4 gap-3">
           <View className="flex-row items-start gap-3">
             <Skeleton width={56} height={56} borderRadius={28} />
@@ -129,10 +130,10 @@ function ListSkeleton() {
 export default function SelectSpecialistScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const {professionalCategory, specialistCategory} = route.params;
+  const { professionalCategory, specialistCategory } = route.params;
 
   // Keep store for setBookingData (client state)
-  const {setBookingData} = useAppointmentsStore();
+  const { setBookingData } = useAppointmentsStore();
 
   const [gender, setGender] = useState('');
   const [rating, setRating] = useState('');
@@ -152,10 +153,7 @@ export default function SelectSpecialistScreen() {
     return payload;
   }, [professionalCategory, specialistCategory, gender, rating]);
 
-  const {
-    data: specialistsRaw,
-    isLoading,
-  } = useSpecialistsQuery(queryParams);
+  const { data: specialistsRaw, isLoading } = useSpecialistsQuery(queryParams);
 
   const specialists = useMemo(() => {
     if (!specialistsRaw) return [];
@@ -165,9 +163,7 @@ export default function SelectSpecialistScreen() {
   // Client-side meeting channel filter (backend returns meeting_channels per specialist)
   const filteredSpecialists = useMemo(() => {
     if (!channel) return specialists;
-    return specialists.filter(
-      (s: any) => s.meeting_channels?.includes(channel),
-    );
+    return specialists.filter((s: any) => s.meeting_channels?.includes(channel));
   }, [specialists, channel]);
 
   const clearFilters = () => {
@@ -177,16 +173,16 @@ export default function SelectSpecialistScreen() {
   };
 
   const getFilterLabel = (
-    options: {label: string; value: string}[],
+    options: { label: string; value: string }[],
     value: string,
-    defaultLabel: string,
+    defaultLabel: string
   ) => {
     if (!value) return defaultLabel;
-    return options.find(o => o.value === value)?.label || defaultLabel;
+    return options.find((o) => o.value === value)?.label || defaultLabel;
   };
 
   const handleSelect = (specialist: any) => {
-    setBookingData({specialist, categoryName: specialistCategory});
+    setBookingData({ specialist, categoryName: specialistCategory });
     navigation.navigate('SelectSchedule', {
       specialistId: specialist._id || specialist.id,
     });
@@ -200,7 +196,7 @@ export default function SelectSpecialistScreen() {
       <View className="px-4 pt-4 pb-2">
         <View className="flex-row items-center gap-2">
           <View className="flex-row gap-1.5">
-            {[1, 2, 3, 4].map(step => (
+            {[1, 2, 3, 4].map((step) => (
               <View
                 key={step}
                 className="h-1.5 rounded-full"
@@ -224,14 +220,13 @@ export default function SelectSpecialistScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{gap: 8, paddingRight: 16}}>
-          <View style={{position: 'relative'}}>
+          contentContainerStyle={{ gap: 8, paddingRight: 16 }}
+        >
+          <View style={{ position: 'relative' }}>
             <FilterChip
               label={getFilterLabel(GENDER_OPTIONS, gender, 'Gender')}
               active={!!gender}
-              onPress={() =>
-                setActiveDropdown(activeDropdown === 'gender' ? null : 'gender')
-              }
+              onPress={() => setActiveDropdown(activeDropdown === 'gender' ? null : 'gender')}
             />
             <FilterDropdown
               visible={activeDropdown === 'gender'}
@@ -242,13 +237,11 @@ export default function SelectSpecialistScreen() {
             />
           </View>
 
-          <View style={{position: 'relative'}}>
+          <View style={{ position: 'relative' }}>
             <FilterChip
               label={getFilterLabel(RATING_OPTIONS, rating, 'Rating')}
               active={!!rating}
-              onPress={() =>
-                setActiveDropdown(activeDropdown === 'rating' ? null : 'rating')
-              }
+              onPress={() => setActiveDropdown(activeDropdown === 'rating' ? null : 'rating')}
             />
             <FilterDropdown
               visible={activeDropdown === 'rating'}
@@ -259,13 +252,11 @@ export default function SelectSpecialistScreen() {
             />
           </View>
 
-          <View style={{position: 'relative'}}>
+          <View style={{ position: 'relative' }}>
             <FilterChip
               label={getFilterLabel(CHANNEL_OPTIONS, channel, 'Channel')}
               active={!!channel}
-              onPress={() =>
-                setActiveDropdown(activeDropdown === 'channel' ? null : 'channel')
-              }
+              onPress={() => setActiveDropdown(activeDropdown === 'channel' ? null : 'channel')}
             />
             <FilterDropdown
               visible={activeDropdown === 'channel'}
@@ -282,7 +273,8 @@ export default function SelectSpecialistScreen() {
               accessibilityRole="button"
               accessibilityLabel="Clear all filters"
               className="flex-row items-center gap-1 px-3 py-2 rounded-xl"
-              style={{backgroundColor: `${colors.destructive}15`}}>
+              style={{ backgroundColor: `${colors.destructive}15` }}
+            >
               <X size={12} color={colors.destructive} />
               <Text className="text-destructive text-xs font-medium">Clear</Text>
             </TouchableOpacity>
@@ -295,12 +287,9 @@ export default function SelectSpecialistScreen() {
       ) : (
         <FlashList
           data={filteredSpecialists}
-          keyExtractor={item => item._id || item.id || String(Math.random())}
-          renderItem={({item}) => (
-            <SpecialistCard
-              specialist={item}
-              onSelect={() => handleSelect(item)}
-            />
+          keyExtractor={(item: any) => item?._id || item?.id || String(Math.random())}
+          renderItem={({ item }: { item: any }) => (
+            <SpecialistCard specialist={item} onSelect={() => handleSelect(item)} />
           )}
           contentContainerStyle={{
             paddingHorizontal: 16,

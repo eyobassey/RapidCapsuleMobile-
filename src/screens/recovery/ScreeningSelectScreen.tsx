@@ -1,11 +1,11 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text, ScrollView, TouchableOpacity, ActivityIndicator} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {ClipboardCheck, Star, Clock, ChevronRight} from 'lucide-react-native';
-import {Header} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {recoveryService} from '../../services/recovery.service';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { ClipboardCheck, Star, Clock, ChevronRight } from 'lucide-react-native';
+import { Header, Text } from '../../components/ui';
+import { colors } from '../../theme/colors';
+import { recoveryService } from '../../services/recovery.service';
 
 const INSTRUMENTS = [
   {
@@ -49,8 +49,6 @@ const INSTRUMENTS = [
 export default function ScreeningSelectScreen() {
   const navigation = useNavigation<any>();
   const [recommended, setRecommended] = useState<string | null>(null);
-  const [reason, setReason] = useState('');
-  const [loading, setLoading] = useState(false);
   const [starting, setStarting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,7 +59,6 @@ export default function ScreeningSelectScreen() {
     try {
       const data = await recoveryService.getRecommendedInstrument();
       setRecommended(data.instrument);
-      setReason(data.reason);
     } catch {
       // ignore
     }
@@ -83,17 +80,21 @@ export default function ScreeningSelectScreen() {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Screening Tools" onBack={() => navigation.goBack()} />
 
       <ScrollView
-        contentContainerStyle={{padding: 16, paddingBottom: 40, gap: 12}}
-        showsVerticalScrollIndicator={false}>
-        <Text style={{fontSize: 13, color: colors.mutedForeground, lineHeight: 20, marginBottom: 4}}>
-          Validated screening instruments to assess your current status and track progress over time.
+        contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 12 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text
+          style={{ fontSize: 13, color: colors.mutedForeground, lineHeight: 20, marginBottom: 4 }}
+        >
+          Validated screening instruments to assess your current status and track progress over
+          time.
         </Text>
 
-        {INSTRUMENTS.map(inst => {
+        {INSTRUMENTS.map((inst) => {
           const isRecommended = recommended === inst.id;
           return (
             <TouchableOpacity
@@ -102,14 +103,17 @@ export default function ScreeningSelectScreen() {
               onPress={() => startScreening(inst.id)}
               disabled={starting !== null}
               accessibilityRole="button"
-              accessibilityLabel={`${inst.name}, ${inst.full}, ${inst.time}${isRecommended ? ', recommended' : ''}`}
+              accessibilityLabel={`${inst.name}, ${inst.full}, ${inst.time}${
+                isRecommended ? ', recommended' : ''
+              }`}
               style={{
                 backgroundColor: colors.card,
                 borderWidth: 1,
                 borderColor: isRecommended ? `${colors.accent}40` : colors.border,
                 borderRadius: 16,
                 padding: 16,
-              }}>
+              }}
+            >
               {isRecommended && (
                 <View
                   style={{
@@ -122,15 +126,16 @@ export default function ScreeningSelectScreen() {
                     paddingVertical: 3,
                     borderRadius: 8,
                     alignSelf: 'flex-start',
-                  }}>
+                  }}
+                >
                   <Star size={10} color={colors.accent} />
-                  <Text style={{fontSize: 10, fontWeight: '700', color: colors.accent}}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: colors.accent }}>
                     RECOMMENDED
                   </Text>
                 </View>
               )}
 
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View
                   style={{
                     width: 44,
@@ -139,25 +144,32 @@ export default function ScreeningSelectScreen() {
                     backgroundColor: `${inst.color}15`,
                     alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
+                  }}
+                >
                   <ClipboardCheck size={20} color={inst.color} />
                 </View>
-                <View style={{flex: 1}}>
-                  <Text style={{fontSize: 15, fontWeight: '700', color: colors.foreground}}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: '700', color: colors.foreground }}>
                     {inst.name}
                   </Text>
-                  <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 1}}>
+                  <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 1 }}>
                     {inst.full}
                   </Text>
-                  <Text style={{fontSize: 12, color: colors.foreground, marginTop: 4, lineHeight: 18}}>
+                  <Text
+                    style={{ fontSize: 12, color: colors.foreground, marginTop: 4, lineHeight: 18 }}
+                  >
                     {inst.desc}
                   </Text>
-                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6}}>
-                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+                  <View
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6 }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                       <Clock size={10} color={colors.mutedForeground} />
-                      <Text style={{fontSize: 10, color: colors.mutedForeground}}>{inst.time}</Text>
+                      <Text style={{ fontSize: 10, color: colors.mutedForeground }}>
+                        {inst.time}
+                      </Text>
                     </View>
-                    <Text style={{fontSize: 10, color: colors.mutedForeground}}>
+                    <Text style={{ fontSize: 10, color: colors.mutedForeground }}>
                       Target: {inst.target}
                     </Text>
                   </View>

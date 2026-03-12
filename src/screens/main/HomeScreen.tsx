@@ -1,42 +1,43 @@
-import React, { useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import {
   Bell,
-  MessageCircle,
-  Stethoscope,
-  Pill,
-  Calendar,
-  HeartPulse,
   BrainCircuit,
+  Calendar,
   CalendarDays,
-  Wallet,
-  Sparkles,
   ChevronRight,
-  Video,
-  Phone,
+  HeartPulse,
   MapPin,
+  MessageCircle,
+  Phone,
+  Pill,
+  Sparkles,
+  Stethoscope,
+  Video,
+  Wallet,
 } from 'lucide-react-native';
+import React, { useCallback, useMemo } from 'react';
+import { RefreshControl, ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuthStore } from '../../store/auth';
 import { useCreditsStore } from '../../store/credits';
 import { useMessagingStore } from '../../store/messaging';
 
 import {
-  useHealthScoreQuery,
   useAppointmentsQuery,
-  useWalletBalanceQuery,
-  useUnreadCountQuery,
+  useHealthScoreQuery,
   usePrescriptionsQuery,
+  useUnreadCountQuery,
+  useWalletBalanceQuery,
 } from '../../hooks/queries';
 
-import { ProgressRing, Skeleton } from '../../components/ui';
 import RecoveryHomeCard from '../../components/recovery/RecoveryHomeCard';
-import { colors } from '../../theme/colors';
-import { getGreeting, formatTime, formatRelativeDate } from '../../utils/formatters';
+import { ProgressRing, Skeleton } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
 import { useCurrency } from '../../hooks/useCurrency';
+import { colors } from '../../theme/colors';
 import { MEETING_CHANNEL_LABELS } from '../../utils/constants';
+import { formatRelativeDate, formatTime, getGreeting } from '../../utils/formatters';
 
 // Score thresholds → ring color
 function getScoreColor(score: number): string {

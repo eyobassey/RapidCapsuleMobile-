@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   RefreshControl,
   ActivityIndicator,
@@ -14,7 +13,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import { CheckCircle, Settings, Truck, Package, Phone, Clock, User } from 'lucide-react-native';
 
 import { useTrackOrderQuery } from '../../hooks/queries';
-import { Header, StatusBadge, Button } from '../../components/ui';
+import { Header, StatusBadge, Button, Text } from '../../components/ui';
 import { colors } from '../../theme/colors';
 import { formatDateTime } from '../../utils/formatters';
 import { useCurrency } from '../../hooks/useCurrency';

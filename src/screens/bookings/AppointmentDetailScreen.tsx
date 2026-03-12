@@ -1,9 +1,9 @@
-import React, {useEffect, useCallback} from 'react';
-import {View, Text, ScrollView, Alert, Linking} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import type {RouteProp} from '@react-navigation/native';
+import React, { useEffect, useCallback } from 'react';
+import { View, ScrollView, Alert, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import {
   Calendar,
   Clock,
@@ -17,13 +17,13 @@ import {
   StickyNote,
   XCircle,
 } from 'lucide-react-native';
-import {Header, Avatar, StatusBadge, Button, Card, Skeleton} from '../../components/ui';
-import {useAppointmentsStore} from '../../store/appointments';
-import {colors} from '../../theme/colors';
-import {formatDate, formatTime} from '../../utils/formatters';
-import {useCurrency} from '../../hooks/useCurrency';
-import {MEETING_CHANNEL_LABELS} from '../../utils/constants';
-import type {BookingsStackParamList} from '../../navigation/stacks/BookingsStack';
+import { Header, Avatar, StatusBadge, Button, Card, Skeleton, Text } from '../../components/ui';
+import { useAppointmentsStore } from '../../store/appointments';
+import { colors } from '../../theme/colors';
+import { formatDate, formatTime } from '../../utils/formatters';
+import { useCurrency } from '../../hooks/useCurrency';
+import { MEETING_CHANNEL_LABELS } from '../../utils/constants';
+import type { BookingsStackParamList } from '../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 type Route = RouteProp<BookingsStackParamList, 'AppointmentDetail'>;
@@ -57,10 +57,10 @@ function DetailSkeleton() {
 }
 
 export default function AppointmentDetailScreen() {
-  const {format} = useCurrency();
+  const { format } = useCurrency();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const {id} = route.params;
+  const { id } = route.params;
 
   const {
     currentAppointment: appointment,
@@ -84,7 +84,8 @@ export default function AppointmentDetailScreen() {
     appointment?.specialty ||
     'General Practice';
   const channel = appointment?.meeting_channel || 'zoom';
-  const fee = appointment?.appointment_fee || appointment?.consultation_fee || appointment?.fee || 0;
+  const fee =
+    appointment?.appointment_fee || appointment?.consultation_fee || appointment?.fee || 0;
   const status = appointment?.status || 'OPEN';
   const duration = appointment?.duration || 30;
   const rating = specialist.average_rating || specialist.rating || 0;
@@ -93,16 +94,24 @@ export default function AppointmentDetailScreen() {
   const isCompleted = status === 'COMPLETED';
   const isCancelled = status === 'CANCELLED';
 
-  const meetingUrl = appointment?.join_url || appointment?.zoom_meeting_url || appointment?.meeting_link || appointment?.zoom_link;
+  const meetingUrl =
+    appointment?.join_url ||
+    appointment?.zoom_meeting_url ||
+    appointment?.meeting_link ||
+    appointment?.zoom_link;
   const meetingId = appointment?.meeting_id || appointment?.zoom_meeting_id;
   const meetingPassword = appointment?.meeting_password || appointment?.zoom_meeting_password;
 
   const handleJoinMeeting = useCallback(() => {
-    const link = appointment?.zoom_meeting_url || appointment?.meeting_link || appointment?.zoom_link;
+    const link =
+      appointment?.zoom_meeting_url || appointment?.meeting_link || appointment?.zoom_link;
     if (link) {
       Linking.openURL(link);
     } else {
-      Alert.alert('No Meeting Link', 'The meeting link is not available yet. Please check back later.');
+      Alert.alert(
+        'No Meeting Link',
+        'The meeting link is not available yet. Please check back later.'
+      );
     }
   }, [appointment]);
 
@@ -111,7 +120,7 @@ export default function AppointmentDetailScreen() {
       'Cancel Appointment',
       'Are you sure you want to cancel this appointment? This action cannot be undone.',
       [
-        {text: 'Keep', style: 'cancel'},
+        { text: 'Keep', style: 'cancel' },
         {
           text: 'Cancel Appointment',
           style: 'destructive',
@@ -120,12 +129,12 @@ export default function AppointmentDetailScreen() {
             navigation.goBack();
           },
         },
-      ],
+      ]
     );
   }, [id, cancelAppointment, navigation]);
 
   const handleRate = useCallback(() => {
-    navigation.navigate('RateAppointment', {id});
+    navigation.navigate('RateAppointment', { id });
   }, [id, navigation]);
 
   return (
@@ -141,8 +150,9 @@ export default function AppointmentDetailScreen() {
       ) : (
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{padding: 16, paddingBottom: 40}}
-          showsVerticalScrollIndicator={false}>
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Section 1: Specialist Card */}
           <View className="bg-card border border-border rounded-2xl p-6 items-center mb-4">
             <Avatar
@@ -156,7 +166,7 @@ export default function AppointmentDetailScreen() {
 
             {rating > 0 && (
               <View className="flex-row items-center gap-1 mt-2">
-                {[1, 2, 3, 4, 5].map(i => (
+                {[1, 2, 3, 4, 5].map((i) => (
                   <Star
                     key={i}
                     size={14}
@@ -168,9 +178,7 @@ export default function AppointmentDetailScreen() {
               </View>
             )}
 
-            <Text className="text-primary font-bold text-lg mt-2">
-              {format(fee)}
-            </Text>
+            <Text className="text-primary font-bold text-lg mt-2">{format(fee)}</Text>
           </View>
 
           {/* Section 2: Status & Schedule */}
@@ -188,7 +196,12 @@ export default function AppointmentDetailScreen() {
                 <View>
                   <Text className="text-muted-foreground text-xs">Date</Text>
                   <Text className="text-foreground text-sm font-medium">
-                    {formatDate(appointment.start_time || appointment.date || appointment.appointment_date || appointment.createdAt)}
+                    {formatDate(
+                      appointment.start_time ||
+                        appointment.date ||
+                        appointment.appointment_date ||
+                        appointment.createdAt
+                    )}
                   </Text>
                 </View>
               </View>
@@ -200,7 +213,12 @@ export default function AppointmentDetailScreen() {
                 <View>
                   <Text className="text-muted-foreground text-xs">Time</Text>
                   <Text className="text-foreground text-sm font-medium">
-                    {formatTime(appointment.start_time || appointment.time || appointment.appointment_time || '00:00')}
+                    {formatTime(
+                      appointment.start_time ||
+                        appointment.time ||
+                        appointment.appointment_time ||
+                        '00:00'
+                    )}
                   </Text>
                 </View>
               </View>
@@ -258,10 +276,7 @@ export default function AppointmentDetailScreen() {
               {meetingUrl && (
                 <View>
                   <Text className="text-muted-foreground text-xs">Meeting Link</Text>
-                  <Text
-                    className="text-primary text-sm font-medium"
-                    selectable
-                    numberOfLines={2}>
+                  <Text className="text-primary text-sm font-medium" selectable numberOfLines={2}>
                     {meetingUrl}
                   </Text>
                 </View>
@@ -273,7 +288,8 @@ export default function AppointmentDetailScreen() {
           {appointment.health_checkup_id && (
             <View
               className="flex-row items-center gap-3 p-3 rounded-xl mb-4 border"
-              style={{backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}30`}}>
+              style={{ backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}30` }}
+            >
               <FileText size={18} color={colors.primary} />
               <View className="flex-1">
                 <Text className="text-primary text-sm font-bold">Health Checkup Linked</Text>
@@ -315,9 +331,7 @@ export default function AppointmentDetailScreen() {
               )}
 
               {appointment.notes && !appointment.patient_notes && !appointment.specialist_notes && (
-                <Text className="text-foreground text-sm leading-relaxed">
-                  {appointment.notes}
-                </Text>
+                <Text className="text-foreground text-sm leading-relaxed">{appointment.notes}</Text>
               )}
             </View>
           )}
@@ -339,10 +353,17 @@ export default function AppointmentDetailScreen() {
           <View className="gap-3 mt-2">
             {isUpcoming && (
               <>
-                <Button variant="primary" onPress={handleJoinMeeting} icon={<Video size={18} color={colors.white} />}>
+                <Button
+                  variant="primary"
+                  onPress={handleJoinMeeting}
+                  icon={<Video size={18} color={colors.white} />}
+                >
                   Join Meeting
                 </Button>
-                <Button variant="outline" onPress={() => Alert.alert('Reschedule', 'Reschedule feature coming soon.')}>
+                <Button
+                  variant="outline"
+                  onPress={() => Alert.alert('Reschedule', 'Reschedule feature coming soon.')}
+                >
                   Reschedule
                 </Button>
                 <Button variant="ghost" onPress={handleCancel}>
@@ -353,14 +374,19 @@ export default function AppointmentDetailScreen() {
 
             {isCompleted && (
               <>
-                <Button variant="primary" onPress={handleRate} icon={<Star size={18} color={colors.white} />}>
+                <Button
+                  variant="primary"
+                  onPress={handleRate}
+                  icon={<Star size={18} color={colors.white} />}
+                >
                   Rate Appointment
                 </Button>
                 {appointment.prescription_id && (
                   <Button
                     variant="outline"
                     onPress={() => Alert.alert('Prescription', 'Navigate to prescription detail.')}
-                    icon={<FileText size={18} color={colors.foreground} />}>
+                    icon={<FileText size={18} color={colors.foreground} />}
+                  >
                     View Prescription
                   </Button>
                 )}

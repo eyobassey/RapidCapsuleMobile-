@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, RefreshControl, ActivityIndicator } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -7,7 +7,7 @@ import { ClipboardList, TrendingUp, CheckCircle, Package } from 'lucide-react-na
 
 import { useMyOrdersQuery } from '../../hooks/queries';
 import OrderCard from '../../components/pharmacy/OrderCard';
-import { Header, TabBar, EmptyState } from '../../components/ui';
+import { Header, TabBar, EmptyState, Text } from '../../components/ui';
 import { colors } from '../../theme/colors';
 import type { PharmacyOrder } from '../../types/pharmacy.types';
 

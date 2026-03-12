@@ -1,11 +1,12 @@
-import React, {useState, useMemo} from 'react';
-import {View, Text, ScrollView, TouchableOpacity, TextInput} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {Check, Shield, Search, X, ChevronDown, ChevronUp} from 'lucide-react-native';
-import {Header, Button} from '../../components/ui';
-import {useHealthCheckupStore} from '../../store/healthCheckup';
-import {colors} from '../../theme/colors';
+import { useNavigation } from '@react-navigation/native';
+import { Check, ChevronDown, ChevronUp, Search, Shield, X } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button, Header, TextInput } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useHealthCheckupStore } from '../../store/healthCheckup';
+import { colors } from '../../theme/colors';
 
 const INITIAL_VISIBLE = 8;
 
@@ -23,7 +24,7 @@ function FactorItem({
       activeOpacity={0.7}
       accessibilityRole="checkbox"
       accessibilityLabel={factor.common_name || factor.name}
-      accessibilityState={{checked: isSelected}}
+      accessibilityState={{ checked: isSelected }}
       onPress={onToggle}
       style={{
         flexDirection: 'row',
@@ -34,7 +35,8 @@ function FactorItem({
         borderWidth: 1.5,
         backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
         borderColor: isSelected ? colors.primary : colors.mutedForeground,
-      }}>
+      }}
+    >
       <View
         style={{
           width: 24,
@@ -45,17 +47,16 @@ function FactorItem({
           borderWidth: 2,
           backgroundColor: isSelected ? colors.primary : 'transparent',
           borderColor: isSelected ? colors.primary : colors.mutedForeground,
-        }}>
+        }}
+      >
         {isSelected && <Check size={14} color={colors.white} />}
       </View>
-      <View style={{flex: 1}}>
+      <View style={{ flex: 1 }}>
         <Text className="text-sm font-medium text-foreground">
           {factor.common_name || factor.name}
         </Text>
         {factor.question && (
-          <Text className="text-xs text-muted-foreground mt-0.5">
-            {factor.question}
-          </Text>
+          <Text className="text-xs text-muted-foreground mt-0.5">{factor.question}</Text>
         )}
       </View>
     </TouchableOpacity>
@@ -64,13 +65,13 @@ function FactorItem({
 
 export default function RiskFactorsScreen() {
   const navigation = useNavigation<any>();
-  const {riskFactors, addEvidence} = useHealthCheckupStore();
+  const { riskFactors, addEvidence } = useHealthCheckupStore();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
 
   const toggleFactor = (id: string) => {
-    setSelected(prev => {
+    setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -103,7 +104,7 @@ export default function RiskFactorsScreen() {
   }, [query, remainingFactors]);
 
   const handleNext = () => {
-    const evidence = Array.from(selected).map(id => ({
+    const evidence = Array.from(selected).map((id) => ({
       id,
       choice_id: 'present' as const,
       source: 'initial' as const,
@@ -117,14 +118,15 @@ export default function RiskFactorsScreen() {
   const hasMore = remainingFactors.length > 0;
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Risk Factors" onBack={() => navigation.goBack()} />
 
       <ScrollView
-        style={{flex: 1}}
-        contentContainerStyle={{paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40}}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Step indicator */}
         <View className="flex-row items-center gap-2 mb-6">
           <View className="h-1.5 flex-1 bg-primary rounded-full" />
@@ -134,7 +136,7 @@ export default function RiskFactorsScreen() {
           <View className="h-1.5 flex-1 bg-border rounded-full" />
         </View>
 
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4}}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
           <Shield size={20} color={colors.primary} />
           <Text className="text-lg font-bold text-foreground">Risk Factors</Text>
         </View>
@@ -152,7 +154,7 @@ export default function RiskFactorsScreen() {
           <>
             {/* Extra selected (from search, not in top 8) — pinned at top */}
             {extraSelected.length > 0 && (
-              <View style={{gap: 8, marginBottom: 8}}>
+              <View style={{ gap: 8, marginBottom: 8 }}>
                 {extraSelected.map((factor: any) => (
                   <FactorItem
                     key={factor.id}
@@ -165,7 +167,7 @@ export default function RiskFactorsScreen() {
             )}
 
             {/* Common risk factors (top 8) */}
-            <View style={{gap: 8}}>
+            <View style={{ gap: 8 }}>
               {topFactors.map((factor: any) => (
                 <FactorItem
                   key={factor.id}
@@ -181,8 +183,10 @@ export default function RiskFactorsScreen() {
               <TouchableOpacity
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel={showAll ? 'Show less risk factors' : `Show all ${riskFactors.length} risk factors`}
-                onPress={() => setShowAll(v => !v)}
+                accessibilityLabel={
+                  showAll ? 'Show less risk factors' : `Show all ${riskFactors.length} risk factors`
+                }
+                onPress={() => setShowAll((v) => !v)}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -190,13 +194,14 @@ export default function RiskFactorsScreen() {
                   gap: 6,
                   marginTop: 12,
                   paddingVertical: 8,
-                }}>
+                }}
+              >
                 {showAll ? (
                   <ChevronUp size={16} color={colors.primary} />
                 ) : (
                   <ChevronDown size={16} color={colors.primary} />
                 )}
-                <Text style={{fontSize: 13, fontWeight: '600', color: colors.primary}}>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary }}>
                   {showAll ? 'Show Less' : `Show All (${riskFactors.length} total)`}
                 </Text>
               </TouchableOpacity>
@@ -204,7 +209,7 @@ export default function RiskFactorsScreen() {
 
             {/* Expanded full list */}
             {showAll && !query && (
-              <View style={{gap: 8, marginTop: 8}}>
+              <View style={{ gap: 8, marginTop: 8 }}>
                 {remainingFactors.map((factor: any) => (
                   <FactorItem
                     key={factor.id}
@@ -218,14 +223,24 @@ export default function RiskFactorsScreen() {
 
             {/* Search bar */}
             {hasMore && (
-              <View style={{marginTop: 16}}>
-                <Text style={{fontSize: 12, fontWeight: 'bold', color: colors.mutedForeground, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, marginLeft: 4}}>
+              <View style={{ marginTop: 16 }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                    color: colors.mutedForeground,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                    marginBottom: 8,
+                    marginLeft: 4,
+                  }}
+                >
                   Search Risk Factors
                 </Text>
                 <View className="flex-row items-center bg-card border border-border rounded-2xl px-4 h-12">
                   <Search size={18} color={colors.mutedForeground} />
                   <TextInput
-                    style={{flex: 1, fontSize: 14, color: colors.foreground, marginLeft: 12}}
+                    style={{ flex: 1, fontSize: 14, color: colors.foreground, marginLeft: 12 }}
                     placeholder="Type to search..."
                     placeholderTextColor={colors.mutedForeground}
                     value={query}
@@ -234,7 +249,11 @@ export default function RiskFactorsScreen() {
                     accessibilityLabel="Search risk factors"
                   />
                   {query.length > 0 && (
-                    <TouchableOpacity onPress={() => setQuery('')} accessibilityRole="button" accessibilityLabel="Clear search">
+                    <TouchableOpacity
+                      onPress={() => setQuery('')}
+                      accessibilityRole="button"
+                      accessibilityLabel="Clear search"
+                    >
                       <X size={18} color={colors.mutedForeground} />
                     </TouchableOpacity>
                   )}
@@ -242,7 +261,7 @@ export default function RiskFactorsScreen() {
 
                 {/* Search results */}
                 {query.length > 0 && searchResults.length > 0 && (
-                  <View style={{gap: 8, marginTop: 12}}>
+                  <View style={{ gap: 8, marginTop: 12 }}>
                     {searchResults.map((factor: any) => (
                       <FactorItem
                         key={factor.id}
@@ -255,7 +274,7 @@ export default function RiskFactorsScreen() {
                 )}
 
                 {query.length >= 2 && searchResults.length === 0 && (
-                  <View style={{alignItems: 'center', paddingVertical: 16}}>
+                  <View style={{ alignItems: 'center', paddingVertical: 16 }}>
                     <Text className="text-sm text-muted-foreground">No matching risk factors</Text>
                   </View>
                 )}
@@ -265,7 +284,7 @@ export default function RiskFactorsScreen() {
         )}
 
         {/* Continue button */}
-        <View style={{marginTop: 24}}>
+        <View style={{ marginTop: 24 }}>
           <Button variant="primary" onPress={handleNext}>
             {selected.size > 0
               ? `Continue with ${selected.size} factor${selected.size > 1 ? 's' : ''}`

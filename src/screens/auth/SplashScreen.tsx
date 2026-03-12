@@ -1,13 +1,13 @@
 import React from 'react';
-import {View, Text, Image} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {Button} from '../../components/ui';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {AuthStackParamList} from '../../navigation/AuthStack';
+import { View, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button, Text } from '../../components/ui';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { AuthStackParamList } from '../../navigation/AuthStack';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
-export default function SplashScreen({navigation}: Props) {
+export default function SplashScreen({ navigation }: Props) {
   return (
     <SafeAreaView className="flex-1 bg-background">
       {/* Background glow effects */}
@@ -39,9 +39,7 @@ export default function SplashScreen({navigation}: Props) {
 
       {/* Bottom CTAs */}
       <View className="px-6 pb-8 gap-3">
-        <Button onPress={() => navigation.navigate('Signup')}>
-          Create Patient Account
-        </Button>
+        <Button onPress={() => navigation.navigate('Signup')}>Create Patient Account</Button>
         <Button variant="outline" onPress={() => navigation.navigate('Login')}>
           Sign In to Account
         </Button>

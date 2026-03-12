@@ -1,21 +1,19 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {Send, BrainCircuit, AlertTriangle} from 'lucide-react-native';
-import {Header} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {recoveryService} from '../../services/recovery.service';
+import { FlashList } from '@shopify/flash-list';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Send, BrainCircuit, AlertTriangle } from 'lucide-react-native';
+import { Header, Text, TextInput } from '../../components/ui';
+import { colors } from '../../theme/colors';
+import { recoveryService } from '../../services/recovery.service';
 
 interface ChatMessage {
   id: string;
@@ -49,16 +47,18 @@ export default function CompanionChatScreen() {
       const session = await recoveryService.startCompanion();
       setSessionId(session.session_id);
       if (session.greeting) {
-        setMessages([{
-          id: '0',
-          role: 'assistant',
-          content: session.greeting,
-          timestamp: new Date().toISOString(),
-        }]);
+        setMessages([
+          {
+            id: '0',
+            role: 'assistant',
+            content: session.greeting,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
       }
     } catch {
       Alert.alert('Error', 'Failed to start companion session.', [
-        {text: 'OK', onPress: () => navigation.goBack()},
+        { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } finally {
       setStarting(false);
@@ -76,7 +76,7 @@ export default function CompanionChatScreen() {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setText('');
     setSending(true);
 
@@ -91,29 +91,29 @@ export default function CompanionChatScreen() {
         crisis_detected: response.conversation_analysis?.crisis_detected,
       };
 
-      setMessages(prev => [...prev, aiMsg]);
+      setMessages((prev) => [...prev, aiMsg]);
 
       // If crisis detected, show alert
       if (response.conversation_analysis?.crisis_detected) {
         Alert.alert(
-          'We\'re Concerned',
+          "We're Concerned",
           'It sounds like you may be in crisis. Would you like to access crisis support?',
           [
-            {text: 'Continue Chat', style: 'cancel'},
+            { text: 'Continue Chat', style: 'cancel' },
             {
               text: 'Crisis Support',
               onPress: () => navigation.navigate('Crisis'),
             },
-          ],
+          ]
         );
       }
     } catch {
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         {
           id: `e-${Date.now()}`,
           role: 'assistant',
-          content: 'I\'m sorry, I couldn\'t process that. Please try again.',
+          content: "I'm sorry, I couldn't process that. Please try again.",
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -125,7 +125,7 @@ export default function CompanionChatScreen() {
   const handleEnd = async () => {
     if (!sessionId) return;
     Alert.alert('End Session', 'Would you like to end this companion session?', [
-      {text: 'Continue', style: 'cancel'},
+      { text: 'Continue', style: 'cancel' },
       {
         text: 'End Session',
         onPress: async () => {
@@ -140,7 +140,7 @@ export default function CompanionChatScreen() {
     ]);
   };
 
-  const renderMessage = ({item}: {item: ChatMessage}) => {
+  const renderMessage = ({ item }: { item: ChatMessage }) => {
     const isUser = item.role === 'user';
     return (
       <View
@@ -149,11 +149,12 @@ export default function CompanionChatScreen() {
           maxWidth: '80%',
           marginHorizontal: 12,
           marginVertical: 3,
-        }}>
+        }}
+      >
         {!isUser && (
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4}}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             <BrainCircuit size={12} color={colors.accent} />
-            <Text style={{fontSize: 10, fontWeight: '600', color: colors.accent}}>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: colors.accent }}>
               AI Companion
             </Text>
           </View>
@@ -168,20 +169,22 @@ export default function CompanionChatScreen() {
             paddingVertical: 10,
             borderWidth: isUser ? 0 : 1,
             borderColor: colors.border,
-          }}>
+          }}
+        >
           <Text
             style={{
               fontSize: 14,
               lineHeight: 20,
               color: isUser ? colors.white : colors.foreground,
-            }}>
+            }}
+          >
             {item.content}
           </Text>
         </View>
         {item.crisis_detected && (
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4}}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
             <AlertTriangle size={10} color={colors.destructive} />
-            <Text style={{fontSize: 10, color: colors.destructive}}>
+            <Text style={{ fontSize: 10, color: colors.destructive }}>
               Crisis indicators detected
             </Text>
           </View>
@@ -192,11 +195,11 @@ export default function CompanionChatScreen() {
 
   if (starting) {
     return (
-      <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
         <Header title="AI Companion" onBack={() => navigation.goBack()} />
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12}}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <ActivityIndicator size="large" color={colors.accent} />
-          <Text style={{fontSize: 13, color: colors.mutedForeground}}>
+          <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
             Starting companion session...
           </Text>
         </View>
@@ -205,33 +208,39 @@ export default function CompanionChatScreen() {
   }
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header
         title="AI Companion"
         onBack={handleEnd}
         right={
-          <TouchableOpacity onPress={handleEnd} hitSlop={8} accessibilityRole="button" accessibilityLabel="End companion session">
-            <Text style={{fontSize: 13, fontWeight: '600', color: colors.destructive}}>End</Text>
+          <TouchableOpacity
+            onPress={handleEnd}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="End companion session"
+          >
+            <Text style={{ fontSize: 13, fontWeight: '600', color: colors.destructive }}>End</Text>
           </TouchableOpacity>
         }
       />
 
       <KeyboardAvoidingView
-        style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <FlashList
           ref={flatListRef}
           data={messages}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           renderItem={renderMessage}
-          contentContainerStyle={{paddingVertical: 8}}
+          contentContainerStyle={{ paddingVertical: 8 }}
           estimatedItemSize={80}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({animated: true})}
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
 
         {/* Typing indicator when sending */}
         {sending && (
-          <View style={{paddingHorizontal: 16, paddingVertical: 4}}>
+          <View style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
             <View
               style={{
                 flexDirection: 'row',
@@ -242,9 +251,10 @@ export default function CompanionChatScreen() {
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 alignSelf: 'flex-start',
-              }}>
+              }}
+            >
               <ActivityIndicator size="small" color={colors.accent} />
-              <Text style={{fontSize: 11, color: colors.mutedForeground}}>Thinking...</Text>
+              <Text style={{ fontSize: 11, color: colors.mutedForeground }}>Thinking...</Text>
             </View>
           </View>
         )}
@@ -260,7 +270,8 @@ export default function CompanionChatScreen() {
             borderTopWidth: 1,
             borderTopColor: colors.border,
             backgroundColor: colors.background,
-          }}>
+          }}
+        >
           <View
             style={{
               flex: 1,
@@ -271,7 +282,8 @@ export default function CompanionChatScreen() {
               paddingHorizontal: 16,
               paddingVertical: Platform.OS === 'ios' ? 8 : 4,
               maxHeight: 120,
-            }}>
+            }}
+          >
             <TextInput
               value={text}
               onChangeText={setText}
@@ -300,11 +312,9 @@ export default function CompanionChatScreen() {
               backgroundColor: text.trim() ? colors.accent : colors.muted,
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
-            <Send
-              size={18}
-              color={text.trim() ? colors.white : colors.mutedForeground}
-            />
+            }}
+          >
+            <Send size={18} color={text.trim() ? colors.white : colors.mutedForeground} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

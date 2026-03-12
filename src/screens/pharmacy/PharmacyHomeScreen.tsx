@@ -9,12 +9,12 @@ import {
   Upload,
 } from 'lucide-react-native';
 import React, { useCallback } from 'react';
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CategoryCard from '../../components/pharmacy/CategoryCard';
 import DrugCard from '../../components/pharmacy/DrugCard';
-import { Skeleton } from '../../components/ui';
+import { Skeleton, Text } from '../../components/ui';
 import { usePharmacyCategoriesQuery, useFeaturedDrugsQuery } from '../../hooks/queries';
 import { usePharmacyStore } from '../../store/pharmacy';
 import { colors } from '../../theme/colors';

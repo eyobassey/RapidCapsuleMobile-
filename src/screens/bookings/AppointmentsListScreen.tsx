@@ -1,29 +1,36 @@
-import React, {useCallback, useState} from 'react';
-import {View, Text, TouchableOpacity, Linking} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {Plus, CalendarPlus, CalendarX, CalendarCheck, Clock, AlertTriangle} from 'lucide-react-native';
-import {Header, TabBar, EmptyState, Skeleton} from '../../components/ui';
+import React, { useCallback, useState } from 'react';
+import { View, TouchableOpacity, Linking } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {
+  Plus,
+  CalendarPlus,
+  CalendarX,
+  CalendarCheck,
+  Clock,
+  AlertTriangle,
+} from 'lucide-react-native';
+import { Header, TabBar, EmptyState, Skeleton, Text } from '../../components/ui';
 import AppointmentCard from '../../components/appointments/AppointmentCard';
-import {useAppointmentsQuery} from '../../hooks/queries';
-import {colors} from '../../theme/colors';
-import type {BookingsStackParamList} from '../../navigation/stacks/BookingsStack';
+import { useAppointmentsQuery } from '../../hooks/queries';
+import { colors } from '../../theme/colors';
+import type { BookingsStackParamList } from '../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 
 const TABS = [
-  {label: 'Upcoming', value: 'upcoming'},
-  {label: 'Past', value: 'past'},
-  {label: 'Missed', value: 'missed'},
-  {label: 'Cancelled', value: 'cancelled'},
+  { label: 'Upcoming', value: 'upcoming' },
+  { label: 'Past', value: 'past' },
+  { label: 'Missed', value: 'missed' },
+  { label: 'Cancelled', value: 'cancelled' },
 ];
 
 function ListSkeleton() {
   return (
     <View className="p-4 gap-3">
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <View key={i} className="bg-card border border-border rounded-2xl p-4 gap-3">
           <View className="flex-row items-center gap-3">
             <Skeleton width={40} height={40} borderRadius={20} />
@@ -40,7 +47,7 @@ function ListSkeleton() {
   );
 }
 
-const emptyConfig: Record<string, {icon: React.ReactNode; title: string; subtitle: string}> = {
+const emptyConfig: Record<string, { icon: React.ReactNode; title: string; subtitle: string }> = {
   upcoming: {
     icon: <CalendarCheck size={32} color={colors.mutedForeground} />,
     title: 'No upcoming appointments',
@@ -101,7 +108,8 @@ export default function AppointmentsListScreen() {
             accessibilityRole="button"
             accessibilityLabel="Book new appointment"
             activeOpacity={0.7}
-            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
             <Plus size={24} color={colors.foreground} />
           </TouchableOpacity>
         }
@@ -116,11 +124,11 @@ export default function AppointmentsListScreen() {
       ) : (
         <FlashList
           data={appointments}
-          keyExtractor={item => item._id || item.id || String(Math.random())}
-          renderItem={({item}) => (
+          keyExtractor={(item) => item._id || item.id || String(Math.random())}
+          renderItem={({ item }) => (
             <AppointmentCard
               appointment={item}
-              onPress={() => navigation.navigate('AppointmentDetail', {id: item._id || item.id})}
+              onPress={() => navigation.navigate('AppointmentDetail', { id: item._id || item.id })}
               onJoin={() => handleJoin(item)}
             />
           )}
@@ -162,13 +170,14 @@ export default function AppointmentsListScreen() {
           alignItems: 'center',
           gap: 8,
           shadowColor: colors.primary,
-          shadowOffset: {width: 0, height: 4},
+          shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 8,
           elevation: 8,
-        }}>
+        }}
+      >
         <CalendarPlus size={20} color={colors.white} />
-        <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 14}}>Book</Text>
+        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Book</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );

@@ -1,43 +1,42 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
-import {
-  FileText,
   Activity,
   AlertTriangle,
-  Stethoscope,
-  Pill,
-  Heart,
   ChevronRight,
   Clock,
+  FileText,
+  Heart,
   Shield,
+  Stethoscope,
   Users,
 } from 'lucide-react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text } from '../../components/ui/Text';
 
-import {useAuthStore} from '../../store/auth';
-import {healthCheckupService} from '../../services/healthCheckup.service';
-import {Header} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {formatDate} from '../../utils/formatters';
+import { Header } from '../../components/ui';
+import { healthCheckupService } from '../../services/healthCheckup.service';
+import { useAuthStore } from '../../store/auth';
+import { colors } from '../../theme/colors';
+import { formatDate } from '../../utils/formatters';
 
 export default function HealthRecordsScreen() {
   const navigation = useNavigation<any>();
-  const user = useAuthStore(s => s.user);
+  const user = useAuthStore((s) => s.user);
   const [checkups, setCheckups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = async () => {
     try {
-      const history = await healthCheckupService.getHistory({limit: 5});
+      const history = await healthCheckupService.getHistory({ limit: 5 });
       setCheckups(Array.isArray(history) ? history : history?.checkups || []);
     } catch {
       // silently fail
@@ -50,7 +49,7 @@ export default function HealthRecordsScreen() {
   useFocusEffect(
     useCallback(() => {
       loadData();
-    }, []),
+    }, [])
   );
 
   const onRefresh = () => {
@@ -118,42 +117,40 @@ export default function HealthRecordsScreen() {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Health Records" onBack={() => navigation.goBack()} />
 
       {loading ? (
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <ScrollView
-          style={{flex: 1}}
-          contentContainerStyle={{padding: 16, paddingBottom: 40, gap: 16}}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 16 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-          }>
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
+          }
+        >
           {/* Vitals Summary */}
           <SectionCard
             icon={<Activity size={18} color={colors.primary} />}
             title="Vitals & Metrics"
-            onPress={() => navigation.navigate('VitalsMetrics')}>
+            onPress={() => navigation.navigate('VitalsMetrics')}
+          >
             {height || weight || bloodType || genotype ? (
-              <View style={{gap: 8, marginTop: 12}}>
-                <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
-                  {height ? (
-                    <MetricBadge label="Height" value={`${height} cm`} />
-                  ) : null}
-                  {weight ? (
-                    <MetricBadge label="Weight" value={`${weight} kg`} />
-                  ) : null}
+              <View style={{ gap: 8, marginTop: 12 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {height ? <MetricBadge label="Height" value={`${height} cm`} /> : null}
+                  {weight ? <MetricBadge label="Weight" value={`${weight} kg`} /> : null}
                   {bmi ? <MetricBadge label="BMI" value={bmi} /> : null}
-                  {bloodType ? (
-                    <MetricBadge label="Blood" value={bloodType} />
-                  ) : null}
-                  {genotype ? (
-                    <MetricBadge label="Genotype" value={genotype} />
-                  ) : null}
+                  {bloodType ? <MetricBadge label="Blood" value={bloodType} /> : null}
+                  {genotype ? <MetricBadge label="Genotype" value={genotype} /> : null}
                 </View>
               </View>
             ) : (
@@ -165,9 +162,10 @@ export default function HealthRecordsScreen() {
           <SectionCard
             icon={<Stethoscope size={18} color={colors.accent} />}
             title="Medical History"
-            onPress={() => navigation.navigate('MedicalHistory')}>
+            onPress={() => navigation.navigate('MedicalHistory')}
+          >
             {conditionsCount + medicationsCount + surgeriesCount > 0 ? (
-              <View style={{gap: 6, marginTop: 12}}>
+              <View style={{ gap: 6, marginTop: 12 }}>
                 {conditionsCount > 0 ? (
                   <InfoRow
                     label="Chronic Conditions"
@@ -205,7 +203,8 @@ export default function HealthRecordsScreen() {
           <SectionCard
             icon={<AlertTriangle size={18} color={colors.secondary} />}
             title="Allergies"
-            onPress={() => navigation.navigate('Allergies')}>
+            onPress={() => navigation.navigate('Allergies')}
+          >
             {hasAllergies === false ? (
               <View
                 style={{
@@ -214,13 +213,14 @@ export default function HealthRecordsScreen() {
                   borderRadius: 12,
                   padding: 12,
                   alignItems: 'center',
-                }}>
-                <Text style={{fontSize: 13, color: colors.success, fontWeight: '600'}}>
+                }}
+              >
+                <Text style={{ fontSize: 13, color: colors.success, fontWeight: '600' }}>
                   No known allergies
                 </Text>
               </View>
             ) : allergyCount > 0 ? (
-              <View style={{gap: 6, marginTop: 12}}>
+              <View style={{ gap: 6, marginTop: 12 }}>
                 {(allergies?.drug_allergies?.length || 0) > 0 ? (
                   <InfoRow
                     label="Drug"
@@ -261,11 +261,13 @@ export default function HealthRecordsScreen() {
           <SectionCard
             icon={<Users size={18} color={colors.primary} />}
             title="Dependants"
-            onPress={() => navigation.navigate('Dependants')}>
+            onPress={() => navigation.navigate('Dependants')}
+          >
             {user?.dependants?.length ? (
-              <View style={{gap: 6, marginTop: 12}}>
+              <View style={{ gap: 6, marginTop: 12 }}>
                 {user.dependants.slice(0, 4).map((d: any, i: number) => {
-                  const name = [d.first_name, d.last_name].filter(Boolean).join(' ') || d.name || 'Unnamed';
+                  const name =
+                    [d.first_name, d.last_name].filter(Boolean).join(' ') || d.name || 'Unnamed';
                   return (
                     <InfoRow
                       key={i}
@@ -276,7 +278,7 @@ export default function HealthRecordsScreen() {
                   );
                 })}
                 {user.dependants.length > 4 && (
-                  <Text style={{fontSize: 12, color: colors.mutedForeground}}>
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
                     +{user.dependants.length - 4} more
                   </Text>
                 )}
@@ -290,15 +292,18 @@ export default function HealthRecordsScreen() {
           {preExistingCount > 0 ? (
             <SectionCard
               icon={<Shield size={18} color={colors.destructive} />}
-              title="Pre-existing Conditions">
-              <View style={{gap: 4, marginTop: 12}}>
+              title="Pre-existing Conditions"
+            >
+              <View style={{ gap: 4, marginTop: 12 }}>
                 {preExisting!.slice(0, 5).map((condition: any, i: number) => (
-                  <Text key={i} style={{fontSize: 13, color: colors.foreground}}>
-                    {typeof condition === 'string' ? condition : condition.name || condition.condition || ''}
+                  <Text key={i} style={{ fontSize: 13, color: colors.foreground }}>
+                    {typeof condition === 'string'
+                      ? condition
+                      : condition.name || condition.condition || ''}
                   </Text>
                 ))}
                 {preExistingCount > 5 ? (
-                  <Text style={{fontSize: 12, color: colors.mutedForeground}}>
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
                     +{preExistingCount - 5} more
                   </Text>
                 ) : null}
@@ -314,13 +319,18 @@ export default function HealthRecordsScreen() {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: 12,
-              }}>
-              <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground}}>
+              }}
+            >
+              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
                 Recent Health Checkups
               </Text>
               {checkups.length > 0 ? (
-                <TouchableOpacity onPress={() => navigation.navigate('Home' as any, {screen: 'HealthCheckupHistory'})}>
-                  <Text style={{fontSize: 13, color: colors.primary, fontWeight: '600'}}>
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate('Home' as any, { screen: 'HealthCheckupHistory' })
+                  }
+                >
+                  <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '600' }}>
                     View All
                   </Text>
                 </TouchableOpacity>
@@ -328,14 +338,11 @@ export default function HealthRecordsScreen() {
             </View>
 
             {checkups.length > 0 ? (
-              <View style={{gap: 10}}>
+              <View style={{ gap: 10 }}>
                 {checkups.map((checkup: any, index: number) => {
                   const triageLevel =
-                    checkup.response?.data?.triage_level ||
-                    checkup.triage_level ||
-                    '';
-                  const conditions =
-                    checkup.response?.data?.conditions || checkup.conditions || [];
+                    checkup.response?.data?.triage_level || checkup.triage_level || '';
+                  const conditions = checkup.response?.data?.conditions || checkup.conditions || [];
                   const topCondition = conditions[0];
                   const date = checkup.created_at || checkup.createdAt;
 
@@ -344,13 +351,15 @@ export default function HealthRecordsScreen() {
                       key={checkup._id || index}
                       activeOpacity={0.7}
                       accessibilityRole="button"
-                      accessibilityLabel={`Health checkup: ${topCondition?.common_name || topCondition?.name || 'Health Checkup'}, ${getTriageLabel(triageLevel)}`}
+                      accessibilityLabel={`Health checkup: ${
+                        topCondition?.common_name || topCondition?.name || 'Health Checkup'
+                      }, ${getTriageLabel(triageLevel)}`}
                       accessibilityHint="Double tap to view details"
                       onPress={() => {
                         if (checkup._id) {
                           navigation.navigate('Home' as any, {
                             screen: 'HealthCheckupDetail',
-                            params: {id: checkup._id},
+                            params: { id: checkup._id },
                           });
                         }
                       }}
@@ -363,7 +372,8 @@ export default function HealthRecordsScreen() {
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: 12,
-                      }}>
+                      }}
+                    >
                       <View
                         style={{
                           width: 40,
@@ -372,36 +382,47 @@ export default function HealthRecordsScreen() {
                           backgroundColor: `${getTriageColor(triageLevel)}15`,
                           alignItems: 'center',
                           justifyContent: 'center',
-                        }}>
+                        }}
+                      >
                         <Heart size={18} color={getTriageColor(triageLevel)} />
                       </View>
-                      <View style={{flex: 1}}>
+                      <View style={{ flex: 1 }}>
                         <Text
-                          style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}
-                          numberOfLines={1}>
+                          style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}
+                          numberOfLines={1}
+                        >
                           {topCondition?.common_name || topCondition?.name || 'Health Checkup'}
                         </Text>
-                        <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 3}}>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 8,
+                            marginTop: 3,
+                          }}
+                        >
                           <View
                             style={{
                               backgroundColor: `${getTriageColor(triageLevel)}20`,
                               paddingHorizontal: 8,
                               paddingVertical: 2,
                               borderRadius: 8,
-                            }}>
+                            }}
+                          >
                             <Text
                               style={{
                                 fontSize: 10,
                                 fontWeight: '700',
                                 color: getTriageColor(triageLevel),
-                              }}>
+                              }}
+                            >
                               {getTriageLabel(triageLevel)}
                             </Text>
                           </View>
                           {date ? (
-                            <View style={{flexDirection: 'row', alignItems: 'center', gap: 3}}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                               <Clock size={10} color={colors.mutedForeground} />
-                              <Text style={{fontSize: 11, color: colors.mutedForeground}}>
+                              <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
                                 {formatDate(date)}
                               </Text>
                             </View>
@@ -422,12 +443,13 @@ export default function HealthRecordsScreen() {
                   borderRadius: 16,
                   padding: 24,
                   alignItems: 'center',
-                }}>
+                }}
+              >
                 <FileText size={32} color={colors.mutedForeground} />
-                <Text style={{fontSize: 13, color: colors.mutedForeground, marginTop: 8}}>
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 8 }}>
                   No health checkups yet
                 </Text>
-                <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 2}}>
+                <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
                   Start a health checkup to get AI-powered insights
                 </Text>
               </View>
@@ -465,9 +487,10 @@ function SectionCard({
         borderColor: colors.border,
         borderRadius: 16,
         padding: 16,
-      }}>
-      <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <View
             style={{
               width: 32,
@@ -476,12 +499,11 @@ function SectionCard({
               backgroundColor: colors.muted,
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
+            }}
+          >
             {icon}
           </View>
-          <Text style={{fontSize: 15, fontWeight: '700', color: colors.foreground}}>
-            {title}
-          </Text>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.foreground }}>{title}</Text>
         </View>
         {onPress ? <ChevronRight size={16} color={colors.mutedForeground} /> : null}
       </View>
@@ -490,7 +512,7 @@ function SectionCard({
   );
 }
 
-function MetricBadge({label, value}: {label: string; value: string}) {
+function MetricBadge({ label, value }: { label: string; value: string }) {
   return (
     <View
       style={{
@@ -498,34 +520,40 @@ function MetricBadge({label, value}: {label: string; value: string}) {
         borderRadius: 10,
         paddingHorizontal: 10,
         paddingVertical: 6,
-      }}>
-      <Text style={{fontSize: 10, color: colors.mutedForeground, fontWeight: '600'}}>{label}</Text>
-      <Text style={{fontSize: 14, color: colors.foreground, fontWeight: '700'}}>{value}</Text>
+      }}
+    >
+      <Text style={{ fontSize: 10, color: colors.mutedForeground, fontWeight: '600' }}>
+        {label}
+      </Text>
+      <Text style={{ fontSize: 14, color: colors.foreground, fontWeight: '700' }}>{value}</Text>
     </View>
   );
 }
 
-function InfoRow({label, value, count}: {label: string; value: string; count: number}) {
+function InfoRow({ label, value, count }: { label: string; value: string; count: number }) {
   return (
-    <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <View
         style={{
           backgroundColor: `${colors.accent}20`,
           borderRadius: 6,
           paddingHorizontal: 6,
           paddingVertical: 2,
-        }}>
-        <Text style={{fontSize: 10, fontWeight: '700', color: colors.accent}}>{count}</Text>
+        }}
+      >
+        <Text style={{ fontSize: 10, fontWeight: '700', color: colors.accent }}>{count}</Text>
       </View>
-      <Text style={{fontSize: 12, color: colors.mutedForeground, fontWeight: '600'}}>{label}:</Text>
-      <Text style={{flex: 1, fontSize: 12, color: colors.foreground}} numberOfLines={1}>
+      <Text style={{ fontSize: 12, color: colors.mutedForeground, fontWeight: '600' }}>
+        {label}:
+      </Text>
+      <Text style={{ flex: 1, fontSize: 12, color: colors.foreground }} numberOfLines={1}>
         {value}
       </Text>
     </View>
   );
 }
 
-function EmptyState({text}: {text: string}) {
+function EmptyState({ text }: { text: string }) {
   return (
     <View
       style={{
@@ -534,8 +562,9 @@ function EmptyState({text}: {text: string}) {
         borderRadius: 12,
         padding: 12,
         alignItems: 'center',
-      }}>
-      <Text style={{fontSize: 12, color: colors.mutedForeground}}>{text}</Text>
+      }}
+    >
+      <Text style={{ fontSize: 12, color: colors.mutedForeground }}>{text}</Text>
     </View>
   );
 }

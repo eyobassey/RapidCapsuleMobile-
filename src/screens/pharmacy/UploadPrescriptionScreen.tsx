@@ -1,16 +1,8 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Image, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import {
   Camera,
   ImageIcon,
@@ -24,44 +16,44 @@ import {
   ShieldCheck,
 } from 'lucide-react-native';
 
-import {usePrescriptionUploadStore} from '../../store/prescriptionUpload';
-import {Header, Input, Button} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {isTerminalStatus} from '../../types/prescriptionUpload.types';
-import type {VerificationStatus} from '../../types/prescriptionUpload.types';
+import { usePrescriptionUploadStore } from '../../store/prescriptionUpload';
+import { Header, Input, Button, Text } from '../../components/ui';
+import { colors } from '../../theme/colors';
+import { isTerminalStatus } from '../../types/prescriptionUpload.types';
+import type { VerificationStatus } from '../../types/prescriptionUpload.types';
 
 // ── Verification pipeline steps ──
 
 const PIPELINE_STEPS = [
-  {key: 'upload', label: 'Uploaded', icon: Upload},
-  {key: 'ocr', label: 'OCR Processing', icon: FileSearch},
-  {key: 'ai', label: 'AI Analysis', icon: Brain},
-  {key: 'result', label: 'Verification Result', icon: ShieldCheck},
+  { key: 'upload', label: 'Uploaded', icon: Upload },
+  { key: 'ocr', label: 'OCR Processing', icon: FileSearch },
+  { key: 'ai', label: 'AI Analysis', icon: Brain },
+  { key: 'result', label: 'Verification Result', icon: ShieldCheck },
 ];
 
 function getStepState(
   status: VerificationStatus,
-  stepKey: string,
+  stepKey: string
 ): 'done' | 'active' | 'pending' | 'failed' {
   const statusMap: Record<string, Record<string, 'done' | 'active' | 'pending' | 'failed'>> = {
-    PENDING: {upload: 'done', ocr: 'pending', ai: 'pending', result: 'pending'},
-    TIER1_PROCESSING: {upload: 'done', ocr: 'active', ai: 'pending', result: 'pending'},
-    TIER1_PASSED: {upload: 'done', ocr: 'done', ai: 'pending', result: 'pending'},
-    TIER1_FAILED: {upload: 'done', ocr: 'failed', ai: 'pending', result: 'pending'},
-    TIER2_PROCESSING: {upload: 'done', ocr: 'done', ai: 'active', result: 'pending'},
-    TIER2_PASSED: {upload: 'done', ocr: 'done', ai: 'done', result: 'pending'},
-    TIER2_FAILED: {upload: 'done', ocr: 'done', ai: 'failed', result: 'pending'},
-    PHARMACIST_REVIEW: {upload: 'done', ocr: 'done', ai: 'done', result: 'active'},
-    CLARIFICATION_NEEDED: {upload: 'done', ocr: 'done', ai: 'done', result: 'active'},
-    CLARIFICATION_RECEIVED: {upload: 'done', ocr: 'done', ai: 'done', result: 'active'},
-    APPROVED: {upload: 'done', ocr: 'done', ai: 'done', result: 'done'},
-    REJECTED: {upload: 'done', ocr: 'done', ai: 'done', result: 'failed'},
-    EXPIRED: {upload: 'done', ocr: 'done', ai: 'done', result: 'failed'},
+    PENDING: { upload: 'done', ocr: 'pending', ai: 'pending', result: 'pending' },
+    TIER1_PROCESSING: { upload: 'done', ocr: 'active', ai: 'pending', result: 'pending' },
+    TIER1_PASSED: { upload: 'done', ocr: 'done', ai: 'pending', result: 'pending' },
+    TIER1_FAILED: { upload: 'done', ocr: 'failed', ai: 'pending', result: 'pending' },
+    TIER2_PROCESSING: { upload: 'done', ocr: 'done', ai: 'active', result: 'pending' },
+    TIER2_PASSED: { upload: 'done', ocr: 'done', ai: 'done', result: 'pending' },
+    TIER2_FAILED: { upload: 'done', ocr: 'done', ai: 'failed', result: 'pending' },
+    PHARMACIST_REVIEW: { upload: 'done', ocr: 'done', ai: 'done', result: 'active' },
+    CLARIFICATION_NEEDED: { upload: 'done', ocr: 'done', ai: 'done', result: 'active' },
+    CLARIFICATION_RECEIVED: { upload: 'done', ocr: 'done', ai: 'done', result: 'active' },
+    APPROVED: { upload: 'done', ocr: 'done', ai: 'done', result: 'done' },
+    REJECTED: { upload: 'done', ocr: 'done', ai: 'done', result: 'failed' },
+    EXPIRED: { upload: 'done', ocr: 'done', ai: 'done', result: 'failed' },
   };
   return statusMap[status]?.[stepKey] || 'pending';
 }
 
-function StepIcon({state}: {state: 'done' | 'active' | 'pending' | 'failed'}) {
+function StepIcon({ state }: { state: 'done' | 'active' | 'pending' | 'failed' }) {
   if (state === 'done') return <CheckCircle size={20} color={colors.success} />;
   if (state === 'active') return <Loader size={20} color={colors.primary} />;
   if (state === 'failed') return <XCircle size={20} color={colors.destructive} />;
@@ -70,8 +62,7 @@ function StepIcon({state}: {state: 'done' | 'active' | 'pending' | 'failed'}) {
 
 export default function UploadPrescriptionScreen() {
   const navigation = useNavigation<any>();
-  const {uploadPrescription, fetchVerification, isUploading} =
-    usePrescriptionUploadStore();
+  const { uploadPrescription, fetchVerification, isUploading } = usePrescriptionUploadStore();
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [doctorName, setDoctorName] = useState('');
@@ -82,23 +73,23 @@ export default function UploadPrescriptionScreen() {
   // ── Image Picker ──
   const pickFromCamera = () => {
     launchCamera(
-      {mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000},
-      response => {
+      { mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000 },
+      (response) => {
         if (response.assets?.[0]?.uri) {
           setImageUri(response.assets[0].uri);
         }
-      },
+      }
     );
   };
 
   const pickFromGallery = () => {
     launchImageLibrary(
-      {mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000},
-      response => {
+      { mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000 },
+      (response) => {
         if (response.assets?.[0]?.uri) {
           setImageUri(response.assets[0].uri);
         }
-      },
+      }
     );
   };
 
@@ -123,7 +114,7 @@ export default function UploadPrescriptionScreen() {
     } catch (err: any) {
       Alert.alert(
         'Upload Failed',
-        err?.response?.data?.message || err?.message || 'Could not upload prescription.',
+        err?.response?.data?.message || err?.message || 'Could not upload prescription.'
       );
     }
   };
@@ -178,7 +169,8 @@ export default function UploadPrescriptionScreen() {
         <ScrollView
           className="flex-1"
           contentContainerClassName="px-5 pt-6 pb-32"
-          showsVerticalScrollIndicator={false}>
+          showsVerticalScrollIndicator={false}
+        >
           <Text className="text-lg font-bold text-foreground text-center mb-2">
             Prescription Verification
           </Text>
@@ -203,11 +195,12 @@ export default function UploadPrescriptionScreen() {
                           state === 'done'
                             ? 'text-success'
                             : state === 'active'
-                              ? 'text-primary'
-                              : state === 'failed'
-                                ? 'text-destructive'
-                                : 'text-muted-foreground'
-                        }`}>
+                            ? 'text-primary'
+                            : state === 'failed'
+                            ? 'text-destructive'
+                            : 'text-muted-foreground'
+                        }`}
+                      >
                         {step.label}
                       </Text>
                     </View>
@@ -217,10 +210,10 @@ export default function UploadPrescriptionScreen() {
                         state === 'done'
                           ? colors.success
                           : state === 'active'
-                            ? colors.primary
-                            : state === 'failed'
-                              ? colors.destructive
-                              : colors.mutedForeground
+                          ? colors.primary
+                          : state === 'failed'
+                          ? colors.destructive
+                          : colors.mutedForeground
                       }
                     />
                   </View>
@@ -230,8 +223,7 @@ export default function UploadPrescriptionScreen() {
                         width: 2,
                         height: 24,
                         marginLeft: 9,
-                        backgroundColor:
-                          state === 'done' ? colors.success : colors.border,
+                        backgroundColor: state === 'done' ? colors.success : colors.border,
                       }}
                     />
                   )}
@@ -245,27 +237,29 @@ export default function UploadPrescriptionScreen() {
             <View
               className={`mt-6 rounded-2xl p-4 ${
                 isApproved ? 'bg-success/10' : 'bg-destructive/10'
-              }`}>
+              }`}
+            >
               <Text
                 className={`text-sm font-bold text-center ${
                   isApproved ? 'text-success' : 'text-destructive'
-                }`}>
+                }`}
+              >
                 {isApproved
                   ? 'Prescription Approved!'
                   : verificationStatus === 'CLARIFICATION_NEEDED'
-                    ? 'Clarification Needed'
-                    : verificationStatus === 'PHARMACIST_REVIEW'
-                      ? 'Under Pharmacist Review'
-                      : 'Verification Failed'}
+                  ? 'Clarification Needed'
+                  : verificationStatus === 'PHARMACIST_REVIEW'
+                  ? 'Under Pharmacist Review'
+                  : 'Verification Failed'}
               </Text>
               <Text className="text-xs text-muted-foreground text-center mt-1">
                 {isApproved
                   ? 'Your prescription has been verified and is ready to use.'
                   : verificationStatus === 'CLARIFICATION_NEEDED'
-                    ? 'Additional information is needed. Check the details page.'
-                    : verificationStatus === 'PHARMACIST_REVIEW'
-                      ? 'A pharmacist is reviewing your prescription.'
-                      : 'Please check the details or retry.'}
+                  ? 'Additional information is needed. Check the details page.'
+                  : verificationStatus === 'PHARMACIST_REVIEW'
+                  ? 'A pharmacist is reviewing your prescription.'
+                  : 'Please check the details or retry.'}
               </Text>
             </View>
           )}
@@ -276,18 +270,15 @@ export default function UploadPrescriptionScreen() {
           <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
             <View className="flex-row gap-3">
               <View className="flex-1">
-                <Button
-                  variant="outline"
-                  onPress={() => navigation.navigate('MyUploads')}>
+                <Button variant="outline" onPress={() => navigation.navigate('MyUploads')}>
                   My Prescriptions
                 </Button>
               </View>
               <View className="flex-1">
                 <Button
                   variant="primary"
-                  onPress={() =>
-                    navigation.replace('UploadDetail', {uploadId})
-                  }>
+                  onPress={() => navigation.replace('UploadDetail', { uploadId })}
+                >
                   View Details
                 </Button>
               </View>
@@ -325,10 +316,10 @@ export default function UploadPrescriptionScreen() {
         className="flex-1"
         contentContainerClassName="px-5 pt-4 pb-32"
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+      >
         <Text className="text-sm text-muted-foreground mb-4">
-          Take a photo or select an image of your prescription for AI-powered
-          verification.
+          Take a photo or select an image of your prescription for AI-powered verification.
         </Text>
 
         {/* Camera / Gallery Buttons */}
@@ -339,14 +330,11 @@ export default function UploadPrescriptionScreen() {
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Take a photo of prescription"
-              className="flex-1 bg-card border border-border rounded-2xl p-6 items-center">
+              className="flex-1 bg-card border border-border rounded-2xl p-6 items-center"
+            >
               <Camera size={32} color={colors.primary} />
-              <Text className="text-sm font-semibold text-foreground mt-3">
-                Camera
-              </Text>
-              <Text className="text-xs text-muted-foreground mt-0.5">
-                Take a photo
-              </Text>
+              <Text className="text-sm font-semibold text-foreground mt-3">Camera</Text>
+              <Text className="text-xs text-muted-foreground mt-0.5">Take a photo</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -354,14 +342,11 @@ export default function UploadPrescriptionScreen() {
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Choose image from gallery"
-              className="flex-1 bg-card border border-border rounded-2xl p-6 items-center">
+              className="flex-1 bg-card border border-border rounded-2xl p-6 items-center"
+            >
               <ImageIcon size={32} color={colors.primary} />
-              <Text className="text-sm font-semibold text-foreground mt-3">
-                Gallery
-              </Text>
-              <Text className="text-xs text-muted-foreground mt-0.5">
-                Choose image
-              </Text>
+              <Text className="text-sm font-semibold text-foreground mt-3">Gallery</Text>
+              <Text className="text-xs text-muted-foreground mt-0.5">Choose image</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -370,7 +355,7 @@ export default function UploadPrescriptionScreen() {
         {imageUri && (
           <View className="mb-4">
             <Image
-              source={{uri: imageUri}}
+              source={{ uri: imageUri }}
               className="w-full h-64 rounded-2xl"
               resizeMode="cover"
             />
@@ -378,10 +363,9 @@ export default function UploadPrescriptionScreen() {
               onPress={() => setImageUri(null)}
               className="mt-2 self-center"
               accessibilityRole="button"
-              accessibilityLabel="Change prescription image">
-              <Text className="text-sm text-primary font-semibold">
-                Change Image
-              </Text>
+              accessibilityLabel="Change prescription image"
+            >
+              <Text className="text-sm text-primary font-semibold">Change Image</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -404,10 +388,7 @@ export default function UploadPrescriptionScreen() {
       {/* Upload Button */}
       {imageUri && (
         <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
-          <Button
-            variant="primary"
-            icon={<Upload size={18} color="#fff" />}
-            onPress={handleUpload}>
+          <Button variant="primary" icon={<Upload size={18} color="#fff" />} onPress={handleUpload}>
             Upload Prescription
           </Button>
         </View>

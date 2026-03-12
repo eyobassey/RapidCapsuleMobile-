@@ -1,13 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  ActivityIndicator,
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Modal, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
@@ -33,7 +25,7 @@ import {
   usePharmacyWalletBalanceQuery,
 } from '../../hooks/queries';
 import { usePharmacyStore } from '../../store/pharmacy';
-import { Header, Input, Button, FormInput } from '../../components/ui';
+import { Header, Input, Button, FormInput, Text } from '../../components/ui';
 import { checkoutAddressSchema, type CheckoutAddressFormData } from '../../utils/validation';
 import { colors } from '../../theme/colors';
 import { useCurrency } from '../../hooks/useCurrency';

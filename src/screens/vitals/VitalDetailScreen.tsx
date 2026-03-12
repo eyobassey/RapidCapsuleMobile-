@@ -1,14 +1,39 @@
-import React, {useCallback, useMemo, useState} from 'react';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
-import {
+  Activity,
+  Brain,
+  Clock,
+  Droplets,
+  Flame,
+  Footprints,
+  GlassWater,
+  Heart,
+  HeartPulse,
+  Info,
+  Moon,
+  Percent,
+  Plus,
+  Scale,
+  Thermometer,
+  TrendingUp,
+  Wind,
+  Zap,
+} from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { RefreshControl, ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Line, Path, Circle as SvgCircle, Text as SvgText } from 'react-native-svg';
+
+import { EmptyState, Header, Skeleton, StatusBadge, TabBar } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useVitalChartQuery, useVitalsQuery } from '../../hooks/queries';
+import type { HomeStackParamList } from '../../navigation/stacks/HomeStack';
+import { colors } from '../../theme/colors';
+import type { VitalStatus, VitalTypeConfig } from '../../types/vital.types';
+import { VITAL_TYPES } from '../../utils/constants';
+import { formatDate, formatDateTime, formatVitalValue, timeAgo } from '../../utils/formatters';
+
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Heart,
   HeartPulse,
   Thermometer,
@@ -23,34 +48,16 @@ import {
   Percent,
   GlassWater,
   Zap,
-  TrendingUp,
-  Clock,
-  Info,
-  Plus,
-} from 'lucide-react-native';
-import Svg, {Path, Circle as SvgCircle, Line, Text as SvgText} from 'react-native-svg';
-
-import {useVitalsQuery, useVitalChartQuery} from '../../hooks/queries';
-import {Header, TabBar, StatusBadge, Skeleton, EmptyState} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {VITAL_TYPES} from '../../utils/constants';
-import {formatVitalValue, formatDate, formatDateTime, timeAgo} from '../../utils/formatters';
-import type {HomeStackParamList} from '../../navigation/stacks/HomeStack';
-import type {VitalStatus, VitalTypeConfig} from '../../types/vital.types';
-
-const ICON_MAP: Record<string, React.ComponentType<any>> = {
-  Heart, HeartPulse, Thermometer, Droplets, Wind, Activity,
-  Scale, Footprints, Moon, Flame, Brain, Percent, GlassWater, Zap,
 };
 
 const PERIOD_TABS = [
-  {label: '7 Days', value: '7d'},
-  {label: '30 Days', value: '30d'},
-  {label: '90 Days', value: '90d'},
+  { label: '7 Days', value: '7d' },
+  { label: '30 Days', value: '30d' },
+  { label: '90 Days', value: '90d' },
 ];
 
 function getVitalStatus(value: number, config: VitalTypeConfig): VitalStatus {
-  const {min, max} = config.normalRange;
+  const { min, max } = config.normalRange;
   if (value < min * 0.8 || value > max * 1.3) return 'Critical';
   if (value < min) return 'Low';
   if (value > max) return 'High';
@@ -63,7 +70,7 @@ function SimpleLineChart({
   config,
   width,
 }: {
-  data: {value: number; date: string}[];
+  data: { value: number; date: string }[];
   config: VitalTypeConfig;
   width: number;
 }) {
@@ -71,9 +78,7 @@ function SimpleLineChart({
     return (
       <View className="h-48 items-center justify-center bg-muted/30 rounded-2xl">
         <TrendingUp size={32} color={colors.mutedForeground} />
-        <Text className="text-sm text-muted-foreground mt-2">
-          No chart data available
-        </Text>
+        <Text className="text-sm text-muted-foreground mt-2">No chart data available</Text>
       </View>
     );
   }
@@ -84,7 +89,7 @@ function SimpleLineChart({
   const chartWidth = width - paddingX * 2;
   const chartInnerHeight = chartHeight - paddingY * 2;
 
-  const values = data.map(d => d.value);
+  const values = data.map((d) => d.value);
   const minVal = Math.min(...values, config.normalRange.min);
   const maxVal = Math.max(...values, config.normalRange.max);
   const range = maxVal - minVal || 1;
@@ -102,51 +107,92 @@ function SimpleLineChart({
   });
 
   // Normal range band
-  const normalMinY = paddingY + chartInnerHeight - ((config.normalRange.min - minVal) / range) * chartInnerHeight;
-  const normalMaxY = paddingY + chartInnerHeight - ((config.normalRange.max - minVal) / range) * chartInnerHeight;
+  const normalMinY =
+    paddingY + chartInnerHeight - ((config.normalRange.min - minVal) / range) * chartInnerHeight;
+  const normalMaxY =
+    paddingY + chartInnerHeight - ((config.normalRange.max - minVal) / range) * chartInnerHeight;
 
   return (
     <View className="bg-card border border-border rounded-2xl p-3 overflow-hidden">
       <Svg width={width - 32} height={chartHeight}>
         {/* Normal range band */}
         <Path
-          d={`M ${paddingX} ${normalMaxY} L ${paddingX + chartWidth} ${normalMaxY} L ${paddingX + chartWidth} ${normalMinY} L ${paddingX} ${normalMinY} Z`}
+          d={`M ${paddingX} ${normalMaxY} L ${paddingX + chartWidth} ${normalMaxY} L ${
+            paddingX + chartWidth
+          } ${normalMinY} L ${paddingX} ${normalMinY} Z`}
           fill={`${colors.success}15`}
         />
         {/* Normal range lines */}
         <Line
-          x1={paddingX} y1={normalMaxY}
-          x2={paddingX + chartWidth} y2={normalMaxY}
+          x1={paddingX}
+          y1={normalMaxY}
+          x2={paddingX + chartWidth}
+          y2={normalMaxY}
           stroke={`${colors.success}40`}
           strokeDasharray="4,4"
         />
         <Line
-          x1={paddingX} y1={normalMinY}
-          x2={paddingX + chartWidth} y2={normalMinY}
+          x1={paddingX}
+          y1={normalMinY}
+          x2={paddingX + chartWidth}
+          y2={normalMinY}
           stroke={`${colors.success}40`}
           strokeDasharray="4,4"
         />
 
         {/* Y-axis labels */}
-        <SvgText x={paddingX - 6} y={normalMaxY + 4} fontSize={9} fill={colors.mutedForeground} textAnchor="end">
+        <SvgText
+          x={paddingX - 6}
+          y={normalMaxY + 4}
+          fontSize={9}
+          fill={colors.mutedForeground}
+          textAnchor="end"
+        >
           {config.normalRange.max}
         </SvgText>
-        <SvgText x={paddingX - 6} y={normalMinY + 4} fontSize={9} fill={colors.mutedForeground} textAnchor="end">
+        <SvgText
+          x={paddingX - 6}
+          y={normalMinY + 4}
+          fontSize={9}
+          fill={colors.mutedForeground}
+          textAnchor="end"
+        >
           {config.normalRange.min}
         </SvgText>
 
         {/* Data line */}
-        <Path d={pathD} fill="none" stroke={config.color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        <Path
+          d={pathD}
+          fill="none"
+          stroke={config.color}
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
 
         {/* Data points */}
         {points.map((p, i) => (
-          <SvgCircle key={i} cx={p.x} cy={p.y} r={4} fill={config.color} stroke={colors.card} strokeWidth={2} />
+          <SvgCircle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={4}
+            fill={config.color}
+            stroke={colors.card}
+            strokeWidth={2}
+          />
         ))}
 
         {/* X-axis labels (show first, middle, last) */}
         {data.length > 0 && (
           <>
-            <SvgText x={paddingX} y={chartHeight - 6} fontSize={9} fill={colors.mutedForeground} textAnchor="start">
+            <SvgText
+              x={paddingX}
+              y={chartHeight - 6}
+              fontSize={9}
+              fill={colors.mutedForeground}
+              textAnchor="start"
+            >
               {formatDate(data[0].date).split(',')[0]}
             </SvgText>
             {data.length > 2 && (
@@ -155,11 +201,18 @@ function SimpleLineChart({
                 y={chartHeight - 6}
                 fontSize={9}
                 fill={colors.mutedForeground}
-                textAnchor="middle">
+                textAnchor="middle"
+              >
                 {formatDate(data[Math.floor(data.length / 2)].date).split(',')[0]}
               </SvgText>
             )}
-            <SvgText x={paddingX + chartWidth} y={chartHeight - 6} fontSize={9} fill={colors.mutedForeground} textAnchor="end">
+            <SvgText
+              x={paddingX + chartWidth}
+              y={chartHeight - 6}
+              fontSize={9}
+              fill={colors.mutedForeground}
+              textAnchor="end"
+            >
               {formatDate(data[data.length - 1].date).split(',')[0]}
             </SvgText>
           </>
@@ -192,12 +245,9 @@ export default function VitalDetailScreen() {
 
   const isLoading = vitalsLoading || chartLoading;
 
-  const config = useMemo(
-    () => VITAL_TYPES.find(v => v.key === vitalType),
-    [vitalType],
-  );
+  const config = useMemo(() => VITAL_TYPES.find((v) => v.key === vitalType), [vitalType]);
 
-  const IconComponent = config ? (ICON_MAP[config.icon] || Activity) : Activity;
+  const IconComponent = config ? ICON_MAP[config.icon] || Activity : Activity;
 
   const onRefresh = useCallback(async () => {
     await Promise.allSettled([refetchVitals(), refetchChart()]);
@@ -205,15 +255,13 @@ export default function VitalDetailScreen() {
 
   // Extract history entries for this vital from the merged vitals object
   const history = useMemo(() => {
-    const entries: {value: string; unit: string; date: string; status: VitalStatus}[] = [];
+    const entries: { value: string; unit: string; date: string; status: VitalStatus }[] = [];
     const readings = vitalsData[vitalType];
 
     if (Array.isArray(readings)) {
       for (const r of readings) {
         const numVal = parseFloat(
-          vitalType === 'blood_pressure'
-            ? String(r.value).split('/')[0]
-            : String(r.value),
+          vitalType === 'blood_pressure' ? String(r.value).split('/')[0] : String(r.value)
         );
         entries.push({
           value: String(r.value),
@@ -227,7 +275,7 @@ export default function VitalDetailScreen() {
       const numVal = parseFloat(
         vitalType === 'blood_pressure'
           ? String(readings.value).split('/')[0]
-          : String(readings.value),
+          : String(readings.value)
       );
       entries.push({
         value: String(readings.value),
@@ -254,7 +302,7 @@ export default function VitalDetailScreen() {
 
   // Chart data points — parse all, then filter by period
   const chartPoints = useMemo(() => {
-    let allPoints: {value: number; date: string}[] = [];
+    let allPoints: { value: number; date: string }[] = [];
 
     // Backend returns: [{ date: "2025-03-01", data: [{value, unit, updatedAt}] }, ...]
     if (chartData && Array.isArray(chartData) && chartData.length > 0) {
@@ -265,32 +313,31 @@ export default function VitalDetailScreen() {
           .map((d: any) => {
             const reading = d.data[0];
             const rawValue = String(reading.value || '');
-            const numValue = parseFloat(
-              vitalType === 'blood_pressure'
-                ? rawValue.split('/')[0]
-                : rawValue,
-            ) || 0;
-            return {value: numValue, date: d.date};
+            const numValue =
+              parseFloat(vitalType === 'blood_pressure' ? rawValue.split('/')[0] : rawValue) || 0;
+            return { value: numValue, date: d.date };
           });
       } else {
         // Flat array format: [{ value, date }]
         allPoints = chartData.map((d: any) => ({
-          value: parseFloat(
-            vitalType === 'blood_pressure'
-              ? String(d.value || '').split('/')[0]
-              : String(d.value || ''),
-          ) || 0,
+          value:
+            parseFloat(
+              vitalType === 'blood_pressure'
+                ? String(d.value || '').split('/')[0]
+                : String(d.value || '')
+            ) || 0,
           date: d.date || d.createdAt || d.updatedAt,
         }));
       }
     } else if (chartData?.data && Array.isArray(chartData.data)) {
       // Object with .data array
       allPoints = chartData.data.map((d: any) => ({
-        value: parseFloat(
-          vitalType === 'blood_pressure'
-            ? String(d.value || '').split('/')[0]
-            : String(d.value || ''),
-        ) || 0,
+        value:
+          parseFloat(
+            vitalType === 'blood_pressure'
+              ? String(d.value || '').split('/')[0]
+              : String(d.value || '')
+          ) || 0,
         date: d.date || d.createdAt || d.updatedAt,
       }));
     } else {
@@ -298,24 +345,20 @@ export default function VitalDetailScreen() {
       allPoints = history
         .slice()
         .reverse()
-        .map(h => ({
-          value: parseFloat(
-            vitalType === 'blood_pressure'
-              ? h.value.split('/')[0]
-              : h.value,
-          ) || 0,
+        .map((h) => ({
+          value: parseFloat(vitalType === 'blood_pressure' ? h.value.split('/')[0] : h.value) || 0,
           date: h.date,
         }));
     }
 
     // Filter by selected period
-    return allPoints.filter(p => new Date(p.date) >= periodCutoff);
+    return allPoints.filter((p) => new Date(p.date) >= periodCutoff);
   }, [chartData, history, vitalType, periodCutoff]);
 
   // History filtered by period (for the Reading History list)
   const filteredHistory = useMemo(
-    () => history.filter(h => new Date(h.date) >= periodCutoff),
-    [history, periodCutoff],
+    () => history.filter((h) => new Date(h.date) >= periodCutoff),
+    [history, periodCutoff]
   );
 
   if (!config) {
@@ -346,12 +389,21 @@ export default function VitalDetailScreen() {
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
-        }>
+        }
+      >
         {/* Current Value Card */}
         <View className="bg-card border border-border rounded-2xl p-5 mb-4">
           <View className="flex-row items-center gap-4">
             <View
-              style={{backgroundColor: `${config.color}20`, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center'}}>
+              style={{
+                backgroundColor: `${config.color}20`,
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <IconComponent size={28} color={config.color} />
             </View>
             <View className="flex-1">
@@ -364,18 +416,14 @@ export default function VitalDetailScreen() {
                     <Text className="text-3xl font-bold text-foreground">
                       {formatVitalValue(latest.value, config.key)}
                     </Text>
-                    <Text className="text-sm text-muted-foreground">
-                      {config.unit}
-                    </Text>
+                    <Text className="text-sm text-muted-foreground">{config.unit}</Text>
                   </View>
                   <Text className="text-xs text-muted-foreground mt-1">
                     Last updated {timeAgo(latest.date)}
                   </Text>
                 </>
               ) : (
-                <Text className="text-lg text-muted-foreground">
-                  No readings yet
-                </Text>
+                <Text className="text-lg text-muted-foreground">No readings yet</Text>
               )}
             </View>
             {latest && <StatusBadge status={latest.status} size="md" />}
@@ -388,9 +436,7 @@ export default function VitalDetailScreen() {
         </View>
 
         {/* Chart Area */}
-        <View
-          className="mb-6"
-          onLayout={e => setChartWidth(e.nativeEvent.layout.width)}>
+        <View className="mb-6" onLayout={(e) => setChartWidth(e.nativeEvent.layout.width)}>
           {isLoading && chartPoints.length === 0 ? (
             <View className="bg-card border border-border rounded-2xl p-3">
               <Skeleton height={180} borderRadius={16} />
@@ -406,9 +452,7 @@ export default function VitalDetailScreen() {
             <Info size={16} color={colors.success} />
           </View>
           <View className="flex-1">
-            <Text className="text-xs font-semibold text-foreground">
-              Normal Range
-            </Text>
+            <Text className="text-xs font-semibold text-foreground">Normal Range</Text>
             <Text className="text-xs text-muted-foreground">
               {config.normalRange.min} - {config.normalRange.max} {config.unit}
             </Text>
@@ -416,22 +460,19 @@ export default function VitalDetailScreen() {
         </View>
 
         {/* History */}
-        <Text className="text-sm font-bold text-foreground mb-3 px-1">
-          Reading History
-        </Text>
+        <Text className="text-sm font-bold text-foreground mb-3 px-1">Reading History</Text>
 
         {filteredHistory.length === 0 ? (
           <View className="bg-card border border-border rounded-2xl p-8 items-center">
             <Clock size={32} color={colors.mutedForeground} />
-            <Text className="text-sm text-muted-foreground mt-2">
-              No readings in this period
-            </Text>
+            <Text className="text-sm text-muted-foreground mt-2">No readings in this period</Text>
           </View>
         ) : (
           filteredHistory.map((entry, index) => (
             <View
               key={`${entry.date}-${index}`}
-              className="bg-card border border-border rounded-2xl p-4 mb-2">
+              className="bg-card border border-border rounded-2xl p-4 mb-2"
+            >
               <View className="flex-row items-center justify-between">
                 <View className="flex-1">
                   <Text className="text-xs text-muted-foreground mb-0.5">
@@ -459,12 +500,11 @@ export default function VitalDetailScreen() {
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={`Log ${config?.name || 'vital'} reading`}
-          onPress={() => navigation.navigate('LogVitals', {vitalType})}
-          className="bg-primary rounded-2xl h-14 flex-row items-center justify-center shadow-lg">
+          onPress={() => navigation.navigate('LogVitals', { vitalType })}
+          className="bg-primary rounded-2xl h-14 flex-row items-center justify-center shadow-lg"
+        >
           <Plus size={20} color={colors.white} />
-          <Text className="text-base font-bold text-white ml-2">
-            Log Reading
-          </Text>
+          <Text className="text-base font-bold text-white ml-2">Log Reading</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

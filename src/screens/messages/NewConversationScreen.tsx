@@ -1,13 +1,14 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text, TouchableOpacity, ActivityIndicator} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {Users, Search as SearchIcon} from 'lucide-react-native';
-import {Header, Avatar, SearchInput} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {messagingService} from '../../services/messaging.service';
-import type {UserSnippet} from '../../types/messaging.types';
+import { useNavigation } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
+import { Search as SearchIcon, Users } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Avatar, Header, SearchInput } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { messagingService } from '../../services/messaging.service';
+import { colors } from '../../theme/colors';
+import type { UserSnippet } from '../../types/messaging.types';
 
 export default function NewConversationScreen() {
   const navigation = useNavigation<any>();
@@ -71,7 +72,7 @@ export default function NewConversationScreen() {
   const displayList = search.length >= 2 ? searchResults : contacts;
   const isSearchMode = search.length >= 2;
 
-  const renderUser = ({item}: {item: UserSnippet}) => {
+  const renderUser = ({ item }: { item: UserSnippet }) => {
     const isSpec = item.user_type === 'Specialist';
     const name = isSpec
       ? `Dr. ${item.profile?.first_name} ${item.profile?.last_name || ''}`.trim()
@@ -89,18 +90,19 @@ export default function NewConversationScreen() {
           gap: 12,
           paddingHorizontal: 16,
           paddingVertical: 12,
-        }}>
+        }}
+      >
         <Avatar
           uri={item.profile?.profile_photo}
           firstName={item.profile?.first_name || ''}
           lastName={item.profile?.last_name || ''}
           size="md"
         />
-        <View style={{flex: 1}}>
-          <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
             {name || 'User'}
           </Text>
-          <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 1}}>
+          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 1 }}>
             {item.specialty || item.user_type || item.email}
           </Text>
         </View>
@@ -109,10 +111,10 @@ export default function NewConversationScreen() {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="New Conversation" onBack={() => navigation.goBack()} />
 
-      <View style={{paddingHorizontal: 16, paddingBottom: 8}}>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
         <SearchInput
           value={search}
           onChangeText={setSearch}
@@ -121,24 +123,32 @@ export default function NewConversationScreen() {
       </View>
 
       {/* Section label */}
-      <View style={{paddingHorizontal: 16, paddingVertical: 8}}>
-        <Text style={{fontSize: 12, fontWeight: '600', color: colors.mutedForeground, textTransform: 'uppercase', letterSpacing: 0.5}}>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: '600',
+            color: colors.mutedForeground,
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
+          }}
+        >
           {isSearchMode ? 'Search Results' : 'Your Contacts'}
         </Text>
       </View>
 
       {loading || searching ? (
-        <View style={{alignItems: 'center', paddingTop: 40}}>
+        <View style={{ alignItems: 'center', paddingTop: 40 }}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <FlashList
           data={displayList}
-          keyExtractor={item => item._id}
+          keyExtractor={(item) => item._id}
           renderItem={renderUser}
           estimatedItemSize={64}
           ListEmptyComponent={
-            <View style={{alignItems: 'center', paddingTop: 60, paddingHorizontal: 40}}>
+            <View style={{ alignItems: 'center', paddingTop: 60, paddingHorizontal: 40 }}>
               <View
                 style={{
                   width: 56,
@@ -148,17 +158,25 @@ export default function NewConversationScreen() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 12,
-                }}>
+                }}
+              >
                 {isSearchMode ? (
                   <SearchIcon size={24} color={colors.mutedForeground} />
                 ) : (
                   <Users size={24} color={colors.mutedForeground} />
                 )}
               </View>
-              <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground, marginBottom: 4}}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: colors.foreground,
+                  marginBottom: 4,
+                }}
+              >
                 {isSearchMode ? 'No users found' : 'No contacts yet'}
               </Text>
-              <Text style={{fontSize: 12, color: colors.mutedForeground, textAlign: 'center'}}>
+              <Text style={{ fontSize: 12, color: colors.mutedForeground, textAlign: 'center' }}>
                 {isSearchMode
                   ? 'Try a different search term'
                   : 'Book an appointment to connect with specialists'}
@@ -166,7 +184,7 @@ export default function NewConversationScreen() {
             </View>
           }
           ItemSeparatorComponent={() => (
-            <View style={{height: 1, backgroundColor: colors.border, marginLeft: 76}} />
+            <View style={{ height: 1, backgroundColor: colors.border, marginLeft: 76 }} />
           )}
         />
       )}
@@ -182,7 +200,8 @@ export default function NewConversationScreen() {
             backgroundColor: 'rgba(0,0,0,0.3)',
             alignItems: 'center',
             justifyContent: 'center',
-          }}>
+          }}
+        >
           <ActivityIndicator size="large" color={colors.white} />
         </View>
       )}

@@ -1,41 +1,41 @@
-import React, {useState, useEffect, useMemo} from 'react';
-import {View, Text, Alert} from 'react-native';
-import {Input} from '../../components/ui';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Alert } from 'react-native';
+import { Input, Text } from '../../components/ui';
 import SectionScreenLayout from '../../components/onboarding/SectionScreenLayout';
 import SelectPicker from '../../components/onboarding/SelectPicker';
-import {colors} from '../../theme/colors';
-import {useAuthStore} from '../../store/auth';
-import {useOnboardingStore} from '../../store/onboarding';
-import {usersService} from '../../services/users.service';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
+import { colors } from '../../theme/colors';
+import { useAuthStore } from '../../store/auth';
+import { useOnboardingStore } from '../../store/onboarding';
+import { usersService } from '../../services/users.service';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { OnboardingStackParamList } from '../../navigation/OnboardingStack';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'VitalsMetrics'>;
 
 const BLOOD_TYPE_OPTIONS = [
-  {label: 'A+', value: 'A+'},
-  {label: 'A-', value: 'A-'},
-  {label: 'B+', value: 'B+'},
-  {label: 'B-', value: 'B-'},
-  {label: 'AB+', value: 'AB+'},
-  {label: 'AB-', value: 'AB-'},
-  {label: 'O+', value: 'O+'},
-  {label: 'O-', value: 'O-'},
+  { label: 'A+', value: 'A+' },
+  { label: 'A-', value: 'A-' },
+  { label: 'B+', value: 'B+' },
+  { label: 'B-', value: 'B-' },
+  { label: 'AB+', value: 'AB+' },
+  { label: 'AB-', value: 'AB-' },
+  { label: 'O+', value: 'O+' },
+  { label: 'O-', value: 'O-' },
 ];
 
 const GENOTYPE_OPTIONS = [
-  {label: 'AA', value: 'AA'},
-  {label: 'AS', value: 'AS'},
-  {label: 'SS', value: 'SS'},
-  {label: 'AC', value: 'AC'},
-  {label: 'SC', value: 'SC'},
-  {label: 'CC', value: 'CC'},
+  { label: 'AA', value: 'AA' },
+  { label: 'AS', value: 'AS' },
+  { label: 'SS', value: 'SS' },
+  { label: 'AC', value: 'AC' },
+  { label: 'SC', value: 'SC' },
+  { label: 'CC', value: 'CC' },
 ];
 
-export default function VitalsMetricsScreen({navigation}: Props) {
-  const user = useAuthStore(s => s.user);
-  const fetchUser = useAuthStore(s => s.fetchUser);
-  const clearDraft = useOnboardingStore(s => s.clearDraft);
+export default function VitalsMetricsScreen({ navigation }: Props) {
+  const user = useAuthStore((s) => s.user);
+  const fetchUser = useAuthStore((s) => s.fetchUser);
+  const clearDraft = useOnboardingStore((s) => s.clearDraft);
 
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
@@ -68,10 +68,10 @@ export default function VitalsMetricsScreen({navigation}: Props) {
   const bmiCategory = useMemo(() => {
     if (!bmi) return null;
     const val = parseFloat(bmi);
-    if (val < 18.5) return {label: 'Underweight', color: colors.secondary};
-    if (val < 25) return {label: 'Normal', color: colors.success};
-    if (val < 30) return {label: 'Overweight', color: colors.secondary};
-    return {label: 'Obese', color: colors.destructive};
+    if (val < 18.5) return { label: 'Underweight', color: colors.secondary };
+    if (val < 25) return { label: 'Normal', color: colors.success };
+    if (val < 30) return { label: 'Overweight', color: colors.secondary };
+    return { label: 'Obese', color: colors.destructive };
   }, [bmi]);
 
   const hasSomething = height.trim() || weight.trim() || bloodType || genotype;
@@ -81,8 +81,8 @@ export default function VitalsMetricsScreen({navigation}: Props) {
     try {
       await usersService.updateProfile({
         profile: {
-          height: height.trim() ? {value: parseFloat(height), unit: 'cm'} : undefined,
-          weight: weight.trim() ? {value: parseFloat(weight), unit: 'kg'} : undefined,
+          height: height.trim() ? { value: parseFloat(height), unit: 'cm' } : undefined,
+          weight: weight.trim() ? { value: parseFloat(weight), unit: 'kg' } : undefined,
           blood_type: bloodType || undefined,
           genotype: genotype || undefined,
         },
@@ -104,10 +104,11 @@ export default function VitalsMetricsScreen({navigation}: Props) {
       onBack={() => navigation.goBack()}
       onSave={handleSave}
       saveLabel={hasSomething ? 'Save & Continue' : 'Skip for Now'}
-      loading={loading}>
-      <View style={{gap: 16}}>
-        <View style={{flexDirection: 'row', gap: 12}}>
-          <View style={{flex: 1}}>
+      loading={loading}
+    >
+      <View style={{ gap: 16 }}>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flex: 1 }}>
             <Input
               label="Height (cm)"
               placeholder="170"
@@ -116,7 +117,7 @@ export default function VitalsMetricsScreen({navigation}: Props) {
               keyboardType="decimal-pad"
             />
           </View>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <Input
               label="Weight (kg)"
               placeholder="70"
@@ -141,12 +142,15 @@ export default function VitalsMetricsScreen({navigation}: Props) {
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
-            }}>
+            }}
+          >
             <View>
-              <Text style={{fontSize: 11, color: colors.mutedForeground, fontWeight: '600'}}>
+              <Text style={{ fontSize: 11, color: colors.mutedForeground, fontWeight: '600' }}>
                 BMI (Body Mass Index)
               </Text>
-              <Text style={{fontSize: 24, fontWeight: '700', color: colors.foreground, marginTop: 2}}>
+              <Text
+                style={{ fontSize: 24, fontWeight: '700', color: colors.foreground, marginTop: 2 }}
+              >
                 {bmi}
               </Text>
             </View>
@@ -157,8 +161,9 @@ export default function VitalsMetricsScreen({navigation}: Props) {
                   paddingHorizontal: 12,
                   paddingVertical: 6,
                   borderRadius: 20,
-                }}>
-                <Text style={{fontSize: 12, fontWeight: '700', color: bmiCategory.color}}>
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '700', color: bmiCategory.color }}>
                   {bmiCategory.label}
                 </Text>
               </View>
@@ -166,8 +171,8 @@ export default function VitalsMetricsScreen({navigation}: Props) {
           </View>
         ) : null}
 
-        <View style={{flexDirection: 'row', gap: 12}}>
-          <View style={{flex: 1}}>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flex: 1 }}>
             <SelectPicker
               label="Blood Type"
               placeholder="Select"
@@ -176,7 +181,7 @@ export default function VitalsMetricsScreen({navigation}: Props) {
               onChange={setBloodType}
             />
           </View>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <SelectPicker
               label="Genotype"
               placeholder="Select"

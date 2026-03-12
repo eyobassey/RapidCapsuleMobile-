@@ -1,40 +1,35 @@
-import React, {useMemo} from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {
+  Activity,
+  AlertTriangle,
+  Brain,
+  CheckCircle,
+  Droplets,
+  Flame,
+  Footprints,
+  GlassWater,
   Heart,
   HeartPulse,
-  Thermometer,
-  Droplets,
-  Wind,
-  Activity,
-  Scale,
-  Footprints,
   Moon,
-  Flame,
-  Brain,
   Percent,
-  GlassWater,
-  Zap,
   Plus,
+  Scale,
+  Thermometer,
   TrendingUp,
-  AlertTriangle,
-  CheckCircle,
+  Wind,
+  Zap,
 } from 'lucide-react-native';
+import React, { useMemo } from 'react';
+import { RefreshControl, ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {useVitalsQuery, useRecentVitalsQuery} from '../../hooks/queries';
-import {Header, StatusBadge, Skeleton, EmptyState} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {VITAL_TYPES} from '../../utils/constants';
-import {formatVitalValue, timeAgo} from '../../utils/formatters';
-import type {VitalTypeConfig, VitalStatus} from '../../types/vital.types';
+import { Header, Skeleton, StatusBadge } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useRecentVitalsQuery, useVitalsQuery } from '../../hooks/queries';
+import { colors } from '../../theme/colors';
+import type { VitalStatus, VitalTypeConfig } from '../../types/vital.types';
+import { VITAL_TYPES } from '../../utils/constants';
+import { formatVitalValue, timeAgo } from '../../utils/formatters';
 
 // Map icon string names to actual components
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
@@ -58,11 +53,8 @@ function getIconComponent(iconName: string) {
   return ICON_MAP[iconName] || Activity;
 }
 
-function getVitalStatus(
-  value: number,
-  config: VitalTypeConfig,
-): VitalStatus {
-  const {min, max} = config.normalRange;
+function getVitalStatus(value: number, config: VitalTypeConfig): VitalStatus {
+  const { min, max } = config.normalRange;
   if (value < min * 0.8 || value > max * 1.3) return 'Critical';
   if (value < min) return 'Low';
   if (value > max) return 'High';
@@ -77,7 +69,7 @@ function getVitalStatus(
 function getLatestReading(
   recentVitals: Record<string, any>,
   vitalsData: Record<string, any>,
-  vitalKey: string,
+  vitalKey: string
 ) {
   // 1. Check recentVitals first (flat object: { value, unit, updatedAt })
   const recent = recentVitals[vitalKey];
@@ -134,14 +126,14 @@ export default function VitalsScreen() {
     let normalCount = 0;
     let alertCount = 0;
 
-    VITAL_TYPES.forEach(config => {
+    VITAL_TYPES.forEach((config) => {
       const reading = getLatestReading(recentVitals, vitalsData, config.key);
       if (reading) {
         totalTracked++;
         const numValue = parseFloat(
           config.key === 'blood_pressure'
             ? String(reading.value).split('/')[0]
-            : String(reading.value),
+            : String(reading.value)
         );
         if (!isNaN(numValue)) {
           const status = getVitalStatus(numValue, config);
@@ -151,7 +143,7 @@ export default function VitalsScreen() {
       }
     });
 
-    return {totalTracked, normalCount, alertCount};
+    return { totalTracked, normalCount, alertCount };
   }, [vitalsData, recentVitals]);
 
   if (isLoading && !hasData) {
@@ -160,15 +152,18 @@ export default function VitalsScreen() {
         <Header title="Health Vitals" onBack={() => navigation.goBack()} />
         <ScrollView className="flex-1 px-5 pt-4">
           <View className="flex-row gap-3 mb-6">
-            {[1, 2, 3].map(i => (
-              <View key={i} className="flex-1 bg-card border border-border rounded-2xl p-3 items-center">
+            {[1, 2, 3].map((i) => (
+              <View
+                key={i}
+                className="flex-1 bg-card border border-border rounded-2xl p-3 items-center"
+              >
                 <Skeleton width={32} height={32} borderRadius={16} className="mb-2" />
                 <Skeleton width={40} height={24} className="mb-1" />
                 <Skeleton width={60} height={12} />
               </View>
             ))}
           </View>
-          {[1, 2, 3, 4, 5].map(i => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <View key={i} className="bg-card border border-border rounded-2xl p-4 mb-3">
               <View className="flex-row items-center gap-3">
                 <Skeleton width={44} height={44} borderRadius={22} />
@@ -200,16 +195,15 @@ export default function VitalsScreen() {
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
-        }>
+        }
+      >
         {/* Stats Row */}
         <View className="flex-row gap-3 mb-6">
           <View className="flex-1 bg-card border border-border rounded-2xl p-3 items-center">
             <View className="w-8 h-8 rounded-full bg-primary/10 items-center justify-center mb-1.5">
               <TrendingUp size={16} color={colors.primary} />
             </View>
-            <Text className="text-2xl font-bold text-foreground">
-              {stats.totalTracked}
-            </Text>
+            <Text className="text-2xl font-bold text-foreground">{stats.totalTracked}</Text>
             <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
               Tracked
             </Text>
@@ -219,9 +213,7 @@ export default function VitalsScreen() {
             <View className="w-8 h-8 rounded-full bg-success/10 items-center justify-center mb-1.5">
               <CheckCircle size={16} color={colors.success} />
             </View>
-            <Text className="text-2xl font-bold text-foreground">
-              {stats.normalCount}
-            </Text>
+            <Text className="text-2xl font-bold text-foreground">{stats.normalCount}</Text>
             <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
               Normal
             </Text>
@@ -231,9 +223,7 @@ export default function VitalsScreen() {
             <View className="w-8 h-8 rounded-full bg-destructive/10 items-center justify-center mb-1.5">
               <AlertTriangle size={16} color={colors.destructive} />
             </View>
-            <Text className="text-2xl font-bold text-foreground">
-              {stats.alertCount}
-            </Text>
+            <Text className="text-2xl font-bold text-foreground">{stats.alertCount}</Text>
             <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
               Alerts
             </Text>
@@ -241,19 +231,18 @@ export default function VitalsScreen() {
         </View>
 
         {/* Vital Type Cards */}
-        {VITAL_TYPES.map(config => {
+        {VITAL_TYPES.map((config) => {
           const IconComponent = getIconComponent(config.icon);
           const reading = getLatestReading(recentVitals, vitalsData, config.key);
-          const displayValue = reading?.value != null
-            ? formatVitalValue(String(reading.value), config.key)
-            : null;
+          const displayValue =
+            reading?.value != null ? formatVitalValue(String(reading.value), config.key) : null;
 
           let status: VitalStatus | null = null;
           if (reading?.value != null) {
             const numVal = parseFloat(
               config.key === 'blood_pressure'
                 ? String(reading.value).split('/')[0]
-                : String(reading.value),
+                : String(reading.value)
             );
             if (!isNaN(numVal)) {
               status = getVitalStatus(numVal, config);
@@ -265,37 +254,40 @@ export default function VitalsScreen() {
               key={config.key}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={`${config.name}${reading?.value != null ? `, ${formatVitalValue(String(reading.value), config.key)} ${config.unit}` : ', no data recorded'}${status ? `, Status: ${status}` : ''}`}
+              accessibilityLabel={`${config.name}${
+                reading?.value != null
+                  ? `, ${formatVitalValue(String(reading.value), config.key)} ${config.unit}`
+                  : ', no data recorded'
+              }${status ? `, Status: ${status}` : ''}`}
               accessibilityHint="Double tap to view details"
-              onPress={() =>
-                navigation.navigate('VitalDetail', {vitalType: config.key})
-              }
-              className="bg-card border border-border rounded-2xl p-4 mb-3">
+              onPress={() => navigation.navigate('VitalDetail', { vitalType: config.key })}
+              className="bg-card border border-border rounded-2xl p-4 mb-3"
+            >
               <View className="flex-row items-center gap-3">
                 {/* Colored icon circle */}
                 <View
-                  style={{backgroundColor: `${config.color}20`, width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center'}}>
+                  style={{
+                    backgroundColor: `${config.color}20`,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <IconComponent size={22} color={config.color} />
                 </View>
 
                 {/* Info */}
                 <View className="flex-1">
-                  <Text className="text-sm font-semibold text-foreground">
-                    {config.name}
-                  </Text>
+                  <Text className="text-sm font-semibold text-foreground">{config.name}</Text>
                   {reading ? (
                     <View className="flex-row items-baseline gap-1 mt-0.5">
-                      <Text className="text-lg font-bold text-foreground">
-                        {displayValue}
-                      </Text>
-                      <Text className="text-xs text-muted-foreground">
-                        {config.unit}
-                      </Text>
+                      <Text className="text-lg font-bold text-foreground">{displayValue}</Text>
+                      <Text className="text-xs text-muted-foreground">{config.unit}</Text>
                     </View>
                   ) : (
-                    <Text className="text-xs text-muted-foreground mt-0.5">
-                      No data recorded
-                    </Text>
+                    <Text className="text-xs text-muted-foreground mt-0.5">No data recorded</Text>
                   )}
                   {reading?.updatedAt && (
                     <Text className="text-[10px] text-muted-foreground mt-0.5">
@@ -323,11 +315,10 @@ export default function VitalsScreen() {
           accessibilityRole="button"
           accessibilityLabel="Log vitals"
           onPress={() => navigation.navigate('LogVitals')}
-          className="bg-primary rounded-2xl h-14 flex-row items-center justify-center shadow-lg">
+          className="bg-primary rounded-2xl h-14 flex-row items-center justify-center shadow-lg"
+        >
           <Plus size={20} color={colors.white} />
-          <Text className="text-base font-bold text-white ml-2">
-            Log Vitals
-          </Text>
+          <Text className="text-base font-bold text-white ml-2">Log Vitals</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -1,26 +1,22 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text, ScrollView, ActivityIndicator, Alert} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {
-  AlertTriangle,
-  Calendar,
-  Check,
-  Download,
-  Shield,
-  Stethoscope,
-  User,
-} from 'lucide-react-native';
-import {Header, Button} from '../../components/ui';
-import {useHealthCheckupStore} from '../../store/healthCheckup';
-import {useAuthStore} from '../../store/auth';
-import {colors} from '../../theme/colors';
-import {formatDate} from '../../utils/formatters';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { AlertTriangle, Calendar, Check, Download, Stethoscope, User } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AISummaryCard from '../../components/health-checkup/AISummaryCard';
-import {generateHealthCheckupPDF} from '../../utils/healthCheckupPdf';
+import { Button, Header } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useAuthStore } from '../../store/auth';
+import { useHealthCheckupStore } from '../../store/healthCheckup';
+import { colors } from '../../theme/colors';
+import { formatDate } from '../../utils/formatters';
+import { generateHealthCheckupPDF } from '../../utils/healthCheckupPdf';
 
 // Maps Infermedica triage_level values to display config
-const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; description: string}> = {
+const TRIAGE_CONFIG: Record<
+  string,
+  { label: string; color: string; icon: any; description: string }
+> = {
   emergency_ambulance: {
     label: 'Emergency',
     color: colors.destructive,
@@ -31,7 +27,8 @@ const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; de
     label: 'Emergency',
     color: colors.destructive,
     icon: AlertTriangle,
-    description: 'A potentially serious condition was detected requiring immediate medical attention.',
+    description:
+      'A potentially serious condition was detected requiring immediate medical attention.',
   },
   consultation_24: {
     label: 'Urgent',
@@ -53,12 +50,20 @@ const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; de
   },
 };
 
-function ProbabilityBar({probability}: {probability: number}) {
+function ProbabilityBar({ probability }: { probability: number }) {
   const pct = Math.round(probability * 100);
   const barColor = pct >= 70 ? colors.destructive : pct >= 40 ? colors.secondary : colors.primary;
   return (
-    <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4}}>
-      <View style={{flex: 1, height: 6, backgroundColor: colors.muted, borderRadius: 9999, overflow: 'hidden'}}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+      <View
+        style={{
+          flex: 1,
+          height: 6,
+          backgroundColor: colors.muted,
+          borderRadius: 9999,
+          overflow: 'hidden',
+        }}
+      >
         <View
           style={{
             width: `${pct}%`,
@@ -68,7 +73,9 @@ function ProbabilityBar({probability}: {probability: number}) {
           }}
         />
       </View>
-      <Text style={{color: barColor, fontSize: 12, fontWeight: 'bold', width: 36, textAlign: 'right'}}>
+      <Text
+        style={{ color: barColor, fontSize: 12, fontWeight: 'bold', width: 36, textAlign: 'right' }}
+      >
         {pct}%
       </Text>
     </View>
@@ -89,7 +96,7 @@ export default function HistoryDetailScreen() {
     generateClaudeSummary,
     fetchSummaryStatus,
   } = useHealthCheckupStore();
-  const authUser = useAuthStore(s => s.user);
+  const authUser = useAuthStore((s) => s.user);
 
   const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -117,13 +124,17 @@ export default function HistoryDetailScreen() {
     setPdfLoading(true);
     try {
       const responseData = currentDetail.response?.data;
-      const patientName = `${authUser?.profile?.first_name || ''} ${authUser?.profile?.last_name || ''}`.trim() || 'Patient';
+      const patientName =
+        `${authUser?.profile?.first_name || ''} ${authUser?.profile?.last_name || ''}`.trim() ||
+        'Patient';
       // Age: try patient_info.age → request.age.value → derive from user DOB
       const detailAge =
         currentDetail.patient_info?.age ||
         currentDetail.request?.age?.value ||
         (authUser?.profile?.date_of_birth
-          ? Math.floor((Date.now() - new Date(authUser.profile.date_of_birth).getTime()) / 31557600000)
+          ? Math.floor(
+              (Date.now() - new Date(authUser.profile.date_of_birth).getTime()) / 31557600000
+            )
           : 0);
       // Sex: try patient_info.gender → request.sex → user profile gender
       const detailSex =
@@ -177,7 +188,8 @@ export default function HistoryDetailScreen() {
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-5 pt-4 pb-32"
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         {/* Date */}
         <Text className="text-xs text-muted-foreground mb-4">
           {formatDate(currentDetail.created_at || currentDetail.createdAt)}
@@ -192,7 +204,8 @@ export default function HistoryDetailScreen() {
             borderRadius: 20,
             padding: 20,
             marginBottom: 16,
-          }}>
+          }}
+        >
           <View className="flex-row items-center gap-3 mb-3">
             <View
               style={{
@@ -202,23 +215,29 @@ export default function HistoryDetailScreen() {
                 backgroundColor: `${triage.color}25`,
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <TriageIcon size={24} color={triage.color} />
             </View>
             <View className="flex-1">
-              <Text style={{color: triage.color, fontWeight: 'bold', fontSize: 18}}>
+              <Text style={{ color: triage.color, fontWeight: 'bold', fontSize: 18 }}>
                 {triage.label}
               </Text>
               {hasEmergency && effectiveTriageLevel === 'emergency' && (
-                <Text style={{color: colors.destructive, fontSize: 12, fontWeight: '600', marginTop: 2}}>
+                <Text
+                  style={{
+                    color: colors.destructive,
+                    fontSize: 12,
+                    fontWeight: '600',
+                    marginTop: 2,
+                  }}
+                >
                   Immediate attention recommended
                 </Text>
               )}
             </View>
           </View>
-          <Text className="text-sm text-foreground leading-relaxed">
-            {triage.description}
-          </Text>
+          <Text className="text-sm text-foreground leading-relaxed">{triage.description}</Text>
         </View>
 
         {/* Patient Info */}
@@ -255,7 +274,8 @@ export default function HistoryDetailScreen() {
               {symptoms.map((symptom: any, index: number) => (
                 <View
                   key={symptom.id || index}
-                  className="bg-primary/10 border border-primary/30 rounded-full px-3 py-1.5">
+                  className="bg-primary/10 border border-primary/30 rounded-full px-3 py-1.5"
+                >
                   <Text className="text-xs font-medium text-primary">
                     {symptom.common_name || symptom.name || symptom.id}
                   </Text>
@@ -273,7 +293,8 @@ export default function HistoryDetailScreen() {
         {conditions.map((condition: any, index: number) => (
           <View
             key={condition.id || index}
-            className="bg-card border border-border rounded-2xl p-4 mb-2">
+            className="bg-card border border-border rounded-2xl p-4 mb-2"
+          >
             <View className="flex-row items-start gap-3">
               <View className="w-8 h-8 rounded-full bg-muted items-center justify-center mt-0.5">
                 <Text className="text-xs font-bold text-muted-foreground">{index + 1}</Text>
@@ -308,7 +329,7 @@ export default function HistoryDetailScreen() {
             onGenerate={handleGenerateSummary}
             credits={summaryCredits}
             expanded={summaryExpanded}
-            onToggleExpand={() => setSummaryExpanded(v => !v)}
+            onToggleExpand={() => setSummaryExpanded((v) => !v)}
           />
         </View>
 
@@ -318,7 +339,8 @@ export default function HistoryDetailScreen() {
             variant="outline"
             onPress={handleDownloadReport}
             loading={pdfLoading}
-            icon={<Download size={18} color={colors.foreground} />}>
+            icon={<Download size={18} color={colors.foreground} />}
+          >
             Download Report
           </Button>
 
@@ -327,14 +349,16 @@ export default function HistoryDetailScreen() {
             onPress={() => {
               navigation.navigate('HealthCheckupStart');
             }}
-            icon={<Stethoscope size={18} color={colors.white} />}>
+            icon={<Stethoscope size={18} color={colors.white} />}
+          >
             Start New Checkup
           </Button>
 
           <Button
             variant="secondary"
-            onPress={() => navigation.navigate('Main', {screen: 'Bookings'})}
-            icon={<Calendar size={18} color={colors.foreground} />}>
+            onPress={() => navigation.navigate('Main', { screen: 'Bookings' })}
+            icon={<Calendar size={18} color={colors.foreground} />}
+          >
             Book Appointment
           </Button>
         </View>

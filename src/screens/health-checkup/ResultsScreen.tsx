@@ -1,37 +1,34 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text, ScrollView, TouchableOpacity, Alert} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {
-  AlertTriangle,
-  Calendar,
-  Check,
-  ChevronRight,
-  Download,
-  Home,
-  Shield,
-  Stethoscope,
-} from 'lucide-react-native';
-import {Header, Button} from '../../components/ui';
-import {useHealthCheckupStore} from '../../store/healthCheckup';
-import {useAuthStore} from '../../store/auth';
-import {colors} from '../../theme/colors';
+import { useNavigation } from '@react-navigation/native';
+import { AlertTriangle, Calendar, Check, Download, Stethoscope } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AISummaryCard from '../../components/health-checkup/AISummaryCard';
-import {generateHealthCheckupPDF} from '../../utils/healthCheckupPdf';
+import { Button, Header } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useAuthStore } from '../../store/auth';
+import { useHealthCheckupStore } from '../../store/healthCheckup';
+import { colors } from '../../theme/colors';
+import { generateHealthCheckupPDF } from '../../utils/healthCheckupPdf';
 
 // Maps Infermedica triage_level values to display config
-const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; description: string}> = {
+const TRIAGE_CONFIG: Record<
+  string,
+  { label: string; color: string; icon: any; description: string }
+> = {
   emergency_ambulance: {
     label: 'Emergency',
     color: colors.destructive,
     icon: AlertTriangle,
-    description: 'Your symptoms indicate a medical emergency. Please call emergency services immediately.',
+    description:
+      'Your symptoms indicate a medical emergency. Please call emergency services immediately.',
   },
   emergency: {
     label: 'Emergency',
     color: colors.destructive,
     icon: AlertTriangle,
-    description: 'Your symptoms suggest a potentially serious condition that requires immediate medical attention.',
+    description:
+      'Your symptoms suggest a potentially serious condition that requires immediate medical attention.',
   },
   consultation_24: {
     label: 'Urgent',
@@ -43,17 +40,19 @@ const TRIAGE_CONFIG: Record<string, {label: string; color: string; icon: any; de
     label: 'See a Doctor',
     color: colors.primary,
     icon: Stethoscope,
-    description: 'Your symptoms suggest you should schedule a doctor visit within the next few days.',
+    description:
+      'Your symptoms suggest you should schedule a doctor visit within the next few days.',
   },
   self_care: {
     label: 'Self-Care',
     color: colors.success,
     icon: Check,
-    description: 'Your symptoms appear manageable with self-care. Monitor and consult a doctor if they worsen.',
+    description:
+      'Your symptoms appear manageable with self-care. Monitor and consult a doctor if they worsen.',
   },
 };
 
-function ProbabilityBar({probability}: {probability: number}) {
+function ProbabilityBar({ probability }: { probability: number }) {
   const pct = Math.round(probability * 100);
   const barColor = pct >= 70 ? colors.destructive : pct >= 40 ? colors.secondary : colors.primary;
   return (
@@ -68,7 +67,9 @@ function ProbabilityBar({probability}: {probability: number}) {
           }}
         />
       </View>
-      <Text style={{color: barColor, fontSize: 12, fontWeight: 'bold', width: 36, textAlign: 'right'}}>
+      <Text
+        style={{ color: barColor, fontSize: 12, fontWeight: 'bold', width: 36, textAlign: 'right' }}
+      >
         {pct}%
       </Text>
     </View>
@@ -92,7 +93,7 @@ export default function ResultsScreen() {
     age,
     reset,
   } = useHealthCheckupStore();
-  const user = useAuthStore(s => s.user);
+  const user = useAuthStore((s) => s.user);
 
   const [summaryExpanded, setSummaryExpanded] = useState(true);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -115,18 +116,21 @@ export default function ResultsScreen() {
   };
 
   // If emergency evidence is detected, always show Emergency regardless of triage_level
-  const effectiveTriageLevel = hasEmergency ? 'emergency' : (triageLevel || 'self_care');
+  const effectiveTriageLevel = hasEmergency ? 'emergency' : triageLevel || 'self_care';
   const triage = TRIAGE_CONFIG[effectiveTriageLevel] || TRIAGE_CONFIG.self_care;
   const TriageIcon = triage.icon;
 
   const handleDownloadReport = async () => {
     setPdfLoading(true);
     try {
-      const patientName = `${user?.profile?.first_name || ''} ${user?.profile?.last_name || ''}`.trim() || 'Patient';
+      const patientName =
+        `${user?.profile?.first_name || ''} ${user?.profile?.last_name || ''}`.trim() || 'Patient';
       // Fallback to user profile if store values are empty
-      const reportAge = age || (user?.profile?.date_of_birth
-        ? Math.floor((Date.now() - new Date(user.profile.date_of_birth).getTime()) / 31557600000)
-        : 0);
+      const reportAge =
+        age ||
+        (user?.profile?.date_of_birth
+          ? Math.floor((Date.now() - new Date(user.profile.date_of_birth).getTime()) / 31557600000)
+          : 0);
       const reportSex = sex || user?.profile?.gender || '';
       await generateHealthCheckupPDF({
         patientName,
@@ -174,7 +178,8 @@ export default function ResultsScreen() {
       <ScrollView
         className="flex-1"
         contentContainerClassName="px-5 pt-4 pb-32"
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         {/* Step indicator */}
         <View className="flex-row items-center gap-2 mb-6">
           <View className="h-1.5 flex-1 bg-primary rounded-full" />
@@ -193,7 +198,8 @@ export default function ResultsScreen() {
             borderRadius: 20,
             padding: 20,
             marginBottom: 16,
-          }}>
+          }}
+        >
           <View className="flex-row items-center gap-3 mb-3">
             <View
               style={{
@@ -203,23 +209,29 @@ export default function ResultsScreen() {
                 backgroundColor: `${triage.color}25`,
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <TriageIcon size={24} color={triage.color} />
             </View>
             <View className="flex-1">
-              <Text style={{color: triage.color, fontWeight: 'bold', fontSize: 18}}>
+              <Text style={{ color: triage.color, fontWeight: 'bold', fontSize: 18 }}>
                 {triage.label}
               </Text>
               {hasEmergency && effectiveTriageLevel === 'emergency' && (
-                <Text style={{color: colors.destructive, fontSize: 12, fontWeight: '600', marginTop: 2}}>
+                <Text
+                  style={{
+                    color: colors.destructive,
+                    fontSize: 12,
+                    fontWeight: '600',
+                    marginTop: 2,
+                  }}
+                >
                   Immediate attention recommended
                 </Text>
               )}
             </View>
           </View>
-          <Text className="text-sm text-foreground leading-relaxed">
-            {triage.description}
-          </Text>
+          <Text className="text-sm text-foreground leading-relaxed">{triage.description}</Text>
         </View>
 
         {/* Conditions */}
@@ -230,7 +242,8 @@ export default function ResultsScreen() {
         {conditions.map((condition: any, index: number) => (
           <View
             key={condition.id || index}
-            className="bg-card border border-border rounded-2xl p-4 mb-2">
+            className="bg-card border border-border rounded-2xl p-4 mb-2"
+          >
             <View className="flex-row items-start gap-3">
               <View className="w-8 h-8 rounded-full bg-muted items-center justify-center mt-0.5">
                 <Text className="text-xs font-bold text-muted-foreground">{index + 1}</Text>
@@ -265,7 +278,7 @@ export default function ResultsScreen() {
             onGenerate={handleGenerateSummary}
             credits={summaryCredits}
             expanded={summaryExpanded}
-            onToggleExpand={() => setSummaryExpanded(v => !v)}
+            onToggleExpand={() => setSummaryExpanded((v) => !v)}
           />
         </View>
 
@@ -275,14 +288,16 @@ export default function ResultsScreen() {
             variant="outline"
             onPress={handleDownloadReport}
             loading={pdfLoading}
-            icon={<Download size={18} color={colors.foreground} />}>
+            icon={<Download size={18} color={colors.foreground} />}
+          >
             Download Report
           </Button>
 
           <Button
             variant="primary"
             onPress={handleBookAppointment}
-            icon={<Calendar size={18} color={colors.white} />}>
+            icon={<Calendar size={18} color={colors.white} />}
+          >
             Book Appointment with Specialist
           </Button>
 

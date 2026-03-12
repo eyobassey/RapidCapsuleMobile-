@@ -1,54 +1,53 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Modal,
-  Pressable,
-  Alert,
-  ActivityIndicator,
-  TextInput,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {WebView} from 'react-native-webview';
-import {
-  ArrowUpRight,
-  ArrowDownLeft,
-  Wallet,
-  TrendingUp,
-  TrendingDown,
-  CreditCard,
-  Sparkles,
-  Zap,
-  Gift,
-  Crown,
-  ShoppingCart,
-  ChevronRight,
-  Send,
   AlertTriangle,
+  ArrowDownLeft,
+  ArrowUpRight,
   Check,
-  Search,
-  X,
+  CreditCard,
+  Crown,
+  Gift,
   Minus,
   Plus,
+  Search,
+  Send,
+  ShoppingCart,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+  X,
+  Zap,
 } from 'lucide-react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
+import { Text } from '../../components/ui/Text';
+import { TextInput } from '../../components/ui/TextInput';
 
-import {useWalletStore} from '../../store/wallet';
-import {useCreditsStore, type CreditPlan} from '../../store/credits';
-import {creditsService} from '../../services/credits.service';
-import {useWalletBalanceQuery, useTransactionsQuery} from '../../hooks/queries';
-import {Header, Button, Skeleton, TabBar} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {formatDate, formatDateTime} from '../../utils/formatters';
-import {useCurrency} from '../../hooks/useCurrency';
+import { Button, Header, Skeleton, TabBar } from '../../components/ui';
+import { useTransactionsQuery, useWalletBalanceQuery } from '../../hooks/queries';
+import { useCurrency } from '../../hooks/useCurrency';
+import { creditsService } from '../../services/credits.service';
+import { useCreditsStore, type CreditPlan } from '../../store/credits';
+import { useWalletStore } from '../../store/wallet';
+import { colors } from '../../theme/colors';
+import { formatDate, formatDateTime } from '../../utils/formatters';
 
 const QUICK_AMOUNTS = [1000, 2000, 5000, 10000, 20000];
 
 export default function WalletScreen() {
-  const {format, symbol} = useCurrency();
+  const { format } = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const [refreshing, setRefreshing] = useState(false);
@@ -90,11 +89,7 @@ export default function WalletScreen() {
   const walletLoading = balanceLoading || txLoading;
 
   // Keep store for mutations (fundWallet, verifyFunding)
-  const {
-    funding,
-    fundWallet,
-    verifyFunding,
-  } = useWalletStore();
+  const { funding, fundWallet, verifyFunding } = useWalletStore();
 
   const {
     freeCredits,
@@ -120,9 +115,9 @@ export default function WalletScreen() {
   } = useCreditsStore();
 
   const tabs = [
-    {label: 'Wallet', value: 'wallet'},
-    {label: 'AI Credits', value: 'credits'},
-    {label: 'Plans', value: 'plans'},
+    { label: 'Wallet', value: 'wallet' },
+    { label: 'AI Credits', value: 'credits' },
+    { label: 'Plans', value: 'plans' },
   ];
 
   useEffect(() => {
@@ -131,7 +126,7 @@ export default function WalletScreen() {
     fetchPlans();
     fetchCreditTransactions();
     fetchSharingSettings();
-  }, []);
+  }, [fetchCreditTransactions, fetchCredits, fetchPlans, fetchSharingSettings]);
 
   // Handle deep-link param for initial tab
   useEffect(() => {
@@ -165,7 +160,7 @@ export default function WalletScreen() {
         totalSpent += amount;
       }
     }
-    return {totalSpent, totalFunded};
+    return { totalSpent, totalFunded };
   }, [transactions]);
 
   const isCredit = (tx: any) => {
@@ -191,7 +186,7 @@ export default function WalletScreen() {
     } else {
       Alert.alert(
         'Purchase Failed',
-        useCreditsStore.getState().purchaseError || 'Something went wrong.',
+        useCreditsStore.getState().purchaseError || 'Something went wrong.'
       );
     }
   };
@@ -215,23 +210,34 @@ export default function WalletScreen() {
   }, [fundAmount, fundWallet]);
 
   // ── Handle Paystack WebView navigation ──
-  const handlePaystackNavigation = useCallback(async (navState: {url: string}) => {
-    const url = navState.url || '';
-    // Detect redirect away from Paystack (callback reached)
-    if (paystackUrl && url !== paystackUrl && !url.includes('paystack.co') && !url.includes('paystack.com')) {
-      setPaystackUrl(null);
-      if (fundReference) {
-        const verified = await verifyFunding(fundReference);
-        if (verified) {
-          Alert.alert('Success', 'Wallet funded successfully!');
-          setFundAmount('');
-        } else {
-          Alert.alert('Verification Pending', 'Your payment is being processed. Balance will update shortly.');
+  const handlePaystackNavigation = useCallback(
+    async (navState: { url: string }) => {
+      const url = navState.url || '';
+      // Detect redirect away from Paystack (callback reached)
+      if (
+        paystackUrl &&
+        url !== paystackUrl &&
+        !url.includes('paystack.co') &&
+        !url.includes('paystack.com')
+      ) {
+        setPaystackUrl(null);
+        if (fundReference) {
+          const verified = await verifyFunding(fundReference);
+          if (verified) {
+            Alert.alert('Success', 'Wallet funded successfully!');
+            setFundAmount('');
+          } else {
+            Alert.alert(
+              'Verification Pending',
+              'Your payment is being processed. Balance will update shortly.'
+            );
+          }
+          setFundReference(null);
         }
-        setFundReference(null);
       }
-    }
-  }, [paystackUrl, fundReference, verifyFunding]);
+    },
+    [paystackUrl, fundReference, verifyFunding]
+  );
 
   const handleClosePaystack = useCallback(async () => {
     setPaystackUrl(null);
@@ -304,7 +310,7 @@ export default function WalletScreen() {
             <Skeleton height={70} borderRadius={16} className="flex-1" />
             <Skeleton height={70} borderRadius={16} className="flex-1" />
           </View>
-          {[1, 2, 3, 4].map(i => (
+          {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} height={60} borderRadius={16} className="mb-2" />
           ))}
         </ScrollView>
@@ -317,13 +323,13 @@ export default function WalletScreen() {
       <Header title="Wallet & Credits" onBack={() => navigation.goBack()} />
 
       {/* Tab Bar */}
-      <View style={{paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4}}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 }}>
         <TabBar tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
       </View>
 
       <ScrollView
-        style={{flex: 1}}
-        contentContainerStyle={{paddingBottom: 48}}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 48 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -332,9 +338,10 @@ export default function WalletScreen() {
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
-        }>
+        }
+      >
         {/* ═══════ WALLET TAB ═══════ */}
-        <View style={activeTab !== 'wallet' ? {display: 'none'} : undefined}>
+        <View style={activeTab !== 'wallet' ? { display: 'none' } : undefined}>
           <>
             {/* Balance Card */}
             <View className="mx-5 mt-4 bg-primary/10 border border-primary/20 rounded-3xl p-6 overflow-hidden relative">
@@ -347,13 +354,12 @@ export default function WalletScreen() {
                     Available Balance
                   </Text>
                 </View>
-                <Text className="text-3xl font-bold text-foreground mb-6">
-                  {format(balance)}
-                </Text>
+                <Text className="text-3xl font-bold text-foreground mb-6">{format(balance)}</Text>
                 <Button
                   variant="primary"
                   icon={<CreditCard size={18} color={colors.white} />}
-                  onPress={() => setShowFundModal(true)}>
+                  onPress={() => setShowFundModal(true)}
+                >
                   Fund Wallet
                 </Button>
               </View>
@@ -399,9 +405,7 @@ export default function WalletScreen() {
                   <View className="bg-muted rounded-full p-4 mb-3">
                     <Wallet size={28} color={colors.mutedForeground} />
                   </View>
-                  <Text className="text-sm font-semibold text-foreground">
-                    No transactions yet
-                  </Text>
+                  <Text className="text-sm font-semibold text-foreground">No transactions yet</Text>
                   <Text className="text-xs text-muted-foreground mt-1 text-center">
                     Your transaction history will appear here.
                   </Text>
@@ -412,12 +416,14 @@ export default function WalletScreen() {
                   return (
                     <View
                       key={tx._id || `tx-${index}`}
-                      className="bg-card border border-border rounded-2xl p-4 mb-2">
+                      className="bg-card border border-border rounded-2xl p-4 mb-2"
+                    >
                       <View className="flex-row items-center gap-3">
                         <View
                           className={`w-11 h-11 rounded-full items-center justify-center ${
                             credit ? 'bg-success/10' : 'bg-destructive/10'
-                          }`}>
+                          }`}
+                        >
                           {credit ? (
                             <ArrowDownLeft size={20} color={colors.success} />
                           ) : (
@@ -426,16 +432,23 @@ export default function WalletScreen() {
                         </View>
                         <View className="flex-1">
                           <Text className="text-sm font-medium text-foreground" numberOfLines={1}>
-                            {tx.description || tx.narration || (credit ? 'Wallet Credit' : 'Payment')}
+                            {tx.description ||
+                              tx.narration ||
+                              (credit ? 'Wallet Credit' : 'Payment')}
                           </Text>
                           <Text className="text-xs text-muted-foreground mt-0.5">
-                            {tx.created_at ? formatDateTime(tx.created_at) : tx.date ? formatDate(tx.date) : ''}
+                            {tx.created_at
+                              ? formatDateTime(tx.created_at)
+                              : tx.date
+                              ? formatDate(tx.date)
+                              : ''}
                           </Text>
                         </View>
                         <Text
                           className={`text-sm font-bold ${
                             credit ? 'text-success' : 'text-destructive'
-                          }`}>
+                          }`}
+                        >
                           {credit ? '+' : '-'}
                           {format(Math.abs(tx.amount || 0))}
                         </Text>
@@ -449,7 +462,7 @@ export default function WalletScreen() {
         </View>
 
         {/* ═══════ AI CREDITS TAB ═══════ */}
-        <View style={activeTab !== 'credits' ? {display: 'none'} : undefined}>
+        <View style={activeTab !== 'credits' ? { display: 'none' } : undefined}>
           <>
             {/* Credits Summary Card */}
             <View
@@ -462,7 +475,8 @@ export default function WalletScreen() {
                 borderRadius: 24,
                 padding: 24,
                 overflow: 'hidden',
-              }}>
+              }}
+            >
               {/* Decorative */}
               <View
                 style={{
@@ -476,7 +490,9 @@ export default function WalletScreen() {
                 }}
               />
 
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20}}>
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 }}
+              >
                 <View
                   style={{
                     width: 48,
@@ -485,21 +501,22 @@ export default function WalletScreen() {
                     backgroundColor: `${colors.accent}20`,
                     alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
+                  }}
+                >
                   <Sparkles size={24} color={colors.accent} />
                 </View>
-                <View style={{flex: 1}}>
-                  <Text style={{fontSize: 12, color: colors.mutedForeground, fontWeight: '600'}}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground, fontWeight: '600' }}>
                     AI Health Summary Credits
                   </Text>
-                  <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 1}}>
+                  <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 1 }}>
                     Generate detailed health reports with AI
                   </Text>
                 </View>
               </View>
 
               {/* Total Credits */}
-              <View style={{alignItems: 'center', marginBottom: 20}}>
+              <View style={{ alignItems: 'center', marginBottom: 20 }}>
                 {hasUnlimited ? (
                   <View
                     style={{
@@ -510,18 +527,21 @@ export default function WalletScreen() {
                       paddingHorizontal: 16,
                       paddingVertical: 8,
                       borderRadius: 20,
-                    }}>
+                    }}
+                  >
                     <Crown size={18} color={colors.primary} />
-                    <Text style={{fontSize: 16, fontWeight: '700', color: colors.primary}}>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.primary }}>
                       Unlimited
                     </Text>
                   </View>
                 ) : (
                   <>
-                    <Text style={{fontSize: 48, fontWeight: '700', color: colors.foreground}}>
+                    <Text style={{ fontSize: 48, fontWeight: '700', color: colors.foreground }}>
                       {totalAvailable}
                     </Text>
-                    <Text style={{fontSize: 13, color: colors.mutedForeground, fontWeight: '500'}}>
+                    <Text
+                      style={{ fontSize: 13, color: colors.mutedForeground, fontWeight: '500' }}
+                    >
                       credits remaining
                     </Text>
                   </>
@@ -535,7 +555,8 @@ export default function WalletScreen() {
                   borderRadius: 16,
                   padding: 16,
                   gap: 12,
-                }}>
+                }}
+              >
                 <CreditBreakdownRow
                   label="Free"
                   value={`${freeCredits}/5`}
@@ -558,11 +579,12 @@ export default function WalletScreen() {
                     paddingTop: 12,
                     flexDirection: 'row',
                     justifyContent: 'space-between',
-                  }}>
-                  <Text style={{fontSize: 13, color: colors.mutedForeground}}>
+                  }}
+                >
+                  <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
                     Summaries Generated
                   </Text>
-                  <Text style={{fontSize: 13, fontWeight: '700', color: colors.foreground}}>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.foreground }}>
                     {totalGenerated}
                   </Text>
                 </View>
@@ -583,9 +605,10 @@ export default function WalletScreen() {
                   flexDirection: 'row',
                   justifyContent: 'center',
                   gap: 8,
-                }}>
+                }}
+              >
                 <ShoppingCart size={16} color={colors.white} />
-                <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.white }}>
                   Buy More Credits
                 </Text>
               </TouchableOpacity>
@@ -615,9 +638,10 @@ export default function WalletScreen() {
                     flexDirection: 'row',
                     justifyContent: 'center',
                     gap: 8,
-                  }}>
+                  }}
+                >
                   <Send size={16} color={colors.accent} />
-                  <Text style={{fontSize: 14, fontWeight: '700', color: colors.accent}}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.accent }}>
                     Share Credits
                   </Text>
                 </TouchableOpacity>
@@ -625,14 +649,21 @@ export default function WalletScreen() {
             </View>
 
             {/* Credit Transaction History */}
-            <View style={{marginHorizontal: 20, marginTop: 24}}>
-              <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground, marginBottom: 12}}>
+            <View style={{ marginHorizontal: 20, marginTop: 24 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '700',
+                  color: colors.foreground,
+                  marginBottom: 12,
+                }}
+              >
                 Credit History
               </Text>
 
               {transactionsLoading ? (
-                <View style={{gap: 8}}>
-                  {[1, 2, 3].map(i => (
+                <View style={{ gap: 8 }}>
+                  {[1, 2, 3].map((i) => (
                     <Skeleton key={i} height={60} borderRadius={16} />
                   ))}
                 </View>
@@ -645,9 +676,10 @@ export default function WalletScreen() {
                     borderRadius: 16,
                     padding: 24,
                     alignItems: 'center',
-                  }}>
+                  }}
+                >
                   <Sparkles size={28} color={colors.mutedForeground} />
-                  <Text style={{fontSize: 13, color: colors.mutedForeground, marginTop: 8}}>
+                  <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 8 }}>
                     No credit transactions yet
                   </Text>
                 </View>
@@ -661,160 +693,183 @@ export default function WalletScreen() {
         </View>
 
         {/* ═══════ PLANS TAB ═══════ */}
-        <View style={activeTab !== 'plans' ? {display: 'none'} : {paddingHorizontal: 20, paddingTop: 16}}>
-            <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground, marginBottom: 4}}>
-              Health Credit Plans
-            </Text>
-            <Text style={{fontSize: 12, color: colors.mutedForeground, marginBottom: 16}}>
-              Purchase credits for AI-powered health report generation
-            </Text>
+        <View
+          style={
+            activeTab !== 'plans' ? { display: 'none' } : { paddingHorizontal: 20, paddingTop: 16 }
+          }
+        >
+          <Text
+            style={{ fontSize: 14, fontWeight: '700', color: colors.foreground, marginBottom: 4 }}
+          >
+            Health Credit Plans
+          </Text>
+          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 16 }}>
+            Purchase credits for AI-powered health report generation
+          </Text>
 
-            {plansLoading ? (
-              <View style={{gap: 12}}>
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} height={140} borderRadius={20} />
-                ))}
-              </View>
-            ) : plans.length === 0 ? (
-              <View
-                style={{
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  borderRadius: 16,
-                  padding: 24,
-                  alignItems: 'center',
-                }}>
-                <ShoppingCart size={28} color={colors.mutedForeground} />
-                <Text style={{fontSize: 13, color: colors.mutedForeground, marginTop: 8}}>
-                  No plans available at the moment
-                </Text>
-              </View>
-            ) : (
-              <View style={{gap: 12}}>
-                {plans.map(plan => {
-                  const price = getPlanPrice(plan);
-                  const isUnlimited = plan.type !== 'bundle';
-                  const isPopular = plan.sort_order === 1;
+          {plansLoading ? (
+            <View style={{ gap: 12 }}>
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} height={140} borderRadius={20} />
+              ))}
+            </View>
+          ) : plans.length === 0 ? (
+            <View
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 16,
+                padding: 24,
+                alignItems: 'center',
+              }}
+            >
+              <ShoppingCart size={28} color={colors.mutedForeground} />
+              <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 8 }}>
+                No plans available at the moment
+              </Text>
+            </View>
+          ) : (
+            <View style={{ gap: 12 }}>
+              {plans.map((plan) => {
+                const price = getPlanPrice(plan);
+                const isUnlimited = plan.type !== 'bundle';
+                const isPopular = plan.sort_order === 1;
 
-                  return (
+                return (
+                  <View
+                    key={plan._id}
+                    style={{
+                      backgroundColor: colors.card,
+                      borderWidth: isPopular ? 2 : 1,
+                      borderColor: isPopular ? colors.primary : colors.border,
+                      borderRadius: 20,
+                      padding: 20,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {isPopular && (
+                      <View
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          backgroundColor: colors.primary,
+                          paddingHorizontal: 12,
+                          paddingVertical: 4,
+                          borderBottomLeftRadius: 12,
+                        }}
+                      >
+                        <Text style={{ fontSize: 10, fontWeight: '700', color: colors.white }}>
+                          POPULAR
+                        </Text>
+                      </View>
+                    )}
+
                     <View
-                      key={plan._id}
                       style={{
-                        backgroundColor: colors.card,
-                        borderWidth: isPopular ? 2 : 1,
-                        borderColor: isPopular ? colors.primary : colors.border,
-                        borderRadius: 20,
-                        padding: 20,
-                        overflow: 'hidden',
-                      }}>
-                      {isPopular && (
-                        <View
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            right: 0,
-                            backgroundColor: colors.primary,
-                            paddingHorizontal: 12,
-                            paddingVertical: 4,
-                            borderBottomLeftRadius: 12,
-                          }}>
-                          <Text style={{fontSize: 10, fontWeight: '700', color: colors.white}}>
-                            POPULAR
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 12,
+                        marginBottom: 12,
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 22,
+                          backgroundColor: isUnlimited
+                            ? `${colors.primary}15`
+                            : `${colors.accent}15`,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {isUnlimited ? (
+                          <Crown size={20} color={colors.primary} />
+                        ) : (
+                          <Sparkles size={20} color={colors.accent} />
+                        )}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
+                          {plan.name}
+                        </Text>
+                        {plan.description ? (
+                          <Text
+                            style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}
+                            numberOfLines={2}
+                          >
+                            {plan.description}
                           </Text>
-                        </View>
-                      )}
+                        ) : null}
+                      </View>
+                    </View>
 
-                      <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12}}>
-                        <View
-                          style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 22,
-                            backgroundColor: isUnlimited
-                              ? `${colors.primary}15`
-                              : `${colors.accent}15`,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}>
-                          {isUnlimited ? (
-                            <Crown size={20} color={colors.primary} />
-                          ) : (
-                            <Sparkles size={20} color={colors.accent} />
-                          )}
-                        </View>
-                        <View style={{flex: 1}}>
-                          <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground}}>
-                            {plan.name}
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'flex-end',
+                        justifyContent: 'space-between',
+                        marginBottom: 16,
+                      }}
+                    >
+                      <View>
+                        <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+                          {isUnlimited ? 'Subscription' : 'One-time purchase'}
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2 }}>
+                          <Text
+                            style={{ fontSize: 24, fontWeight: '700', color: colors.foreground }}
+                          >
+                            {format(price)}
                           </Text>
-                          {plan.description ? (
-                            <Text
-                              style={{fontSize: 11, color: colors.mutedForeground, marginTop: 2}}
-                              numberOfLines={2}>
-                              {plan.description}
+                          {isUnlimited && plan.duration_days ? (
+                            <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+                              /{plan.duration_days === 30 ? 'mo' : 'yr'}
                             </Text>
                           ) : null}
                         </View>
                       </View>
-
                       <View
                         style={{
-                          flexDirection: 'row',
-                          alignItems: 'flex-end',
-                          justifyContent: 'space-between',
-                          marginBottom: 16,
-                        }}>
-                        <View>
-                          <Text style={{fontSize: 11, color: colors.mutedForeground}}>
-                            {isUnlimited ? 'Subscription' : 'One-time purchase'}
-                          </Text>
-                          <View style={{flexDirection: 'row', alignItems: 'baseline', gap: 2}}>
-                            <Text style={{fontSize: 24, fontWeight: '700', color: colors.foreground}}>
-                              {format(price)}
-                            </Text>
-                            {isUnlimited && plan.duration_days ? (
-                              <Text style={{fontSize: 12, color: colors.mutedForeground}}>
-                                /{plan.duration_days === 30 ? 'mo' : 'yr'}
-                              </Text>
-                            ) : null}
-                          </View>
-                        </View>
-                        <View
-                          style={{
-                            backgroundColor: `${colors.accent}15`,
-                            paddingHorizontal: 12,
-                            paddingVertical: 6,
-                            borderRadius: 12,
-                          }}>
-                          <Text style={{fontSize: 14, fontWeight: '700', color: colors.accent}}>
-                            {isUnlimited ? 'Unlimited' : `${plan.credits} credits`}
-                          </Text>
-                        </View>
-                      </View>
-
-                      <TouchableOpacity
-                        activeOpacity={0.7}
-                        onPress={() => {
-                          setSelectedPlan(plan);
-                          setShowPurchaseModal(true);
+                          backgroundColor: `${colors.accent}15`,
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 12,
                         }}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Purchase ${plan.name}`}
-                        style={{
-                          backgroundColor: colors.primary,
-                          borderRadius: 14,
-                          paddingVertical: 14,
-                          alignItems: 'center',
-                        }}>
-                        <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>
-                          Purchase
+                      >
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: colors.accent }}>
+                          {isUnlimited ? 'Unlimited' : `${plan.credits} credits`}
                         </Text>
-                      </TouchableOpacity>
+                      </View>
                     </View>
-                  );
-                })}
-              </View>
-            )}
+
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedPlan(plan);
+                        setShowPurchaseModal(true);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Purchase ${plan.name}`}
+                      style={{
+                        backgroundColor: colors.primary,
+                        borderRadius: 14,
+                        paddingVertical: 14,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.white }}>
+                        Purchase
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -823,10 +878,12 @@ export default function WalletScreen() {
         visible={showPurchaseModal}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowPurchaseModal(false)}>
+        onRequestClose={() => setShowPurchaseModal(false)}
+      >
         <Pressable
-          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}
-          onPress={() => !purchasing && setShowPurchaseModal(false)}>
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          onPress={() => !purchasing && setShowPurchaseModal(false)}
+        >
           <Pressable
             style={{
               backgroundColor: colors.card,
@@ -834,9 +891,10 @@ export default function WalletScreen() {
               borderTopRightRadius: 24,
               paddingBottom: 34,
             }}
-            onPress={() => {}}>
+            onPress={() => {}}
+          >
             {/* Handle bar */}
-            <View style={{alignItems: 'center', paddingTop: 12, paddingBottom: 8}}>
+            <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 8 }}>
               <View
                 style={{
                   width: 40,
@@ -847,9 +905,9 @@ export default function WalletScreen() {
               />
             </View>
 
-            <View style={{padding: 24, gap: 20}}>
+            <View style={{ padding: 24, gap: 20 }}>
               {/* Title */}
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View
                   style={{
                     width: 48,
@@ -858,14 +916,15 @@ export default function WalletScreen() {
                     backgroundColor: `${colors.accent}15`,
                     alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
+                  }}
+                >
                   <Sparkles size={24} color={colors.accent} />
                 </View>
                 <View>
-                  <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground}}>
+                  <Text style={{ fontSize: 18, fontWeight: '700', color: colors.foreground }}>
                     Purchase {selectedPlan?.name}
                   </Text>
-                  <Text style={{fontSize: 12, color: colors.mutedForeground}}>
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
                     {selectedPlan?.type === 'bundle'
                       ? `${selectedPlan?.credits} credits`
                       : 'Unlimited access'}
@@ -880,16 +939,17 @@ export default function WalletScreen() {
                   borderRadius: 16,
                   padding: 16,
                   gap: 12,
-                }}>
-                <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                  <Text style={{fontSize: 13, color: colors.mutedForeground}}>Plan</Text>
-                  <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 13, color: colors.mutedForeground }}>Plan</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}>
                     {selectedPlan?.name}
                   </Text>
                 </View>
-                <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                  <Text style={{fontSize: 13, color: colors.mutedForeground}}>Credits</Text>
-                  <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Text style={{ fontSize: 13, color: colors.mutedForeground }}>Credits</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}>
                     {selectedPlan?.type === 'bundle' ? selectedPlan?.credits : 'Unlimited'}
                   </Text>
                 </View>
@@ -900,11 +960,12 @@ export default function WalletScreen() {
                     paddingTop: 12,
                     flexDirection: 'row',
                     justifyContent: 'space-between',
-                  }}>
-                  <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>
+                  }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>
                     Total
                   </Text>
-                  <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>
                     {selectedPlan ? format(getPlanPrice(selectedPlan)) : ''}
                   </Text>
                 </View>
@@ -916,11 +977,10 @@ export default function WalletScreen() {
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                }}>
-                <Text style={{fontSize: 13, color: colors.mutedForeground}}>
-                  Wallet Balance
-                </Text>
-                <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>
+                }}
+              >
+                <Text style={{ fontSize: 13, color: colors.mutedForeground }}>Wallet Balance</Text>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>
                   {format(balance)}
                 </Text>
               </View>
@@ -935,8 +995,9 @@ export default function WalletScreen() {
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 8,
-                  }}>
-                  <Text style={{flex: 1, fontSize: 12, color: colors.destructive}}>
+                  }}
+                >
+                  <Text style={{ flex: 1, fontSize: 12, color: colors.destructive }}>
                     Insufficient wallet balance. Please fund your wallet first.
                   </Text>
                   <TouchableOpacity
@@ -945,8 +1006,9 @@ export default function WalletScreen() {
                       setActiveTab('wallet');
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel="Add funds to wallet">
-                    <Text style={{fontSize: 12, fontWeight: '700', color: colors.primary}}>
+                    accessibilityLabel="Add funds to wallet"
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
                       Add Funds
                     </Text>
                   </TouchableOpacity>
@@ -954,7 +1016,7 @@ export default function WalletScreen() {
               )}
 
               {/* Action buttons */}
-              <View style={{flexDirection: 'row', gap: 12}}>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
                 <TouchableOpacity
                   activeOpacity={0.7}
                   onPress={() => {
@@ -971,8 +1033,9 @@ export default function WalletScreen() {
                     borderWidth: 1,
                     borderColor: colors.border,
                     alignItems: 'center',
-                  }}>
-                  <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+                  }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
                     Cancel
                   </Text>
                 </TouchableOpacity>
@@ -981,7 +1044,9 @@ export default function WalletScreen() {
                   activeOpacity={0.7}
                   onPress={handlePurchase}
                   accessibilityRole="button"
-                  accessibilityLabel={selectedPlan ? `Pay ${format(getPlanPrice(selectedPlan))}` : 'Pay'}
+                  accessibilityLabel={
+                    selectedPlan ? `Pay ${format(getPlanPrice(selectedPlan))}` : 'Pay'
+                  }
                   disabled={
                     purchasing ||
                     !selectedPlan ||
@@ -992,23 +1057,24 @@ export default function WalletScreen() {
                     paddingVertical: 14,
                     borderRadius: 14,
                     backgroundColor:
-                      purchasing || !selectedPlan || balance < (selectedPlan ? getPlanPrice(selectedPlan) : Infinity)
+                      purchasing ||
+                      !selectedPlan ||
+                      balance < (selectedPlan ? getPlanPrice(selectedPlan) : Infinity)
                         ? `${colors.primary}50`
                         : colors.primary,
                     alignItems: 'center',
                     flexDirection: 'row',
                     justifyContent: 'center',
                     gap: 8,
-                  }}>
-                  {purchasing ? (
-                    <ActivityIndicator size="small" color={colors.white} />
-                  ) : null}
-                  <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>
+                  }}
+                >
+                  {purchasing ? <ActivityIndicator size="small" color={colors.white} /> : null}
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.white }}>
                     {purchasing
                       ? 'Processing...'
                       : selectedPlan
-                        ? `Pay ${format(getPlanPrice(selectedPlan))}`
-                        : 'Pay'}
+                      ? `Pay ${format(getPlanPrice(selectedPlan))}`
+                      : 'Pay'}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -1022,35 +1088,79 @@ export default function WalletScreen() {
         visible={showFundModal}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowFundModal(false)}>
+        onRequestClose={() => setShowFundModal(false)}
+      >
         <Pressable
-          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}
-          onPress={() => !funding && setShowFundModal(false)}>
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          onPress={() => !funding && setShowFundModal(false)}
+        >
           <Pressable
-            style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 34}}
-            onPress={() => {}}>
-            <View style={{alignItems: 'center', paddingTop: 12, paddingBottom: 8}}>
-              <View style={{width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border}} />
+            style={{
+              backgroundColor: colors.card,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingBottom: 34,
+            }}
+            onPress={() => {}}
+          >
+            <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 8 }}>
+              <View
+                style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }}
+              />
             </View>
-            <View style={{padding: 24, gap: 20}}>
+            <View style={{ padding: 24, gap: 20 }}>
               {/* Title */}
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-                <View style={{width: 48, height: 48, borderRadius: 24, backgroundColor: `${colors.primary}15`, alignItems: 'center', justifyContent: 'center'}}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: `${colors.primary}15`,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <CreditCard size={24} color={colors.primary} />
                 </View>
                 <View>
-                  <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground}}>Fund Wallet</Text>
-                  <Text style={{fontSize: 12, color: colors.mutedForeground}}>Enter the amount you want to add</Text>
+                  <Text style={{ fontSize: 18, fontWeight: '700', color: colors.foreground }}>
+                    Fund Wallet
+                  </Text>
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+                    Enter the amount you want to add
+                  </Text>
                 </View>
               </View>
 
               {/* Amount Input — always NGN since Paystack charges in Naira */}
-              <View style={{backgroundColor: colors.muted, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center'}}>
-                <Text style={{fontSize: 24, fontWeight: '700', color: colors.mutedForeground, marginRight: 4}}>
+              <View
+                style={{
+                  backgroundColor: colors.muted,
+                  borderRadius: 16,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 24,
+                    fontWeight: '700',
+                    color: colors.mutedForeground,
+                    marginRight: 4,
+                  }}
+                >
                   {'\u20A6'}
                 </Text>
                 <TextInput
-                  style={{flex: 1, fontSize: 24, fontWeight: '700', color: colors.foreground, padding: 0}}
+                  style={{
+                    flex: 1,
+                    fontSize: 24,
+                    fontWeight: '700',
+                    color: colors.foreground,
+                    padding: 0,
+                  }}
                   placeholder="0.00"
                   placeholderTextColor={`${colors.mutedForeground}80`}
                   keyboardType="numeric"
@@ -1061,8 +1171,8 @@ export default function WalletScreen() {
               </View>
 
               {/* Quick Amounts */}
-              <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
-                {QUICK_AMOUNTS.map(amt => {
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {QUICK_AMOUNTS.map((amt) => {
                   const isActive = fundAmount === String(amt);
                   return (
                     <TouchableOpacity
@@ -1078,28 +1188,49 @@ export default function WalletScreen() {
                         borderWidth: 1,
                         borderColor: isActive ? colors.primary : colors.border,
                         backgroundColor: isActive ? `${colors.primary}15` : 'transparent',
-                      }}>
-                      <Text style={{fontSize: 13, fontWeight: '600', color: isActive ? colors.primary : colors.foreground}}>
-                        {'\u20A6'}{amt.toLocaleString()}
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: '600',
+                          color: isActive ? colors.primary : colors.foreground,
+                        }}
+                      >
+                        {'\u20A6'}
+                        {amt.toLocaleString()}
                       </Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
 
-              <Text style={{fontSize: 11, color: colors.mutedForeground}}>
+              <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
                 Minimum amount: {'\u20A6'}100
               </Text>
 
               {/* Actions */}
-              <View style={{flexDirection: 'row', gap: 12}}>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => {setShowFundModal(false); setFundAmount('');}}
+                  onPress={() => {
+                    setShowFundModal(false);
+                    setFundAmount('');
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel="Cancel"
-                  style={{flex: 1, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, alignItems: 'center'}}>
-                  <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>Cancel</Text>
+                  style={{
+                    flex: 1,
+                    paddingVertical: 14,
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
+                    Cancel
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   activeOpacity={0.7}
@@ -1111,14 +1242,18 @@ export default function WalletScreen() {
                     flex: 1,
                     paddingVertical: 14,
                     borderRadius: 14,
-                    backgroundColor: (!fundAmount || parseFloat(fundAmount) < 100) ? `${colors.primary}50` : colors.primary,
+                    backgroundColor:
+                      !fundAmount || parseFloat(fundAmount) < 100
+                        ? `${colors.primary}50`
+                        : colors.primary,
                     alignItems: 'center',
                     flexDirection: 'row',
                     justifyContent: 'center',
                     gap: 8,
-                  }}>
+                  }}
+                >
                   {funding && <ActivityIndicator size="small" color={colors.white} />}
-                  <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.white }}>
                     {funding ? 'Processing...' : 'Continue to Payment'}
                   </Text>
                 </TouchableOpacity>
@@ -1133,36 +1268,79 @@ export default function WalletScreen() {
         visible={showShareModal}
         transparent
         animationType="slide"
-        onRequestClose={closeShareModal}>
+        onRequestClose={closeShareModal}
+      >
         <Pressable
-          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}
-          onPress={closeShareModal}>
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+          onPress={closeShareModal}
+        >
           <Pressable
-            style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 34, maxHeight: '85%'}}
-            onPress={() => {}}>
-            <View style={{alignItems: 'center', paddingTop: 12, paddingBottom: 8}}>
-              <View style={{width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border}} />
+            style={{
+              backgroundColor: colors.card,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingBottom: 34,
+              maxHeight: '85%',
+            }}
+            onPress={() => {}}
+          >
+            <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 8 }}>
+              <View
+                style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }}
+              />
             </View>
 
-            <ScrollView style={{maxHeight: 500}} contentContainerStyle={{padding: 24, gap: 20}} keyboardShouldPersistTaps="handled">
+            <ScrollView
+              style={{ maxHeight: 500 }}
+              contentContainerStyle={{ padding: 24, gap: 20 }}
+              keyboardShouldPersistTaps="handled"
+            >
               {/* ── STEP 1: Search & Select ── */}
               {shareStep === 1 && (
                 <>
-                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-                    <View style={{width: 48, height: 48, borderRadius: 24, backgroundColor: `${colors.accent}15`, alignItems: 'center', justifyContent: 'center'}}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        backgroundColor: `${colors.accent}15`,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
                       <Send size={24} color={colors.accent} />
                     </View>
                     <View>
-                      <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground}}>Share AI Credits</Text>
-                      <Text style={{fontSize: 12, color: colors.mutedForeground}}>Send credits to another patient</Text>
+                      <Text style={{ fontSize: 18, fontWeight: '700', color: colors.foreground }}>
+                        Share AI Credits
+                      </Text>
+                      <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+                        Send credits to another patient
+                      </Text>
                     </View>
                   </View>
 
                   {/* Search Input */}
-                  <View style={{backgroundColor: colors.muted, borderRadius: 14, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, height: 48}}>
+                  <View
+                    style={{
+                      backgroundColor: colors.muted,
+                      borderRadius: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 14,
+                      height: 48,
+                    }}
+                  >
                     <Search size={18} color={colors.mutedForeground} />
                     <TextInput
-                      style={{flex: 1, fontSize: 14, color: colors.foreground, marginLeft: 10, padding: 0}}
+                      style={{
+                        flex: 1,
+                        fontSize: 14,
+                        color: colors.foreground,
+                        marginLeft: 10,
+                        padding: 0,
+                      }}
                       placeholder="Search by name or email..."
                       placeholderTextColor={`${colors.mutedForeground}80`}
                       value={searchQuery}
@@ -1171,16 +1349,29 @@ export default function WalletScreen() {
                       accessibilityLabel="Search patients by name or email"
                     />
                     {searchQuery.length > 0 && (
-                      <TouchableOpacity onPress={() => {setSearchQuery(''); setSearchResults([]);}} accessibilityRole="button" accessibilityLabel="Clear search">
+                      <TouchableOpacity
+                        onPress={() => {
+                          setSearchQuery('');
+                          setSearchResults([]);
+                        }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Clear search"
+                      >
                         <X size={18} color={colors.mutedForeground} />
                       </TouchableOpacity>
                     )}
-                    {searching && <ActivityIndicator size="small" color={colors.primary} style={{marginLeft: 8}} />}
+                    {searching && (
+                      <ActivityIndicator
+                        size="small"
+                        color={colors.primary}
+                        style={{ marginLeft: 8 }}
+                      />
+                    )}
                   </View>
 
                   {/* Search Results */}
                   {searchResults.map((patient: any) => {
-                    const isSelected = !!selectedRecipient && (selectedRecipient.id === patient.id);
+                    const isSelected = !!selectedRecipient && selectedRecipient.id === patient.id;
                     const initial = (patient.name || patient.email || '?')[0].toUpperCase();
                     return (
                       <TouchableOpacity
@@ -1189,7 +1380,7 @@ export default function WalletScreen() {
                         onPress={() => setSelectedRecipient(isSelected ? null : patient)}
                         accessibilityRole="radio"
                         accessibilityLabel={patient.name || patient.email}
-                        accessibilityState={{selected: isSelected}}
+                        accessibilityState={{ selected: isSelected }}
                         style={{
                           flexDirection: 'row',
                           alignItems: 'center',
@@ -1199,13 +1390,31 @@ export default function WalletScreen() {
                           borderWidth: 1.5,
                           borderColor: isSelected ? colors.primary : colors.border,
                           backgroundColor: isSelected ? `${colors.primary}10` : colors.card,
-                        }}>
-                        <View style={{width: 40, height: 40, borderRadius: 20, backgroundColor: `${colors.accent}20`, alignItems: 'center', justifyContent: 'center'}}>
-                          <Text style={{fontSize: 16, fontWeight: '700', color: colors.accent}}>{initial}</Text>
+                        }}
+                      >
+                        <View
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            backgroundColor: `${colors.accent}20`,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.accent }}>
+                            {initial}
+                          </Text>
                         </View>
-                        <View style={{flex: 1}}>
-                          <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>{patient.name}</Text>
-                          <Text style={{fontSize: 12, color: colors.mutedForeground}}>{patient.email}</Text>
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}
+                          >
+                            {patient.name}
+                          </Text>
+                          <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+                            {patient.email}
+                          </Text>
                         </View>
                         {isSelected && <Check size={18} color={colors.primary} />}
                       </TouchableOpacity>
@@ -1213,58 +1422,123 @@ export default function WalletScreen() {
                   })}
 
                   {searchQuery.length >= 2 && searchResults.length === 0 && !searching && (
-                    <Text style={{fontSize: 13, color: colors.mutedForeground, textAlign: 'center', paddingVertical: 12}}>No patients found</Text>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        color: colors.mutedForeground,
+                        textAlign: 'center',
+                        paddingVertical: 12,
+                      }}
+                    >
+                      No patients found
+                    </Text>
                   )}
 
                   {/* Amount Stepper (only when recipient selected) */}
                   {selectedRecipient && (
-                    <View style={{gap: 8}}>
-                      <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>Credits to Send</Text>
-                      <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+                    <View style={{ gap: 8 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}>
+                        Credits to Send
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                         <TouchableOpacity
-                          onPress={() => setCreditsToSend(Math.max(sharingSettings?.min_amount || 1, creditsToSend - 1))}
+                          onPress={() =>
+                            setCreditsToSend(
+                              Math.max(sharingSettings?.min_amount || 1, creditsToSend - 1)
+                            )
+                          }
                           accessibilityRole="button"
                           accessibilityLabel="Decrease credits"
-                          style={{width: 40, height: 40, borderRadius: 12, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center'}}>
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 12,
+                            backgroundColor: colors.muted,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
                           <Minus size={18} color={colors.foreground} />
                         </TouchableOpacity>
-                        <View style={{flex: 1, backgroundColor: colors.muted, borderRadius: 12, height: 48, alignItems: 'center', justifyContent: 'center'}}>
-                          <Text style={{fontSize: 24, fontWeight: '700', color: colors.foreground}}>{creditsToSend}</Text>
+                        <View
+                          style={{
+                            flex: 1,
+                            backgroundColor: colors.muted,
+                            borderRadius: 12,
+                            height: 48,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Text
+                            style={{ fontSize: 24, fontWeight: '700', color: colors.foreground }}
+                          >
+                            {creditsToSend}
+                          </Text>
                         </View>
                         <TouchableOpacity
                           onPress={() => setCreditsToSend(Math.min(maxTransfer, creditsToSend + 1))}
                           accessibilityRole="button"
                           accessibilityLabel="Increase credits"
-                          style={{width: 40, height: 40, borderRadius: 12, backgroundColor: colors.muted, alignItems: 'center', justifyContent: 'center'}}>
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 12,
+                            backgroundColor: colors.muted,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
                           <Plus size={18} color={colors.foreground} />
                         </TouchableOpacity>
                       </View>
-                      <Text style={{fontSize: 11, color: colors.mutedForeground}}>
-                        Available: {purchasedCredits} purchased credits (max {maxTransfer} per transfer)
+                      <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+                        Available: {purchasedCredits} purchased credits (max {maxTransfer} per
+                        transfer)
                       </Text>
                     </View>
                   )}
 
                   {/* Actions */}
-                  <View style={{flexDirection: 'row', gap: 12}}>
+                  <View style={{ flexDirection: 'row', gap: 12 }}>
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={closeShareModal}
-                      style={{flex: 1, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, alignItems: 'center'}}>
-                      <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => setShareStep(2)}
-                      disabled={!selectedRecipient || creditsToSend < (sharingSettings?.min_amount || 1) || creditsToSend > maxTransfer}
                       style={{
                         flex: 1,
                         paddingVertical: 14,
                         borderRadius: 14,
-                        backgroundColor: (!selectedRecipient || creditsToSend > maxTransfer) ? `${colors.primary}50` : colors.primary,
+                        borderWidth: 1,
+                        borderColor: colors.border,
                         alignItems: 'center',
-                      }}>
-                      <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>Continue</Text>
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
+                        Cancel
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setShareStep(2)}
+                      disabled={
+                        !selectedRecipient ||
+                        creditsToSend < (sharingSettings?.min_amount || 1) ||
+                        creditsToSend > maxTransfer
+                      }
+                      style={{
+                        flex: 1,
+                        paddingVertical: 14,
+                        borderRadius: 14,
+                        backgroundColor:
+                          !selectedRecipient || creditsToSend > maxTransfer
+                            ? `${colors.primary}50`
+                            : colors.primary,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.white }}>
+                        Continue
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </>
@@ -1273,53 +1547,127 @@ export default function WalletScreen() {
               {/* ── STEP 2: Confirmation ── */}
               {shareStep === 2 && (
                 <>
-                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
-                    <View style={{width: 48, height: 48, borderRadius: 24, backgroundColor: `${colors.accent}15`, alignItems: 'center', justifyContent: 'center'}}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        backgroundColor: `${colors.accent}15`,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
                       <Send size={24} color={colors.accent} />
                     </View>
                     <View>
-                      <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground}}>Confirm Transfer</Text>
-                      <Text style={{fontSize: 12, color: colors.mutedForeground}}>Review your credit transfer</Text>
+                      <Text style={{ fontSize: 18, fontWeight: '700', color: colors.foreground }}>
+                        Confirm Transfer
+                      </Text>
+                      <Text style={{ fontSize: 12, color: colors.mutedForeground }}>
+                        Review your credit transfer
+                      </Text>
                     </View>
                   </View>
 
                   {/* Transfer summary */}
-                  <View style={{alignItems: 'center', paddingVertical: 12}}>
-                    <Text style={{fontSize: 13, color: colors.mutedForeground}}>You're about to send</Text>
-                    <Text style={{fontSize: 40, fontWeight: '700', color: colors.accent, marginVertical: 4}}>{creditsToSend}</Text>
-                    <Text style={{fontSize: 15, fontWeight: '600', color: colors.foreground}}>AI Credits to {selectedRecipient?.name}</Text>
+                  <View style={{ alignItems: 'center', paddingVertical: 12 }}>
+                    <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
+                      You're about to send
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 40,
+                        fontWeight: '700',
+                        color: colors.accent,
+                        marginVertical: 4,
+                      }}
+                    >
+                      {creditsToSend}
+                    </Text>
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: colors.foreground }}>
+                      AI Credits to {selectedRecipient?.name}
+                    </Text>
                   </View>
 
                   {/* Balance breakdown */}
-                  <View style={{backgroundColor: colors.muted, borderRadius: 16, padding: 16, gap: 12}}>
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                      <Text style={{fontSize: 13, color: colors.mutedForeground}}>Your Balance</Text>
-                      <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>{purchasedCredits} credits</Text>
+                  <View
+                    style={{
+                      backgroundColor: colors.muted,
+                      borderRadius: 16,
+                      padding: 16,
+                      gap: 12,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
+                        Your Balance
+                      </Text>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}>
+                        {purchasedCredits} credits
+                      </Text>
                     </View>
-                    <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-                      <Text style={{fontSize: 13, color: colors.destructive}}>Credits to Send</Text>
-                      <Text style={{fontSize: 13, fontWeight: '600', color: colors.destructive}}>-{creditsToSend} credits</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={{ fontSize: 13, color: colors.destructive }}>
+                        Credits to Send
+                      </Text>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: colors.destructive }}>
+                        -{creditsToSend} credits
+                      </Text>
                     </View>
-                    <View style={{borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12, flexDirection: 'row', justifyContent: 'space-between'}}>
-                      <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>Remaining</Text>
-                      <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>{purchasedCredits - creditsToSend} credits</Text>
+                    <View
+                      style={{
+                        borderTopWidth: 1,
+                        borderTopColor: colors.border,
+                        paddingTop: 12,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>
+                        Remaining
+                      </Text>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>
+                        {purchasedCredits - creditsToSend} credits
+                      </Text>
                     </View>
                   </View>
 
                   {/* Warning */}
-                  <View style={{backgroundColor: `${colors.destructive}15`, borderRadius: 12, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                  <View
+                    style={{
+                      backgroundColor: `${colors.destructive}15`,
+                      borderRadius: 12,
+                      padding: 12,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
                     <AlertTriangle size={18} color={colors.destructive} />
-                    <Text style={{flex: 1, fontSize: 12, color: colors.destructive}}>This action cannot be undone.</Text>
+                    <Text style={{ flex: 1, fontSize: 12, color: colors.destructive }}>
+                      This action cannot be undone.
+                    </Text>
                   </View>
 
                   {/* Actions */}
-                  <View style={{flexDirection: 'row', gap: 12}}>
+                  <View style={{ flexDirection: 'row', gap: 12 }}>
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => setShareStep(1)}
                       disabled={transferring}
-                      style={{flex: 1, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, alignItems: 'center'}}>
-                      <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>Back</Text>
+                      style={{
+                        flex: 1,
+                        paddingVertical: 14,
+                        borderRadius: 14,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
+                        Back
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.7}
@@ -1334,9 +1682,10 @@ export default function WalletScreen() {
                         flexDirection: 'row',
                         justifyContent: 'center',
                         gap: 8,
-                      }}>
+                      }}
+                    >
                       {transferring && <ActivityIndicator size="small" color={colors.white} />}
-                      <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>
+                      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.white }}>
                         {transferring ? 'Sending...' : 'Confirm & Send'}
                       </Text>
                     </TouchableOpacity>
@@ -1346,15 +1695,31 @@ export default function WalletScreen() {
 
               {/* ── STEP 3: Success ── */}
               {shareStep === 3 && (
-                <View style={{alignItems: 'center', paddingVertical: 20, gap: 16}}>
-                  <View style={{width: 72, height: 72, borderRadius: 36, backgroundColor: `${colors.success}15`, alignItems: 'center', justifyContent: 'center'}}>
+                <View style={{ alignItems: 'center', paddingVertical: 20, gap: 16 }}>
+                  <View
+                    style={{
+                      width: 72,
+                      height: 72,
+                      borderRadius: 36,
+                      backgroundColor: `${colors.success}15`,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
                     <Check size={36} color={colors.success} />
                   </View>
-                  <Text style={{fontSize: 20, fontWeight: '700', color: colors.foreground}}>Transfer Successful</Text>
-                  <Text style={{fontSize: 14, color: colors.mutedForeground, textAlign: 'center'}}>
-                    {creditsToSend} credit{creditsToSend !== 1 ? 's' : ''} sent to {selectedRecipient?.name}
+                  <Text style={{ fontSize: 20, fontWeight: '700', color: colors.foreground }}>
+                    Transfer Successful
                   </Text>
-                  <Text style={{fontSize: 12, color: colors.mutedForeground, textAlign: 'center'}}>
+                  <Text
+                    style={{ fontSize: 14, color: colors.mutedForeground, textAlign: 'center' }}
+                  >
+                    {creditsToSend} credit{creditsToSend !== 1 ? 's' : ''} sent to{' '}
+                    {selectedRecipient?.name}
+                  </Text>
+                  <Text
+                    style={{ fontSize: 12, color: colors.mutedForeground, textAlign: 'center' }}
+                  >
                     Both you and the recipient will receive email confirmations.
                   </Text>
                   <TouchableOpacity
@@ -1367,8 +1732,11 @@ export default function WalletScreen() {
                       borderRadius: 14,
                       backgroundColor: colors.primary,
                       alignItems: 'center',
-                    }}>
-                    <Text style={{fontSize: 14, fontWeight: '700', color: colors.white}}>Done</Text>
+                    }}
+                  >
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: colors.white }}>
+                      Done
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -1378,11 +1746,8 @@ export default function WalletScreen() {
       </Modal>
 
       {/* ═══════ PAYSTACK WEBVIEW MODAL ═══════ */}
-      <Modal
-        visible={!!paystackUrl}
-        animationType="slide"
-        onRequestClose={handleClosePaystack}>
-        <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+      <Modal visible={!!paystackUrl} animationType="slide" onRequestClose={handleClosePaystack}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
           <View
             style={{
               flexDirection: 'row',
@@ -1391,8 +1756,14 @@ export default function WalletScreen() {
               paddingVertical: 12,
               borderBottomWidth: 1,
               borderBottomColor: colors.border,
-            }}>
-            <TouchableOpacity onPress={handleClosePaystack} style={{padding: 4}} accessibilityRole="button" accessibilityLabel="Close payment">
+            }}
+          >
+            <TouchableOpacity
+              onPress={handleClosePaystack}
+              style={{ padding: 4 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close payment"
+            >
               <X size={24} color={colors.foreground} />
             </TouchableOpacity>
             <Text
@@ -1402,21 +1773,35 @@ export default function WalletScreen() {
                 fontSize: 16,
                 fontWeight: '700',
                 color: colors.foreground,
-              }}>
+              }}
+            >
               Complete Payment
             </Text>
-            <View style={{width: 32}} />
+            <View style={{ width: 32 }} />
           </View>
           {paystackUrl && (
             <WebView
-              source={{uri: paystackUrl}}
+              source={{ uri: paystackUrl }}
               onNavigationStateChange={handlePaystackNavigation}
-              style={{flex: 1}}
+              style={{ flex: 1 }}
               startInLoadingState
               renderLoading={() => (
-                <View style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background}}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: colors.background,
+                  }}
+                >
                   <ActivityIndicator size="large" color={colors.primary} />
-                  <Text style={{marginTop: 12, fontSize: 14, color: colors.mutedForeground}}>Loading payment page...</Text>
+                  <Text style={{ marginTop: 12, fontSize: 14, color: colors.mutedForeground }}>
+                    Loading payment page...
+                  </Text>
                 </View>
               )}
             />
@@ -1439,19 +1824,17 @@ function CreditBreakdownRow({
   dotColor: string;
 }) {
   return (
-    <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-      <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-        <View
-          style={{width: 8, height: 8, borderRadius: 4, backgroundColor: dotColor}}
-        />
-        <Text style={{fontSize: 13, color: colors.mutedForeground}}>{label}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: dotColor }} />
+        <Text style={{ fontSize: 13, color: colors.mutedForeground }}>{label}</Text>
       </View>
-      <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>{value}</Text>
+      <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>{value}</Text>
     </View>
   );
 }
 
-function CreditTransactionItem({tx}: {tx: any}) {
+function CreditTransactionItem({ tx }: { tx: any }) {
   const display = getCreditTxnDisplay(tx.type);
   const isPositive = tx.credits_delta > 0;
   const date = tx.created_at;
@@ -1468,7 +1851,8 @@ function CreditTransactionItem({tx}: {tx: any}) {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
-      }}>
+      }}
+    >
       <View
         style={{
           width: 40,
@@ -1477,17 +1861,19 @@ function CreditTransactionItem({tx}: {tx: any}) {
           backgroundColor: `${display.color}15`,
           alignItems: 'center',
           justifyContent: 'center',
-        }}>
+        }}
+      >
         {display.icon}
       </View>
-      <View style={{flex: 1}}>
+      <View style={{ flex: 1 }}>
         <Text
-          style={{fontSize: 13, fontWeight: '500', color: colors.foreground}}
-          numberOfLines={1}>
+          style={{ fontSize: 13, fontWeight: '500', color: colors.foreground }}
+          numberOfLines={1}
+        >
           {tx.description || display.label}
         </Text>
         {date ? (
-          <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 2}}>
+          <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
             {formatDate(date)}
           </Text>
         ) : null}
@@ -1497,7 +1883,8 @@ function CreditTransactionItem({tx}: {tx: any}) {
           fontSize: 14,
           fontWeight: '700',
           color: isPositive ? colors.success : colors.destructive,
-        }}>
+        }}
+      >
         {isPositive ? '+' : ''}
         {tx.credits_delta}
       </Text>
@@ -1512,27 +1899,71 @@ function getCreditTxnDisplay(type: string): {
 } {
   switch (type) {
     case 'free_usage':
-      return {icon: <Zap size={18} color={colors.destructive} />, color: colors.destructive, label: 'Free credit used'};
+      return {
+        icon: <Zap size={18} color={colors.destructive} />,
+        color: colors.destructive,
+        label: 'Free credit used',
+      };
     case 'purchased_usage':
-      return {icon: <Zap size={18} color={colors.destructive} />, color: colors.destructive, label: 'Purchased credit used'};
+      return {
+        icon: <Zap size={18} color={colors.destructive} />,
+        color: colors.destructive,
+        label: 'Purchased credit used',
+      };
     case 'gifted_usage':
-      return {icon: <Zap size={18} color={colors.destructive} />, color: colors.destructive, label: 'Gifted credit used'};
+      return {
+        icon: <Zap size={18} color={colors.destructive} />,
+        color: colors.destructive,
+        label: 'Gifted credit used',
+      };
     case 'unlimited_usage':
-      return {icon: <Zap size={18} color={colors.accent} />, color: colors.accent, label: 'Unlimited usage'};
+      return {
+        icon: <Zap size={18} color={colors.accent} />,
+        color: colors.accent,
+        label: 'Unlimited usage',
+      };
     case 'bundle_purchase':
-      return {icon: <ShoppingCart size={18} color={colors.success} />, color: colors.success, label: 'Credits purchased'};
+      return {
+        icon: <ShoppingCart size={18} color={colors.success} />,
+        color: colors.success,
+        label: 'Credits purchased',
+      };
     case 'unlimited_purchase':
-      return {icon: <Crown size={18} color={colors.success} />, color: colors.success, label: 'Subscription purchased'};
+      return {
+        icon: <Crown size={18} color={colors.success} />,
+        color: colors.success,
+        label: 'Subscription purchased',
+      };
     case 'admin_gift':
     case 'admin_gift_unlimited':
-      return {icon: <Gift size={18} color={colors.success} />, color: colors.success, label: 'Admin gifted credits'};
+      return {
+        icon: <Gift size={18} color={colors.success} />,
+        color: colors.success,
+        label: 'Admin gifted credits',
+      };
     case 'monthly_reset':
-      return {icon: <Sparkles size={18} color={colors.primary} />, color: colors.primary, label: 'Monthly free credits reset'};
+      return {
+        icon: <Sparkles size={18} color={colors.primary} />,
+        color: colors.primary,
+        label: 'Monthly free credits reset',
+      };
     case 'credit_transfer_sent':
-      return {icon: <ArrowUpRight size={18} color={colors.destructive} />, color: colors.destructive, label: 'Credits sent'};
+      return {
+        icon: <ArrowUpRight size={18} color={colors.destructive} />,
+        color: colors.destructive,
+        label: 'Credits sent',
+      };
     case 'credit_transfer_received':
-      return {icon: <ArrowDownLeft size={18} color={colors.success} />, color: colors.success, label: 'Credits received'};
+      return {
+        icon: <ArrowDownLeft size={18} color={colors.success} />,
+        color: colors.success,
+        label: 'Credits received',
+      };
     default:
-      return {icon: <Sparkles size={18} color={colors.mutedForeground} />, color: colors.mutedForeground, label: type};
+      return {
+        icon: <Sparkles size={18} color={colors.mutedForeground} />,
+        color: colors.mutedForeground,
+        label: type,
+      };
   }
 }

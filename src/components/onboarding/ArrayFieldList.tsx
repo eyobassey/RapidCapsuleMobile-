@@ -1,7 +1,8 @@
+import { Plus, Trash2 } from 'lucide-react-native';
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
-import {Plus, Trash2} from 'lucide-react-native';
-import {colors} from '../../theme/colors';
+import { TouchableOpacity, View } from 'react-native';
+import { colors } from '../../theme/colors';
+import { Text } from '../ui/Text';
 
 interface ArrayFieldListProps<T> {
   items: T[];
@@ -23,7 +24,7 @@ export default function ArrayFieldList<T>({
   emptyText,
 }: ArrayFieldListProps<T>) {
   return (
-    <View style={{gap: 12}}>
+    <View style={{ gap: 12 }}>
       {items.length === 0 && emptyText ? (
         <View
           style={{
@@ -31,8 +32,9 @@ export default function ArrayFieldList<T>({
             backgroundColor: colors.muted,
             borderRadius: 12,
             alignItems: 'center',
-          }}>
-          <Text style={{fontSize: 13, color: colors.mutedForeground, textAlign: 'center'}}>
+          }}
+        >
+          <Text style={{ fontSize: 13, color: colors.mutedForeground, textAlign: 'center' }}>
             {emptyText}
           </Text>
         </View>
@@ -47,14 +49,16 @@ export default function ArrayFieldList<T>({
             borderColor: colors.border,
             borderRadius: 16,
             padding: 16,
-          }}>
+          }}
+        >
           <View
             style={{
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: 12,
-            }}>
+            }}
+          >
             <Text
               style={{
                 fontSize: 12,
@@ -62,13 +66,15 @@ export default function ArrayFieldList<T>({
                 color: colors.mutedForeground,
                 textTransform: 'uppercase',
                 letterSpacing: 0.5,
-              }}>
+              }}
+            >
               #{index + 1}
             </Text>
             <TouchableOpacity
               onPress={() => onRemove(index)}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-              activeOpacity={0.7}>
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              activeOpacity={0.7}
+            >
               <Trash2 size={16} color={colors.destructive} />
             </TouchableOpacity>
           </View>
@@ -90,11 +96,10 @@ export default function ArrayFieldList<T>({
             borderWidth: 1,
             borderColor: colors.primary,
             borderStyle: 'dashed',
-          }}>
+          }}
+        >
           <Plus size={18} color={colors.primary} />
-          <Text style={{fontSize: 14, fontWeight: '600', color: colors.primary}}>
-            {addLabel}
-          </Text>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary }}>{addLabel}</Text>
         </TouchableOpacity>
       ) : null}
     </View>

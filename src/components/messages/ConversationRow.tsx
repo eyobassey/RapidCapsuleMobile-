@@ -1,10 +1,11 @@
+import { File as FileIcon, Image as ImageIcon, Mic, Video } from 'lucide-react-native';
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
-import {Image as ImageIcon, File as FileIcon, Mic, Video} from 'lucide-react-native';
-import {Avatar} from '../ui';
-import {colors} from '../../theme/colors';
-import {formatRelativeDate} from '../../utils/formatters';
-import type {Conversation, PresenceStatus, UserSnippet} from '../../types/messaging.types';
+import { TouchableOpacity, View } from 'react-native';
+import { colors } from '../../theme/colors';
+import type { Conversation, PresenceStatus, UserSnippet } from '../../types/messaging.types';
+import { formatRelativeDate } from '../../utils/formatters';
+import { Avatar } from '../ui';
+import { Text } from '../ui/Text';
 
 interface Props {
   conversation: Conversation;
@@ -13,27 +14,18 @@ interface Props {
   onPress: () => void;
 }
 
-export default function ConversationRow({
-  conversation,
-  myUserId,
-  presenceMap,
-  onPress,
-}: Props) {
+export default function ConversationRow({ conversation, myUserId, presenceMap, onPress }: Props) {
   // Get the other participant
-  const otherParticipant = conversation.participants.find(p => {
+  const otherParticipant = conversation.participants.find((p) => {
     const uid = typeof p.user === 'string' ? p.user : (p.user as UserSnippet)?._id;
     return uid !== myUserId;
   });
 
   const otherUser =
-    typeof otherParticipant?.user === 'object'
-      ? (otherParticipant.user as UserSnippet)
-      : null;
+    typeof otherParticipant?.user === 'object' ? (otherParticipant.user as UserSnippet) : null;
 
   const otherId =
-    typeof otherParticipant?.user === 'string'
-      ? otherParticipant.user
-      : otherUser?._id || '';
+    typeof otherParticipant?.user === 'string' ? otherParticipant.user : otherUser?._id || '';
 
   const firstName = otherUser?.profile?.first_name || '';
   const lastName = otherUser?.profile?.last_name || '';
@@ -95,15 +87,11 @@ export default function ConversationRow({
         paddingHorizontal: 16,
         paddingVertical: 12,
         backgroundColor: unreadCount > 0 ? `${colors.primary}06` : 'transparent',
-      }}>
+      }}
+    >
       {/* Avatar with presence dot */}
       <View>
-        <Avatar
-          uri={photo}
-          firstName={firstName}
-          lastName={lastName}
-          size="md"
-        />
+        <Avatar uri={photo} firstName={firstName} lastName={lastName} size="md" />
         {isOnline && (
           <View
             style={{
@@ -122,8 +110,10 @@ export default function ConversationRow({
       </View>
 
       {/* Name + last message */}
-      <View style={{flex: 1}}>
-        <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
+      <View style={{ flex: 1 }}>
+        <View
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+        >
           <Text
             numberOfLines={1}
             style={{
@@ -132,7 +122,8 @@ export default function ConversationRow({
               color: colors.foreground,
               flex: 1,
               marginRight: 8,
-            }}>
+            }}
+          >
             {displayName}
           </Text>
           {lastMsg?.sent_at && (
@@ -141,13 +132,14 @@ export default function ConversationRow({
                 fontSize: 11,
                 color: unreadCount > 0 ? colors.primary : colors.mutedForeground,
                 fontWeight: unreadCount > 0 ? '600' : '400',
-              }}>
+              }}
+            >
               {formatRelativeDate(lastMsg.sent_at)}
             </Text>
           )}
         </View>
 
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2}}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
           {getMessageIcon()}
           <Text
             numberOfLines={1}
@@ -156,7 +148,8 @@ export default function ConversationRow({
               color: unreadCount > 0 ? colors.foreground : colors.mutedForeground,
               fontWeight: unreadCount > 0 ? '500' : '400',
               flex: 1,
-            }}>
+            }}
+          >
             {getLastMessagePreview()}
           </Text>
 
@@ -171,8 +164,9 @@ export default function ConversationRow({
                 alignItems: 'center',
                 justifyContent: 'center',
                 paddingHorizontal: 5,
-              }}>
-              <Text style={{fontSize: 10, fontWeight: '700', color: colors.white}}>
+              }}
+            >
+              <Text style={{ fontSize: 10, fontWeight: '700', color: colors.white }}>
                 {unreadCount > 99 ? '99+' : unreadCount}
               </Text>
             </View>

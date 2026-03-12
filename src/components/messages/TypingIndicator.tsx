@@ -1,6 +1,6 @@
-import React, {useEffect, useRef} from 'react';
-import {View, Animated} from 'react-native';
-import {colors} from '../../theme/colors';
+import React, { useEffect, useRef } from 'react';
+import { Animated, View } from 'react-native';
+import { colors } from '../../theme/colors';
 
 export default function TypingIndicator() {
   const dot1 = useRef(new Animated.Value(0)).current;
@@ -22,7 +22,7 @@ export default function TypingIndicator() {
             duration: 300,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       );
 
     const a1 = animate(dot1, 0);
@@ -37,14 +37,14 @@ export default function TypingIndicator() {
       a2.stop();
       a3.stop();
     };
-  }, []);
+  }, [dot1, dot2, dot3]);
 
   const dotStyle = (anim: Animated.Value) => ({
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: colors.mutedForeground,
-    opacity: anim.interpolate({inputRange: [0, 1], outputRange: [0.3, 1]}),
+    opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }),
     transform: [
       {
         translateY: anim.interpolate({
@@ -68,7 +68,8 @@ export default function TypingIndicator() {
         alignSelf: 'flex-start',
         marginLeft: 12,
         marginBottom: 4,
-      }}>
+      }}
+    >
       <Animated.View style={dotStyle(dot1)} />
       <Animated.View style={dotStyle(dot2)} />
       <Animated.View style={dotStyle(dot3)} />

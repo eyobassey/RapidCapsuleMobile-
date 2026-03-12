@@ -13,12 +13,11 @@ import {
   ScrollView,
   StyleSheet,
   Switch,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, FormInput } from '../../components/ui';
+import { Button, FormInput, Text } from '../../components/ui';
 import { isAppleAuthAvailable, USER_CANCELLED } from '../../services/socialAuth.service';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuthStore } from '../../store/auth';

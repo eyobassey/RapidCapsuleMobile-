@@ -1,29 +1,29 @@
-import React, {useState} from 'react';
-import {View, Text, ScrollView, TouchableOpacity, Switch} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {ArrowLeft} from 'lucide-react-native';
-import {Button, Input} from '../../components/ui';
-import {colors} from '../../theme/colors';
+import React, { useState } from 'react';
+import { View, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft } from 'lucide-react-native';
+import { Button, Input, Text } from '../../components/ui';
+import { colors } from '../../theme/colors';
 import api from '../../services/api';
-import {useAuthStore} from '../../store/auth';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import { useAuthStore } from '../../store/auth';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 type Props = NativeStackScreenProps<any>;
 
-export default function EmergencyContactScreen({navigation}: Props) {
+export default function EmergencyContactScreen({ navigation }: Props) {
   const [street, setStreet] = useState('');
   const [contactName, setContactName] = useState('');
   const [relationship, setRelationship] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [sameAddress, setSameAddress] = useState(false);
   const [loading, setLoading] = useState(false);
-  const fetchUser = useAuthStore(s => s.fetchUser);
+  const fetchUser = useAuthStore((s) => s.fetchUser);
 
   const handleSave = async () => {
     setLoading(true);
     try {
       const user = useAuthStore.getState().user;
       await api.patch(`/users/${user?._id}`, {
-        delivery_addresses: [{street_address: street, country: 'Nigeria', state: 'Lagos'}],
+        delivery_addresses: [{ street_address: street, country: 'Nigeria', state: 'Lagos' }],
         emergency_contacts: [
           {
             name: contactName,
@@ -50,7 +50,8 @@ export default function EmergencyContactScreen({navigation}: Props) {
           onPress={() => navigation.goBack()}
           accessibilityRole="button"
           accessibilityLabel="Go back"
-          className="w-10 h-10 rounded-full items-center justify-center">
+          className="w-10 h-10 rounded-full items-center justify-center"
+        >
           <ArrowLeft size={20} color={colors.foreground} />
         </TouchableOpacity>
         {/* Progress dots */}
@@ -67,9 +68,7 @@ export default function EmergencyContactScreen({navigation}: Props) {
 
       <ScrollView className="flex-1 p-6" contentContainerClassName="pb-28 gap-8">
         <View>
-          <Text className="font-bold text-2xl text-foreground mb-1">
-            Address & Emergency
-          </Text>
+          <Text className="font-bold text-2xl text-foreground mb-1">Address & Emergency</Text>
           <Text className="text-sm text-muted-foreground">
             We need this information to serve you better and in case of emergencies.
           </Text>
@@ -137,12 +136,12 @@ export default function EmergencyContactScreen({navigation}: Props) {
             <Switch
               value={sameAddress}
               onValueChange={setSameAddress}
-              trackColor={{false: colors.border, true: colors.primary}}
+              trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={colors.white}
-              style={{transform: [{scaleX: 0.8}, {scaleY: 0.8}]}}
+              style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
               accessibilityRole="switch"
               accessibilityLabel="Same address as patient"
-              accessibilityState={{checked: sameAddress}}
+              accessibilityState={{ checked: sameAddress }}
             />
             <Text className="text-sm text-foreground">Same address as patient</Text>
           </View>
@@ -151,10 +150,7 @@ export default function EmergencyContactScreen({navigation}: Props) {
 
       {/* Bottom CTA */}
       <View className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
-        <Button
-          onPress={handleSave}
-          loading={loading}
-          disabled={!contactName || !contactPhone}>
+        <Button onPress={handleSave} loading={loading} disabled={!contactName || !contactPhone}>
           Continue
         </Button>
       </View>

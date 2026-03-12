@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert } from 'react-native';
-import { Input, DatePickerInput } from '../../components/ui';
+import { View, Alert } from 'react-native';
+import { Input, DatePickerInput, Text } from '../../components/ui';
 import SectionScreenLayout from '../../components/onboarding/SectionScreenLayout';
 import SelectPicker from '../../components/onboarding/SelectPicker';
 import ArrayFieldList from '../../components/onboarding/ArrayFieldList';

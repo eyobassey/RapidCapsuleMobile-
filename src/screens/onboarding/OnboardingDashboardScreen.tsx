@@ -1,6 +1,6 @@
-import React, {useEffect} from 'react';
-import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import React, { useEffect } from 'react';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User,
   MapPin,
@@ -14,13 +14,13 @@ import {
   ChevronRight,
   Heart,
 } from 'lucide-react-native';
-import {ProgressRing, Button} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {useOnboardingStore} from '../../store/onboarding';
-import {useAuthStore} from '../../store/auth';
-import {ONBOARDING_STEPS, type OnboardingStepConfig} from '../../types/onboarding.types';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
+import { ProgressRing, Button, Text } from '../../components/ui';
+import { colors } from '../../theme/colors';
+import { useOnboardingStore } from '../../store/onboarding';
+import { useAuthStore } from '../../store/auth';
+import { ONBOARDING_STEPS, type OnboardingStepConfig } from '../../types/onboarding.types';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { OnboardingStackParamList } from '../../navigation/OnboardingStack';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'OnboardingDashboard'>;
 
@@ -35,32 +35,27 @@ const ICON_MAP: Record<string, any> = {
   Wallet,
 };
 
-export default function OnboardingDashboardScreen({navigation}: Props) {
-  const user = useAuthStore(s => s.user);
-  const {completedSections, progress, summaryData, refreshFromUser} =
-    useOnboardingStore();
+export default function OnboardingDashboardScreen({ navigation }: Props) {
+  const user = useAuthStore((s) => s.user);
+  const { completedSections, progress, summaryData, refreshFromUser } = useOnboardingStore();
 
   // Refresh when screen loads
   useEffect(() => {
     if (user) refreshFromUser(user);
   }, [user, refreshFromUser]);
 
-  const requiredSteps = ONBOARDING_STEPS.filter(s => s.required);
-  const optionalSteps = ONBOARDING_STEPS.filter(s => !s.required);
-  const allRequiredDone = requiredSteps.every(
-    s => completedSections[s.key],
-  );
-  const completedCount = ONBOARDING_STEPS.filter(
-    s => completedSections[s.key],
-  ).length;
+  const requiredSteps = ONBOARDING_STEPS.filter((s) => s.required);
+  const optionalSteps = ONBOARDING_STEPS.filter((s) => !s.required);
+  const allRequiredDone = requiredSteps.every((s) => completedSections[s.key]);
+  const completedCount = ONBOARDING_STEPS.filter((s) => completedSections[s.key]).length;
 
   const handleSkip = () => {
     // Navigate to main app — the RootNavigator will handle routing
-    (navigation as any).reset({index: 0, routes: [{name: 'Main'}]});
+    (navigation as any).reset({ index: 0, routes: [{ name: 'Main' }] });
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header with progress ring */}
       <View
         style={{
@@ -73,26 +68,31 @@ export default function OnboardingDashboardScreen({navigation}: Props) {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-        }}>
-        <View style={{flex: 1}}>
-          <Text style={{fontWeight: '700', fontSize: 20, color: colors.foreground}}>
+        }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontWeight: '700', fontSize: 20, color: colors.foreground }}>
             Profile Setup
           </Text>
-          <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 2}}>
+          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
             {completedCount} of {ONBOARDING_STEPS.length} sections complete
           </Text>
         </View>
         <ProgressRing progress={progress} size={52} strokeWidth={4}>
-          <Text accessibilityLabel={`Profile setup ${progress}% complete`} style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
+          <Text
+            accessibilityLabel={`Profile setup ${progress}% complete`}
+            style={{ fontSize: 12, fontWeight: '700', color: colors.foreground }}
+          >
             {progress}%
           </Text>
         </ProgressRing>
       </View>
 
       <ScrollView
-        style={{flex: 1}}
-        contentContainerStyle={{padding: 16, paddingBottom: 120, gap: 12}}
-        showsVerticalScrollIndicator={false}>
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 120, gap: 12 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Required section */}
         <Text
           style={{
@@ -104,18 +104,17 @@ export default function OnboardingDashboardScreen({navigation}: Props) {
             marginLeft: 4,
             marginTop: 4,
             marginBottom: 2,
-          }}>
+          }}
+        >
           Required
         </Text>
-        {requiredSteps.map(step => (
+        {requiredSteps.map((step) => (
           <StepCard
             key={step.key}
             step={step}
             isComplete={completedSections[step.key]}
             summary={summaryData[step.key]}
-            onPress={() =>
-              navigation.navigate(step.route as keyof OnboardingStackParamList)
-            }
+            onPress={() => navigation.navigate(step.route as keyof OnboardingStackParamList)}
           />
         ))}
 
@@ -130,18 +129,17 @@ export default function OnboardingDashboardScreen({navigation}: Props) {
             marginLeft: 4,
             marginTop: 16,
             marginBottom: 2,
-          }}>
+          }}
+        >
           Optional
         </Text>
-        {optionalSteps.map(step => (
+        {optionalSteps.map((step) => (
           <StepCard
             key={step.key}
             step={step}
             isComplete={completedSections[step.key]}
             summary={summaryData[step.key]}
-            onPress={() =>
-              navigation.navigate(step.route as keyof OnboardingStackParamList)
-            }
+            onPress={() => navigation.navigate(step.route as keyof OnboardingStackParamList)}
           />
         ))}
 
@@ -157,10 +155,12 @@ export default function OnboardingDashboardScreen({navigation}: Props) {
             alignItems: 'center',
             gap: 12,
             marginTop: 8,
-          }}>
+          }}
+        >
           <Heart size={20} color={colors.success} />
-          <Text style={{flex: 1, fontSize: 12, color: colors.foreground, lineHeight: 18}}>
-            A complete health profile helps doctors provide better care and enables personalized AI health insights.
+          <Text style={{ flex: 1, fontSize: 12, color: colors.foreground, lineHeight: 18 }}>
+            A complete health profile helps doctors provide better care and enables personalized AI
+            health insights.
           </Text>
         </View>
       </ScrollView>
@@ -177,7 +177,8 @@ export default function OnboardingDashboardScreen({navigation}: Props) {
           backgroundColor: colors.background,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-        }}>
+        }}
+      >
         {allRequiredDone ? (
           <Button onPress={handleSkip}>Continue to Dashboard</Button>
         ) : (
@@ -190,7 +191,8 @@ export default function OnboardingDashboardScreen({navigation}: Props) {
               textAlign: 'center',
               color: colors.mutedForeground,
               marginTop: 8,
-            }}>
+            }}
+          >
             Complete required steps to access the app
           </Text>
         )}
@@ -235,7 +237,8 @@ function StepCard({
         borderLeftWidth: isComplete ? 3 : 1,
         borderLeftColor: isComplete ? colors.success : colors.border,
         opacity: isComplete ? 0.85 : 1,
-      }}>
+      }}
+    >
       <View
         style={{
           width: 40,
@@ -244,7 +247,8 @@ function StepCard({
           backgroundColor: iconBg,
           alignItems: 'center',
           justifyContent: 'center',
-        }}>
+        }}
+      >
         {isComplete ? (
           <Check size={18} color={colors.success} />
         ) : (
@@ -252,14 +256,14 @@ function StepCard({
         )}
       </View>
 
-      <View style={{flex: 1}}>
-        <Text style={{fontWeight: '700', fontSize: 14, color: colors.foreground}}>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontWeight: '700', fontSize: 14, color: colors.foreground }}>
           {step.title}
         </Text>
         {isComplete && summary ? (
           <SummaryText sectionKey={step.key} summary={summary} />
         ) : (
-          <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 2}}>
+          <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
             {isComplete ? 'Completed' : step.subtitle}
           </Text>
         )}
@@ -270,19 +274,18 @@ function StepCard({
           flexDirection: 'row',
           alignItems: 'center',
           gap: 4,
-        }}>
+        }}
+      >
         <Text
           style={{
             fontSize: 12,
             fontWeight: '600',
             color: isComplete ? colors.mutedForeground : colors.primary,
-          }}>
+          }}
+        >
           {isComplete ? 'Edit' : 'Start'}
         </Text>
-        <ChevronRight
-          size={14}
-          color={isComplete ? colors.mutedForeground : colors.primary}
-        />
+        <ChevronRight size={14} color={isComplete ? colors.mutedForeground : colors.primary} />
       </View>
     </TouchableOpacity>
   );
@@ -290,7 +293,7 @@ function StepCard({
 
 // ─── Summary text for completed cards ────────────────────────────
 
-function SummaryText({sectionKey, summary}: {sectionKey: string; summary: any}) {
+function SummaryText({ sectionKey, summary }: { sectionKey: string; summary: any }) {
   let text = 'Completed';
 
   switch (sectionKey) {
@@ -317,13 +320,15 @@ function SummaryText({sectionKey, summary}: {sectionKey: string; summary: any}) 
       text = summary.count
         ? `${summary.count} allerg${summary.count > 1 ? 'ies' : 'y'} recorded`
         : summary.hasAllergies === false
-          ? 'No known allergies'
-          : 'Completed';
+        ? 'No known allergies'
+        : 'Completed';
       break;
     case 'medicalHistory': {
       const mParts = [];
-      if (summary.conditions) mParts.push(`${summary.conditions} condition${summary.conditions > 1 ? 's' : ''}`);
-      if (summary.medications) mParts.push(`${summary.medications} medication${summary.medications > 1 ? 's' : ''}`);
+      if (summary.conditions)
+        mParts.push(`${summary.conditions} condition${summary.conditions > 1 ? 's' : ''}`);
+      if (summary.medications)
+        mParts.push(`${summary.medications} medication${summary.medications > 1 ? 's' : ''}`);
       text = mParts.length > 0 ? mParts.join(', ') : 'Completed';
       break;
     }
@@ -334,14 +339,12 @@ function SummaryText({sectionKey, summary}: {sectionKey: string; summary: any}) 
           : 'Completed';
       break;
     case 'walletCredits':
-      text = summary.balance
-        ? `Balance: ${summary.currency} ${summary.balance}`
-        : 'Completed';
+      text = summary.balance ? `Balance: ${summary.currency} ${summary.balance}` : 'Completed';
       break;
   }
 
   return (
-    <Text style={{fontSize: 11, color: colors.success, marginTop: 2}} numberOfLines={1}>
+    <Text style={{ fontSize: 11, color: colors.success, marginTop: 2 }} numberOfLines={1}>
       {text}
     </Text>
   );

@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Image, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import {
@@ -25,7 +17,7 @@ import {
 import { useDrugQuery, useSimilarDrugsQuery } from '../../hooks/queries';
 import { usePharmacyStore } from '../../store/pharmacy';
 import DrugCard from '../../components/pharmacy/DrugCard';
-import { Header } from '../../components/ui';
+import { Header, Text } from '../../components/ui';
 import { colors } from '../../theme/colors';
 import { useCurrency } from '../../hooks/useCurrency';
 import type { Drug } from '../../types/pharmacy.types';

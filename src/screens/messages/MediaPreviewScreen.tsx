@@ -1,18 +1,17 @@
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { X } from 'lucide-react-native';
 import React from 'react';
-import {View, Image, TouchableOpacity, Dimensions, StatusBar} from 'react-native';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {X} from 'lucide-react-native';
-import {colors} from '../../theme/colors';
+import { Dimensions, Image, StatusBar, TouchableOpacity, View } from 'react-native';
 
-const {width, height} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 export default function MediaPreviewScreen() {
   const navigation = useNavigation();
   const route = useRoute<any>();
-  const {url, type} = route.params as {url: string; type: string};
+  const { url, type } = route.params as { url: string; type: string };
 
   return (
-    <View style={{flex: 1, backgroundColor: '#000'}}>
+    <View style={{ flex: 1, backgroundColor: '#000' }}>
       <StatusBar barStyle="light-content" />
 
       {/* Close button */}
@@ -32,15 +31,16 @@ export default function MediaPreviewScreen() {
           backgroundColor: 'rgba(255,255,255,0.2)',
           alignItems: 'center',
           justifyContent: 'center',
-        }}>
+        }}
+      >
         <X size={20} color="#fff" />
       </TouchableOpacity>
 
       {/* Image */}
       {type === 'image' && (
         <Image
-          source={{uri: url}}
-          style={{width, height, resizeMode: 'contain'}}
+          source={{ uri: url }}
+          style={{ width, height, resizeMode: 'contain' }}
           accessibilityRole="image"
           accessibilityLabel="Full size image preview"
         />

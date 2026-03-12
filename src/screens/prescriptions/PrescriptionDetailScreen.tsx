@@ -1,54 +1,57 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import {
-  View,
-  Text,
-  ScrollView,
-  Alert,
-  RefreshControl,
-  Modal,
-  TouchableOpacity,
-  ActivityIndicator,
-  TextInput,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
-import {WebView} from 'react-native-webview';
-import {
-  Pill,
+  AlertTriangle,
+  Calendar,
   CheckCircle,
   Clock,
-  Truck,
-  Package,
-  XCircle,
-  AlertTriangle,
   CreditCard,
-  Wallet,
-  RotateCcw,
-  X,
-  Star,
-  Calendar,
   FileText,
+  Package,
+  Pill,
+  RotateCcw,
+  Star,
+  Truck,
+  Wallet,
+  X,
+  XCircle,
 } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
+import { Text } from '../../components/ui/Text';
 
-import {usePrescriptionsStore} from '../../store/prescriptions';
-import {Header, Avatar, StatusBadge, Button, Skeleton} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {formatDate} from '../../utils/formatters';
-import {useCurrency} from '../../hooks/useCurrency';
-import type {ProfileStackParamList} from '../../navigation/stacks/ProfileStack';
+import { Avatar, Button, Header, Skeleton, StatusBadge } from '../../components/ui';
+import { useCurrency } from '../../hooks/useCurrency';
+import type { ProfileStackParamList } from '../../navigation/stacks/ProfileStack';
+import { usePrescriptionsStore } from '../../store/prescriptions';
+import { colors } from '../../theme/colors';
+import { formatDate } from '../../utils/formatters';
 
-const STATUS_BANNER_CONFIG: Record<string, {bg: string; icon: React.ComponentType<any>; label: string}> = {
-  pending_acceptance: {bg: `${colors.secondary}20`, icon: Clock, label: 'Awaiting Your Response'},
-  accepted: {bg: `${colors.primary}20`, icon: CheckCircle, label: 'Accepted'},
-  pending_payment: {bg: `${colors.secondary}20`, icon: CreditCard, label: 'Payment Required'},
-  paid: {bg: `${colors.success}20`, icon: CheckCircle, label: 'Payment Confirmed'},
-  processing: {bg: `${colors.primary}20`, icon: Package, label: 'Being Processed'},
-  dispensed: {bg: `${colors.success}20`, icon: Package, label: 'Dispensed'},
-  shipped: {bg: `${colors.primary}20`, icon: Truck, label: 'On The Way'},
-  delivered: {bg: `${colors.success}20`, icon: CheckCircle, label: 'Delivered'},
-  cancelled: {bg: `${colors.destructive}20`, icon: XCircle, label: 'Cancelled'},
-  expired: {bg: `${colors.muted}`, icon: AlertTriangle, label: 'Expired'},
-  draft: {bg: `${colors.muted}`, icon: Clock, label: 'Draft'},
+const STATUS_BANNER_CONFIG: Record<
+  string,
+  { bg: string; icon: React.ComponentType<any>; label: string }
+> = {
+  pending_acceptance: { bg: `${colors.secondary}20`, icon: Clock, label: 'Awaiting Your Response' },
+  accepted: { bg: `${colors.primary}20`, icon: CheckCircle, label: 'Accepted' },
+  pending_payment: { bg: `${colors.secondary}20`, icon: CreditCard, label: 'Payment Required' },
+  paid: { bg: `${colors.success}20`, icon: CheckCircle, label: 'Payment Confirmed' },
+  processing: { bg: `${colors.primary}20`, icon: Package, label: 'Being Processed' },
+  dispensed: { bg: `${colors.success}20`, icon: Package, label: 'Dispensed' },
+  shipped: { bg: `${colors.primary}20`, icon: Truck, label: 'On The Way' },
+  delivered: { bg: `${colors.success}20`, icon: CheckCircle, label: 'Delivered' },
+  cancelled: { bg: `${colors.destructive}20`, icon: XCircle, label: 'Cancelled' },
+  expired: { bg: `${colors.muted}`, icon: AlertTriangle, label: 'Expired' },
+  draft: { bg: `${colors.muted}`, icon: Clock, label: 'Draft' },
 };
 
 const TIMELINE_ICONS: Record<string, React.ComponentType<any>> = {
@@ -66,7 +69,7 @@ const TIMELINE_ICONS: Record<string, React.ComponentType<any>> = {
 };
 
 export default function PrescriptionDetailScreen() {
-  const {format} = useCurrency();
+  const { format } = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<ProfileStackParamList, 'PrescriptionDetail'>>();
   const prescriptionId = route.params.id;
@@ -106,28 +109,24 @@ export default function PrescriptionDetailScreen() {
   }, [prescriptionId, fetchPrescriptionById]);
 
   const handleAccept = () => {
-    Alert.alert(
-      'Accept Prescription',
-      'Are you sure you want to accept this prescription?',
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Accept',
-          onPress: async () => {
-            setActionLoading('accept');
-            try {
-              await acceptPrescription(prescriptionId);
-              await fetchPrescriptionById(prescriptionId);
-              Alert.alert('Success', 'Prescription accepted successfully.');
-            } catch (err: any) {
-              Alert.alert('Error', err?.message || 'Failed to accept prescription.');
-            } finally {
-              setActionLoading(null);
-            }
-          },
+    Alert.alert('Accept Prescription', 'Are you sure you want to accept this prescription?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Accept',
+        onPress: async () => {
+          setActionLoading('accept');
+          try {
+            await acceptPrescription(prescriptionId);
+            await fetchPrescriptionById(prescriptionId);
+            Alert.alert('Success', 'Prescription accepted successfully.');
+          } catch (err: any) {
+            Alert.alert('Error', err?.message || 'Failed to accept prescription.');
+          } finally {
+            setActionLoading(null);
+          }
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const handleDecline = () => {
@@ -135,7 +134,7 @@ export default function PrescriptionDetailScreen() {
       'Decline Prescription',
       'Are you sure you want to decline this prescription? This action cannot be undone.',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Decline',
           style: 'destructive',
@@ -152,7 +151,7 @@ export default function PrescriptionDetailScreen() {
             }
           },
         },
-      ],
+      ]
     );
   };
 
@@ -196,7 +195,7 @@ export default function PrescriptionDetailScreen() {
     } catch (err: any) {
       Alert.alert(
         'Payment Failed',
-        err?.response?.data?.message || 'Insufficient wallet balance. Try card payment.',
+        err?.response?.data?.message || 'Insufficient wallet balance. Try card payment.'
       );
     } finally {
       setActionLoading(null);
@@ -204,7 +203,7 @@ export default function PrescriptionDetailScreen() {
   };
 
   const handlePaystackNavigation = useCallback(
-    (navState: {url: string}) => {
+    (navState: { url: string }) => {
       const url = navState.url || '';
       if (
         paystackUrl &&
@@ -221,7 +220,7 @@ export default function PrescriptionDetailScreen() {
         }
       }
     },
-    [paystackUrl, paymentReference, prescriptionId, verifyPayment, fetchPrescriptionById],
+    [paystackUrl, paymentReference, prescriptionId, verifyPayment, fetchPrescriptionById]
   );
 
   const handleClosePaystack = useCallback(() => {
@@ -259,7 +258,7 @@ export default function PrescriptionDetailScreen() {
         <ScrollView className="flex-1 px-5 pt-4">
           <Skeleton height={60} borderRadius={16} className="mb-4" />
           <Skeleton height={80} borderRadius={16} className="mb-4" />
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <View key={i} className="bg-card border border-border rounded-2xl p-4 mb-3">
               <Skeleton width={160} height={16} className="mb-2" />
               <Skeleton width={100} height={14} className="mb-2" />
@@ -278,9 +277,7 @@ export default function PrescriptionDetailScreen() {
         <Header title="Prescription Details" onBack={() => navigation.goBack()} />
         <View className="flex-1 items-center justify-center p-8">
           <Pill size={40} color={colors.mutedForeground} />
-          <Text className="text-lg font-bold text-foreground mt-4">
-            Prescription not found
-          </Text>
+          <Text className="text-lg font-bold text-foreground mt-4">Prescription not found</Text>
           <Text className="text-sm text-muted-foreground mt-1 text-center">
             This prescription may have been removed or is unavailable.
           </Text>
@@ -308,7 +305,9 @@ export default function PrescriptionDetailScreen() {
 
   const isPending = rx.status === 'pending_acceptance';
   const isAccepted = rx.status === 'accepted' || rx.status === 'pending_payment';
-  const canRefill = rx.is_refillable && rx.refills_used < rx.refill_count &&
+  const canRefill =
+    rx.is_refillable &&
+    rx.refills_used < rx.refill_count &&
     ['delivered', 'dispensed'].includes(rx.status);
   const canRate = rx.status === 'delivered' && !rx.rating;
 
@@ -327,18 +326,25 @@ export default function PrescriptionDetailScreen() {
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
-        }>
+        }
+      >
         {/* Status Banner */}
         <View
-          style={{backgroundColor: bannerConfig.bg, marginHorizontal: 20, marginTop: 16, borderRadius: 16, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12}}>
+          style={{
+            backgroundColor: bannerConfig.bg,
+            marginHorizontal: 20,
+            marginTop: 16,
+            borderRadius: 16,
+            padding: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
           <BannerIcon size={24} color={colors.foreground} />
           <View className="flex-1">
-            <Text className="text-sm font-bold text-foreground">
-              {bannerConfig.label}
-            </Text>
-            <Text className="text-xs text-muted-foreground mt-0.5">
-              #{rx.prescription_number}
-            </Text>
+            <Text className="text-sm font-bold text-foreground">{bannerConfig.label}</Text>
+            <Text className="text-xs text-muted-foreground mt-0.5">#{rx.prescription_number}</Text>
           </View>
           <StatusBadge status={rx.status} size="md" />
         </View>
@@ -357,9 +363,7 @@ export default function PrescriptionDetailScreen() {
                 size="md"
               />
               <View className="flex-1">
-                <Text className="text-sm font-semibold text-foreground">
-                  {specialistName}
-                </Text>
+                <Text className="text-sm font-semibold text-foreground">{specialistName}</Text>
                 {specialistSpecialty ? (
                   <Text className="text-xs text-muted-foreground mt-0.5">
                     {specialistSpecialty}
@@ -374,14 +378,18 @@ export default function PrescriptionDetailScreen() {
         {rx.appointment_id && (
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('AppointmentDetail', {id: typeof rx.appointment_id === 'object' ? rx.appointment_id._id : rx.appointment_id})}
+            onPress={() =>
+              navigation.navigate('AppointmentDetail', {
+                id:
+                  typeof rx.appointment_id === 'object' ? rx.appointment_id._id : rx.appointment_id,
+              })
+            }
             accessibilityRole="button"
             accessibilityLabel="View linked appointment"
-            className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3">
+            className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3"
+          >
             <Calendar size={18} color={colors.primary} />
-            <Text className="text-sm text-primary font-medium flex-1">
-              View Linked Appointment
-            </Text>
+            <Text className="text-sm text-primary font-medium flex-1">View Linked Appointment</Text>
           </TouchableOpacity>
         )}
 
@@ -391,9 +399,7 @@ export default function PrescriptionDetailScreen() {
             <Text className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
               Clinical Notes
             </Text>
-            <Text className="text-sm text-foreground leading-relaxed">
-              {rx.clinical_notes}
-            </Text>
+            <Text className="text-sm text-foreground leading-relaxed">{rx.clinical_notes}</Text>
           </View>
         ) : null}
 
@@ -406,12 +412,11 @@ export default function PrescriptionDetailScreen() {
           {(rx.items || []).map((item: any, index: number) => (
             <View
               key={`${item.drug_name}-${index}`}
-              className="bg-card border border-border rounded-2xl p-4 mb-3">
+              className="bg-card border border-border rounded-2xl p-4 mb-3"
+            >
               <View className="flex-row items-start justify-between mb-2">
                 <View className="flex-1 mr-3">
-                  <Text className="text-sm font-bold text-foreground">
-                    {item.drug_name}
-                  </Text>
+                  <Text className="text-sm font-bold text-foreground">{item.drug_name}</Text>
                   {item.drug_strength ? (
                     <Text className="text-xs text-muted-foreground mt-0.5">
                       {item.drug_strength}
@@ -428,39 +433,29 @@ export default function PrescriptionDetailScreen() {
               <View className="flex-row flex-wrap gap-2 mt-1">
                 {item.dosage ? (
                   <View className="bg-muted rounded-lg px-2.5 py-1">
-                    <Text className="text-[10px] text-muted-foreground">
-                      Dosage: {item.dosage}
-                    </Text>
+                    <Text className="text-[10px] text-muted-foreground">Dosage: {item.dosage}</Text>
                   </View>
                 ) : null}
                 {item.quantity ? (
                   <View className="bg-muted rounded-lg px-2.5 py-1">
-                    <Text className="text-[10px] text-muted-foreground">
-                      Qty: {item.quantity}
-                    </Text>
+                    <Text className="text-[10px] text-muted-foreground">Qty: {item.quantity}</Text>
                   </View>
                 ) : null}
                 {item.frequency ? (
                   <View className="bg-muted rounded-lg px-2.5 py-1">
-                    <Text className="text-[10px] text-muted-foreground">
-                      {item.frequency}
-                    </Text>
+                    <Text className="text-[10px] text-muted-foreground">{item.frequency}</Text>
                   </View>
                 ) : null}
                 {item.duration ? (
                   <View className="bg-muted rounded-lg px-2.5 py-1">
-                    <Text className="text-[10px] text-muted-foreground">
-                      {item.duration}
-                    </Text>
+                    <Text className="text-[10px] text-muted-foreground">{item.duration}</Text>
                   </View>
                 ) : null}
               </View>
 
               {item.instructions ? (
                 <View className="mt-2 pt-2 border-t border-border">
-                  <Text className="text-xs text-muted-foreground italic">
-                    {item.instructions}
-                  </Text>
+                  <Text className="text-xs text-muted-foreground italic">{item.instructions}</Text>
                 </View>
               ) : null}
             </View>
@@ -476,26 +471,20 @@ export default function PrescriptionDetailScreen() {
 
             <View className="flex-row justify-between mb-2">
               <Text className="text-sm text-muted-foreground">Subtotal</Text>
-              <Text className="text-sm text-foreground">
-                {format(rx.subtotal || 0)}
-              </Text>
+              <Text className="text-sm text-foreground">{format(rx.subtotal || 0)}</Text>
             </View>
 
             {rx.discount > 0 && (
               <View className="flex-row justify-between mb-2">
                 <Text className="text-sm text-muted-foreground">Discount</Text>
-                <Text className="text-sm text-success">
-                  -{format(rx.discount)}
-                </Text>
+                <Text className="text-sm text-success">-{format(rx.discount)}</Text>
               </View>
             )}
 
             {rx.delivery_fee > 0 && (
               <View className="flex-row justify-between mb-2">
                 <Text className="text-sm text-muted-foreground">Delivery Fee</Text>
-                <Text className="text-sm text-foreground">
-                  {format(rx.delivery_fee)}
-                </Text>
+                <Text className="text-sm text-foreground">{format(rx.delivery_fee)}</Text>
               </View>
             )}
 
@@ -524,7 +513,10 @@ export default function PrescriptionDetailScreen() {
                     <View className="items-center">
                       <View
                         className="w-7 h-7 rounded-full items-center justify-center"
-                        style={{backgroundColor: isLast ? `${colors.primary}20` : `${colors.muted}`}}>
+                        style={{
+                          backgroundColor: isLast ? `${colors.primary}20` : `${colors.muted}`,
+                        }}
+                      >
                         <TimelineIcon
                           size={14}
                           color={isLast ? colors.primary : colors.mutedForeground}
@@ -542,7 +534,10 @@ export default function PrescriptionDetailScreen() {
                     </View>
                     <View className="flex-1 pb-3">
                       <Text
-                        className={`text-sm font-medium ${isLast ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        className={`text-sm font-medium ${
+                          isLast ? 'text-foreground' : 'text-muted-foreground'
+                        }`}
+                      >
                         {statusLabel}
                       </Text>
                       <Text className="text-[11px] text-muted-foreground mt-0.5">
@@ -576,17 +571,13 @@ export default function PrescriptionDetailScreen() {
             {rx.tracking_number && (
               <View className="flex-row justify-between mb-1">
                 <Text className="text-sm text-muted-foreground">Tracking #</Text>
-                <Text className="text-sm text-primary font-medium">
-                  {rx.tracking_number}
-                </Text>
+                <Text className="text-sm text-primary font-medium">{rx.tracking_number}</Text>
               </View>
             )}
             {rx.estimated_delivery && (
               <View className="flex-row justify-between">
                 <Text className="text-sm text-muted-foreground">Est. Delivery</Text>
-                <Text className="text-sm text-foreground">
-                  {formatDate(rx.estimated_delivery)}
-                </Text>
+                <Text className="text-sm text-foreground">{formatDate(rx.estimated_delivery)}</Text>
               </View>
             )}
           </View>
@@ -625,9 +616,7 @@ export default function PrescriptionDetailScreen() {
             {rx.next_refill_date && (
               <View className="flex-row justify-between">
                 <Text className="text-sm text-muted-foreground">Next Refill Date</Text>
-                <Text className="text-sm text-foreground">
-                  {formatDate(rx.next_refill_date)}
-                </Text>
+                <Text className="text-sm text-foreground">{formatDate(rx.next_refill_date)}</Text>
               </View>
             )}
           </View>
@@ -640,7 +629,7 @@ export default function PrescriptionDetailScreen() {
               Your Rating
             </Text>
             <View className="flex-row gap-1 mb-1">
-              {[1, 2, 3, 4, 5].map(s => (
+              {[1, 2, 3, 4, 5].map((s) => (
                 <Star
                   key={s}
                   size={18}
@@ -650,9 +639,7 @@ export default function PrescriptionDetailScreen() {
               ))}
             </View>
             {rx.review ? (
-              <Text className="text-xs text-muted-foreground mt-1">
-                "{rx.review}"
-              </Text>
+              <Text className="text-xs text-muted-foreground mt-1">"{rx.review}"</Text>
             ) : null}
           </View>
         )}
@@ -661,15 +648,16 @@ export default function PrescriptionDetailScreen() {
         {rx.linked_pharmacy_order && (
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('OrderDetail', {orderId: rx.linked_pharmacy_order})}
+            onPress={() =>
+              navigation.navigate('OrderDetail', { orderId: rx.linked_pharmacy_order })
+            }
             accessibilityRole="button"
             accessibilityLabel="View pharmacy order"
-            className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3">
+            className="mx-5 mt-4 bg-card border border-border rounded-2xl p-4 flex-row items-center gap-3"
+          >
             <Package size={18} color={colors.primary} />
             <View className="flex-1">
-              <Text className="text-sm text-primary font-medium">
-                View Pharmacy Order
-              </Text>
+              <Text className="text-sm text-primary font-medium">View Pharmacy Order</Text>
               {rx.linked_pharmacy_order_number && (
                 <Text className="text-xs text-muted-foreground">
                   #{rx.linked_pharmacy_order_number}
@@ -697,7 +685,10 @@ export default function PrescriptionDetailScreen() {
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Download prescription PDF"
-              onPress={() => {/* Could open PDF in browser */}}>
+              onPress={() => {
+                /* Could open PDF in browser */
+              }}
+            >
               <FileText size={16} color={colors.primary} />
               <Text className="text-sm text-primary font-medium">Download PDF</Text>
             </TouchableOpacity>
@@ -715,7 +706,8 @@ export default function PrescriptionDetailScreen() {
                   variant="outline"
                   onPress={handleDecline}
                   loading={actionLoading === 'decline'}
-                  disabled={!!actionLoading}>
+                  disabled={!!actionLoading}
+                >
                   <Text className="text-destructive font-bold">Decline</Text>
                 </Button>
               </View>
@@ -724,7 +716,8 @@ export default function PrescriptionDetailScreen() {
                   variant="primary"
                   onPress={handleAccept}
                   loading={actionLoading === 'accept'}
-                  disabled={!!actionLoading}>
+                  disabled={!!actionLoading}
+                >
                   Accept
                 </Button>
               </View>
@@ -737,7 +730,8 @@ export default function PrescriptionDetailScreen() {
               icon={<CreditCard size={20} color="#fff" />}
               onPress={() => setShowPaymentPicker(true)}
               loading={actionLoading === 'pay'}
-              disabled={!!actionLoading}>
+              disabled={!!actionLoading}
+            >
               Pay {format(rx.total_amount || 0)}
             </Button>
           )}
@@ -748,7 +742,8 @@ export default function PrescriptionDetailScreen() {
               icon={<RotateCcw size={18} color={colors.foreground} />}
               onPress={handleRefill}
               loading={actionLoading === 'refill'}
-              disabled={!!actionLoading}>
+              disabled={!!actionLoading}
+            >
               Request Refill
             </Button>
           )}
@@ -762,7 +757,8 @@ export default function PrescriptionDetailScreen() {
                     icon={<RotateCcw size={16} color={colors.foreground} />}
                     onPress={handleRefill}
                     loading={actionLoading === 'refill'}
-                    disabled={!!actionLoading}>
+                    disabled={!!actionLoading}
+                  >
                     Refill
                   </Button>
                 </View>
@@ -771,7 +767,8 @@ export default function PrescriptionDetailScreen() {
                 <Button
                   variant="primary"
                   icon={<Star size={16} color="#fff" />}
-                  onPress={() => setShowRating(true)}>
+                  onPress={() => setShowRating(true)}
+                >
                   Rate
                 </Button>
               </View>
@@ -785,13 +782,31 @@ export default function PrescriptionDetailScreen() {
         visible={showPaymentPicker}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowPaymentPicker(false)}>
+        onRequestClose={() => setShowPaymentPicker(false)}
+      >
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setShowPaymentPicker(false)}
-          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}>
-          <View style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40}}>
-            <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground, marginBottom: 16}}>
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.card,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingHorizontal: 20,
+              paddingTop: 20,
+              paddingBottom: 40,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '700',
+                color: colors.foreground,
+                marginBottom: 16,
+              }}
+            >
               Choose Payment Method
             </Text>
 
@@ -800,13 +815,23 @@ export default function PrescriptionDetailScreen() {
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Pay with card"
-              style={{flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.background, borderRadius: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 12}}>
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 16,
+                backgroundColor: colors.background,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+                marginBottom: 12,
+              }}
+            >
               <CreditCard size={22} color={colors.primary} />
-              <View style={{marginLeft: 12, flex: 1}}>
-                <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+              <View style={{ marginLeft: 12, flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
                   Pay with Card
                 </Text>
-                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 2}}>
+                <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
                   Visa, Mastercard via Paystack
                 </Text>
               </View>
@@ -817,13 +842,22 @@ export default function PrescriptionDetailScreen() {
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Pay with wallet"
-              style={{flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: colors.background, borderRadius: 16, borderWidth: 1, borderColor: colors.border}}>
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: 16,
+                backgroundColor: colors.background,
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
               <Wallet size={22} color={colors.primary} />
-              <View style={{marginLeft: 12, flex: 1}}>
-                <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+              <View style={{ marginLeft: 12, flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
                   Pay with Wallet
                 </Text>
-                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 2}}>
+                <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
                   Use your RapidCapsule wallet balance
                 </Text>
               </View>
@@ -837,29 +871,50 @@ export default function PrescriptionDetailScreen() {
         visible={showRating}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowRating(false)}>
+        onRequestClose={() => setShowRating(false)}
+      >
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setShowRating(false)}
-          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}>
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+        >
           <TouchableOpacity activeOpacity={1}>
-            <View style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40}}>
-              <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground, marginBottom: 4}}>
+            <View
+              style={{
+                backgroundColor: colors.card,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                paddingHorizontal: 20,
+                paddingTop: 20,
+                paddingBottom: 40,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: '700',
+                  color: colors.foreground,
+                  marginBottom: 4,
+                }}
+              >
                 Rate this prescription
               </Text>
-              <Text style={{fontSize: 13, color: colors.mutedForeground, marginBottom: 20}}>
+              <Text style={{ fontSize: 13, color: colors.mutedForeground, marginBottom: 20 }}>
                 How was your experience with this prescription?
               </Text>
 
-              <View style={{flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20}}>
-                {[1, 2, 3, 4, 5].map(s => (
+              <View
+                style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20 }}
+              >
+                {[1, 2, 3, 4, 5].map((s) => (
                   <TouchableOpacity
                     key={s}
                     onPress={() => setRatingValue(s)}
-                    hitSlop={{top: 8, bottom: 8, left: 4, right: 4}}
+                    hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
                     accessibilityRole="radio"
                     accessibilityLabel={`${s} star${s !== 1 ? 's' : ''}`}
-                    accessibilityState={{selected: ratingValue === s}}>
+                    accessibilityState={{ selected: ratingValue === s }}
+                  >
                     <Star
                       size={36}
                       color={s <= ratingValue ? '#f59e0b' : colors.border}
@@ -893,7 +948,8 @@ export default function PrescriptionDetailScreen() {
               <Button
                 variant="primary"
                 onPress={handleSubmitRating}
-                loading={actionLoading === 'rate'}>
+                loading={actionLoading === 'rate'}
+              >
                 Submit Rating
               </Button>
             </View>
@@ -902,30 +958,53 @@ export default function PrescriptionDetailScreen() {
       </Modal>
 
       {/* Paystack WebView Modal */}
-      <Modal
-        visible={!!paystackUrl}
-        animationType="slide"
-        onRequestClose={handleClosePaystack}>
-        <View style={{flex: 1, backgroundColor: colors.background}}>
-          <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border}}>
-            <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground}}>
+      <Modal visible={!!paystackUrl} animationType="slide" onRequestClose={handleClosePaystack}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              paddingHorizontal: 20,
+              paddingTop: 60,
+              paddingBottom: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
               Complete Payment
             </Text>
-            <TouchableOpacity onPress={handleClosePaystack} hitSlop={{top: 8, bottom: 8, left: 8, right: 8}} accessibilityRole="button" accessibilityLabel="Close payment">
+            <TouchableOpacity
+              onPress={handleClosePaystack}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Close payment"
+            >
               <X size={24} color={colors.foreground} />
             </TouchableOpacity>
           </View>
           {paystackUrl && (
             <WebView
-              source={{uri: paystackUrl}}
+              source={{ uri: paystackUrl }}
               onNavigationStateChange={handlePaystackNavigation}
               startInLoadingState
               renderLoading={() => (
-                <View style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center'}}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <ActivityIndicator size="large" color={colors.primary} />
                 </View>
               )}
-              style={{flex: 1}}
+              style={{ flex: 1 }}
             />
           )}
         </View>

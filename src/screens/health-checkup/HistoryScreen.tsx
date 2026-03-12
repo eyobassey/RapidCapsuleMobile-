@@ -1,13 +1,14 @@
-import React, {useEffect, useCallback, useState} from 'react';
-import {View, Text, TouchableOpacity, RefreshControl} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {ChevronRight, History, Stethoscope} from 'lucide-react-native';
-import {Header, EmptyState, Skeleton} from '../../components/ui';
-import {useHealthCheckupStore} from '../../store/healthCheckup';
-import {colors} from '../../theme/colors';
-import {formatDate} from '../../utils/formatters';
+import { useNavigation } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
+import { ChevronRight, History, Stethoscope } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { RefreshControl, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { EmptyState, Header } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useHealthCheckupStore } from '../../store/healthCheckup';
+import { colors } from '../../theme/colors';
+import { formatDate } from '../../utils/formatters';
 
 const TRIAGE_COLORS: Record<string, string> = {
   emergency: colors.destructive,
@@ -18,16 +19,16 @@ const TRIAGE_COLORS: Record<string, string> = {
 
 export default function HistoryScreen() {
   const navigation = useNavigation<any>();
-  const {history, isLoading, fetchHistory} = useHealthCheckupStore();
+  const { history, isLoading, fetchHistory } = useHealthCheckupStore();
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchHistory({limit: 50});
-  }, []);
+    fetchHistory({ limit: 50 });
+  }, [fetchHistory]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchHistory({limit: 50});
+    await fetchHistory({ limit: 50 });
     setRefreshing(false);
   }, [fetchHistory]);
 
@@ -44,7 +45,7 @@ export default function HistoryScreen() {
           paddingBottom: 40,
         }}
         estimatedItemSize={80}
-        renderItem={({item}) => {
+        renderItem={({ item }) => {
           const topCondition = item.response?.data?.conditions?.[0];
           const triage = item.response?.data?.triage_level;
           const condCount = item.response?.data?.conditions?.length || 0;
@@ -53,10 +54,13 @@ export default function HistoryScreen() {
             <TouchableOpacity
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={`${topCondition?.common_name || topCondition?.name || 'Health Checkup'}${triage ? `, ${triage.replace('_', ' ')}` : ''}`}
+              accessibilityLabel={`${
+                topCondition?.common_name || topCondition?.name || 'Health Checkup'
+              }${triage ? `, ${triage.replace('_', ' ')}` : ''}`}
               accessibilityHint="Double tap to view checkup details"
-              onPress={() => navigation.navigate('HealthCheckupDetail', {id: item._id})}
-              className="bg-card border border-border rounded-2xl p-4 mb-2 flex-row items-center gap-3">
+              onPress={() => navigation.navigate('HealthCheckupDetail', { id: item._id })}
+              className="bg-card border border-border rounded-2xl p-4 mb-2 flex-row items-center gap-3"
+            >
               <View className="w-11 h-11 rounded-full bg-muted items-center justify-center">
                 <History size={20} color={colors.mutedForeground} />
               </View>
@@ -69,9 +73,7 @@ export default function HistoryScreen() {
                     {formatDate(item.created_at || item.createdAt)}
                   </Text>
                   {condCount > 1 && (
-                    <Text className="text-xs text-muted-foreground">
-                      +{condCount - 1} more
-                    </Text>
+                    <Text className="text-xs text-muted-foreground">+{condCount - 1} more</Text>
                   )}
                   {triage && (
                     <View
@@ -80,14 +82,16 @@ export default function HistoryScreen() {
                         paddingHorizontal: 6,
                         paddingVertical: 1,
                         borderRadius: 8,
-                      }}>
+                      }}
+                    >
                       <Text
                         style={{
                           color: TRIAGE_COLORS[triage] || colors.mutedForeground,
                           fontSize: 10,
                           fontWeight: '600',
                           textTransform: 'capitalize',
-                        }}>
+                        }}
+                      >
                         {triage.replace('_', ' ')}
                       </Text>
                     </View>

@@ -1,27 +1,28 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {View, Text, TouchableOpacity, ActivityIndicator} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
-import {PenSquare, MessageCircle} from 'lucide-react-native';
-import {Header, SearchInput} from '../../components/ui';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
+import { MessageCircle, PenSquare } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ConversationRow from '../../components/messages/ConversationRow';
-import {colors} from '../../theme/colors';
-import {useMessagingStore} from '../../store/messaging';
-import {useAuthStore} from '../../store/auth';
-import {useSocket} from '../../hooks/useSocket';
+import { Header, SearchInput } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useSocket } from '../../hooks/useSocket';
+import { useAuthStore } from '../../store/auth';
+import { useMessagingStore } from '../../store/messaging';
+import { colors } from '../../theme/colors';
 
 export default function ConversationsListScreen() {
   const navigation = useNavigation<any>();
-  const myUserId = useAuthStore(s => s.user?._id) || '';
+  const myUserId = useAuthStore((s) => s.user?._id) || '';
 
-  const conversations = useMessagingStore(s => s.conversations);
-  const hasMore = useMessagingStore(s => s.hasMoreConversations);
-  const currentPage = useMessagingStore(s => s.currentPage);
-  const isLoading = useMessagingStore(s => s.isLoading);
-  const presenceMap = useMessagingStore(s => s.presenceMap);
-  const fetchConversations = useMessagingStore(s => s.fetchConversations);
-  const computeUnreadTotal = useMessagingStore(s => s.computeUnreadTotal);
+  const conversations = useMessagingStore((s) => s.conversations);
+  const hasMore = useMessagingStore((s) => s.hasMoreConversations);
+  const currentPage = useMessagingStore((s) => s.currentPage);
+  const isLoading = useMessagingStore((s) => s.isLoading);
+  const presenceMap = useMessagingStore((s) => s.presenceMap);
+  const fetchConversations = useMessagingStore((s) => s.fetchConversations);
+  const computeUnreadTotal = useMessagingStore((s) => s.computeUnreadTotal);
 
   const [search, setSearch] = useState('');
 
@@ -32,13 +33,13 @@ export default function ConversationsListScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchConversations(1, search || undefined);
-    }, [search]),
+    }, [search, fetchConversations])
   );
 
   // Compute unread whenever conversations change
   useEffect(() => {
     computeUnreadTotal(myUserId);
-  }, [conversations, myUserId]);
+  }, [conversations, myUserId, computeUnreadTotal]);
 
   const loadMore = () => {
     if (!isLoading && hasMore) {
@@ -49,7 +50,7 @@ export default function ConversationsListScreen() {
   const renderEmpty = () => {
     if (isLoading) return null;
     return (
-      <View style={{alignItems: 'center', paddingTop: 80, paddingHorizontal: 40}}>
+      <View style={{ alignItems: 'center', paddingTop: 80, paddingHorizontal: 40 }}>
         <View
           style={{
             width: 64,
@@ -59,13 +60,23 @@ export default function ConversationsListScreen() {
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: 16,
-          }}>
+          }}
+        >
           <MessageCircle size={28} color={colors.primary} />
         </View>
-        <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground, marginBottom: 6}}>
+        <Text
+          style={{ fontSize: 16, fontWeight: '700', color: colors.foreground, marginBottom: 6 }}
+        >
           No conversations yet
         </Text>
-        <Text style={{fontSize: 13, color: colors.mutedForeground, textAlign: 'center', lineHeight: 20}}>
+        <Text
+          style={{
+            fontSize: 13,
+            color: colors.mutedForeground,
+            textAlign: 'center',
+            lineHeight: 20,
+          }}
+        >
           Start a conversation with your healthcare specialist to get started.
         </Text>
       </View>
@@ -73,7 +84,7 @@ export default function ConversationsListScreen() {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header
         title="Messages"
         onBack={() => navigation.goBack()}
@@ -90,14 +101,15 @@ export default function ConversationsListScreen() {
               backgroundColor: colors.primary,
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
+            }}
+          >
             <PenSquare size={16} color={colors.white} />
           </TouchableOpacity>
         }
       />
 
       {/* Search bar */}
-      <View style={{paddingHorizontal: 16, paddingBottom: 8}}>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
         <SearchInput
           value={search}
           onChangeText={setSearch}
@@ -107,9 +119,9 @@ export default function ConversationsListScreen() {
 
       <FlashList
         data={conversations}
-        keyExtractor={item => item._id}
+        keyExtractor={(item) => item._id}
         estimatedItemSize={80}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <ConversationRow
             conversation={item}
             myUserId={myUserId}
@@ -136,7 +148,7 @@ export default function ConversationsListScreen() {
         )}
         ListFooterComponent={
           isLoading && conversations.length > 0 ? (
-            <View style={{padding: 16, alignItems: 'center'}}>
+            <View style={{ padding: 16, alignItems: 'center' }}>
               <ActivityIndicator size="small" color={colors.primary} />
             </View>
           ) : null

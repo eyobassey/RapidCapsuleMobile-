@@ -1,18 +1,16 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
   Image,
   ScrollView,
   Alert,
   RefreshControl,
   TouchableOpacity,
   Modal,
-  TextInput,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import {
   FileImage,
   User,
@@ -32,17 +30,17 @@ import {
   ShoppingCart,
 } from 'lucide-react-native';
 
-import {usePrescriptionUploadStore} from '../../store/prescriptionUpload';
-import {Header, StatusBadge, Button, Skeleton} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {formatDate} from '../../utils/formatters';
-import {VERIFICATION_STATUS_LABELS, isTerminalStatus} from '../../types/prescriptionUpload.types';
-import type {PharmacyStackParamList} from '../../navigation/stacks/PharmacyStack';
+import { usePrescriptionUploadStore } from '../../store/prescriptionUpload';
+import { Header, StatusBadge, Button, Skeleton, Text, TextInput } from '../../components/ui';
+import { colors } from '../../theme/colors';
+import { formatDate } from '../../utils/formatters';
+import { VERIFICATION_STATUS_LABELS, isTerminalStatus } from '../../types/prescriptionUpload.types';
+import type { PharmacyStackParamList } from '../../navigation/stacks/PharmacyStack';
 
 export default function UploadDetailScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<PharmacyStackParamList, 'UploadDetail'>>();
-  const {uploadId} = route.params;
+  const { uploadId } = route.params;
 
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -86,7 +84,7 @@ export default function UploadDetailScreen() {
       'Delete Prescription',
       'Are you sure you want to delete this uploaded prescription?',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Delete',
           style: 'destructive',
@@ -102,7 +100,7 @@ export default function UploadDetailScreen() {
             }
           },
         },
-      ],
+      ]
     );
   };
 
@@ -126,9 +124,7 @@ export default function UploadDetailScreen() {
         <Header title="Prescription Detail" onBack={() => navigation.goBack()} />
         <View className="flex-1 items-center justify-center p-8">
           <FileImage size={40} color={colors.mutedForeground} />
-          <Text className="text-lg font-bold text-foreground mt-4">
-            Prescription not found
-          </Text>
+          <Text className="text-lg font-bold text-foreground mt-4">Prescription not found</Text>
         </View>
       </SafeAreaView>
     );
@@ -140,7 +136,9 @@ export default function UploadDetailScreen() {
   const imageUrl = upload.presigned_url || upload.prescription_image;
 
   const canRetry = ['TIER1_FAILED', 'TIER2_FAILED', 'REJECTED'].includes(status);
-  const canDelete = ['PENDING', 'TIER1_FAILED', 'TIER2_FAILED', 'REJECTED', 'EXPIRED'].includes(status);
+  const canDelete = ['PENDING', 'TIER1_FAILED', 'TIER2_FAILED', 'REJECTED', 'EXPIRED'].includes(
+    status
+  );
   const needsClarification = status === 'CLARIFICATION_NEEDED';
   const isApproved = status === 'APPROVED';
 
@@ -177,18 +175,24 @@ export default function UploadDetailScreen() {
       {
         text: 'Camera',
         onPress: () =>
-          launchCamera({mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000}, res => {
-            if (res.assets?.[0]?.uri) setClarificationImage(res.assets[0].uri);
-          }),
+          launchCamera(
+            { mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000 },
+            (res) => {
+              if (res.assets?.[0]?.uri) setClarificationImage(res.assets[0].uri);
+            }
+          ),
       },
       {
         text: 'Gallery',
         onPress: () =>
-          launchImageLibrary({mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000}, res => {
-            if (res.assets?.[0]?.uri) setClarificationImage(res.assets[0].uri);
-          }),
+          launchImageLibrary(
+            { mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000 },
+            (res) => {
+              if (res.assets?.[0]?.uri) setClarificationImage(res.assets[0].uri);
+            }
+          ),
       },
-      {text: 'Cancel', style: 'cancel'},
+      { text: 'Cancel', style: 'cancel' },
     ]);
   };
 
@@ -201,7 +205,7 @@ export default function UploadDetailScreen() {
     // Navigate to pharmacy search with first medication name pre-filled
     navigation.navigate('Pharmacy', {
       screen: 'DrugSearch',
-      params: {query: meds[0]?.name || ''},
+      params: { query: meds[0]?.name || '' },
     });
   };
 
@@ -220,14 +224,11 @@ export default function UploadDetailScreen() {
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
-        }>
+        }
+      >
         {/* Prescription Image */}
         {imageUrl ? (
-          <Image
-            source={{uri: imageUrl}}
-            className="w-full h-56"
-            resizeMode="cover"
-          />
+          <Image source={{ uri: imageUrl }} className="w-full h-56" resizeMode="cover" />
         ) : (
           <View className="w-full h-56 bg-muted items-center justify-center">
             <FileImage size={56} color={colors.mutedForeground} />
@@ -240,10 +241,10 @@ export default function UploadDetailScreen() {
             backgroundColor: isApproved
               ? `${colors.success}20`
               : needsClarification
-                ? `${colors.secondary}20`
-                : canRetry
-                  ? `${colors.destructive}20`
-                  : `${colors.primary}20`,
+              ? `${colors.secondary}20`
+              : canRetry
+              ? `${colors.destructive}20`
+              : `${colors.primary}20`,
             marginHorizontal: 20,
             marginTop: 16,
             borderRadius: 16,
@@ -251,7 +252,8 @@ export default function UploadDetailScreen() {
             flexDirection: 'row',
             alignItems: 'center',
             gap: 12,
-          }}>
+          }}
+        >
           {isApproved ? (
             <CheckCircle size={24} color={colors.success} />
           ) : canRetry ? (
@@ -261,7 +263,7 @@ export default function UploadDetailScreen() {
           ) : (
             <Clock size={24} color={colors.primary} />
           )}
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <Text className="text-sm font-bold text-foreground">
               {VERIFICATION_STATUS_LABELS[status] || status}
             </Text>
@@ -281,9 +283,7 @@ export default function UploadDetailScreen() {
                 Clarification Requested
               </Text>
             </View>
-            <Text className="text-sm text-foreground">
-              {upload.clarification_request.message}
-            </Text>
+            <Text className="text-sm text-foreground">{upload.clarification_request.message}</Text>
           </View>
         )}
 
@@ -313,9 +313,7 @@ export default function UploadDetailScreen() {
             {ocr.date && (
               <View className="flex-row items-center gap-2 mb-2">
                 <Clock size={14} color={colors.mutedForeground} />
-                <Text className="text-sm text-muted-foreground">
-                  Prescription date: {ocr.date}
-                </Text>
+                <Text className="text-sm text-muted-foreground">Prescription date: {ocr.date}</Text>
               </View>
             )}
 
@@ -326,9 +324,7 @@ export default function UploadDetailScreen() {
                   Medications ({ocr.medications.length})
                 </Text>
                 {ocr.medications.map((med, idx) => (
-                  <View
-                    key={idx}
-                    className="bg-muted rounded-xl p-3 mb-2">
+                  <View key={idx} className="bg-muted rounded-xl p-3 mb-2">
                     <View className="flex-row items-center gap-2 mb-1">
                       <Pill size={14} color={colors.primary} />
                       <Text className="text-sm font-semibold text-foreground">
@@ -337,24 +333,16 @@ export default function UploadDetailScreen() {
                     </View>
                     <View className="flex-row flex-wrap gap-2 ml-6">
                       {med.dosage && (
-                        <Text className="text-xs text-muted-foreground">
-                          Dosage: {med.dosage}
-                        </Text>
+                        <Text className="text-xs text-muted-foreground">Dosage: {med.dosage}</Text>
                       )}
                       {med.frequency && (
-                        <Text className="text-xs text-muted-foreground">
-                          {med.frequency}
-                        </Text>
+                        <Text className="text-xs text-muted-foreground">{med.frequency}</Text>
                       )}
                       {med.quantity && (
-                        <Text className="text-xs text-muted-foreground">
-                          Qty: {med.quantity}
-                        </Text>
+                        <Text className="text-xs text-muted-foreground">Qty: {med.quantity}</Text>
                       )}
                       {med.duration && (
-                        <Text className="text-xs text-muted-foreground">
-                          {med.duration}
-                        </Text>
+                        <Text className="text-xs text-muted-foreground">{med.duration}</Text>
                       )}
                     </View>
                     {med.instructions && (
@@ -419,9 +407,7 @@ export default function UploadDetailScreen() {
                 {result.tier2_result.fraud_detection?.is_suspicious && (
                   <View className="ml-6 mt-1 flex-row items-center gap-1">
                     <AlertTriangle size={12} color={colors.destructive} />
-                    <Text className="text-xs text-destructive font-medium">
-                      Flagged for review
-                    </Text>
+                    <Text className="text-xs text-destructive font-medium">Flagged for review</Text>
                   </View>
                 )}
                 {result.tier2_result.clinical_validation?.issues &&
@@ -440,12 +426,8 @@ export default function UploadDetailScreen() {
             {/* Review Notes */}
             {result.review_notes && (
               <View className="pt-3 border-t border-border">
-                <Text className="text-xs font-semibold text-foreground mb-1">
-                  Reviewer Notes
-                </Text>
-                <Text className="text-xs text-muted-foreground">
-                  {result.review_notes}
-                </Text>
+                <Text className="text-xs font-semibold text-foreground mb-1">Reviewer Notes</Text>
+                <Text className="text-xs text-muted-foreground">{result.review_notes}</Text>
               </View>
             )}
           </View>
@@ -484,7 +466,8 @@ export default function UploadDetailScreen() {
                   icon={<Trash2 size={16} color={colors.destructive} />}
                   onPress={handleDelete}
                   loading={actionLoading === 'delete'}
-                  disabled={!!actionLoading}>
+                  disabled={!!actionLoading}
+                >
                   <Text className="text-destructive font-bold">Delete</Text>
                 </Button>
               </View>
@@ -496,7 +479,8 @@ export default function UploadDetailScreen() {
                   icon={<RotateCcw size={16} color="#fff" />}
                   onPress={handleRetry}
                   loading={actionLoading === 'retry'}
-                  disabled={!!actionLoading}>
+                  disabled={!!actionLoading}
+                >
                   Retry
                 </Button>
               </View>
@@ -506,7 +490,8 @@ export default function UploadDetailScreen() {
                 <Button
                   variant="primary"
                   icon={<MessageSquare size={16} color="#fff" />}
-                  onPress={() => setShowClarification(true)}>
+                  onPress={() => setShowClarification(true)}
+                >
                   Respond
                 </Button>
               </View>
@@ -516,7 +501,8 @@ export default function UploadDetailScreen() {
                 <Button
                   variant="primary"
                   icon={<ShoppingCart size={16} color="#fff" />}
-                  onPress={handleOrderFromPrescription}>
+                  onPress={handleOrderFromPrescription}
+                >
                   Order Medications
                 </Button>
               </View>
@@ -530,22 +516,55 @@ export default function UploadDetailScreen() {
         visible={showClarification}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowClarification(false)}>
+        onRequestClose={() => setShowClarification(false)}
+      >
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setShowClarification(false)}
-          style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'}}>
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }}
+        >
           <TouchableOpacity activeOpacity={1}>
-            <View style={{backgroundColor: colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40}}>
-              <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground, marginBottom: 4}}>
+            <View
+              style={{
+                backgroundColor: colors.card,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                paddingHorizontal: 20,
+                paddingTop: 20,
+                paddingBottom: 40,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: '700',
+                  color: colors.foreground,
+                  marginBottom: 4,
+                }}
+              >
                 Respond to Clarification
               </Text>
               {upload?.clarification_request?.message && (
-                <View style={{backgroundColor: `${colors.secondary}15`, borderRadius: 12, padding: 12, marginBottom: 16, marginTop: 8}}>
-                  <Text style={{fontSize: 12, fontWeight: '600', color: colors.secondary, marginBottom: 4}}>
+                <View
+                  style={{
+                    backgroundColor: `${colors.secondary}15`,
+                    borderRadius: 12,
+                    padding: 12,
+                    marginBottom: 16,
+                    marginTop: 8,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: '600',
+                      color: colors.secondary,
+                      marginBottom: 4,
+                    }}
+                  >
                     Request:
                   </Text>
-                  <Text style={{fontSize: 13, color: colors.foreground}}>
+                  <Text style={{ fontSize: 13, color: colors.foreground }}>
                     {upload.clarification_request.message}
                   </Text>
                 </View>
@@ -571,20 +590,21 @@ export default function UploadDetailScreen() {
                 multiline
               />
 
-              <View style={{flexDirection: 'row', gap: 12, marginBottom: 16}}>
+              <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
                 <TouchableOpacity
                   onPress={pickClarificationImage}
                   activeOpacity={0.7}
-                  style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                >
                   <Camera size={16} color={colors.primary} />
-                  <Text style={{fontSize: 13, color: colors.primary, fontWeight: '600'}}>
+                  <Text style={{ fontSize: 13, color: colors.primary, fontWeight: '600' }}>
                     {clarificationImage ? 'Change Image' : 'Add Image'}
                   </Text>
                 </TouchableOpacity>
                 {clarificationImage && (
                   <Image
-                    source={{uri: clarificationImage}}
-                    style={{width: 48, height: 48, borderRadius: 8}}
+                    source={{ uri: clarificationImage }}
+                    style={{ width: 48, height: 48, borderRadius: 8 }}
                   />
                 )}
               </View>
@@ -592,7 +612,8 @@ export default function UploadDetailScreen() {
               <Button
                 variant="primary"
                 onPress={handleSubmitClarification}
-                loading={actionLoading === 'clarify'}>
+                loading={actionLoading === 'clarify'}
+              >
                 Submit Response
               </Button>
             </View>

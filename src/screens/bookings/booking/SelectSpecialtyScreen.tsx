@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from 'react';
-import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import type {RouteProp} from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import {
   Stethoscope,
   Heart,
@@ -21,10 +21,10 @@ import {
   X,
   Clock,
 } from 'lucide-react-native';
-import {Header, Button, Skeleton} from '../../../components/ui';
-import {useAppointmentsStore} from '../../../store/appointments';
-import {colors} from '../../../theme/colors';
-import type {BookingsStackParamList} from '../../../navigation/stacks/BookingsStack';
+import { Header, Button, Skeleton, Text } from '../../../components/ui';
+import { useAppointmentsStore } from '../../../store/appointments';
+import { colors } from '../../../theme/colors';
+import type { BookingsStackParamList } from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 type Route = RouteProp<BookingsStackParamList, 'SelectSpecialty'>;
@@ -68,10 +68,20 @@ const categoryColors = [
 function LoadingSkeleton() {
   return (
     <View className="flex-row flex-wrap px-4 gap-3">
-      {[1, 2, 3, 4, 5, 6].map(i => (
+      {[1, 2, 3, 4, 5, 6].map((i) => (
         <View
           key={i}
-          style={{width: '47%', backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 16, alignItems: 'center', gap: 12}}>
+          style={{
+            width: '47%',
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 16,
+            padding: 16,
+            alignItems: 'center',
+            gap: 12,
+          }}
+        >
           <Skeleton width={48} height={48} borderRadius={16} />
           <Skeleton width="70%" height={14} />
         </View>
@@ -101,7 +111,7 @@ export default function SelectSpecialtyScreen() {
   useEffect(() => {
     clearBookingData();
     if (healthCheckupId) {
-      setBookingData({health_checkup_id: healthCheckupId, healthCheckupSummary});
+      setBookingData({ health_checkup_id: healthCheckupId, healthCheckupSummary });
     }
     fetchCategories();
     // Fetch recent checkups to decide whether to show suggestion
@@ -127,7 +137,7 @@ export default function SelectSpecialtyScreen() {
   };
 
   const handleStartCheckup = () => {
-    (navigation as any).navigate('Home', {screen: 'HealthCheckupPatientInfo'});
+    (navigation as any).navigate('Home', { screen: 'HealthCheckupPatientInfo' });
   };
 
   return (
@@ -138,7 +148,7 @@ export default function SelectSpecialtyScreen() {
       <View className="px-4 pt-4 pb-2">
         <View className="flex-row items-center gap-2">
           <View className="flex-row gap-1.5">
-            {[1, 2, 3, 4].map(step => (
+            {[1, 2, 3, 4].map((step) => (
               <View
                 key={step}
                 className="h-1.5 rounded-full"
@@ -166,8 +176,8 @@ export default function SelectSpecialtyScreen() {
             paddingHorizontal: 16,
             paddingBottom: 40,
           }}
-          showsVerticalScrollIndicator={false}>
-
+          showsVerticalScrollIndicator={false}
+        >
           {/* Health checkup suggestion card */}
           {showSuggestion && (
             <View
@@ -175,11 +185,13 @@ export default function SelectSpecialtyScreen() {
               style={{
                 backgroundColor: `${colors.primary}08`,
                 borderColor: `${colors.primary}25`,
-              }}>
+              }}
+            >
               <View className="flex-row items-start gap-3">
                 <View
                   className="w-10 h-10 rounded-xl items-center justify-center"
-                  style={{backgroundColor: `${colors.primary}20`}}>
+                  style={{ backgroundColor: `${colors.primary}20` }}
+                >
                   <ClipboardCheck size={20} color={colors.primary} />
                 </View>
                 <View className="flex-1">
@@ -187,9 +199,8 @@ export default function SelectSpecialtyScreen() {
                     Get better care with a quick health checkup
                   </Text>
                   <Text className="text-muted-foreground text-xs mt-1 leading-relaxed">
-                    A 3-5 min AI health assessment helps your specialist understand your
-                    symptoms before your appointment — leading to a more focused and
-                    productive consultation.
+                    A 3-5 min AI health assessment helps your specialist understand your symptoms
+                    before your appointment — leading to a more focused and productive consultation.
                   </Text>
                   <View className="flex-row items-center gap-1.5 mt-1.5">
                     <Clock size={11} color={colors.mutedForeground} />
@@ -200,7 +211,8 @@ export default function SelectSpecialtyScreen() {
                 </View>
                 <TouchableOpacity
                   onPress={() => setShowSuggestion(false)}
-                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
                   <X size={16} color={colors.mutedForeground} />
                 </TouchableOpacity>
               </View>
@@ -211,10 +223,9 @@ export default function SelectSpecialtyScreen() {
                   accessibilityLabel="Start health checkup"
                   activeOpacity={0.7}
                   className="flex-1 py-2.5 rounded-xl items-center"
-                  style={{backgroundColor: colors.primary}}>
-                  <Text className="text-white text-xs font-bold">
-                    Start Health Checkup
-                  </Text>
+                  style={{ backgroundColor: colors.primary }}
+                >
+                  <Text className="text-white text-xs font-bold">Start Health Checkup</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setShowSuggestion(false)}
@@ -222,10 +233,9 @@ export default function SelectSpecialtyScreen() {
                   accessibilityLabel="Dismiss health checkup suggestion"
                   activeOpacity={0.7}
                   className="flex-1 py-2.5 rounded-xl items-center border"
-                  style={{borderColor: colors.border, backgroundColor: colors.card}}>
-                  <Text className="text-muted-foreground text-xs font-medium">
-                    Maybe Later
-                  </Text>
+                  style={{ borderColor: colors.border, backgroundColor: colors.card }}
+                >
+                  <Text className="text-muted-foreground text-xs font-medium">Maybe Later</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -238,12 +248,11 @@ export default function SelectSpecialtyScreen() {
               style={{
                 backgroundColor: `${colors.success}10`,
                 borderColor: `${colors.success}30`,
-              }}>
+              }}
+            >
               <ClipboardCheck size={18} color={colors.success} />
               <View className="flex-1">
-                <Text className="text-success text-sm font-bold">
-                  Health Checkup Linked
-                </Text>
+                <Text className="text-success text-sm font-bold">Health Checkup Linked</Text>
                 <Text className="text-muted-foreground text-xs mt-0.5">
                   Results will be included in your notes for the specialist
                 </Text>
@@ -252,7 +261,7 @@ export default function SelectSpecialtyScreen() {
           )}
 
           {/* Category grid */}
-          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 12}}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
             {categories.map((category: any, index: number) => {
               const IconComponent = getIconForCategory(category.name);
               const color = categoryColors[index % categoryColors.length];
@@ -266,21 +275,22 @@ export default function SelectSpecialtyScreen() {
                   accessibilityHint="Double tap to select this specialty"
                   activeOpacity={0.7}
                   className="bg-card border border-border rounded-2xl p-4 items-center justify-center"
-                  style={{width: '47%', minHeight: 120}}>
+                  style={{ width: '47%', minHeight: 120 }}
+                >
                   <View
                     className="w-12 h-12 rounded-2xl items-center justify-center mb-3"
-                    style={{backgroundColor: `${color}20`}}>
+                    style={{ backgroundColor: `${color}20` }}
+                  >
                     <IconComponent size={24} color={color} />
                   </View>
-                  <Text
-                    className="text-foreground text-sm font-bold text-center"
-                    numberOfLines={2}>
+                  <Text className="text-foreground text-sm font-bold text-center" numberOfLines={2}>
                     {category.name}
                   </Text>
                   {category.description && (
                     <Text
                       className="text-muted-foreground text-xs text-center mt-1"
-                      numberOfLines={2}>
+                      numberOfLines={2}
+                    >
                       {category.description}
                     </Text>
                   )}
@@ -289,7 +299,15 @@ export default function SelectSpecialtyScreen() {
             })}
 
             {categories.length === 0 && !isLoading && (
-              <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 80, width: '100%'}}>
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingVertical: 80,
+                  width: '100%',
+                }}
+              >
                 <Stethoscope size={32} color={colors.mutedForeground} />
                 <Text className="text-muted-foreground text-base mt-3">
                   No specialties available

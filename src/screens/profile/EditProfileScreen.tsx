@@ -21,11 +21,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text } from '../../components/ui/Text';
 
 import SelectPicker from '../../components/onboarding/SelectPicker';
 import { Avatar, Button, Header, Input, ProgressRing } from '../../components/ui';

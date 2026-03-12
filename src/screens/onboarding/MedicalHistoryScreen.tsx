@@ -1,46 +1,47 @@
-import React, {useState, useEffect} from 'react';
-import {View, Text, TextInput, TouchableOpacity, Alert} from 'react-native';
-import {Plus, X} from 'lucide-react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Alert } from 'react-native';
+import { Plus, X } from 'lucide-react-native';
 import SectionScreenLayout from '../../components/onboarding/SectionScreenLayout';
 import SelectPicker from '../../components/onboarding/SelectPicker';
-import {colors} from '../../theme/colors';
-import {useAuthStore} from '../../store/auth';
-import {useOnboardingStore} from '../../store/onboarding';
-import {usersService} from '../../services/users.service';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
+import { colors } from '../../theme/colors';
+import { useAuthStore } from '../../store/auth';
+import { useOnboardingStore } from '../../store/onboarding';
+import { usersService } from '../../services/users.service';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { OnboardingStackParamList } from '../../navigation/OnboardingStack';
+import { Input, Text, TextInput } from '../../components/ui';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'MedicalHistory'>;
 
 const SMOKING_OPTIONS = [
-  {label: 'Never', value: 'never'},
-  {label: 'Former', value: 'former'},
-  {label: 'Current', value: 'current'},
-  {label: 'Occasional', value: 'occasional'},
+  { label: 'Never', value: 'never' },
+  { label: 'Former', value: 'former' },
+  { label: 'Current', value: 'current' },
+  { label: 'Occasional', value: 'occasional' },
 ];
 const ALCOHOL_OPTIONS = [
-  {label: 'Never', value: 'never'},
-  {label: 'Occasional', value: 'occasional'},
-  {label: 'Moderate', value: 'moderate'},
-  {label: 'Heavy', value: 'heavy'},
+  { label: 'Never', value: 'never' },
+  { label: 'Occasional', value: 'occasional' },
+  { label: 'Moderate', value: 'moderate' },
+  { label: 'Heavy', value: 'heavy' },
 ];
 const EXERCISE_OPTIONS = [
-  {label: 'Sedentary', value: 'sedentary'},
-  {label: 'Light', value: 'light'},
-  {label: 'Moderate', value: 'moderate'},
-  {label: 'Active', value: 'active'},
+  { label: 'Sedentary', value: 'sedentary' },
+  { label: 'Light', value: 'light' },
+  { label: 'Moderate', value: 'moderate' },
+  { label: 'Active', value: 'active' },
 ];
 const DIET_OPTIONS = [
-  {label: 'Regular', value: 'regular'},
-  {label: 'Vegetarian', value: 'vegetarian'},
-  {label: 'Vegan', value: 'vegan'},
-  {label: 'Keto', value: 'keto'},
+  { label: 'Regular', value: 'regular' },
+  { label: 'Vegetarian', value: 'vegetarian' },
+  { label: 'Vegan', value: 'vegan' },
+  { label: 'Keto', value: 'keto' },
 ];
 
-export default function MedicalHistoryScreen({navigation}: Props) {
-  const user = useAuthStore(s => s.user);
-  const fetchUser = useAuthStore(s => s.fetchUser);
-  const clearDraft = useOnboardingStore(s => s.clearDraft);
+export default function MedicalHistoryScreen({ navigation }: Props) {
+  const user = useAuthStore((s) => s.user);
+  const fetchUser = useAuthStore((s) => s.fetchUser);
+  const clearDraft = useOnboardingStore((s) => s.clearDraft);
 
   const [conditions, setConditions] = useState<string[]>([]);
   const [medications, setMedications] = useState<string[]>([]);
@@ -72,7 +73,7 @@ export default function MedicalHistoryScreen({navigation}: Props) {
           if (typeof m === 'string') return m;
           const parts = [m.name, m.strength, m.form].filter(Boolean);
           return parts.join(' ') || '';
-        }),
+        })
       );
 
       const surgs = h.past_surgeries || [];
@@ -81,7 +82,7 @@ export default function MedicalHistoryScreen({navigation}: Props) {
         surgs.map((s: any) => {
           if (typeof s === 'string') return s;
           return s.year ? `${s.procedure} (${s.year})` : s.procedure || '';
-        }),
+        })
       );
 
       const fh = h.family_history || [];
@@ -90,7 +91,7 @@ export default function MedicalHistoryScreen({navigation}: Props) {
         fh.map((f: any) => {
           if (typeof f === 'string') return f;
           return f.relation ? `${f.condition} (${f.relation})` : f.condition || '';
-        }),
+        })
       );
 
       if (h.lifestyle) {
@@ -119,30 +120,34 @@ export default function MedicalHistoryScreen({navigation}: Props) {
     try {
       // Merge: keep original structured items for existing entries, add new as simple
       const existingMedNames = rawMedications.map((m: any) =>
-        typeof m === 'string' ? m : [m.name, m.strength, m.form].filter(Boolean).join(' '),
+        typeof m === 'string' ? m : [m.name, m.strength, m.form].filter(Boolean).join(' ')
       );
-      const mergedMeds = medications.filter(Boolean).map(displayStr => {
+      const mergedMeds = medications.filter(Boolean).map((displayStr) => {
         const idx = existingMedNames.indexOf(displayStr);
         if (idx >= 0) return rawMedications[idx]; // preserve full object
-        return {name: displayStr};
+        return { name: displayStr };
       });
 
       const existingSurgNames = rawSurgeries.map((s: any) =>
-        typeof s === 'string' ? s : s.year ? `${s.procedure} (${s.year})` : s.procedure || '',
+        typeof s === 'string' ? s : s.year ? `${s.procedure} (${s.year})` : s.procedure || ''
       );
-      const mergedSurgs = surgeries.filter(Boolean).map(displayStr => {
+      const mergedSurgs = surgeries.filter(Boolean).map((displayStr) => {
         const idx = existingSurgNames.indexOf(displayStr);
         if (idx >= 0) return rawSurgeries[idx];
-        return {procedure: displayStr};
+        return { procedure: displayStr };
       });
 
       const existingFhNames = rawFamilyHistory.map((f: any) =>
-        typeof f === 'string' ? f : f.relation ? `${f.condition} (${f.relation})` : f.condition || '',
+        typeof f === 'string'
+          ? f
+          : f.relation
+          ? `${f.condition} (${f.relation})`
+          : f.condition || ''
       );
-      const mergedFh = familyHistory.filter(Boolean).map(displayStr => {
+      const mergedFh = familyHistory.filter(Boolean).map((displayStr) => {
         const idx = existingFhNames.indexOf(displayStr);
         if (idx >= 0) return rawFamilyHistory[idx];
-        return {condition: displayStr};
+        return { condition: displayStr };
       });
 
       await usersService.updateProfile({
@@ -176,8 +181,9 @@ export default function MedicalHistoryScreen({navigation}: Props) {
       onBack={() => navigation.goBack()}
       onSave={handleSave}
       saveLabel={hasSomething ? 'Save & Continue' : 'Skip for Now'}
-      loading={loading}>
-      <View style={{gap: 24}}>
+      loading={loading}
+    >
+      <View style={{ gap: 24 }}>
         <StringListSection
           title="Chronic Conditions"
           items={conditions}
@@ -221,43 +227,44 @@ export default function MedicalHistoryScreen({navigation}: Props) {
               borderBottomColor: colors.border,
               paddingBottom: 8,
               marginBottom: 16,
-            }}>
+            }}
+          >
             Lifestyle
           </Text>
-          <View style={{gap: 16}}>
-            <View style={{flexDirection: 'row', gap: 12}}>
-              <View style={{flex: 1}}>
+          <View style={{ gap: 16 }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flex: 1 }}>
                 <SelectPicker
                   label="Smoking"
                   value={lifestyle.smoking}
                   options={SMOKING_OPTIONS}
-                  onChange={v => setLifestyle(prev => ({...prev, smoking: v}))}
+                  onChange={(v) => setLifestyle((prev) => ({ ...prev, smoking: v }))}
                 />
               </View>
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <SelectPicker
                   label="Alcohol"
                   value={lifestyle.alcohol}
                   options={ALCOHOL_OPTIONS}
-                  onChange={v => setLifestyle(prev => ({...prev, alcohol: v}))}
+                  onChange={(v) => setLifestyle((prev) => ({ ...prev, alcohol: v }))}
                 />
               </View>
             </View>
-            <View style={{flexDirection: 'row', gap: 12}}>
-              <View style={{flex: 1}}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flex: 1 }}>
                 <SelectPicker
                   label="Exercise"
                   value={lifestyle.exercise}
                   options={EXERCISE_OPTIONS}
-                  onChange={v => setLifestyle(prev => ({...prev, exercise: v}))}
+                  onChange={(v) => setLifestyle((prev) => ({ ...prev, exercise: v }))}
                 />
               </View>
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <SelectPicker
                   label="Diet"
                   value={lifestyle.diet}
                   options={DIET_OPTIONS}
-                  onChange={v => setLifestyle(prev => ({...prev, diet: v}))}
+                  onChange={(v) => setLifestyle((prev) => ({ ...prev, diet: v }))}
                 />
               </View>
             </View>
@@ -288,7 +295,7 @@ function StringListSection({
   const handleAdd = () => {
     const trimmed = inputValue.trim();
     if (trimmed && !items.includes(trimmed)) {
-      setItems(prev => [...prev, trimmed]);
+      setItems((prev) => [...prev, trimmed]);
       setInputValue('');
     }
   };
@@ -304,13 +311,14 @@ function StringListSection({
           borderBottomColor: colors.border,
           paddingBottom: 8,
           marginBottom: 12,
-        }}>
+        }}
+      >
         {title}
       </Text>
 
       {/* Chips */}
       {items.length > 0 && (
-        <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12}}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
           {items.map((item, index) => (
             <View
               key={index}
@@ -322,15 +330,15 @@ function StringListSection({
                 borderRadius: 20,
                 paddingHorizontal: 12,
                 paddingVertical: 6,
-              }}>
-              <Text style={{fontSize: 12, color: colors.primary, fontWeight: '500'}}>
-                {item}
-              </Text>
+              }}
+            >
+              <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>{item}</Text>
               <TouchableOpacity
-                onPress={() => setItems(prev => prev.filter((_, i) => i !== index))}
+                onPress={() => setItems((prev) => prev.filter((_, i) => i !== index))}
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${item}`}
-                hitSlop={{top: 6, bottom: 6, left: 6, right: 6}}>
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              >
                 <X size={12} color={colors.primary} />
               </TouchableOpacity>
             </View>
@@ -339,8 +347,8 @@ function StringListSection({
       )}
 
       {/* Input + add button */}
-      <View style={{flexDirection: 'row', gap: 8}}>
-        <View style={{flex: 1}}>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={{ flex: 1 }}>
           <TextInput
             style={{
               height: 48,
@@ -373,7 +381,8 @@ function StringListSection({
             backgroundColor: colors.primary,
             alignItems: 'center',
             justifyContent: 'center',
-          }}>
+          }}
+        >
           <Plus size={20} color={colors.white} />
         </TouchableOpacity>
       </View>

@@ -1,18 +1,18 @@
-import React, {useState, useEffect, useCallback} from 'react';
-import {View, Text, ScrollView, TextInput, Alert, TouchableOpacity} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {useForm, Controller} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import type {RouteProp} from '@react-navigation/native';
-import {Star} from 'lucide-react-native';
-import {Header, Avatar, Button, Skeleton} from '../../components/ui';
-import {useAppointmentsStore} from '../../store/appointments';
-import {colors} from '../../theme/colors';
-import {formatDate, formatTime} from '../../utils/formatters';
-import {ratingSchema, type RatingFormData} from '../../utils/validation';
-import type {BookingsStackParamList} from '../../navigation/stacks/BookingsStack';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
+import { Star } from 'lucide-react-native';
+import { Header, Avatar, Button, Skeleton, Text, TextInput } from '../../components/ui';
+import { useAppointmentsStore } from '../../store/appointments';
+import { colors } from '../../theme/colors';
+import { formatDate, formatTime } from '../../utils/formatters';
+import { ratingSchema, type RatingFormData } from '../../utils/validation';
+import type { BookingsStackParamList } from '../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 type Route = RouteProp<BookingsStackParamList, 'RateAppointment'>;
@@ -22,7 +22,7 @@ const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
 export default function RateAppointmentScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const {id} = route.params;
+  const { id } = route.params;
 
   const {
     currentAppointment: appointment,
@@ -38,10 +38,10 @@ export default function RateAppointmentScreen() {
     handleSubmit,
     setValue,
     watch,
-    formState: {errors},
+    formState: { errors },
   } = useForm<RatingFormData>({
     resolver: zodResolver(ratingSchema),
-    defaultValues: {rating: 0, feedback: ''},
+    defaultValues: { rating: 0, feedback: '' },
   });
 
   const rating = watch('rating');
@@ -66,26 +66,22 @@ export default function RateAppointmentScreen() {
           rating: data.rating,
           review: data.feedback?.trim() || undefined,
         });
-        Alert.alert(
-          'Thank You!',
-          'Your review has been submitted successfully.',
-          [
-            {
-              text: 'Done',
-              onPress: () => navigation.goBack(),
-            },
-          ],
-        );
+        Alert.alert('Thank You!', 'Your review has been submitted successfully.', [
+          {
+            text: 'Done',
+            onPress: () => navigation.goBack(),
+          },
+        ]);
       } catch (err: any) {
         Alert.alert(
           'Error',
-          err?.response?.data?.message || err?.message || 'Failed to submit rating.',
+          err?.response?.data?.message || err?.message || 'Failed to submit rating.'
         );
       } finally {
         setSubmitting(false);
       }
     },
-    [id, rateAppointment, navigation],
+    [id, rateAppointment, navigation]
   );
 
   if (isLoading && !appointment) {
@@ -109,8 +105,9 @@ export default function RateAppointmentScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{padding: 16, paddingBottom: 120}}
-        showsVerticalScrollIndicator={false}>
+        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Specialist info */}
         <View className="bg-card border border-border rounded-2xl p-5 items-center mb-6">
           <Avatar
@@ -122,7 +119,9 @@ export default function RateAppointmentScreen() {
           <Text className="text-foreground text-lg font-bold mt-3">{specialistName}</Text>
           {appointment && (
             <Text className="text-muted-foreground text-xs mt-1">
-              {formatDate(appointment.date || appointment.appointment_date || appointment.createdAt)}
+              {formatDate(
+                appointment.date || appointment.appointment_date || appointment.createdAt
+              )}
               {' at '}
               {formatTime(appointment.time || appointment.appointment_time || '00:00')}
             </Text>
@@ -131,20 +130,19 @@ export default function RateAppointmentScreen() {
 
         {/* Star rating */}
         <View className="items-center mb-6">
-          <Text className="text-foreground text-base font-bold mb-4">
-            How was your experience?
-          </Text>
+          <Text className="text-foreground text-base font-bold mb-4">How was your experience?</Text>
 
           <View className="flex-row items-center gap-3">
-            {[1, 2, 3, 4, 5].map(i => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <TouchableOpacity
                 key={i}
-                onPress={() => setValue('rating', i, {shouldValidate: true})}
+                onPress={() => setValue('rating', i, { shouldValidate: true })}
                 accessibilityRole="button"
                 accessibilityLabel={`Rate ${i} star${i > 1 ? 's' : ''}, ${RATING_LABELS[i]}`}
-                accessibilityState={{selected: i <= rating}}
+                accessibilityState={{ selected: i <= rating }}
                 activeOpacity={0.7}
-                hitSlop={{top: 8, bottom: 8, left: 4, right: 4}}>
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+              >
                 <Star
                   size={40}
                   color={i <= rating ? colors.secondary : colors.border}
@@ -155,17 +153,13 @@ export default function RateAppointmentScreen() {
           </View>
 
           {rating > 0 && (
-            <Text
-              className="text-sm font-bold mt-3"
-              style={{color: colors.secondary}}>
+            <Text className="text-sm font-bold mt-3" style={{ color: colors.secondary }}>
               {RATING_LABELS[rating]}
             </Text>
           )}
 
           {errors.rating?.message && (
-            <Text className="text-xs text-destructive mt-2">
-              {errors.rating.message}
-            </Text>
+            <Text className="text-xs text-destructive mt-2">{errors.rating.message}</Text>
           )}
         </View>
 
@@ -178,7 +172,7 @@ export default function RateAppointmentScreen() {
             <Controller
               control={control}
               name="feedback"
-              render={({field: {onChange, value}}) => (
+              render={({ field: { onChange, value } }) => (
                 <TextInput
                   value={value}
                   onChangeText={onChange}
@@ -206,7 +200,8 @@ export default function RateAppointmentScreen() {
           onPress={handleSubmit(onSubmit)}
           loading={submitting}
           disabled={rating === 0}
-          icon={<Star size={18} color={colors.white} fill={colors.white} />}>
+          icon={<Star size={18} color={colors.white} fill={colors.white} />}
+        >
           Submit Rating
         </Button>
       </View>

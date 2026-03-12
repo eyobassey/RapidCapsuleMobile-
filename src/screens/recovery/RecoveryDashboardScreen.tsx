@@ -1,13 +1,7 @@
-import React, {useCallback} from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import React, { useCallback } from 'react';
+import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import {
   Flame,
   ClipboardCheck,
@@ -31,41 +25,32 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 
-import {Header} from '../../components/ui';
+import { Header, Text } from '../../components/ui';
 import RiskBadge from '../../components/recovery/RiskBadge';
 import LineChart from '../../components/charts/LineChart';
-import {colors} from '../../theme/colors';
-import {
-  useRecoveryDashboardQuery,
-  useRecoveryProfileQuery,
-} from '../../hooks/queries';
-import {useRecoveryStore} from '../../store/recovery';
+import { colors } from '../../theme/colors';
+import { useRecoveryDashboardQuery, useRecoveryProfileQuery } from '../../hooks/queries';
+import { useRecoveryStore } from '../../store/recovery';
 
 export default function RecoveryDashboardScreen() {
   const navigation = useNavigation<any>();
 
   // React Query hooks
-  const {
-    data: dashboard,
-    refetch: refetchDashboard,
-  } = useRecoveryDashboardQuery();
+  const { data: dashboard, refetch: refetchDashboard } = useRecoveryDashboardQuery();
 
-  const {
-    data: profile,
-    refetch: refetchProfile,
-  } = useRecoveryProfileQuery();
+  const { data: profile, refetch: refetchProfile } = useRecoveryProfileQuery();
 
   // Keep store for activePlan and recentConversations (no dedicated query hooks)
-  const activePlan = useRecoveryStore(s => s.activePlan);
-  const recentConversations = useRecoveryStore(s => s.recentConversations);
-  const fetchActivePlan = useRecoveryStore(s => s.fetchActivePlan);
-  const fetchRecentConversations = useRecoveryStore(s => s.fetchRecentConversations);
+  const activePlan = useRecoveryStore((s) => s.activePlan);
+  const recentConversations = useRecoveryStore((s) => s.recentConversations);
+  const fetchActivePlan = useRecoveryStore((s) => s.fetchActivePlan);
+  const fetchRecentConversations = useRecoveryStore((s) => s.fetchRecentConversations);
 
   useFocusEffect(
     useCallback(() => {
       fetchActivePlan();
       fetchRecentConversations();
-    }, []),
+    }, [])
   );
 
   const onRefresh = async () => {
@@ -165,7 +150,7 @@ export default function RecoveryDashboardScreen() {
   ];
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header
         title="Recovery"
         onBack={() => navigation.goBack()}
@@ -174,21 +159,23 @@ export default function RecoveryDashboardScreen() {
             onPress={() => navigation.navigate('ScreeningHistory')}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="Screening history">
+            accessibilityLabel="Screening history"
+          >
             <History size={20} color={colors.foreground} />
           </TouchableOpacity>
         }
       />
 
       <ScrollView
-        contentContainerStyle={{padding: 16, paddingBottom: 40, gap: 16}}
+        contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 16 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={colors.primary} />
-        }>
+        }
+      >
         {/* ─── New User Welcome ─── */}
         {isNewUser && (
-          <View style={{gap: 16}}>
+          <View style={{ gap: 16 }}>
             {/* Welcome Hero */}
             <View
               style={{
@@ -198,7 +185,8 @@ export default function RecoveryDashboardScreen() {
                 borderRadius: 24,
                 padding: 28,
                 alignItems: 'center',
-              }}>
+              }}
+            >
               <View
                 style={{
                   width: 64,
@@ -208,7 +196,8 @@ export default function RecoveryDashboardScreen() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: 16,
-                }}>
+                }}
+              >
                 <Heart size={32} color={colors.accent} />
               </View>
               <Text
@@ -217,7 +206,8 @@ export default function RecoveryDashboardScreen() {
                   fontWeight: '800',
                   color: colors.foreground,
                   textAlign: 'center',
-                }}>
+                }}
+              >
                 Welcome to Recovery
               </Text>
               <Text
@@ -228,8 +218,10 @@ export default function RecoveryDashboardScreen() {
                   marginTop: 8,
                   lineHeight: 20,
                   paddingHorizontal: 8,
-                }}>
-                You've taken a brave first step. This space is here to support you with evidence-based tools, daily tracking, and compassionate AI guidance.
+                }}
+              >
+                You've taken a brave first step. This space is here to support you with
+                evidence-based tools, daily tracking, and compassionate AI guidance.
               </Text>
             </View>
 
@@ -246,7 +238,8 @@ export default function RecoveryDashboardScreen() {
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 14,
-              }}>
+              }}
+            >
               <View
                 style={{
                   width: 48,
@@ -255,15 +248,24 @@ export default function RecoveryDashboardScreen() {
                   backgroundColor: `${colors.primary}15`,
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 <ClipboardCheck size={24} color={colors.primary} />
               </View>
-              <View style={{flex: 1}}>
-                <Text style={{fontSize: 15, fontWeight: '700', color: colors.foreground}}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.foreground }}>
                   Take Your First Screening
                 </Text>
-                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 3, lineHeight: 17}}>
-                  A short confidential assessment to understand where you are and personalise your support.
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: colors.mutedForeground,
+                    marginTop: 3,
+                    lineHeight: 17,
+                  }}
+                >
+                  A short confidential assessment to understand where you are and personalise your
+                  support.
                 </Text>
               </View>
               <ChevronRight size={18} color={colors.primary} />
@@ -282,7 +284,8 @@ export default function RecoveryDashboardScreen() {
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 14,
-              }}>
+              }}
+            >
               <View
                 style={{
                   width: 48,
@@ -291,15 +294,24 @@ export default function RecoveryDashboardScreen() {
                   backgroundColor: `${colors.success}15`,
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 <CalendarCheck size={24} color={colors.success} />
               </View>
-              <View style={{flex: 1}}>
-                <Text style={{fontSize: 15, fontWeight: '700', color: colors.foreground}}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.foreground }}>
                   Log Your First Check-in
                 </Text>
-                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 3, lineHeight: 17}}>
-                  Track your mood, cravings, and daily progress. Just a minute a day makes a difference.
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: colors.mutedForeground,
+                    marginTop: 3,
+                    lineHeight: 17,
+                  }}
+                >
+                  Track your mood, cravings, and daily progress. Just a minute a day makes a
+                  difference.
                 </Text>
               </View>
               <ChevronRight size={18} color={colors.success} />
@@ -317,7 +329,8 @@ export default function RecoveryDashboardScreen() {
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 14,
-              }}>
+              }}
+            >
               <View
                 style={{
                   width: 48,
@@ -326,14 +339,22 @@ export default function RecoveryDashboardScreen() {
                   backgroundColor: '#8b5cf615',
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 <BrainCircuit size={24} color="#8b5cf6" />
               </View>
-              <View style={{flex: 1}}>
-                <Text style={{fontSize: 15, fontWeight: '700', color: colors.foreground}}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.foreground }}>
                   Chat with AI Companion
                 </Text>
-                <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 3, lineHeight: 17}}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: colors.mutedForeground,
+                    marginTop: 3,
+                    lineHeight: 17,
+                  }}
+                >
                   A judgement-free space to talk, get coping strategies, or just be heard.
                 </Text>
               </View>
@@ -342,10 +363,17 @@ export default function RecoveryDashboardScreen() {
 
             {/* Explore more */}
             <View>
-              <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground, marginBottom: 12}}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '700',
+                  color: colors.foreground,
+                  marginBottom: 12,
+                }}
+              >
                 Explore Tools
               </Text>
-              <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                 {quickActions.map((action, i) => (
                   <TouchableOpacity
                     key={i}
@@ -363,7 +391,8 @@ export default function RecoveryDashboardScreen() {
                       alignItems: 'center',
                       gap: 8,
                       flexGrow: 1,
-                    }}>
+                    }}
+                  >
                     <View
                       style={{
                         width: 40,
@@ -372,10 +401,18 @@ export default function RecoveryDashboardScreen() {
                         backgroundColor: action.bg,
                         alignItems: 'center',
                         justifyContent: 'center',
-                      }}>
+                      }}
+                    >
                       {action.icon}
                     </View>
-                    <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground, textAlign: 'center'}}>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: '600',
+                        color: colors.foreground,
+                        textAlign: 'center',
+                      }}
+                    >
                       {action.label}
                     </Text>
                   </TouchableOpacity>
@@ -386,309 +423,396 @@ export default function RecoveryDashboardScreen() {
         )}
 
         {/* ─── Regular Dashboard (users with screening/activity) ─── */}
-        {!isNewUser && (<>
-        {/* Sobriety Hero */}
-        <View
-          style={{
-            backgroundColor: colors.card,
-            borderWidth: 1,
-            borderColor: `${colors.success}30`,
-            borderRadius: 24,
-            padding: 24,
-            alignItems: 'center',
-          }}>
-          <Flame size={28} color={colors.success} />
-          <Text
-            style={{
-              fontSize: 48,
-              fontWeight: '800',
-              color: colors.foreground,
-              marginTop: 4,
-            }}>
-            {sobrietyDays}
-          </Text>
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: '600',
-              color: colors.mutedForeground,
-              textTransform: 'uppercase',
-              letterSpacing: 1,
-            }}>
-            Days Sober
-          </Text>
-
-          <View style={{flexDirection: 'row', gap: 24, marginTop: 16}}>
-            <View style={{alignItems: 'center'}}>
-              <Text style={{fontSize: 20, fontWeight: '700', color: colors.foreground}}>
-                {streak}
-              </Text>
-              <Text style={{fontSize: 10, color: colors.mutedForeground, fontWeight: '600'}}>
-                Current Streak
-              </Text>
-            </View>
-            <View style={{width: 1, backgroundColor: colors.border}} />
-            <View style={{alignItems: 'center'}}>
-              <Text style={{fontSize: 20, fontWeight: '700', color: colors.foreground}}>
-                {longestStreak}
-              </Text>
-              <Text style={{fontSize: 10, color: colors.mutedForeground, fontWeight: '600'}}>
-                Longest Streak
-              </Text>
-            </View>
-          </View>
-
-          {dashboard?.risk_level && (
-            <View style={{marginTop: 14}}>
-              <RiskBadge level={dashboard.risk_level} size="md" />
-            </View>
-          )}
-        </View>
-
-        {/* Programme Stats */}
-        {dashboard && (
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 16,
-              padding: 16,
-            }}>
-            <Text style={{fontSize: 13, fontWeight: '700', color: colors.foreground, marginBottom: 12}}>
-              Programme
-            </Text>
-            <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
-              <StatItem value={dashboard.days_in_program || profile?.outcomes?.days_in_program || 0} label="Days" />
-              <StatItem value={profile?.outcomes?.appointments_attended || 0} label="Appointments" />
-              <StatItem value={profile?.outcomes?.companion_sessions_count || 0} label="AI Sessions" />
-              <StatItem value={dashboard.milestones_total || profile?.outcomes?.milestones_achieved || 0} label="Milestones" />
-            </View>
-          </View>
-        )}
-
-        {/* Today's Check-in Status */}
-        {logSummary && !logSummary.logged_today && (
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('DailyCheckIn')}
-            style={{
-              backgroundColor: `${colors.accent}10`,
-              borderWidth: 1,
-              borderColor: `${colors.accent}30`,
-              borderRadius: 16,
-              padding: 16,
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 12,
-            }}>
-            <CalendarCheck size={20} color={colors.accent} />
-            <View style={{flex: 1}}>
-              <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
-                Daily check-in pending
-              </Text>
-              <Text style={{fontSize: 11, color: colors.mutedForeground}}>
-                Take a moment to log how you're feeling today
-              </Text>
-            </View>
-            <ChevronRight size={16} color={colors.accent} />
-          </TouchableOpacity>
-        )}
-
-        {/* Mood Trend Chart */}
-        {dashboard?.mood_trend && dashboard.mood_trend.length > 0 && (
-          <LineChart
-            data={dashboard.mood_trend.map(m => ({date: m.date, value: m.mood_score}))}
-            color={colors.primary}
-            height={160}
-            label="Mood Trend"
-            range={{min: 0, max: 10}}
-          />
-        )}
-
-        {/* Recent Screening */}
-        {dashboard?.recent_screening && (
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 16,
-              padding: 16,
-            }}>
-            <Text style={{fontSize: 13, fontWeight: '700', color: colors.foreground, marginBottom: 8}}>
-              Latest Screening
-            </Text>
-            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-              <View>
-                <Text style={{fontSize: 12, color: colors.mutedForeground, textTransform: 'uppercase'}}>
-                  {dashboard.recent_screening.instrument}
-                </Text>
-                <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground}}>
-                  Score: {dashboard.recent_screening.score}
-                </Text>
-              </View>
-              <RiskBadge level={dashboard.recent_screening.risk_level} />
-            </View>
-          </View>
-        )}
-
-        {/* Recovery Plan Summary */}
-        {activePlan && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('RecoveryPlan')}
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 16,
-              padding: 16,
-            }}>
-            <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10}}>
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
-                <Target size={16} color="#f59e0b" />
-                <Text style={{fontSize: 13, fontWeight: '700', color: colors.foreground}}>
-                  Recovery Plan
-                </Text>
-              </View>
-              <ChevronRight size={16} color={colors.mutedForeground} />
-            </View>
-            <View style={{marginBottom: 8}}>
-              <View style={{flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4}}>
-                <Text style={{fontSize: 11, color: colors.mutedForeground}}>
-                  {activePlan.stages?.filter(s => s.status === 'completed').length || 0} of{' '}
-                  {activePlan.stages?.length || 0} stages complete
-                </Text>
-                <Text style={{fontSize: 11, fontWeight: '700', color: colors.foreground}}>
-                  {Math.round(activePlan.progress_percentage || 0)}%
-                </Text>
-              </View>
-              <View style={{height: 6, backgroundColor: colors.muted, borderRadius: 3}}>
-                <View
-                  style={{
-                    height: 6,
-                    width: `${Math.min(activePlan.progress_percentage || 0, 100)}%`,
-                    backgroundColor: '#f59e0b',
-                    borderRadius: 3,
-                  }}
-                />
-              </View>
-            </View>
-            {activePlan.stages?.find(s => s.status === 'in_progress') && (
-              <Text style={{fontSize: 11, color: colors.mutedForeground}}>
-                Current: {activePlan.stages.find(s => s.status === 'in_progress')!.name}
-              </Text>
-            )}
-          </TouchableOpacity>
-        )}
-
-        {/* Recent Conversations */}
-        {recentConversations.length > 0 && (
-          <View
-            style={{
-              backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 16,
-              padding: 16,
-            }}>
-            <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12}}>
-              <MessageCircle size={16} color="#8b5cf6" />
-              <Text style={{fontSize: 13, fontWeight: '700', color: colors.foreground}}>
-                Recent Conversations
-              </Text>
-            </View>
-            {recentConversations.slice(0, 3).map((session, i) => (
-              <TouchableOpacity
-                key={session.session_id || i}
-                activeOpacity={0.7}
-                onPress={() => navigation.navigate('CompanionChat', {sessionId: session.session_id})}
+        {!isNewUser && (
+          <>
+            {/* Sobriety Hero */}
+            <View
+              style={{
+                backgroundColor: colors.card,
+                borderWidth: 1,
+                borderColor: `${colors.success}30`,
+                borderRadius: 24,
+                padding: 24,
+                alignItems: 'center',
+              }}
+            >
+              <Flame size={28} color={colors.success} />
+              <Text
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                  paddingVertical: 8,
-                  borderTopWidth: i > 0 ? 1 : 0,
-                  borderTopColor: colors.border,
-                }}>
-                <View
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    backgroundColor: '#8b5cf615',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                  <BrainCircuit size={14} color="#8b5cf6" />
-                </View>
-                <View style={{flex: 1}}>
-                  <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground}}>
-                    {session.context || 'General Support'}
+                  fontSize: 48,
+                  fontWeight: '800',
+                  color: colors.foreground,
+                  marginTop: 4,
+                }}
+              >
+                {sobrietyDays}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: '600',
+                  color: colors.mutedForeground,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1,
+                }}
+              >
+                Days Sober
+              </Text>
+
+              <View style={{ flexDirection: 'row', gap: 24, marginTop: 16 }}>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ fontSize: 20, fontWeight: '700', color: colors.foreground }}>
+                    {streak}
                   </Text>
-                  <Text style={{fontSize: 10, color: colors.mutedForeground}}>
-                    {session.message_count ? `${session.message_count} messages` : ''}{' '}
-                    {session.started_at ? formatRelativeDate(session.started_at) : ''}
+                  <Text style={{ fontSize: 10, color: colors.mutedForeground, fontWeight: '600' }}>
+                    Current Streak
                   </Text>
                 </View>
-                <ChevronRight size={14} color={colors.mutedForeground} />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+                <View style={{ width: 1, backgroundColor: colors.border }} />
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ fontSize: 20, fontWeight: '700', color: colors.foreground }}>
+                    {longestStreak}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: colors.mutedForeground, fontWeight: '600' }}>
+                    Longest Streak
+                  </Text>
+                </View>
+              </View>
 
-        {/* Quick Actions Grid */}
-        <View>
-          <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground, marginBottom: 12}}>
-            Quick Actions
-          </Text>
-          <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10}}>
-            {quickActions.map((action, i) => (
-              <TouchableOpacity
-                key={i}
-                activeOpacity={0.7}
-                onPress={action.onPress}
+              {dashboard?.risk_level && (
+                <View style={{ marginTop: 14 }}>
+                  <RiskBadge level={dashboard.risk_level} size="md" />
+                </View>
+              )}
+            </View>
+
+            {/* Programme Stats */}
+            {dashboard && (
+              <View
                 style={{
-                  width: '31%',
                   backgroundColor: colors.card,
                   borderWidth: 1,
                   borderColor: colors.border,
                   borderRadius: 16,
-                  padding: 14,
+                  padding: 16,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '700',
+                    color: colors.foreground,
+                    marginBottom: 12,
+                  }}
+                >
+                  Programme
+                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                  <StatItem
+                    value={dashboard.days_in_program || profile?.outcomes?.days_in_program || 0}
+                    label="Days"
+                  />
+                  <StatItem
+                    value={profile?.outcomes?.appointments_attended || 0}
+                    label="Appointments"
+                  />
+                  <StatItem
+                    value={profile?.outcomes?.companion_sessions_count || 0}
+                    label="AI Sessions"
+                  />
+                  <StatItem
+                    value={
+                      dashboard.milestones_total || profile?.outcomes?.milestones_achieved || 0
+                    }
+                    label="Milestones"
+                  />
+                </View>
+              </View>
+            )}
+
+            {/* Today's Check-in Status */}
+            {logSummary && !logSummary.logged_today && (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => navigation.navigate('DailyCheckIn')}
+                style={{
+                  backgroundColor: `${colors.accent}10`,
+                  borderWidth: 1,
+                  borderColor: `${colors.accent}30`,
+                  borderRadius: 16,
+                  padding: 16,
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 8,
-                  flexGrow: 1,
-                }}>
+                  gap: 12,
+                }}
+              >
+                <CalendarCheck size={20} color={colors.accent} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
+                    Daily check-in pending
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+                    Take a moment to log how you're feeling today
+                  </Text>
+                </View>
+                <ChevronRight size={16} color={colors.accent} />
+              </TouchableOpacity>
+            )}
+
+            {/* Mood Trend Chart */}
+            {dashboard?.mood_trend && dashboard.mood_trend.length > 0 && (
+              <LineChart
+                data={dashboard.mood_trend.map((m) => ({ date: m.date, value: m.mood_score }))}
+                color={colors.primary}
+                height={160}
+                label="Mood Trend"
+                range={{ min: 0, max: 10 }}
+              />
+            )}
+
+            {/* Recent Screening */}
+            {dashboard?.recent_screening && (
+              <View
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 16,
+                  padding: 16,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '700',
+                    color: colors.foreground,
+                    marginBottom: 8,
+                  }}
+                >
+                  Latest Screening
+                </Text>
                 <View
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: action.bg,
+                    flexDirection: 'row',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                  {action.icon}
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <View>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: colors.mutedForeground,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {dashboard.recent_screening.instrument}
+                    </Text>
+                    <Text style={{ fontSize: 18, fontWeight: '700', color: colors.foreground }}>
+                      Score: {dashboard.recent_screening.score}
+                    </Text>
+                  </View>
+                  <RiskBadge level={dashboard.recent_screening.risk_level} />
                 </View>
-                <Text style={{fontSize: 11, fontWeight: '600', color: colors.foreground, textAlign: 'center'}}>
-                  {action.label}
-                </Text>
+              </View>
+            )}
+
+            {/* Recovery Plan Summary */}
+            {activePlan && (
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('RecoveryPlan')}
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 16,
+                  padding: 16,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: 10,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Target size={16} color="#f59e0b" />
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.foreground }}>
+                      Recovery Plan
+                    </Text>
+                  </View>
+                  <ChevronRight size={16} color={colors.mutedForeground} />
+                </View>
+                <View style={{ marginBottom: 8 }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      marginBottom: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+                      {activePlan.stages?.filter((s) => s.status === 'completed').length || 0} of{' '}
+                      {activePlan.stages?.length || 0} stages complete
+                    </Text>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: colors.foreground }}>
+                      {Math.round(activePlan.progress_percentage || 0)}%
+                    </Text>
+                  </View>
+                  <View style={{ height: 6, backgroundColor: colors.muted, borderRadius: 3 }}>
+                    <View
+                      style={{
+                        height: 6,
+                        width: `${Math.min(activePlan.progress_percentage || 0, 100)}%`,
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 3,
+                      }}
+                    />
+                  </View>
+                </View>
+                {activePlan.stages?.find((s) => s.status === 'in_progress') && (
+                  <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
+                    Current: {activePlan.stages.find((s) => s.status === 'in_progress')!.name}
+                  </Text>
+                )}
               </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-        </>)}
+            )}
+
+            {/* Recent Conversations */}
+            {recentConversations.length > 0 && (
+              <View
+                style={{
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 16,
+                  padding: 16,
+                }}
+              >
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}
+                >
+                  <MessageCircle size={16} color="#8b5cf6" />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.foreground }}>
+                    Recent Conversations
+                  </Text>
+                </View>
+                {recentConversations.slice(0, 3).map((session, i) => (
+                  <TouchableOpacity
+                    key={session.session_id || i}
+                    activeOpacity={0.7}
+                    onPress={() =>
+                      navigation.navigate('CompanionChat', { sessionId: session.session_id })
+                    }
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
+                      paddingVertical: 8,
+                      borderTopWidth: i > 0 ? 1 : 0,
+                      borderTopColor: colors.border,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 16,
+                        backgroundColor: '#8b5cf615',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <BrainCircuit size={14} color="#8b5cf6" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: colors.foreground }}>
+                        {session.context || 'General Support'}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: colors.mutedForeground }}>
+                        {session.message_count ? `${session.message_count} messages` : ''}{' '}
+                        {session.started_at ? formatRelativeDate(session.started_at) : ''}
+                      </Text>
+                    </View>
+                    <ChevronRight size={14} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            {/* Quick Actions Grid */}
+            <View>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '700',
+                  color: colors.foreground,
+                  marginBottom: 12,
+                }}
+              >
+                Quick Actions
+              </Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                {quickActions.map((action, i) => (
+                  <TouchableOpacity
+                    key={i}
+                    activeOpacity={0.7}
+                    onPress={action.onPress}
+                    style={{
+                      width: '31%',
+                      backgroundColor: colors.card,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      borderRadius: 16,
+                      padding: 14,
+                      alignItems: 'center',
+                      gap: 8,
+                      flexGrow: 1,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: action.bg,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {action.icon}
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: '600',
+                        color: colors.foreground,
+                        textAlign: 'center',
+                      }}
+                    >
+                      {action.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function StatItem({value, label}: {value: number; label: string}) {
+function StatItem({ value, label }: { value: number; label: string }) {
   return (
-    <View style={{alignItems: 'center'}}>
-      <Text style={{fontSize: 18, fontWeight: '700', color: colors.foreground}}>{value}</Text>
-      <Text style={{fontSize: 10, color: colors.mutedForeground, fontWeight: '600'}}>{label}</Text>
+    <View style={{ alignItems: 'center' }}>
+      <Text style={{ fontSize: 18, fontWeight: '700', color: colors.foreground }}>{value}</Text>
+      <Text style={{ fontSize: 10, color: colors.mutedForeground, fontWeight: '600' }}>
+        {label}
+      </Text>
     </View>
   );
 }

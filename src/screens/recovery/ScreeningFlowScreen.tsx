@@ -1,24 +1,17 @@
-import React, {useState, useRef} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  Animated,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {ChevronLeft, ChevronRight} from 'lucide-react-native';
-import {Header, Button} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {recoveryService} from '../../services/recovery.service';
-import type {ScreeningQuestion} from '../../types/recovery.types';
+import React, { useState, useRef } from 'react';
+import { View, TouchableOpacity, Alert, ActivityIndicator, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { ChevronLeft } from 'lucide-react-native';
+import { Header, Button, Text } from '../../components/ui';
+import { colors } from '../../theme/colors';
+import { recoveryService } from '../../services/recovery.service';
+import type { ScreeningQuestion } from '../../types/recovery.types';
 
 export default function ScreeningFlowScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const {instrument, questions} = route.params as {
+  const { instrument, questions } = route.params as {
     instrument: string;
     questions: ScreeningQuestion[];
   };
@@ -36,9 +29,9 @@ export default function ScreeningFlowScreen() {
   const isLast = currentIndex === totalQuestions - 1;
 
   const animateTransition = (callback: () => void) => {
-    Animated.timing(fadeAnim, {toValue: 0, duration: 150, useNativeDriver: true}).start(() => {
+    Animated.timing(fadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }).start(() => {
       callback();
-      Animated.timing(fadeAnim, {toValue: 1, duration: 150, useNativeDriver: true}).start();
+      Animated.timing(fadeAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
     });
   };
 
@@ -46,18 +39,18 @@ export default function ScreeningFlowScreen() {
     if (isLast) {
       handleSubmit();
     } else {
-      animateTransition(() => setCurrentIndex(i => i + 1));
+      animateTransition(() => setCurrentIndex((i) => i + 1));
     }
   };
 
   const goPrev = () => {
     if (currentIndex > 0) {
-      animateTransition(() => setCurrentIndex(i => i - 1));
+      animateTransition(() => setCurrentIndex((i) => i - 1));
     }
   };
 
   const selectAnswer = (value: number) => {
-    setAnswers(prev => ({...prev, [question.id]: value}));
+    setAnswers((prev) => ({ ...prev, [question.id]: value }));
   };
 
   const handleSubmit = async () => {
@@ -78,28 +71,28 @@ export default function ScreeningFlowScreen() {
   if (!question) return null;
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header
         title={instrument.toUpperCase()}
         onBack={() => {
           Alert.alert('Leave Screening?', 'Your progress will be lost.', [
-            {text: 'Stay', style: 'cancel'},
-            {text: 'Leave', style: 'destructive', onPress: () => navigation.goBack()},
+            { text: 'Stay', style: 'cancel' },
+            { text: 'Leave', style: 'destructive', onPress: () => navigation.goBack() },
           ]);
         }}
       />
 
       {/* Progress bar */}
-      <View style={{paddingHorizontal: 16, paddingTop: 8}}>
-        <View style={{flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6}}>
-          <Text style={{fontSize: 11, color: colors.mutedForeground, fontWeight: '600'}}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+          <Text style={{ fontSize: 11, color: colors.mutedForeground, fontWeight: '600' }}>
             Question {currentIndex + 1} of {totalQuestions}
           </Text>
-          <Text style={{fontSize: 11, color: colors.primary, fontWeight: '600'}}>
+          <Text style={{ fontSize: 11, color: colors.primary, fontWeight: '600' }}>
             {Math.round(progress)}%
           </Text>
         </View>
-        <View style={{height: 4, backgroundColor: colors.muted, borderRadius: 2}}>
+        <View style={{ height: 4, backgroundColor: colors.muted, borderRadius: 2 }}>
           <View
             style={{
               height: 4,
@@ -112,7 +105,7 @@ export default function ScreeningFlowScreen() {
       </View>
 
       {/* Question content */}
-      <Animated.View style={{flex: 1, padding: 20, opacity: fadeAnim}}>
+      <Animated.View style={{ flex: 1, padding: 20, opacity: fadeAnim }}>
         <Text
           style={{
             fontSize: 18,
@@ -120,12 +113,13 @@ export default function ScreeningFlowScreen() {
             color: colors.foreground,
             lineHeight: 26,
             marginBottom: 24,
-          }}>
+          }}
+        >
           {question.text}
         </Text>
 
         {/* Options */}
-        <View style={{gap: 10}}>
+        <View style={{ gap: 10 }}>
           {question.options.map((option) => {
             const isSelected = answers[question.id] === option.value;
             return (
@@ -135,7 +129,7 @@ export default function ScreeningFlowScreen() {
                 onPress={() => selectAnswer(option.value)}
                 accessibilityRole="radio"
                 accessibilityLabel={option.label}
-                accessibilityState={{selected: isSelected}}
+                accessibilityState={{ selected: isSelected }}
                 style={{
                   backgroundColor: isSelected ? `${colors.primary}12` : colors.card,
                   borderWidth: 2,
@@ -145,7 +139,8 @@ export default function ScreeningFlowScreen() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 12,
-                }}>
+                }}
+              >
                 <View
                   style={{
                     width: 24,
@@ -155,7 +150,8 @@ export default function ScreeningFlowScreen() {
                     borderColor: isSelected ? colors.primary : colors.mutedForeground,
                     alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
+                  }}
+                >
                   {isSelected && (
                     <View
                       style={{
@@ -167,17 +163,18 @@ export default function ScreeningFlowScreen() {
                     />
                   )}
                 </View>
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <Text
                     style={{
                       fontSize: 14,
                       fontWeight: isSelected ? '600' : '400',
                       color: colors.foreground,
-                    }}>
+                    }}
+                  >
                     {option.label}
                   </Text>
                   {option.description && (
-                    <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 2}}>
+                    <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
                       {option.description}
                     </Text>
                   )}
@@ -195,7 +192,8 @@ export default function ScreeningFlowScreen() {
           gap: 12,
           paddingHorizontal: 20,
           paddingBottom: 20,
-        }}>
+        }}
+      >
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={goPrev}
@@ -209,18 +207,16 @@ export default function ScreeningFlowScreen() {
             borderColor: colors.border,
             alignItems: 'center',
             justifyContent: 'center',
-          }}>
+          }}
+        >
           <ChevronLeft
             size={20}
             color={currentIndex > 0 ? colors.foreground : colors.mutedForeground}
           />
         </TouchableOpacity>
 
-        <View style={{flex: 1}}>
-          <Button
-            variant="primary"
-            onPress={goNext}
-            disabled={!canGoNext || submitting}>
+        <View style={{ flex: 1 }}>
+          <Button variant="primary" onPress={goNext} disabled={!canGoNext || submitting}>
             {submitting ? (
               <ActivityIndicator size="small" color={colors.white} />
             ) : isLast ? (

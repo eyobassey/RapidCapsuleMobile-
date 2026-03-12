@@ -1,15 +1,16 @@
-import React, {useState} from 'react';
-import {View, Text, ScrollView, ActivityIndicator} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {MessageCircle, Shield, Lock} from 'lucide-react-native';
-import {useNavigation} from '@react-navigation/native';
-import {Header, Button} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {useMessagingStore} from '../../store/messaging';
+import { useNavigation } from '@react-navigation/native';
+import { Lock, MessageCircle, Shield } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button, Header } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useMessagingStore } from '../../store/messaging';
+import { colors } from '../../theme/colors';
 
 export default function ConsentScreen() {
   const navigation = useNavigation<any>();
-  const giveConsent = useMessagingStore(s => s.giveConsent);
+  const giveConsent = useMessagingStore((s) => s.giveConsent);
   const [loading, setLoading] = useState(false);
 
   const handleAccept = async () => {
@@ -23,14 +24,15 @@ export default function ConsentScreen() {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Messaging" onBack={() => navigation.goBack()} />
 
       <ScrollView
-        contentContainerStyle={{padding: 24, paddingBottom: 40}}
-        showsVerticalScrollIndicator={false}>
+        contentContainerStyle={{ padding: 24, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Icon */}
-        <View style={{alignItems: 'center', marginTop: 20, marginBottom: 32}}>
+        <View style={{ alignItems: 'center', marginTop: 20, marginBottom: 32 }}>
           <View
             style={{
               width: 80,
@@ -39,7 +41,8 @@ export default function ConsentScreen() {
               backgroundColor: `${colors.primary}15`,
               alignItems: 'center',
               justifyContent: 'center',
-            }}>
+            }}
+          >
             <MessageCircle size={36} color={colors.primary} />
           </View>
         </View>
@@ -52,7 +55,8 @@ export default function ConsentScreen() {
             color: colors.foreground,
             textAlign: 'center',
             marginBottom: 12,
-          }}>
+          }}
+        >
           Secure Messaging
         </Text>
         <Text
@@ -62,9 +66,10 @@ export default function ConsentScreen() {
             textAlign: 'center',
             lineHeight: 22,
             marginBottom: 32,
-          }}>
-          Communicate directly with your healthcare specialists in a secure,
-          HIPAA-compliant environment.
+          }}
+        >
+          Communicate directly with your healthcare specialists in a secure, HIPAA-compliant
+          environment.
         </Text>
 
         {/* Feature cards */}
@@ -97,7 +102,8 @@ export default function ConsentScreen() {
               borderColor: colors.border,
               borderRadius: 16,
               padding: 16,
-            }}>
+            }}
+          >
             <View
               style={{
                 width: 40,
@@ -106,14 +112,22 @@ export default function ConsentScreen() {
                 backgroundColor: colors.muted,
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               {item.icon}
             </View>
-            <View style={{flex: 1}}>
-              <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
                 {item.title}
               </Text>
-              <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 2, lineHeight: 18}}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: colors.mutedForeground,
+                  marginTop: 2,
+                  lineHeight: 18,
+                }}
+              >
                 {item.desc}
               </Text>
             </View>
@@ -127,27 +141,21 @@ export default function ConsentScreen() {
             borderRadius: 12,
             padding: 14,
             marginBottom: 24,
-          }}>
-          <Text style={{fontSize: 11, color: colors.mutedForeground, lineHeight: 18}}>
-            By continuing, you consent to using the secure messaging service.
-            Your conversations may be audited for quality and safety purposes.
-            You can revoke consent at any time from your settings.
+          }}
+        >
+          <Text style={{ fontSize: 11, color: colors.mutedForeground, lineHeight: 18 }}>
+            By continuing, you consent to using the secure messaging service. Your conversations may
+            be audited for quality and safety purposes. You can revoke consent at any time from your
+            settings.
           </Text>
         </View>
 
         {/* Actions */}
         <Button variant="primary" onPress={handleAccept} disabled={loading}>
-          {loading ? (
-            <ActivityIndicator size="small" color={colors.white} />
-          ) : (
-            'Accept & Continue'
-          )}
+          {loading ? <ActivityIndicator size="small" color={colors.white} /> : 'Accept & Continue'}
         </Button>
 
-        <Button
-          variant="ghost"
-          onPress={() => navigation.goBack()}
-          style={{marginTop: 8}}>
+        <Button variant="ghost" onPress={() => navigation.goBack()} style={{ marginTop: 8 }}>
           Not Now
         </Button>
       </ScrollView>

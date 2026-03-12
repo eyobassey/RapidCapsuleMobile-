@@ -1,18 +1,19 @@
+import { Calendar, ChevronRight, FileImage, Pill } from 'lucide-react-native';
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
-import {FileImage, Calendar, ChevronRight, Pill} from 'lucide-react-native';
-import {StatusBadge} from '../ui';
-import {colors} from '../../theme/colors';
-import {formatDate} from '../../utils/formatters';
-import type {PrescriptionUpload} from '../../types/prescriptionUpload.types';
-import {VERIFICATION_STATUS_LABELS} from '../../types/prescriptionUpload.types';
+import { TouchableOpacity, View } from 'react-native';
+import { colors } from '../../theme/colors';
+import type { PrescriptionUpload } from '../../types/prescriptionUpload.types';
+import { VERIFICATION_STATUS_LABELS } from '../../types/prescriptionUpload.types';
+import { formatDate } from '../../utils/formatters';
+import { StatusBadge } from '../ui';
+import { Text } from '../ui/Text';
 
 interface UploadCardProps {
   upload: PrescriptionUpload;
   onPress: () => void;
 }
 
-export default function UploadCard({upload, onPress}: UploadCardProps) {
+export default function UploadCard({ upload, onPress }: UploadCardProps) {
   const doctorName = upload.doctor_name || upload.ocr_data?.doctor_name;
   const medCount = upload.ocr_data?.medications?.length || 0;
 
@@ -20,7 +21,8 @@ export default function UploadCard({upload, onPress}: UploadCardProps) {
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
-      className="bg-card border border-border rounded-2xl p-4 mb-3">
+      className="bg-card border border-border rounded-2xl p-4 mb-3"
+    >
       {/* Top row: icon + status */}
       <View className="flex-row items-center justify-between mb-2">
         <View className="flex-row items-center gap-2">
@@ -47,9 +49,7 @@ export default function UploadCard({upload, onPress}: UploadCardProps) {
       {/* Date */}
       <View className="flex-row items-center gap-1.5 mb-3">
         <Calendar size={13} color={colors.mutedForeground} />
-        <Text className="text-xs text-muted-foreground">
-          {formatDate(upload.created_at)}
-        </Text>
+        <Text className="text-xs text-muted-foreground">{formatDate(upload.created_at)}</Text>
       </View>
 
       {/* Bottom row: validity */}
@@ -65,7 +65,7 @@ export default function UploadCard({upload, onPress}: UploadCardProps) {
       </View>
 
       {/* Chevron */}
-      <View style={{position: 'absolute', right: 16, top: '50%', marginTop: -8}}>
+      <View style={{ position: 'absolute', right: 16, top: '50%', marginTop: -8 }}>
         <ChevronRight size={16} color={colors.mutedForeground} />
       </View>
     </TouchableOpacity>

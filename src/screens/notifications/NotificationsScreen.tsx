@@ -1,14 +1,6 @@
-import React, {useCallback, useMemo} from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  SectionList,
-  RefreshControl,
-} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {
+  AlertTriangle,
   Bell,
   CalendarCheck,
   CalendarPlus,
@@ -18,76 +10,79 @@ import {
   FileText,
   Package,
   ShieldCheck,
+  Star,
   Stethoscope,
   Trash2,
   TrendingUp,
-  Truck,
-  AlertTriangle,
-  Wallet as WalletIcon,
-  Video,
-  Star,
   Trophy,
+  Truck,
+  Video,
+  Wallet as WalletIcon,
 } from 'lucide-react-native';
+import React, { useCallback, useMemo } from 'react';
+import { RefreshControl, SectionList, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { EmptyState, Header } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
 import {
+  useMarkAllReadMutation,
+  useMarkReadMutation,
   useNotificationsQuery,
   useUnreadCountQuery,
-  useMarkReadMutation,
-  useMarkAllReadMutation,
 } from '../../hooks/queries';
-import {useNotificationsStore} from '../../store/notifications';
-import {Header, EmptyState} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {timeAgo, formatRelativeDate} from '../../utils/formatters';
+import { useNotificationsStore } from '../../store/notifications';
+import { colors } from '../../theme/colors';
+import { formatRelativeDate, timeAgo } from '../../utils/formatters';
 
 // ---- Icon mapping ----
 // Maps notification type prefixes to lucide icon components.
 // Uses a lookup rather than dynamically importing to keep bundle predictable.
-const ICON_MAP: Record<string, {icon: React.ElementType; color: string}> = {
-  appointment_booked: {icon: CalendarPlus, color: colors.primary},
-  appointment_confirmed: {icon: CalendarCheck, color: colors.success},
-  appointment_reminder: {icon: Bell, color: colors.secondary},
-  appointment_cancelled: {icon: CalendarX, color: colors.destructive},
-  appointment_rescheduled: {icon: CalendarCheck, color: colors.secondary},
-  appointment_completed: {icon: CheckCircle, color: colors.success},
-  appointment_missed: {icon: AlertTriangle, color: colors.destructive},
-  appointment_started: {icon: Video, color: colors.primary},
+const ICON_MAP: Record<string, { icon: React.ElementType; color: string }> = {
+  appointment_booked: { icon: CalendarPlus, color: colors.primary },
+  appointment_confirmed: { icon: CalendarCheck, color: colors.success },
+  appointment_reminder: { icon: Bell, color: colors.secondary },
+  appointment_cancelled: { icon: CalendarX, color: colors.destructive },
+  appointment_rescheduled: { icon: CalendarCheck, color: colors.secondary },
+  appointment_completed: { icon: CheckCircle, color: colors.success },
+  appointment_missed: { icon: AlertTriangle, color: colors.destructive },
+  appointment_started: { icon: Video, color: colors.primary },
 
-  prescription_created: {icon: FileText, color: colors.primary},
-  prescription_ready: {icon: Package, color: colors.success},
-  prescription_payment_required: {icon: CreditCard, color: colors.secondary},
-  prescription_shipped: {icon: Truck, color: colors.primary},
-  prescription_delivered: {icon: CheckCircle, color: colors.success},
+  prescription_created: { icon: FileText, color: colors.primary },
+  prescription_ready: { icon: Package, color: colors.success },
+  prescription_payment_required: { icon: CreditCard, color: colors.secondary },
+  prescription_shipped: { icon: Truck, color: colors.primary },
+  prescription_delivered: { icon: CheckCircle, color: colors.success },
 
-  pharmacy_order_placed: {icon: Package, color: colors.primary},
-  pharmacy_order_confirmed: {icon: CheckCircle, color: colors.success},
-  pharmacy_order_shipped: {icon: Truck, color: colors.primary},
-  pharmacy_order_delivered: {icon: CheckCircle, color: colors.success},
-  pharmacy_order_cancelled: {icon: CalendarX, color: colors.destructive},
+  pharmacy_order_placed: { icon: Package, color: colors.primary },
+  pharmacy_order_confirmed: { icon: CheckCircle, color: colors.success },
+  pharmacy_order_shipped: { icon: Truck, color: colors.primary },
+  pharmacy_order_delivered: { icon: CheckCircle, color: colors.success },
+  pharmacy_order_cancelled: { icon: CalendarX, color: colors.destructive },
 
-  payment_received: {icon: WalletIcon, color: colors.success},
-  payment_failed: {icon: AlertTriangle, color: colors.destructive},
-  wallet_credited: {icon: WalletIcon, color: colors.success},
-  wallet_debited: {icon: WalletIcon, color: colors.secondary},
-  refund_processed: {icon: WalletIcon, color: colors.success},
+  payment_received: { icon: WalletIcon, color: colors.success },
+  payment_failed: { icon: AlertTriangle, color: colors.destructive },
+  wallet_credited: { icon: WalletIcon, color: colors.success },
+  wallet_debited: { icon: WalletIcon, color: colors.secondary },
+  refund_processed: { icon: WalletIcon, color: colors.success },
 
-  health_checkup_complete: {icon: Stethoscope, color: colors.success},
-  health_score_updated: {icon: TrendingUp, color: colors.primary},
-  vitals_alert: {icon: AlertTriangle, color: colors.destructive},
-  vitals_reminder: {icon: Bell, color: colors.secondary},
+  health_checkup_complete: { icon: Stethoscope, color: colors.success },
+  health_score_updated: { icon: TrendingUp, color: colors.primary },
+  vitals_alert: { icon: AlertTriangle, color: colors.destructive },
+  vitals_reminder: { icon: Bell, color: colors.secondary },
 
-  account_verified: {icon: ShieldCheck, color: colors.success},
-  welcome: {icon: Star, color: colors.primary},
-  review_received: {icon: Star, color: colors.secondary},
+  account_verified: { icon: ShieldCheck, color: colors.success },
+  welcome: { icon: Star, color: colors.primary },
+  review_received: { icon: Star, color: colors.secondary },
 
-  recovery_milestone_achieved: {icon: Trophy, color: colors.success},
-  recovery_risk_high: {icon: AlertTriangle, color: colors.destructive},
-  recovery_risk_moderate: {icon: AlertTriangle, color: colors.secondary},
+  recovery_milestone_achieved: { icon: Trophy, color: colors.success },
+  recovery_risk_high: { icon: AlertTriangle, color: colors.destructive },
+  recovery_risk_moderate: { icon: AlertTriangle, color: colors.secondary },
 };
 
-const DEFAULT_ICON = {icon: Bell, color: colors.primary};
+const DEFAULT_ICON = { icon: Bell, color: colors.primary };
 
-function getNotificationIcon(type?: string): {icon: React.ElementType; color: string} {
+function getNotificationIcon(type?: string): { icon: React.ElementType; color: string } {
   if (!type) return DEFAULT_ICON;
   return ICON_MAP[type] ?? DEFAULT_ICON;
 }
@@ -120,7 +115,7 @@ function groupByDate(notifications: any[]): NotificationSection[] {
       if (bi !== -1) return 1;
       return 0;
     })
-    .map(([title, data]) => ({title, data}));
+    .map(([title, data]) => ({ title, data }));
 }
 
 // ---- Notification Row ----
@@ -134,8 +129,8 @@ function NotificationItem({
   onRemove: (id: string) => void;
 }) {
   const isUnread = !notification.is_read;
-  const {icon: IconComponent, color: iconColor} = getNotificationIcon(
-    notification.type || notification.notification_type,
+  const { icon: IconComponent, color: iconColor } = getNotificationIcon(
+    notification.type || notification.notification_type
   );
 
   return (
@@ -146,7 +141,8 @@ function NotificationItem({
       onPress={() => onPress(notification._id)}
       className={`mx-5 mb-2 rounded-2xl border border-border p-4 flex-row items-start gap-3 ${
         isUnread ? 'bg-card' : 'bg-card/60'
-      }`}>
+      }`}
+    >
       {/* Icon */}
       <View
         style={{
@@ -157,7 +153,8 @@ function NotificationItem({
           justifyContent: 'center',
           marginTop: 2,
           backgroundColor: `${iconColor}1A`,
-        }}>
+        }}
+      >
         <IconComponent size={18} color={iconColor} />
       </View>
 
@@ -168,20 +165,17 @@ function NotificationItem({
             className={`text-sm flex-1 ${
               isUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
             }`}
-            numberOfLines={2}>
+            numberOfLines={2}
+          >
             {notification.title}
           </Text>
 
           {/* Unread indicator */}
-          {isUnread && (
-            <View className="w-2.5 h-2.5 rounded-full bg-primary mt-1.5 shrink-0" />
-          )}
+          {isUnread && <View className="w-2.5 h-2.5 rounded-full bg-primary mt-1.5 shrink-0" />}
         </View>
 
-        {(notification.message || notification.body) ? (
-          <Text
-            className="text-xs text-muted-foreground mt-1 leading-relaxed"
-            numberOfLines={2}>
+        {notification.message || notification.body ? (
+          <Text className="text-xs text-muted-foreground mt-1 leading-relaxed" numberOfLines={2}>
             {notification.message || notification.body}
           </Text>
         ) : null}
@@ -193,10 +187,11 @@ function NotificationItem({
 
           <TouchableOpacity
             onPress={() => onRemove(notification._id)}
-            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             activeOpacity={0.6}
             accessibilityRole="button"
-            accessibilityLabel="Remove notification">
+            accessibilityLabel="Remove notification"
+          >
             <Trash2 size={14} color={colors.mutedForeground} />
           </TouchableOpacity>
         </View>
@@ -206,7 +201,7 @@ function NotificationItem({
 }
 
 // ---- Section Header ----
-function SectionHeader({title}: {title: string}) {
+function SectionHeader({ title }: { title: string }) {
   return (
     <View className="px-6 pt-5 pb-2">
       <Text className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
@@ -221,24 +216,17 @@ export default function NotificationsScreen() {
   const navigation = useNavigation<any>();
 
   // React Query hooks
-  const {
-    data: notifications = [],
-    isLoading,
-    refetch,
-  } = useNotificationsQuery();
+  const { data: notifications = [], isLoading, refetch } = useNotificationsQuery();
 
-  const {data: unreadCount = 0} = useUnreadCountQuery();
+  const { data: unreadCount = 0 } = useUnreadCountQuery();
 
   const markReadMutation = useMarkReadMutation();
   const markAllReadMutation = useMarkAllReadMutation();
 
   // Keep store's removeNotification for optimistic local removal
-  const {removeNotification} = useNotificationsStore();
+  const { removeNotification } = useNotificationsStore();
 
-  const sections = useMemo(
-    () => groupByDate(notifications),
-    [notifications],
-  );
+  const sections = useMemo(() => groupByDate(notifications), [notifications]);
 
   const handlePress = useCallback(
     (id: string) => {
@@ -247,14 +235,14 @@ export default function NotificationsScreen() {
         markReadMutation.mutate(id);
       }
     },
-    [notifications, markReadMutation],
+    [notifications, markReadMutation]
   );
 
   const handleRemove = useCallback(
     (id: string) => {
       removeNotification(id);
     },
-    [removeNotification],
+    [removeNotification]
   );
 
   const handleMarkAllRead = useCallback(() => {
@@ -270,10 +258,11 @@ export default function NotificationsScreen() {
           unreadCount > 0 ? (
             <TouchableOpacity
               onPress={handleMarkAllRead}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="Mark all notifications as read">
+              accessibilityLabel="Mark all notifications as read"
+            >
               <Text className="text-xs font-semibold text-primary">Read All</Text>
             </TouchableOpacity>
           ) : undefined
@@ -283,19 +272,11 @@ export default function NotificationsScreen() {
       <SectionList
         sections={sections}
         keyExtractor={(item: any) => item._id || item.id || String(Math.random())}
-        renderItem={({item}) => (
-          <NotificationItem
-            notification={item}
-            onPress={handlePress}
-            onRemove={handleRemove}
-          />
+        renderItem={({ item }) => (
+          <NotificationItem notification={item} onPress={handlePress} onRemove={handleRemove} />
         )}
-        renderSectionHeader={({section}) => (
-          <SectionHeader title={section.title} />
-        )}
-        contentContainerStyle={
-          notifications.length === 0 ? {flex: 1} : {paddingBottom: 40}
-        }
+        renderSectionHeader={({ section }) => <SectionHeader title={section.title} />}
+        contentContainerStyle={notifications.length === 0 ? { flex: 1 } : { paddingBottom: 40 }}
         ListEmptyComponent={
           isLoading ? null : (
             <EmptyState

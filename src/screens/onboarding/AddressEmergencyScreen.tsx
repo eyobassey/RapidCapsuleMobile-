@@ -1,68 +1,63 @@
-import React, {useState, useEffect} from 'react';
-import {View, Text, Alert} from 'react-native';
-import {useForm, useFieldArray, Controller} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {z} from 'zod';
-import {FormInput} from '../../components/ui';
+import React, { useState, useEffect } from 'react';
+import { View, Alert } from 'react-native';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { FormInput, Text } from '../../components/ui';
 import SectionScreenLayout from '../../components/onboarding/SectionScreenLayout';
 import SelectPicker from '../../components/onboarding/SelectPicker';
 import ArrayFieldList from '../../components/onboarding/ArrayFieldList';
-import {colors} from '../../theme/colors';
-import {useAuthStore} from '../../store/auth';
-import {useOnboardingStore} from '../../store/onboarding';
-import {usersService} from '../../services/users.service';
-import {
-  addressSchema,
-  emergencyContactSchema,
-} from '../../utils/validation';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {OnboardingStackParamList} from '../../navigation/OnboardingStack';
+import { colors } from '../../theme/colors';
+import { useAuthStore } from '../../store/auth';
+import { useOnboardingStore } from '../../store/onboarding';
+import { usersService } from '../../services/users.service';
+import { addressSchema, emergencyContactSchema } from '../../utils/validation';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { OnboardingStackParamList } from '../../navigation/OnboardingStack';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'AddressEmergency'>;
 
 // Combined schema for address + emergency contacts
 const addressEmergencySchema = z.object({
   address: addressSchema,
-  contacts: z
-    .array(emergencyContactSchema)
-    .min(1, 'At least one emergency contact is required'),
+  contacts: z.array(emergencyContactSchema).min(1, 'At least one emergency contact is required'),
 });
 type AddressEmergencyFormData = z.infer<typeof addressEmergencySchema>;
 
 const COUNTRY_OPTIONS = [
-  {label: 'Nigeria', value: 'Nigeria'},
-  {label: 'Ghana', value: 'Ghana'},
-  {label: 'Kenya', value: 'Kenya'},
-  {label: 'South Africa', value: 'South Africa'},
-  {label: 'United Kingdom', value: 'United Kingdom'},
-  {label: 'United States', value: 'United States'},
-  {label: 'Canada', value: 'Canada'},
-  {label: 'India', value: 'India'},
-  {label: 'Australia', value: 'Australia'},
-  {label: 'Germany', value: 'Germany'},
+  { label: 'Nigeria', value: 'Nigeria' },
+  { label: 'Ghana', value: 'Ghana' },
+  { label: 'Kenya', value: 'Kenya' },
+  { label: 'South Africa', value: 'South Africa' },
+  { label: 'United Kingdom', value: 'United Kingdom' },
+  { label: 'United States', value: 'United States' },
+  { label: 'Canada', value: 'Canada' },
+  { label: 'India', value: 'India' },
+  { label: 'Australia', value: 'Australia' },
+  { label: 'Germany', value: 'Germany' },
 ];
 
 const RELATIONSHIP_OPTIONS = [
-  {label: 'Spouse', value: 'Spouse'},
-  {label: 'Wife', value: 'Wife'},
-  {label: 'Husband', value: 'Husband'},
-  {label: 'Parent', value: 'Parent'},
-  {label: 'Sibling', value: 'Sibling'},
-  {label: 'Child', value: 'Child'},
-  {label: 'Friend', value: 'Friend'},
-  {label: 'Other', value: 'Other'},
+  { label: 'Spouse', value: 'Spouse' },
+  { label: 'Wife', value: 'Wife' },
+  { label: 'Husband', value: 'Husband' },
+  { label: 'Parent', value: 'Parent' },
+  { label: 'Sibling', value: 'Sibling' },
+  { label: 'Child', value: 'Child' },
+  { label: 'Friend', value: 'Friend' },
+  { label: 'Other', value: 'Other' },
 ];
 
-export default function AddressEmergencyScreen({navigation}: Props) {
-  const user = useAuthStore(s => s.user);
-  const fetchUser = useAuthStore(s => s.fetchUser);
-  const clearDraft = useOnboardingStore(s => s.clearDraft);
+export default function AddressEmergencyScreen({ navigation }: Props) {
+  const user = useAuthStore((s) => s.user);
+  const fetchUser = useAuthStore((s) => s.fetchUser);
+  const clearDraft = useOnboardingStore((s) => s.clearDraft);
   const [loading, setLoading] = useState(false);
 
   const {
     control,
     handleSubmit,
-    formState: {errors},
+    formState: { errors },
     reset,
   } = useForm<AddressEmergencyFormData>({
     resolver: zodResolver(addressEmergencySchema),
@@ -74,11 +69,11 @@ export default function AddressEmergencyScreen({navigation}: Props) {
         country: 'Nigeria',
         postal_code: '',
       },
-      contacts: [{firstName: '', lastName: '', relationship: '', phone: ''}],
+      contacts: [{ firstName: '', lastName: '', relationship: '', phone: '' }],
     },
   });
 
-  const {fields, append, remove} = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: 'contacts',
   });
@@ -95,7 +90,7 @@ export default function AddressEmergencyScreen({navigation}: Props) {
         postal_code: contact?.zip_code || '',
       };
 
-      let contactsData = [{firstName: '', lastName: '', relationship: '', phone: ''}];
+      let contactsData = [{ firstName: '', lastName: '', relationship: '', phone: '' }];
       if (user.emergency_contacts?.length) {
         contactsData = user.emergency_contacts.map((c: any) => ({
           firstName: c.first_name || c.name?.split(' ')[0] || '',
@@ -105,7 +100,7 @@ export default function AddressEmergencyScreen({navigation}: Props) {
         }));
       }
 
-      reset({address: addressData, contacts: contactsData});
+      reset({ address: addressData, contacts: contactsData });
     }
   }, [user, reset]);
 
@@ -131,8 +126,8 @@ export default function AddressEmergencyScreen({navigation}: Props) {
 
       // Emergency contacts
       payload.emergency_contacts = data.contacts
-        .filter(c => c.firstName.trim())
-        .map(c => ({
+        .filter((c) => c.firstName.trim())
+        .map((c) => ({
           first_name: c.firstName.trim(),
           last_name: c.lastName?.trim() || '',
           relationship: c.relationship || 'Other',
@@ -147,10 +142,7 @@ export default function AddressEmergencyScreen({navigation}: Props) {
       await fetchUser();
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert(
-        'Error',
-        err?.response?.data?.message || 'Failed to save. Please try again.',
-      );
+      Alert.alert('Error', err?.response?.data?.message || 'Failed to save. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -163,7 +155,8 @@ export default function AddressEmergencyScreen({navigation}: Props) {
       onBack={() => navigation.goBack()}
       onSave={handleSubmit(onSubmit)}
       saveDisabled={false}
-      loading={loading}>
+      loading={loading}
+    >
       {/* Address section */}
       <Text
         style={{
@@ -174,11 +167,12 @@ export default function AddressEmergencyScreen({navigation}: Props) {
           borderBottomColor: colors.border,
           paddingBottom: 8,
           marginBottom: 16,
-        }}>
+        }}
+      >
         Your Address
       </Text>
 
-      <View style={{gap: 16, marginBottom: 24}}>
+      <View style={{ gap: 16, marginBottom: 24 }}>
         <FormInput
           control={control}
           name="address.street"
@@ -187,8 +181,8 @@ export default function AddressEmergencyScreen({navigation}: Props) {
           error={errors.address?.street?.message}
         />
 
-        <View style={{flexDirection: 'row', gap: 12}}>
-          <View style={{flex: 1}}>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flex: 1 }}>
             <FormInput
               control={control}
               name="address.city"
@@ -197,7 +191,7 @@ export default function AddressEmergencyScreen({navigation}: Props) {
               error={errors.address?.city?.message}
             />
           </View>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <FormInput
               control={control}
               name="address.state"
@@ -208,12 +202,12 @@ export default function AddressEmergencyScreen({navigation}: Props) {
           </View>
         </View>
 
-        <View style={{flexDirection: 'row', gap: 12}}>
-          <View style={{flex: 1}}>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flex: 1 }}>
             <Controller
               control={control}
               name="address.country"
-              render={({field: {onChange, value}}) => (
+              render={({ field: { onChange, value } }) => (
                 <SelectPicker
                   label="Country"
                   value={value}
@@ -224,7 +218,7 @@ export default function AddressEmergencyScreen({navigation}: Props) {
               )}
             />
           </View>
-          <View style={{flex: 1}}>
+          <View style={{ flex: 1 }}>
             <FormInput
               control={control}
               name="address.postal_code"
@@ -247,37 +241,36 @@ export default function AddressEmergencyScreen({navigation}: Props) {
           borderBottomColor: colors.border,
           paddingBottom: 8,
           marginBottom: 16,
-        }}>
-        <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}}>
+        }}
+      >
+        <Text style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}>
           Emergency Contacts
         </Text>
-        <Text style={{fontSize: 11, color: colors.destructive, fontWeight: '600'}}>
+        <Text style={{ fontSize: 11, color: colors.destructive, fontWeight: '600' }}>
           *Required
         </Text>
       </View>
 
       {/* Show array-level error */}
       {errors.contacts?.root?.message || errors.contacts?.message ? (
-        <Text style={{fontSize: 11, color: colors.destructive, marginBottom: 8, marginLeft: 4}}>
+        <Text style={{ fontSize: 11, color: colors.destructive, marginBottom: 8, marginLeft: 4 }}>
           {errors.contacts?.root?.message || errors.contacts?.message}
         </Text>
       ) : null}
 
       <ArrayFieldList
         items={fields}
-        onAdd={() =>
-          append({firstName: '', lastName: '', relationship: '', phone: ''})
-        }
-        onRemove={index => {
+        onAdd={() => append({ firstName: '', lastName: '', relationship: '', phone: '' })}
+        onRemove={(index) => {
           if (fields.length <= 1) return;
           remove(index);
         }}
         addLabel="Add Emergency Contact"
         maxItems={3}
         renderItem={(_contact, index) => (
-          <View style={{gap: 12}}>
-            <View style={{flexDirection: 'row', gap: 12}}>
-              <View style={{flex: 1}}>
+          <View style={{ gap: 12 }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flex: 1 }}>
                 <FormInput
                   control={control}
                   name={`contacts.${index}.firstName`}
@@ -288,7 +281,7 @@ export default function AddressEmergencyScreen({navigation}: Props) {
                   autoCapitalize="words"
                 />
               </View>
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <FormInput
                   control={control}
                   name={`contacts.${index}.lastName`}
@@ -302,7 +295,7 @@ export default function AddressEmergencyScreen({navigation}: Props) {
             <Controller
               control={control}
               name={`contacts.${index}.relationship`}
-              render={({field: {onChange, value}}) => (
+              render={({ field: { onChange, value } }) => (
                 <SelectPicker
                   label="Relationship"
                   placeholder="Select relationship"

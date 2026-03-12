@@ -1,27 +1,27 @@
-import React, {useState, useEffect} from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {ArrowLeft, Shield} from 'lucide-react-native';
-import {Button, OtpInput} from '../../components/ui';
-import {useAuthStore} from '../../store/auth';
-import {colors} from '../../theme/colors';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import type {AuthStackParamList} from '../../navigation/AuthStack';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, Shield } from 'lucide-react-native';
+import { Button, OtpInput, Text } from '../../components/ui';
+import { useAuthStore } from '../../store/auth';
+import { colors } from '../../theme/colors';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { AuthStackParamList } from '../../navigation/AuthStack';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Otp'>;
 
-export default function OtpScreen({navigation, route}: Props) {
+export default function OtpScreen({ navigation, route }: Props) {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(45);
-  const verify2FA = useAuthStore(s => s.verify2FA);
+  const verify2FA = useAuthStore((s) => s.verify2FA);
   const maskedEmail = route.params?.email
     ? route.params.email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
     : 's***h@example.com';
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimer(t => (t > 0 ? t - 1 : 0));
+      setTimer((t) => (t > 0 ? t - 1 : 0));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -44,7 +44,8 @@ export default function OtpScreen({navigation, route}: Props) {
         onPress={() => navigation.goBack()}
         accessibilityRole="button"
         accessibilityLabel="Go back"
-        className="absolute top-14 left-6 w-10 h-10 rounded-full bg-card border border-border items-center justify-center z-10">
+        className="absolute top-14 left-6 w-10 h-10 rounded-full bg-card border border-border items-center justify-center z-10"
+      >
         <ArrowLeft size={20} color={colors.foreground} />
       </TouchableOpacity>
 
@@ -72,7 +73,11 @@ export default function OtpScreen({navigation, route}: Props) {
             Resend in 0:{timer.toString().padStart(2, '0')}
           </Text>
         ) : (
-          <TouchableOpacity onPress={() => setTimer(45)} accessibilityRole="button" accessibilityLabel="Resend verification code">
+          <TouchableOpacity
+            onPress={() => setTimer(45)}
+            accessibilityRole="button"
+            accessibilityLabel="Resend verification code"
+          >
             <Text className="text-primary font-medium">Resend Code</Text>
           </TouchableOpacity>
         )}

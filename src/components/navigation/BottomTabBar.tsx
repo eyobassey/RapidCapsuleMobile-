@@ -1,10 +1,11 @@
+import { BrainCircuit, Calendar, Home, Pill } from 'lucide-react-native';
 import React from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
-import { Home, Calendar, BrainCircuit, Pill } from 'lucide-react-native';
-import { Avatar } from '../ui';
-import { colors } from '../../theme/colors';
+import { TouchableOpacity, View } from 'react-native';
 import { useAuthStore } from '../../store/auth';
 import { usePharmacyStore } from '../../store/pharmacy';
+import { colors } from '../../theme/colors';
+import { Avatar } from '../ui';
+import { Text } from '../ui/Text';
 
 interface BottomTabBarProps {
   state: any;

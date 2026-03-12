@@ -1,41 +1,45 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
+  Camera,
+  File as FileIcon,
+  Image as ImageIcon,
+  Mic,
+  Paperclip,
+  Send,
+  Trash2,
+  Video as VideoIcon,
+  X,
+} from 'lucide-react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
   ActivityIndicator,
   Alert,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {
-  Send,
-  Paperclip,
-  X,
-  Image as ImageIcon,
-  File as FileIcon,
-  Camera,
-  Video as VideoIcon,
-  Mic,
-  Square,
-  Trash2,
-} from 'lucide-react-native';
-import {launchImageLibrary} from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {Header, Avatar} from '../../components/ui';
 import MessageBubble from '../../components/messages/MessageBubble';
 import TypingIndicator from '../../components/messages/TypingIndicator';
-import {colors} from '../../theme/colors';
-import {useMessagingStore} from '../../store/messaging';
-import {useAuthStore} from '../../store/auth';
-import {messagingService} from '../../services/messaging.service';
-import {socketService} from '../../services/socket.service';
-import type {Conversation, Message, UserSnippet, PresenceStatus} from '../../types/messaging.types';
+import { Avatar, Header } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { TextInput } from '../../components/ui/TextInput';
+import { messagingService } from '../../services/messaging.service';
+import { socketService } from '../../services/socket.service';
+import { useAuthStore } from '../../store/auth';
+import { useMessagingStore } from '../../store/messaging';
+import { colors } from '../../theme/colors';
+import type {
+  Conversation,
+  Message,
+  PresenceStatus,
+  UserSnippet,
+} from '../../types/messaging.types';
 
 // Lazy-init to avoid crash if native module isn't linked
 let audioRecorderPlayer: any = null;
@@ -54,21 +58,21 @@ function getRecorder() {
 export default function ChatScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const {conversationId, conversation: initialConv} = route.params as {
+  const { conversationId, conversation: initialConv } = route.params as {
     conversationId: string;
     conversation?: Conversation;
   };
 
-  const myUserId = useAuthStore(s => s.user?._id) || '';
-  const allMessages = useMessagingStore(s => s.messages);
-  const allHasMore = useMessagingStore(s => s.hasMoreMessages);
-  const allTyping = useMessagingStore(s => s.typingMap);
-  const presenceMap = useMessagingStore(s => s.presenceMap);
-  const fetchMessages = useMessagingStore(s => s.fetchMessages);
-  const markConversationRead = useMessagingStore(s => s.markConversationRead);
-  const deleteMessageLocal = useMessagingStore(s => s.deleteMessageLocal);
-  const addIncomingMessage = useMessagingStore(s => s.addIncomingMessage);
-  const updatePresence = useMessagingStore(s => s.updatePresence);
+  const myUserId = useAuthStore((s) => s.user?._id) || '';
+  const allMessages = useMessagingStore((s) => s.messages);
+  const allHasMore = useMessagingStore((s) => s.hasMoreMessages);
+  const allTyping = useMessagingStore((s) => s.typingMap);
+  const presenceMap = useMessagingStore((s) => s.presenceMap);
+  const fetchMessages = useMessagingStore((s) => s.fetchMessages);
+  const markConversationRead = useMessagingStore((s) => s.markConversationRead);
+  const deleteMessageLocal = useMessagingStore((s) => s.deleteMessageLocal);
+  const addIncomingMessage = useMessagingStore((s) => s.addIncomingMessage);
+  const updatePresence = useMessagingStore((s) => s.updatePresence);
 
   const messages = useMemo(() => allMessages[conversationId] || [], [allMessages, conversationId]);
   const hasMore = allHasMore[conversationId] ?? true;
@@ -88,18 +92,14 @@ export default function ChatScreen() {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   // Get partner info
-  const otherParticipant = initialConv?.participants.find(p => {
+  const otherParticipant = initialConv?.participants.find((p) => {
     const uid = typeof p.user === 'string' ? p.user : (p.user as UserSnippet)?._id;
     return uid !== myUserId;
   });
   const otherUser =
-    typeof otherParticipant?.user === 'object'
-      ? (otherParticipant.user as UserSnippet)
-      : null;
+    typeof otherParticipant?.user === 'object' ? (otherParticipant.user as UserSnippet) : null;
   const otherId =
-    typeof otherParticipant?.user === 'string'
-      ? otherParticipant.user
-      : otherUser?._id || '';
+    typeof otherParticipant?.user === 'string' ? otherParticipant.user : otherUser?._id || '';
   const isSpecialist = otherUser?.user_type === 'Specialist';
   const partnerName = otherUser
     ? isSpecialist
@@ -115,9 +115,9 @@ export default function ChatScreen() {
 
     const unsubPresence = socketService.on(
       'presence_update',
-      (data: {userId: string; status: PresenceStatus}) => {
+      (data: { userId: string; status: PresenceStatus }) => {
         updatePresence(data.userId, data.status);
-      },
+      }
     );
 
     const unsubConnected = socketService.on('connected', (data: any) => {
@@ -130,9 +130,9 @@ export default function ChatScreen() {
 
     const unsubNewMsg = socketService.on(
       'new_message',
-      (data: {message: Message; conversation: Conversation}) => {
+      (data: { message: Message; conversation: Conversation }) => {
         addIncomingMessage(data.message, data.conversation);
-      },
+      }
     );
 
     return () => {
@@ -140,44 +140,42 @@ export default function ChatScreen() {
       unsubConnected();
       unsubNewMsg();
     };
-  }, []);
+  }, [addIncomingMessage, updatePresence]);
 
   // Load messages on mount
   useEffect(() => {
     fetchMessages(conversationId);
     markConversationRead(conversationId);
-  }, [conversationId]);
+  }, [conversationId, fetchMessages, markConversationRead]);
 
   // Mark read on new messages
   useEffect(() => {
     if (messages.length > 0) {
       const lastMsg = messages[0];
       const senderId =
-        typeof lastMsg.sender === 'string'
-          ? lastMsg.sender
-          : (lastMsg.sender as UserSnippet)?._id;
+        typeof lastMsg.sender === 'string' ? lastMsg.sender : (lastMsg.sender as UserSnippet)?._id;
       if (senderId !== myUserId) {
         markConversationRead(conversationId);
         socketService.markRead(conversationId, lastMsg._id);
       }
     }
-  }, [messages.length]);
+  }, [messages, conversationId, myUserId, markConversationRead]);
 
   // ── Recording pulse animation ──
   useEffect(() => {
     if (isRecording) {
       const loop = Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, {toValue: 1.3, duration: 600, useNativeDriver: true}),
-          Animated.timing(pulseAnim, {toValue: 1, duration: 600, useNativeDriver: true}),
-        ]),
+          Animated.timing(pulseAnim, { toValue: 1.3, duration: 600, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        ])
       );
       loop.start();
       return () => loop.stop();
     } else {
       pulseAnim.setValue(1);
     }
-  }, [isRecording]);
+  }, [isRecording, pulseAnim]);
 
   // Typing indicator logic
   const handleTextChange = (val: string) => {
@@ -309,7 +307,9 @@ export default function ChatScreen() {
     try {
       const path = Platform.select({
         ios: `voice_${Date.now()}.m4a`,
-        android: `${Platform.OS === 'android' ? '/data/user/0/com.rapidcapsulemobile/cache/' : ''}voice_${Date.now()}.mp4`,
+        android: `${
+          Platform.OS === 'android' ? '/data/user/0/com.rapidcapsulemobile/cache/' : ''
+        }voice_${Date.now()}.mp4`,
       });
       const result = await recorder.startRecorder(path);
       recordingPathRef.current = result;
@@ -339,8 +339,8 @@ export default function ChatScreen() {
       const formData = new FormData();
       formData.append('type', 'voice_note');
       formData.append('file', {
-        uri: Platform.OS === 'android' ? `file://${filePath}` : filePath,
-        type: 'm4a' === filePath.split('.').pop() ? 'audio/m4a' : 'audio/mp4',
+        uri: Platform.OS === 'android' ? `file:// === 'm4a'${filePath}` : filePath,
+        type: filePath.split('.').pop() === 'm4a' ? 'audio/m4a' : 'audio/mp4',
         name: `voice_${Date.now()}.${filePath.split('.').pop() || 'm4a'}`,
       } as any);
 
@@ -384,7 +384,7 @@ export default function ChatScreen() {
   // Delete message
   const handleDelete = async (messageId: string) => {
     Alert.alert('Delete Message', 'This message will be removed for everyone.', [
-      {text: 'Cancel', style: 'cancel'},
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
         style: 'destructive',
@@ -406,18 +406,16 @@ export default function ChatScreen() {
     setLoadingMore(true);
     await fetchMessages(conversationId, true);
     setLoadingMore(false);
-  }, [hasMore, loadingMore, conversationId]);
+  }, [hasMore, loadingMore, conversationId, fetchMessages]);
 
-  const renderItem = ({item}: {item: Message}) => {
+  const renderItem = ({ item }: { item: Message }) => {
     const senderId =
-      typeof item.sender === 'string'
-        ? item.sender
-        : (item.sender as UserSnippet)?._id;
+      typeof item.sender === 'string' ? item.sender : (item.sender as UserSnippet)?._id;
     return (
       <MessageBubble
         message={item}
         isMine={senderId === myUserId}
-        onImagePress={(url) => navigation.navigate('MediaPreview', {url, type: 'image'})}
+        onImagePress={(url) => navigation.navigate('MediaPreview', { url, type: 'image' })}
         onDelete={senderId === myUserId ? handleDelete : undefined}
         onReply={setReplyTo}
       />
@@ -425,13 +423,13 @@ export default function ChatScreen() {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       {/* Header */}
       <Header
         title=""
         onBack={() => navigation.goBack()}
         center={
-          <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <View>
               <Avatar
                 uri={partnerPhoto}
@@ -456,10 +454,15 @@ export default function ChatScreen() {
               )}
             </View>
             <View>
-              <Text style={{fontSize: 14, fontWeight: '700', color: colors.foreground}} numberOfLines={1}>
+              <Text
+                style={{ fontSize: 14, fontWeight: '700', color: colors.foreground }}
+                numberOfLines={1}
+              >
                 {partnerName}
               </Text>
-              <Text style={{fontSize: 11, color: isOnline ? colors.success : colors.mutedForeground}}>
+              <Text
+                style={{ fontSize: 11, color: isOnline ? colors.success : colors.mutedForeground }}
+              >
                 {typingUsers.length > 0 ? 'typing...' : isOnline ? 'Online' : 'Offline'}
               </Text>
             </View>
@@ -468,27 +471,26 @@ export default function ChatScreen() {
       />
 
       <KeyboardAvoidingView
-        style={{flex: 1}}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}>
+        keyboardVerticalOffset={0}
+      >
         {/* Messages list (inverted) */}
         <FlashList
           ref={flatListRef}
           data={messages}
-          keyExtractor={item => item._id}
+          keyExtractor={(item) => item._id}
           renderItem={renderItem}
           inverted
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{paddingVertical: 8}}
+          contentContainerStyle={{ paddingVertical: 8 }}
           estimatedItemSize={80}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.3}
-          ListHeaderComponent={
-            typingUsers.length > 0 ? <TypingIndicator /> : null
-          }
+          ListHeaderComponent={typingUsers.length > 0 ? <TypingIndicator /> : null}
           ListFooterComponent={
             loadingMore ? (
-              <View style={{padding: 16, alignItems: 'center'}}>
+              <View style={{ padding: 16, alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={colors.primary} />
               </View>
             ) : null
@@ -506,25 +508,32 @@ export default function ChatScreen() {
               borderTopColor: colors.border,
               paddingHorizontal: 16,
               paddingVertical: 8,
-            }}>
+            }}
+          >
             <View
               style={{
                 flex: 1,
                 borderLeftWidth: 3,
                 borderLeftColor: colors.accent,
                 paddingLeft: 10,
-              }}>
-              <Text style={{fontSize: 11, fontWeight: '700', color: colors.accent}}>
+              }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '700', color: colors.accent }}>
                 Replying to{' '}
                 {typeof replyTo.sender === 'object'
                   ? (replyTo.sender as UserSnippet).profile?.first_name
                   : 'User'}
               </Text>
-              <Text numberOfLines={1} style={{fontSize: 12, color: colors.mutedForeground}}>
+              <Text numberOfLines={1} style={{ fontSize: 12, color: colors.mutedForeground }}>
                 {replyTo.content || replyTo.type}
               </Text>
             </View>
-            <TouchableOpacity hitSlop={8} onPress={() => setReplyTo(null)} accessibilityRole="button" accessibilityLabel="Cancel reply">
+            <TouchableOpacity
+              hitSlop={8}
+              onPress={() => setReplyTo(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel reply"
+            >
               <X size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
           </View>
@@ -541,12 +550,14 @@ export default function ChatScreen() {
               backgroundColor: colors.card,
               borderTopWidth: 1,
               borderTopColor: colors.border,
-            }}>
+            }}
+          >
             <TouchableOpacity
               onPress={handlePickImage}
               accessibilityRole="button"
               accessibilityLabel="Send a photo"
-              style={{alignItems: 'center', gap: 4}}>
+              style={{ alignItems: 'center', gap: 4 }}
+            >
               <View
                 style={{
                   width: 44,
@@ -555,16 +566,18 @@ export default function ChatScreen() {
                   backgroundColor: `${colors.primary}15`,
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 <ImageIcon size={20} color={colors.primary} />
               </View>
-              <Text style={{fontSize: 10, color: colors.mutedForeground}}>Photo</Text>
+              <Text style={{ fontSize: 10, color: colors.mutedForeground }}>Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handlePickVideo}
               accessibilityRole="button"
               accessibilityLabel="Send a video"
-              style={{alignItems: 'center', gap: 4}}>
+              style={{ alignItems: 'center', gap: 4 }}
+            >
               <View
                 style={{
                   width: 44,
@@ -573,31 +586,43 @@ export default function ChatScreen() {
                   backgroundColor: `${colors.accent}15`,
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 <VideoIcon size={20} color={colors.accent} />
               </View>
-              <Text style={{fontSize: 10, color: colors.mutedForeground}}>Video</Text>
+              <Text style={{ fontSize: 10, color: colors.mutedForeground }}>Video</Text>
             </TouchableOpacity>
             <TouchableOpacity
               accessibilityRole="button"
               accessibilityLabel="Take a photo"
               onPress={() => {
                 setShowAttachMenu(false);
-                launchImageLibrary({mediaType: 'photo', selectionLimit: 1}).then(r => {
-                  // Camera option uses same flow
-                  if (r.assets?.[0]) {
-                    const asset = r.assets[0];
-                    const fd = new FormData();
-                    fd.append('type', 'image');
-                    fd.append('file', {uri: asset.uri, type: asset.type || 'image/jpeg', name: asset.fileName || 'photo.jpg'} as any);
-                    setSending(true);
-                    messagingService.sendAttachment(conversationId, fd).then(sent => {
-                      if (sent?._id && initialConv) addIncomingMessage(sent, initialConv);
-                    }).catch(() => Alert.alert('Error', 'Failed to send photo.')).finally(() => setSending(false));
-                  }
-                }).catch(() => {});
+                launchImageLibrary({ mediaType: 'photo', selectionLimit: 1 })
+                  .then((r) => {
+                    // Camera option uses same flow
+                    if (r.assets?.[0]) {
+                      const asset = r.assets[0];
+                      const fd = new FormData();
+                      fd.append('type', 'image');
+                      fd.append('file', {
+                        uri: asset.uri,
+                        type: asset.type || 'image/jpeg',
+                        name: asset.fileName || 'photo.jpg',
+                      } as any);
+                      setSending(true);
+                      messagingService
+                        .sendAttachment(conversationId, fd)
+                        .then((sent) => {
+                          if (sent?._id && initialConv) addIncomingMessage(sent, initialConv);
+                        })
+                        .catch(() => Alert.alert('Error', 'Failed to send photo.'))
+                        .finally(() => setSending(false));
+                    }
+                  })
+                  .catch(() => {});
               }}
-              style={{alignItems: 'center', gap: 4}}>
+              style={{ alignItems: 'center', gap: 4 }}
+            >
               <View
                 style={{
                   width: 44,
@@ -606,16 +631,18 @@ export default function ChatScreen() {
                   backgroundColor: `${colors.success}15`,
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 <Camera size={20} color={colors.success} />
               </View>
-              <Text style={{fontSize: 10, color: colors.mutedForeground}}>Camera</Text>
+              <Text style={{ fontSize: 10, color: colors.mutedForeground }}>Camera</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowAttachMenu(false)}
               accessibilityRole="button"
               accessibilityLabel="Send a file"
-              style={{alignItems: 'center', gap: 4}}>
+              style={{ alignItems: 'center', gap: 4 }}
+            >
               <View
                 style={{
                   width: 44,
@@ -624,10 +651,11 @@ export default function ChatScreen() {
                   backgroundColor: `${colors.secondary}15`,
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 <FileIcon size={20} color={colors.secondary} />
               </View>
-              <Text style={{fontSize: 10, color: colors.mutedForeground}}>File</Text>
+              <Text style={{ fontSize: 10, color: colors.mutedForeground }}>File</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -645,7 +673,8 @@ export default function ChatScreen() {
               borderTopWidth: 1,
               borderTopColor: colors.border,
               backgroundColor: colors.background,
-            }}>
+            }}
+          >
             {/* Cancel */}
             <TouchableOpacity
               activeOpacity={0.7}
@@ -659,27 +688,26 @@ export default function ChatScreen() {
                 backgroundColor: `${colors.destructive}15`,
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <Trash2 size={18} color={colors.destructive} />
             </TouchableOpacity>
 
             {/* Recording indicator */}
-            <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10}}>
+            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Animated.View
                 style={{
                   width: 10,
                   height: 10,
                   borderRadius: 5,
                   backgroundColor: colors.destructive,
-                  transform: [{scale: pulseAnim}],
+                  transform: [{ scale: pulseAnim }],
                 }}
               />
-              <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
                 {formatRecordTime(recordDuration)}
               </Text>
-              <Text style={{fontSize: 12, color: colors.mutedForeground}}>
-                Recording...
-              </Text>
+              <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Recording...</Text>
             </View>
 
             {/* Send voice */}
@@ -695,7 +723,8 @@ export default function ChatScreen() {
                 backgroundColor: colors.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <Send size={18} color={colors.white} />
             </TouchableOpacity>
           </View>
@@ -711,7 +740,8 @@ export default function ChatScreen() {
               borderTopWidth: 1,
               borderTopColor: colors.border,
               backgroundColor: colors.background,
-            }}>
+            }}
+          >
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => setShowAttachMenu(!showAttachMenu)}
@@ -724,7 +754,8 @@ export default function ChatScreen() {
                 backgroundColor: colors.muted,
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}>
+              }}
+            >
               <Paperclip size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
 
@@ -738,7 +769,8 @@ export default function ChatScreen() {
                 paddingHorizontal: 16,
                 paddingVertical: Platform.OS === 'ios' ? 8 : 4,
                 maxHeight: 120,
-              }}>
+              }}
+            >
               <TextInput
                 value={text}
                 onChangeText={handleTextChange}
@@ -769,7 +801,8 @@ export default function ChatScreen() {
                   backgroundColor: colors.primary,
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 {sending ? (
                   <ActivityIndicator size="small" color={colors.white} />
                 ) : (
@@ -791,7 +824,8 @@ export default function ChatScreen() {
                   backgroundColor: sending ? colors.muted : colors.accent,
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 {sending ? (
                   <ActivityIndicator size="small" color={colors.white} />
                 ) : (

@@ -1,19 +1,10 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Switch,
-  Image,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { View, ScrollView, TouchableOpacity, Switch, Image, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, FormInput } from '../../components/ui';
+import { Button, FormInput, Text } from '../../components/ui';
 import { useAuthStore } from '../../store/auth';
 import { isAppleAuthAvailable, USER_CANCELLED } from '../../services/socialAuth.service';
 import { colors } from '../../theme/colors';

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, Pressable, FlatList } from 'react-native';
 import { Check, ChevronDown } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { FlatList, Modal, Pressable, TouchableOpacity, View } from 'react-native';
 import { colors } from '../../theme/colors';
+import { Text } from '../ui/Text';
 
 interface SelectOption {
   label: string;

@@ -1,18 +1,19 @@
+import { Briefcase, Phone, Star, Video } from 'lucide-react-native';
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
-import {Star, Briefcase, Video, Phone} from 'lucide-react-native';
-import {Avatar, Button} from '../ui';
-import {colors} from '../../theme/colors';
-import {useCurrency} from '../../hooks/useCurrency';
-import {MEETING_CHANNEL_LABELS} from '../../utils/constants';
+import { View } from 'react-native';
+import { useCurrency } from '../../hooks/useCurrency';
+import { colors } from '../../theme/colors';
+import { MEETING_CHANNEL_LABELS } from '../../utils/constants';
+import { Avatar, Button } from '../ui';
+import { Text } from '../ui/Text';
 
 interface SpecialistCardProps {
   specialist: any;
   onSelect: () => void;
 }
 
-export default function SpecialistCard({specialist, onSelect}: SpecialistCardProps) {
-  const {format} = useCurrency();
+export default function SpecialistCard({ specialist, onSelect }: SpecialistCardProps) {
+  const { format } = useCurrency();
   const profile = specialist.profile || {};
   const practice = specialist.professional_practice || {};
   const name = profile.first_name
@@ -47,7 +48,7 @@ export default function SpecialistCard({specialist, onSelect}: SpecialistCardPro
 
           {/* Rating */}
           <View className="flex-row items-center gap-1 mt-1.5">
-            {[1, 2, 3, 4, 5].map(i => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <Star
                 key={i}
                 size={12}
@@ -73,21 +74,18 @@ export default function SpecialistCard({specialist, onSelect}: SpecialistCardPro
             </Text>
           </View>
         )}
-        {fee > 0 && (
-          <Text className="text-primary font-bold text-sm">
-            {format(fee)}
-          </Text>
-        )}
+        {fee > 0 && <Text className="text-primary font-bold text-sm">{format(fee)}</Text>}
       </View>
 
       {/* Meeting channels */}
       {channels.length > 0 && (
         <View className="flex-row flex-wrap gap-1.5 mb-3 px-1">
-          {channels.map(ch => (
+          {channels.map((ch) => (
             <View
               key={ch}
               className="flex-row items-center gap-1 px-2 py-1 rounded-lg"
-              style={{backgroundColor: `${colors.primary}10`}}>
+              style={{ backgroundColor: `${colors.primary}10` }}
+            >
               {ch === 'phone' ? (
                 <Phone size={10} color={colors.primary} />
               ) : (

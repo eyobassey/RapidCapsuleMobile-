@@ -1,24 +1,25 @@
-import React, {useCallback, useMemo, useState} from 'react';
-import {View, Text, RefreshControl, TextInput} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {Pill, Search, X, Upload} from 'lucide-react-native';
-import {TouchableOpacity} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
+import { Pill, Search, Upload, X } from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { RefreshControl, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text } from '../../components/ui/Text';
+import { TextInput } from '../../components/ui/TextInput';
 
-import {usePrescriptionsQuery} from '../../hooks/queries';
-import {Header, TabBar, EmptyState, Skeleton} from '../../components/ui';
 import PrescriptionCard from '../../components/prescriptions/PrescriptionCard';
-import {colors} from '../../theme/colors';
+import { EmptyState, Header, Skeleton, TabBar } from '../../components/ui';
+import { usePrescriptionsQuery } from '../../hooks/queries';
+import { colors } from '../../theme/colors';
 
 const FILTER_TABS = [
-  {label: 'All', value: ''},
-  {label: 'From Doctor', value: 'internal'},
-  {label: 'My Orders', value: 'orders'},
-  {label: 'Uploaded', value: 'external'},
-  {label: 'Pending', value: 'pending'},
-  {label: 'Processing', value: 'processing'},
-  {label: 'Delivered', value: 'delivered'},
+  { label: 'All', value: '' },
+  { label: 'From Doctor', value: 'internal' },
+  { label: 'My Orders', value: 'orders' },
+  { label: 'Uploaded', value: 'external' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Processing', value: 'processing' },
+  { label: 'Delivered', value: 'delivered' },
 ];
 
 export default function PrescriptionsListScreen() {
@@ -27,11 +28,7 @@ export default function PrescriptionsListScreen() {
   const [filter, setFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const {
-    data: prescriptions = [],
-    isLoading,
-    refetch,
-  } = usePrescriptionsQuery();
+  const { data: prescriptions = [], isLoading, refetch } = usePrescriptionsQuery();
 
   const onRefresh = useCallback(async () => {
     await refetch();
@@ -48,7 +45,7 @@ export default function PrescriptionsListScreen() {
         (p: any) =>
           p.type === 'ORDER' ||
           p.linked_pharmacy_order ||
-          (p.used_in_orders && p.used_in_orders.length > 0),
+          (p.used_in_orders && p.used_in_orders.length > 0)
       );
     } else if (filter === 'external') {
       result = result.filter((p: any) => p.type === 'EXTERNAL');
@@ -60,20 +57,23 @@ export default function PrescriptionsListScreen() {
           p.payment_status === 'pending' ||
           p.payment_status === 'PENDING' ||
           p.status === 'PENDING' ||
-          p.status === 'pending',
+          p.status === 'pending'
       );
     } else if (filter === 'processing') {
       result = result.filter((p: any) =>
-        ['processing', 'paid', 'dispensed', 'shipped', 'confirmed', 'ready_for_pickup', 'out_for_delivery'].includes(
-          p.status?.toLowerCase(),
-        ),
+        [
+          'processing',
+          'paid',
+          'dispensed',
+          'shipped',
+          'confirmed',
+          'ready_for_pickup',
+          'out_for_delivery',
+        ].includes(p.status?.toLowerCase())
       );
     } else if (filter === 'delivered') {
       result = result.filter(
-        (p: any) =>
-          p.status === 'delivered' ||
-          p.status === 'DELIVERED' ||
-          p.status === 'COMPLETED',
+        (p: any) => p.status === 'delivered' || p.status === 'DELIVERED' || p.status === 'COMPLETED'
       );
     }
 
@@ -101,21 +101,21 @@ export default function PrescriptionsListScreen() {
           p.status === 'pending_payment' ||
           p.status === 'pending_acceptance' ||
           p.payment_status === 'pending' ||
-          p.status === 'pending',
+          p.status === 'pending'
       ).length,
       processing: prescriptions.filter((p: any) =>
-        ['processing', 'paid', 'dispensed', 'shipped'].includes(p.status?.toLowerCase()),
+        ['processing', 'paid', 'dispensed', 'shipped'].includes(p.status?.toLowerCase())
       ).length,
     };
   }, [prescriptions]);
 
   const handlePress = (item: any) => {
     if (item.type === 'ORDER') {
-      navigation.navigate('Pharmacy', {screen: 'OrderDetail', params: {orderId: item._id}});
+      navigation.navigate('Pharmacy', { screen: 'OrderDetail', params: { orderId: item._id } });
     } else if (item.prescription_source === 'patient_upload') {
-      navigation.navigate('Pharmacy', {screen: 'UploadDetail', params: {uploadId: item._id}});
+      navigation.navigate('Pharmacy', { screen: 'UploadDetail', params: { uploadId: item._id } });
     } else {
-      navigation.navigate('PrescriptionDetail', {id: item._id});
+      navigation.navigate('PrescriptionDetail', { id: item._id });
     }
   };
 
@@ -127,7 +127,7 @@ export default function PrescriptionsListScreen() {
           <View className="mb-4">
             <Skeleton height={44} borderRadius={12} />
           </View>
-          {[1, 2, 3, 4].map(i => (
+          {[1, 2, 3, 4].map((i) => (
             <View key={i} className="bg-card border border-border rounded-2xl p-4 mb-3">
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center gap-2">
@@ -158,9 +158,10 @@ export default function PrescriptionsListScreen() {
           <View className="flex-row items-center gap-3">
             <TouchableOpacity
               onPress={() => setShowSearch(!showSearch)}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityRole="button"
-              accessibilityLabel={showSearch ? 'Close search' : 'Search prescriptions'}>
+              accessibilityLabel={showSearch ? 'Close search' : 'Search prescriptions'}
+            >
               {showSearch ? (
                 <X size={22} color={colors.foreground} />
               ) : (
@@ -168,10 +169,11 @@ export default function PrescriptionsListScreen() {
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => navigation.navigate('Pharmacy', {screen: 'UploadPrescription'})}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+              onPress={() => navigation.navigate('Pharmacy', { screen: 'UploadPrescription' })}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityRole="button"
-              accessibilityLabel="Upload prescription">
+              accessibilityLabel="Upload prescription"
+            >
               <Upload size={22} color={colors.primary} />
             </TouchableOpacity>
           </View>
@@ -194,7 +196,11 @@ export default function PrescriptionsListScreen() {
               accessibilityLabel="Search prescriptions"
             />
             {searchQuery ? (
-              <TouchableOpacity onPress={() => setSearchQuery('')} accessibilityRole="button" accessibilityLabel="Clear search">
+              <TouchableOpacity
+                onPress={() => setSearchQuery('')}
+                accessibilityRole="button"
+                accessibilityLabel="Clear search"
+              >
                 <X size={16} color={colors.mutedForeground} />
               </TouchableOpacity>
             ) : null}
@@ -221,11 +227,7 @@ export default function PrescriptionsListScreen() {
       )}
 
       <View className="px-5 pt-3 pb-2">
-        <TabBar
-          tabs={FILTER_TABS}
-          activeTab={filter}
-          onChange={setFilter}
-        />
+        <TabBar tabs={FILTER_TABS} activeTab={filter} onChange={setFilter} />
       </View>
 
       <FlashList
@@ -242,11 +244,8 @@ export default function PrescriptionsListScreen() {
             colors={[colors.primary]}
           />
         }
-        renderItem={({item}) => (
-          <PrescriptionCard
-            prescription={item}
-            onPress={() => handlePress(item)}
-          />
+        renderItem={({ item }) => (
+          <PrescriptionCard prescription={item} onPress={() => handlePress(item)} />
         )}
         ListEmptyComponent={
           <EmptyState
@@ -267,11 +266,15 @@ export default function PrescriptionsListScreen() {
 function getDoctorName(prescription: any): string {
   const specialist = prescription.specialist_id;
   if (typeof specialist === 'object' && specialist?.profile) {
-    return `Dr. ${specialist.profile.first_name || ''} ${specialist.profile.last_name || ''}`.trim();
+    return `Dr. ${specialist.profile.first_name || ''} ${
+      specialist.profile.last_name || ''
+    }`.trim();
   }
   const prescribedBy = prescription.prescribed_by;
   if (typeof prescribedBy === 'object' && prescribedBy?.profile) {
-    return `${prescribedBy.profile.first_name || ''} ${prescribedBy.profile.last_name || ''}`.trim();
+    return `${prescribedBy.profile.first_name || ''} ${
+      prescribedBy.profile.last_name || ''
+    }`.trim();
   }
   if (prescription.ocr_data?.doctor_name) {
     return `Dr. ${prescription.ocr_data.doctor_name}`;

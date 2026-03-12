@@ -1,17 +1,41 @@
-import React, {useRef, useCallback} from 'react';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
+  Activity,
+  Brain,
+  Droplets,
+  Flame,
+  Footprints,
+  GlassWater,
+  Heart,
+  HeartPulse,
+  Moon,
+  Percent,
+  Scale,
+  StickyNote,
+  Thermometer,
+  Wind,
+  Zap,
+} from 'lucide-react-native';
+import React, { useCallback, useRef } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  TextInput as RNTextInput,
+  ScrollView,
+  View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute, type RouteProp} from '@react-navigation/native';
-import {useForm, Controller} from 'react-hook-form';
-import {
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Text } from '../../components/ui/Text';
+
+import { Button, Header, Input } from '../../components/ui';
+import type { HomeStackParamList } from '../../navigation/stacks/HomeStack';
+import { useVitalsStore } from '../../store/vitals';
+import { colors } from '../../theme/colors';
+import { VITAL_TYPES } from '../../utils/constants';
+
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Heart,
   HeartPulse,
   Thermometer,
@@ -26,18 +50,6 @@ import {
   Percent,
   GlassWater,
   Zap,
-  StickyNote,
-} from 'lucide-react-native';
-
-import {useVitalsStore} from '../../store/vitals';
-import {Header, Input, Button} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import {VITAL_TYPES} from '../../utils/constants';
-import type {HomeStackParamList} from '../../navigation/stacks/HomeStack';
-
-const ICON_MAP: Record<string, React.ComponentType<any>> = {
-  Heart, HeartPulse, Thermometer, Droplets, Wind, Activity,
-  Scale, Footprints, Moon, Flame, Brain, Percent, GlassWater, Zap,
 };
 
 // Form values: keyed by vital type key, plus bp_systolic, bp_diastolic, notes
@@ -55,13 +67,13 @@ export default function LogVitalsScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<HomeStackParamList, 'LogVitals'>>();
   const focusedVitalType = route.params?.vitalType;
-  const {logVital} = useVitalsStore();
-  const bpDiastolicRef = useRef<TextInput>(null);
+  const { logVital } = useVitalsStore();
+  const bpDiastolicRef = useRef<RNTextInput>(null);
 
   const {
     control,
     handleSubmit,
-    formState: {errors},
+    formState: { errors },
     setError,
     clearErrors,
     watch,
@@ -71,7 +83,7 @@ export default function LogVitalsScreen() {
 
   // If navigated from VitalDetail, only show that vital's input
   const displayedVitals = focusedVitalType
-    ? VITAL_TYPES.filter(v => v.key === focusedVitalType)
+    ? VITAL_TYPES.filter((v) => v.key === focusedVitalType)
     : VITAL_TYPES;
 
   const watchedValues = watch();
@@ -103,25 +115,25 @@ export default function LogVitalsScreen() {
           const sysErr = validateNumericField(data.bp_systolic);
           const diaErr = validateNumericField(data.bp_diastolic);
           if (sysErr) {
-            setError('bp_systolic', {message: sysErr});
+            setError('bp_systolic', { message: sysErr });
             hasError = true;
           }
           if (diaErr) {
-            setError('bp_diastolic', {message: diaErr});
+            setError('bp_diastolic', { message: diaErr });
             hasError = true;
           }
           // If only one BP field is filled
           const hasSys = !!data.bp_systolic?.trim();
           const hasDia = !!data.bp_diastolic?.trim();
           if (hasSys !== hasDia) {
-            if (!hasSys) setError('bp_systolic', {message: 'Required with diastolic'});
-            if (!hasDia) setError('bp_diastolic', {message: 'Required with systolic'});
+            if (!hasSys) setError('bp_systolic', { message: 'Required with diastolic' });
+            if (!hasDia) setError('bp_diastolic', { message: 'Required with systolic' });
             hasError = true;
           }
         } else {
           const err = validateNumericField(data[config.key]);
           if (err) {
-            setError(config.key, {message: err});
+            setError(config.key, { message: err });
             hasError = true;
           }
         }
@@ -130,7 +142,7 @@ export default function LogVitalsScreen() {
       if (hasError) return;
 
       // Build payload
-      const payload: Record<string, {value: string; unit: string}> = {};
+      const payload: Record<string, { value: string; unit: string }> = {};
       let count = 0;
 
       for (const config of VITAL_TYPES) {
@@ -165,39 +177,45 @@ export default function LogVitalsScreen() {
         Alert.alert(
           'Vitals Logged',
           `Successfully recorded ${count} vital${count > 1 ? 's' : ''}.`,
-          [{text: 'OK', onPress: () => navigation.goBack()}],
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
       } catch (err: any) {
         Alert.alert(
           'Error',
-          err?.response?.data?.message || err?.message || 'Failed to save vitals. Please try again.',
+          err?.response?.data?.message || err?.message || 'Failed to save vitals. Please try again.'
         );
       } finally {
         setSaving(false);
       }
     },
-    [displayedVitals, logVital, navigation, setError],
+    [displayedVitals, logVital, navigation, setError]
   );
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header
-        title={focusedVitalType && displayedVitals[0] ? `Log ${displayedVitals[0].name}` : 'Log Vitals'}
+        title={
+          focusedVitalType && displayedVitals[0] ? `Log ${displayedVitals[0].name}` : 'Log Vitals'
+        }
         onBack={() => navigation.goBack()}
       />
 
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView
           className="flex-1"
           contentContainerClassName="px-5 pt-4 pb-32"
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Instruction */}
           <View className="bg-card border border-border rounded-2xl p-4 mb-6">
             <Text className="text-sm text-foreground font-medium">
-              {focusedVitalType ? `Enter your ${displayedVitals[0]?.name || 'vital'} reading` : 'Enter your current readings'}
+              {focusedVitalType
+                ? `Enter your ${displayedVitals[0]?.name || 'vital'} reading`
+                : 'Enter your current readings'}
             </Text>
             {!focusedVitalType && (
               <Text className="text-xs text-muted-foreground mt-1">
@@ -207,7 +225,7 @@ export default function LogVitalsScreen() {
           </View>
 
           {/* Vital Input Groups */}
-          {displayedVitals.map(config => {
+          {displayedVitals.map((config) => {
             const IconComponent = ICON_MAP[config.icon] || Activity;
 
             if (config.key === 'blood_pressure') {
@@ -225,11 +243,11 @@ export default function LogVitalsScreen() {
                       <Controller
                         control={control}
                         name="bp_systolic"
-                        render={({field: {onChange, onBlur, value}}) => (
+                        render={({ field: { onChange, onBlur, value } }) => (
                           <Input
                             placeholder="Systolic"
                             value={value || ''}
-                            onChangeText={v => {
+                            onChangeText={(v) => {
                               clearErrors('bp_systolic');
                               onChange(v);
                             }}
@@ -250,12 +268,12 @@ export default function LogVitalsScreen() {
                       <Controller
                         control={control}
                         name="bp_diastolic"
-                        render={({field: {onChange, onBlur, value}}) => (
+                        render={({ field: { onChange, onBlur, value } }) => (
                           <Input
                             ref={bpDiastolicRef}
                             placeholder="Diastolic"
                             value={value || ''}
-                            onChangeText={v => {
+                            onChangeText={(v) => {
                               clearErrors('bp_diastolic');
                               onChange(v);
                             }}
@@ -278,12 +296,12 @@ export default function LogVitalsScreen() {
                 <Controller
                   control={control}
                   name={config.key}
-                  render={({field: {onChange, onBlur, value}}) => (
+                  render={({ field: { onChange, onBlur, value } }) => (
                     <Input
                       label={config.name}
                       placeholder={`Enter ${config.name.toLowerCase()}`}
                       value={value || ''}
-                      onChangeText={v => {
+                      onChangeText={(v) => {
                         clearErrors(config.key);
                         onChange(v);
                       }}
@@ -310,7 +328,7 @@ export default function LogVitalsScreen() {
               <Controller
                 control={control}
                 name="notes"
-                render={({field: {onChange, value}}) => (
+                render={({ field: { onChange, value } }) => (
                   <Input
                     label="Notes (Optional)"
                     placeholder="Any additional notes..."
@@ -334,8 +352,11 @@ export default function LogVitalsScreen() {
           variant="primary"
           onPress={handleSubmit(onSubmit)}
           loading={saving}
-          disabled={filledCount === 0}>
-          {`Save ${filledCount > 0 ? `(${filledCount} vital${filledCount > 1 ? 's' : ''})` : 'Vitals'}`}
+          disabled={filledCount === 0}
+        >
+          {`Save ${
+            filledCount > 0 ? `(${filledCount} vital${filledCount > 1 ? 's' : ''})` : 'Vitals'
+          }`}
         </Button>
       </View>
     </SafeAreaView>

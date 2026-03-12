@@ -1,12 +1,13 @@
-import React, {useState, useMemo} from 'react';
-import {View, Text, ScrollView, TouchableOpacity, Alert} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {User, Calendar} from 'lucide-react-native';
-import {Header, Button, Input} from '../../components/ui';
-import {useAuthStore} from '../../store/auth';
-import {useHealthCheckupStore} from '../../store/healthCheckup';
-import {colors} from '../../theme/colors';
+import { useNavigation } from '@react-navigation/native';
+import { Calendar, User } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button, Header, Input } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useAuthStore } from '../../store/auth';
+import { useHealthCheckupStore } from '../../store/healthCheckup';
+import { colors } from '../../theme/colors';
 
 const GENDER_OPTIONS = ['Male', 'Female'] as const;
 
@@ -21,14 +22,14 @@ function calculateAge(dob: string): number {
 
 export default function PatientInfoScreen() {
   const navigation = useNavigation<any>();
-  const user = useAuthStore(s => s.user);
-  const {beginCheckup, setPatientInfo, fetchRiskFactors, isLoading} = useHealthCheckupStore();
+  const user = useAuthStore((s) => s.user);
+  const { beginCheckup, setPatientInfo, fetchRiskFactors, isLoading } = useHealthCheckupStore();
 
   const profileGender = user?.profile?.gender?.toLowerCase() || '';
   const profileDob = user?.profile?.date_of_birth || '';
 
   const [gender, setGender] = useState<string>(
-    profileGender === 'male' || profileGender === 'female' ? profileGender : '',
+    profileGender === 'male' || profileGender === 'female' ? profileGender : ''
   );
   const [dateOfBirth, setDateOfBirth] = useState(profileDob);
 
@@ -65,14 +66,15 @@ export default function PatientInfoScreen() {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Patient Info" onBack={() => navigation.goBack()} />
 
       <ScrollView
-        style={{flex: 1}}
-        contentContainerStyle={{paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40}}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Step indicator */}
         <View className="flex-row items-center gap-2 mb-6">
           <View className="h-1.5 flex-1 bg-primary rounded-full" />
@@ -82,9 +84,7 @@ export default function PatientInfoScreen() {
           <View className="h-1.5 flex-1 bg-border rounded-full" />
         </View>
 
-        <Text className="text-lg font-bold text-foreground mb-1">
-          Confirm Your Information
-        </Text>
+        <Text className="text-lg font-bold text-foreground mb-1">Confirm Your Information</Text>
         <Text className="text-sm text-muted-foreground mb-6">
           We need this to provide an accurate assessment.
         </Text>
@@ -94,7 +94,7 @@ export default function PatientInfoScreen() {
           Biological Sex
         </Text>
         <View className="flex-row gap-3 mb-6">
-          {GENDER_OPTIONS.map(option => {
+          {GENDER_OPTIONS.map((option) => {
             const isSelected = gender === option.toLowerCase();
             return (
               <TouchableOpacity
@@ -102,7 +102,7 @@ export default function PatientInfoScreen() {
                 activeOpacity={0.7}
                 accessibilityRole="radio"
                 accessibilityLabel={option}
-                accessibilityState={{selected: isSelected}}
+                accessibilityState={{ selected: isSelected }}
                 onPress={() => setGender(option.toLowerCase())}
                 style={{
                   flex: 1,
@@ -113,13 +113,15 @@ export default function PatientInfoScreen() {
                   borderWidth: 1.5,
                   backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
                   borderColor: isSelected ? colors.primary : colors.mutedForeground,
-                }}>
+                }}
+              >
                 <Text
                   style={{
                     fontSize: 14,
                     fontWeight: '500',
                     color: isSelected ? colors.primary : colors.mutedForeground,
-                  }}>
+                  }}
+                >
                   {option}
                 </Text>
               </TouchableOpacity>
@@ -128,7 +130,7 @@ export default function PatientInfoScreen() {
         </View>
 
         {/* Date of Birth */}
-        <View style={{marginBottom: 16}}>
+        <View style={{ marginBottom: 16 }}>
           <Input
             label="Date of Birth"
             placeholder="YYYY-MM-DD"
@@ -149,7 +151,7 @@ export default function PatientInfoScreen() {
         )}
 
         {/* Continue button */}
-        <View style={{marginTop: 16}}>
+        <View style={{ marginTop: 16 }}>
           <Button variant="primary" onPress={handleNext} loading={isLoading}>
             Continue
           </Button>

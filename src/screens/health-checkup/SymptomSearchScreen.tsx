@@ -1,31 +1,31 @@
-import React, {useState, useCallback, useRef, useEffect} from 'react';
+import { useNavigation } from '@react-navigation/native';
+import { Check, ChevronDown, MapPin, Plus, Search, User, X } from 'lucide-react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
   ActivityIndicator,
-  Dimensions,
+  Alert,
   Animated,
+  Dimensions,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {Search, X, Plus, Check, User, ChevronDown, MapPin} from 'lucide-react-native';
-import {Header, Button} from '../../components/ui';
-import {useHealthCheckupStore} from '../../store/healthCheckup';
-import {colors} from '../../theme/colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BodyAvatar from '../../components/health-checkup/BodyAvatar';
+import { Button, Header } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useHealthCheckupStore } from '../../store/healthCheckup';
+import { colors } from '../../theme/colors';
 
 type Tab = 'search' | 'body';
 
-const {height: SCREEN_HEIGHT} = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.48;
 
 export default function SymptomSearchScreen() {
   const navigation = useNavigation<any>();
-  const {addEvidence, submitDiagnosis, isLoading, searchSymptoms, sex} = useHealthCheckupStore();
+  const { addEvidence, submitDiagnosis, isLoading, searchSymptoms, sex } = useHealthCheckupStore();
 
   const [tab, setTab] = useState<Tab>('search');
   const [query, setQuery] = useState('');
@@ -68,7 +68,7 @@ export default function SymptomSearchScreen() {
         setSearching(false);
       }, 400);
     },
-    [searchSymptoms],
+    [searchSymptoms]
   );
 
   const handleSelectRegion = useCallback(
@@ -79,7 +79,7 @@ export default function SymptomSearchScreen() {
       setRegionResults(data);
       setRegionLoading(false);
     },
-    [searchSymptoms],
+    [searchSymptoms]
   );
 
   const dismissSheet = () => {
@@ -88,7 +88,7 @@ export default function SymptomSearchScreen() {
   };
 
   const toggleSymptom = (symptom: any) => {
-    setSelected(prev => {
+    setSelected((prev) => {
       const next = new Map(prev);
       if (next.has(symptom.id)) {
         next.delete(symptom.id);
@@ -105,7 +105,7 @@ export default function SymptomSearchScreen() {
       return;
     }
 
-    const evidence = Array.from(selected.keys()).map(id => ({
+    const evidence = Array.from(selected.keys()).map((id) => ({
       id,
       choice_id: 'present' as const,
       source: 'initial' as const,
@@ -120,7 +120,7 @@ export default function SymptomSearchScreen() {
     }
   };
 
-  const avatarSex = (sex === 'male' || sex === 'female') ? sex : 'male';
+  const avatarSex = sex === 'male' || sex === 'female' ? sex : 'male';
 
   const sheetTranslateY = sheetAnim.interpolate({
     inputRange: [0, 1],
@@ -128,15 +128,16 @@ export default function SymptomSearchScreen() {
   });
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Symptoms" onBack={() => navigation.goBack()} />
 
-      <View style={{flex: 1}}>
+      <View style={{ flex: 1 }}>
         <ScrollView
-          style={{flex: 1}}
-          contentContainerStyle={{paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24}}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Step indicator */}
           <View className="flex-row items-center gap-2 mb-4">
             <View className="h-1.5 flex-1 bg-primary rounded-full" />
@@ -146,9 +147,7 @@ export default function SymptomSearchScreen() {
             <View className="h-1.5 flex-1 bg-border rounded-full" />
           </View>
 
-          <Text className="text-lg font-bold text-foreground mb-1">
-            What are your symptoms?
-          </Text>
+          <Text className="text-lg font-bold text-foreground mb-1">What are your symptoms?</Text>
           <Text className="text-sm text-muted-foreground mb-3">
             Search for symptoms or tap body parts to add them.
           </Text>
@@ -159,7 +158,7 @@ export default function SymptomSearchScreen() {
               activeOpacity={0.7}
               accessibilityRole="tab"
               accessibilityLabel="Search symptoms"
-              accessibilityState={{selected: tab === 'search'}}
+              accessibilityState={{ selected: tab === 'search' }}
               onPress={() => setTab('search')}
               style={{
                 flex: 1,
@@ -170,14 +169,19 @@ export default function SymptomSearchScreen() {
                 paddingVertical: 8,
                 borderRadius: 14,
                 backgroundColor: tab === 'search' ? colors.card : 'transparent',
-              }}>
-              <Search size={14} color={tab === 'search' ? colors.primary : colors.mutedForeground} />
+              }}
+            >
+              <Search
+                size={14}
+                color={tab === 'search' ? colors.primary : colors.mutedForeground}
+              />
               <Text
                 style={{
                   fontSize: 13,
                   fontWeight: '600',
                   color: tab === 'search' ? colors.primary : colors.mutedForeground,
-                }}>
+                }}
+              >
                 Search
               </Text>
             </TouchableOpacity>
@@ -185,7 +189,7 @@ export default function SymptomSearchScreen() {
               activeOpacity={0.7}
               accessibilityRole="tab"
               accessibilityLabel="Body map"
-              accessibilityState={{selected: tab === 'body'}}
+              accessibilityState={{ selected: tab === 'body' }}
               onPress={() => setTab('body')}
               style={{
                 flex: 1,
@@ -196,14 +200,16 @@ export default function SymptomSearchScreen() {
                 paddingVertical: 8,
                 borderRadius: 14,
                 backgroundColor: tab === 'body' ? colors.card : 'transparent',
-              }}>
+              }}
+            >
               <User size={14} color={tab === 'body' ? colors.primary : colors.mutedForeground} />
               <Text
                 style={{
                   fontSize: 13,
                   fontWeight: '600',
                   color: tab === 'body' ? colors.primary : colors.mutedForeground,
-                }}>
+                }}
+              >
                 Body Map
               </Text>
             </TouchableOpacity>
@@ -211,7 +217,7 @@ export default function SymptomSearchScreen() {
 
           {/* Selected symptoms chips */}
           {selected.size > 0 && (
-            <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12}}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
               {Array.from(selected.values()).map((s: any) => (
                 <TouchableOpacity
                   key={s.id}
@@ -219,7 +225,8 @@ export default function SymptomSearchScreen() {
                   activeOpacity={0.7}
                   accessibilityRole="button"
                   accessibilityLabel={`Remove ${s.common_name || s.name || s.label}`}
-                  className="flex-row items-center gap-1 bg-primary/10 border border-primary/30 rounded-full px-3 py-1.5">
+                  className="flex-row items-center gap-1 bg-primary/10 border border-primary/30 rounded-full px-3 py-1.5"
+                >
                   <Text className="text-xs font-medium text-primary">
                     {s.common_name || s.name || s.label}
                   </Text>
@@ -230,121 +237,137 @@ export default function SymptomSearchScreen() {
           )}
 
           {/* ── Search Tab ── */}
-          <View style={tab !== 'search' ? {display: 'none'} : undefined}>
-              <View style={{marginBottom: 8}}>
-                <View className="flex-row items-center bg-card border border-border rounded-2xl px-4 h-12">
-                  <Search size={18} color={colors.mutedForeground} />
-                  <TextInput
-                    className="flex-1 text-sm text-foreground ml-3"
-                    placeholder="Search symptoms (e.g. headache, fever)"
-                    placeholderTextColor={colors.mutedForeground}
-                    value={query}
-                    onChangeText={handleSearch}
-                    autoCapitalize="none"
-                    accessibilityLabel="Search symptoms"
-                  />
-                  {query.length > 0 && (
-                    <TouchableOpacity onPress={() => {setQuery(''); setResults([]);}} accessibilityRole="button" accessibilityLabel="Clear search">
-                      <X size={18} color={colors.mutedForeground} />
-                    </TouchableOpacity>
-                  )}
-                  {searching && <ActivityIndicator size="small" color={colors.primary} />}
-                </View>
-              </View>
-
-              {results.map((symptom: any) => {
-                const isSelected = selected.has(symptom.id);
-                return (
+          <View style={tab !== 'search' ? { display: 'none' } : undefined}>
+            <View style={{ marginBottom: 8 }}>
+              <View className="flex-row items-center bg-card border border-border rounded-2xl px-4 h-12">
+                <Search size={18} color={colors.mutedForeground} />
+                <TextInput
+                  className="flex-1 text-sm text-foreground ml-3"
+                  placeholder="Search symptoms (e.g. headache, fever)"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={query}
+                  onChangeText={handleSearch}
+                  autoCapitalize="none"
+                  accessibilityLabel="Search symptoms"
+                />
+                {query.length > 0 && (
                   <TouchableOpacity
-                    key={symptom.id}
-                    activeOpacity={0.7}
-                    accessibilityRole="checkbox"
-                    accessibilityLabel={symptom.common_name || symptom.name || symptom.label}
-                    accessibilityState={{checked: isSelected}}
-                    onPress={() => toggleSymptom(symptom)}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 12,
-                      padding: 16,
-                      borderRadius: 16,
-                      borderWidth: 1.5,
-                      marginBottom: 8,
-                      backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
-                      borderColor: isSelected ? colors.primary : colors.mutedForeground,
-                    }}>
-                    <View
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderWidth: 2,
-                        backgroundColor: isSelected ? colors.primary : 'transparent',
-                        borderColor: isSelected ? colors.primary : colors.mutedForeground,
-                      }}>
-                      {isSelected ? (
-                        <Check size={14} color={colors.white} />
-                      ) : (
-                        <Plus size={14} color={colors.mutedForeground} />
-                      )}
-                    </View>
-                    <Text className="text-sm text-foreground flex-1">
-                      {symptom.common_name || symptom.name || symptom.label}
-                    </Text>
+                    onPress={() => {
+                      setQuery('');
+                      setResults([]);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Clear search"
+                  >
+                    <X size={18} color={colors.mutedForeground} />
                   </TouchableOpacity>
-                );
-              })}
+                )}
+                {searching && <ActivityIndicator size="small" color={colors.primary} />}
+              </View>
+            </View>
 
-              {query.length >= 2 && results.length === 0 && !searching && (
-                <View className="items-center py-12">
-                  <Text className="text-sm text-muted-foreground">No symptoms found</Text>
-                </View>
-              )}
+            {results.map((symptom: any) => {
+              const isSelected = selected.has(symptom.id);
+              return (
+                <TouchableOpacity
+                  key={symptom.id}
+                  activeOpacity={0.7}
+                  accessibilityRole="checkbox"
+                  accessibilityLabel={symptom.common_name || symptom.name || symptom.label}
+                  accessibilityState={{ checked: isSelected }}
+                  onPress={() => toggleSymptom(symptom)}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: 16,
+                    borderRadius: 16,
+                    borderWidth: 1.5,
+                    marginBottom: 8,
+                    backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
+                    borderColor: isSelected ? colors.primary : colors.mutedForeground,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: 2,
+                      backgroundColor: isSelected ? colors.primary : 'transparent',
+                      borderColor: isSelected ? colors.primary : colors.mutedForeground,
+                    }}
+                  >
+                    {isSelected ? (
+                      <Check size={14} color={colors.white} />
+                    ) : (
+                      <Plus size={14} color={colors.mutedForeground} />
+                    )}
+                  </View>
+                  <Text className="text-sm text-foreground flex-1">
+                    {symptom.common_name || symptom.name || symptom.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
 
-              {/* Continue button */}
-              <View style={{marginTop: 24, paddingBottom: 40}}>
+            {query.length >= 2 && results.length === 0 && !searching && (
+              <View className="items-center py-12">
+                <Text className="text-sm text-muted-foreground">No symptoms found</Text>
+              </View>
+            )}
+
+            {/* Continue button */}
+            <View style={{ marginTop: 24, paddingBottom: 40 }}>
+              <Button variant="primary" onPress={handleNext} loading={isLoading}>
+                {selected.size > 0
+                  ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
+                  : 'Select Symptoms'}
+              </Button>
+            </View>
+          </View>
+
+          {/* ── Body Map Tab ── */}
+          <View style={tab !== 'body' ? { display: 'none' } : undefined}>
+            <View className="bg-card border border-border rounded-2xl p-4">
+              <BodyAvatar
+                sex={avatarSex}
+                selectedRegion={selectedRegion}
+                onSelectRegion={handleSelectRegion}
+              />
+            </View>
+
+            {!selectedRegion && (
+              <View style={{ alignItems: 'center', paddingVertical: 24 }}>
+                <MapPin size={20} color={colors.mutedForeground} />
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: colors.mutedForeground,
+                    textAlign: 'center',
+                    marginTop: 8,
+                  }}
+                >
+                  Tap a body part to see related symptoms
+                </Text>
+              </View>
+            )}
+
+            {/* Spacer so content doesn't hide behind sheet */}
+            {selectedRegion && <View style={{ height: SHEET_HEIGHT + 20 }} />}
+
+            {/* Continue button (when no sheet) */}
+            {!selectedRegion && (
+              <View style={{ marginTop: 8, paddingBottom: 40 }}>
                 <Button variant="primary" onPress={handleNext} loading={isLoading}>
                   {selected.size > 0
                     ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
                     : 'Select Symptoms'}
                 </Button>
               </View>
-          </View>
-
-          {/* ── Body Map Tab ── */}
-          <View style={tab !== 'body' ? {display: 'none'} : undefined}>
-              <View className="bg-card border border-border rounded-2xl p-4">
-                <BodyAvatar
-                  sex={avatarSex}
-                  selectedRegion={selectedRegion}
-                  onSelectRegion={handleSelectRegion}
-                />
-              </View>
-
-              {!selectedRegion && (
-                <View style={{alignItems: 'center', paddingVertical: 24}}>
-                  <MapPin size={20} color={colors.mutedForeground} />
-                  <Text style={{fontSize: 13, color: colors.mutedForeground, textAlign: 'center', marginTop: 8}}>
-                    Tap a body part to see related symptoms
-                  </Text>
-                </View>
-              )}
-
-              {/* Spacer so content doesn't hide behind sheet */}
-              {selectedRegion && <View style={{height: SHEET_HEIGHT + 20}} />}
-
-              {/* Continue button (when no sheet) */}
-              {!selectedRegion && (
-                <View style={{marginTop: 8, paddingBottom: 40}}>
-                  <Button variant="primary" onPress={handleNext} loading={isLoading}>
-                    {selected.size > 0
-                      ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
-                      : 'Select Symptoms'}
-                  </Button>
-                </View>
-              )}
+            )}
           </View>
         </ScrollView>
 
@@ -361,14 +384,15 @@ export default function SymptomSearchScreen() {
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               shadowColor: '#000',
-              shadowOffset: {width: 0, height: -4},
+              shadowOffset: { width: 0, height: -4 },
               shadowOpacity: 0.15,
               shadowRadius: 12,
               elevation: 16,
-              transform: [{translateY: sheetTranslateY}],
-            }}>
+              transform: [{ translateY: sheetTranslateY }],
+            }}
+          >
             {/* Drag handle */}
-            <View style={{alignItems: 'center', paddingTop: 10, paddingBottom: 4}}>
+            <View style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 4 }}>
               <View
                 style={{
                   width: 36,
@@ -389,8 +413,9 @@ export default function SymptomSearchScreen() {
                 paddingVertical: 10,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.border,
-              }}>
-              <View style={{flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1}}>
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                 <View
                   style={{
                     width: 32,
@@ -399,23 +424,27 @@ export default function SymptomSearchScreen() {
                     backgroundColor: `${colors.primary}15`,
                     alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
+                  }}
+                >
                   <MapPin size={16} color={colors.primary} />
                 </View>
-                <View style={{flex: 1}}>
+                <View style={{ flex: 1 }}>
                   <Text
                     style={{
                       fontSize: 15,
                       fontWeight: 'bold',
                       color: colors.foreground,
                       textTransform: 'capitalize',
-                    }}>
+                    }}
+                  >
                     {selectedRegion}
                   </Text>
-                  <Text style={{fontSize: 11, color: colors.mutedForeground}}>
+                  <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
                     {regionLoading
                       ? 'Loading symptoms...'
-                      : `${regionResults.length} symptom${regionResults.length !== 1 ? 's' : ''} found`}
+                      : `${regionResults.length} symptom${
+                          regionResults.length !== 1 ? 's' : ''
+                        } found`}
                   </Text>
                 </View>
               </View>
@@ -432,21 +461,23 @@ export default function SymptomSearchScreen() {
                   backgroundColor: colors.muted,
                   alignItems: 'center',
                   justifyContent: 'center',
-                }}>
+                }}
+              >
                 <ChevronDown size={18} color={colors.mutedForeground} />
               </TouchableOpacity>
             </View>
 
             {/* Sheet content — symptom list */}
             {regionLoading ? (
-              <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                 <ActivityIndicator size="small" color={colors.primary} />
               </View>
             ) : (
               <ScrollView
-                style={{flex: 1}}
-                contentContainerStyle={{paddingHorizontal: 16, paddingTop: 8, paddingBottom: 80}}
-                showsVerticalScrollIndicator={false}>
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 80 }}
+                showsVerticalScrollIndicator={false}
+              >
                 {regionResults.length > 0 ? (
                   regionResults.map((symptom: any) => {
                     const isSelected = selected.has(symptom.id);
@@ -456,7 +487,7 @@ export default function SymptomSearchScreen() {
                         activeOpacity={0.7}
                         accessibilityRole="checkbox"
                         accessibilityLabel={symptom.common_name || symptom.name || symptom.label}
-                        accessibilityState={{checked: isSelected}}
+                        accessibilityState={{ checked: isSelected }}
                         onPress={() => toggleSymptom(symptom)}
                         style={{
                           flexDirection: 'row',
@@ -468,7 +499,8 @@ export default function SymptomSearchScreen() {
                           marginBottom: 6,
                           backgroundColor: isSelected ? `${colors.primary}10` : colors.background,
                           borderColor: isSelected ? colors.primary : colors.mutedForeground,
-                        }}>
+                        }}
+                      >
                         <View
                           style={{
                             width: 24,
@@ -479,22 +511,23 @@ export default function SymptomSearchScreen() {
                             borderWidth: 2,
                             backgroundColor: isSelected ? colors.primary : 'transparent',
                             borderColor: isSelected ? colors.primary : colors.mutedForeground,
-                          }}>
+                          }}
+                        >
                           {isSelected ? (
                             <Check size={14} color={colors.white} />
                           ) : (
                             <Plus size={14} color={colors.mutedForeground} />
                           )}
                         </View>
-                        <Text style={{fontSize: 13, color: colors.foreground, flex: 1}}>
+                        <Text style={{ fontSize: 13, color: colors.foreground, flex: 1 }}>
                           {symptom.common_name || symptom.name || symptom.label}
                         </Text>
                       </TouchableOpacity>
                     );
                   })
                 ) : (
-                  <View style={{alignItems: 'center', paddingVertical: 24}}>
-                    <Text style={{fontSize: 13, color: colors.mutedForeground}}>
+                  <View style={{ alignItems: 'center', paddingVertical: 24 }}>
+                    <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
                       No symptoms found for this area
                     </Text>
                   </View>
@@ -515,7 +548,8 @@ export default function SymptomSearchScreen() {
                 backgroundColor: colors.card,
                 borderTopWidth: 1,
                 borderTopColor: colors.border,
-              }}>
+              }}
+            >
               <Button variant="primary" onPress={handleNext} loading={isLoading}>
                 {selected.size > 0
                   ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`

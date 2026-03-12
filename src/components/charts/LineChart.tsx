@@ -1,15 +1,16 @@
-import React, {useState} from 'react';
-import {View, Text} from 'react-native';
-import Svg, {Path, Circle as SvgCircle, Line, Text as SvgText} from 'react-native-svg';
-import {TrendingUp} from 'lucide-react-native';
-import {colors} from '../../theme/colors';
+import { TrendingUp } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { View } from 'react-native';
+import Svg, { Line, Path, Circle as SvgCircle, Text as SvgText } from 'react-native-svg';
+import { colors } from '../../theme/colors';
+import { Text } from '../ui/Text';
 
 interface LineChartProps {
-  data: Array<{date: string; value: number}>;
+  data: Array<{ date: string; value: number }>;
   color?: string;
   height?: number;
   label?: string;
-  range?: {min: number; max: number};
+  range?: { min: number; max: number };
   formatLabel?: (date: string) => string;
 }
 
@@ -37,9 +38,10 @@ export default function LineChart({
           justifyContent: 'center',
           backgroundColor: `${colors.muted}30`,
           borderRadius: 16,
-        }}>
+        }}
+      >
         <TrendingUp size={28} color={colors.mutedForeground} />
-        <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 6}}>
+        <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 6 }}>
           {label ? `No ${label.toLowerCase()} data yet` : 'No chart data available'}
         </Text>
       </View>
@@ -51,7 +53,7 @@ export default function LineChart({
   const chartWidth = containerWidth - paddingX * 2;
   const chartHeight = height - paddingY * 2;
 
-  const values = data.map(d => d.value);
+  const values = data.map((d) => d.value);
   const dataMin = Math.min(...values);
   const dataMax = Math.max(...values);
   const minVal = range ? Math.min(range.min, dataMin) : dataMin;
@@ -85,7 +87,8 @@ export default function LineChart({
         padding: 12,
         overflow: 'hidden',
       }}
-      onLayout={e => setContainerWidth(e.nativeEvent.layout.width - 24)}>
+      onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width - 24)}
+    >
       {label && (
         <Text
           style={{
@@ -93,13 +96,14 @@ export default function LineChart({
             fontWeight: '700',
             color: colors.foreground,
             marginBottom: 8,
-          }}>
+          }}
+        >
           {label}
         </Text>
       )}
       <Svg width={containerWidth} height={height}>
         {/* Horizontal grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map(frac => {
+        {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
           const y = paddingY + chartHeight * (1 - frac);
           return (
             <Line
@@ -146,7 +150,8 @@ export default function LineChart({
           y={paddingY + 4}
           fontSize={9}
           fill={colors.mutedForeground}
-          textAnchor="end">
+          textAnchor="end"
+        >
           {Math.round(maxVal)}
         </SvgText>
         <SvgText
@@ -154,7 +159,8 @@ export default function LineChart({
           y={paddingY + chartHeight + 4}
           fontSize={9}
           fill={colors.mutedForeground}
-          textAnchor="end">
+          textAnchor="end"
+        >
           {Math.round(minVal)}
         </SvgText>
 
@@ -166,7 +172,8 @@ export default function LineChart({
               y={height - 4}
               fontSize={9}
               fill={colors.mutedForeground}
-              textAnchor="start">
+              textAnchor="start"
+            >
               {formatLabel(data[0].date)}
             </SvgText>
             {data.length > 2 && (
@@ -175,7 +182,8 @@ export default function LineChart({
                 y={height - 4}
                 fontSize={9}
                 fill={colors.mutedForeground}
-                textAnchor="middle">
+                textAnchor="middle"
+              >
                 {formatLabel(data[Math.floor(data.length / 2)].date)}
               </SvgText>
             )}
@@ -184,7 +192,8 @@ export default function LineChart({
               y={height - 4}
               fontSize={9}
               fill={colors.mutedForeground}
-              textAnchor="end">
+              textAnchor="end"
+            >
               {formatLabel(data[data.length - 1].date)}
             </SvgText>
           </>

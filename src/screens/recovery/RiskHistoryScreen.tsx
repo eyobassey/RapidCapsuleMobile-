@@ -1,14 +1,14 @@
-import React, {useCallback, useState} from 'react';
-import {View, Text, ScrollView, TouchableOpacity, RefreshControl} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useFocusEffect} from '@react-navigation/native';
-import {TrendingUp, AlertTriangle, ChevronDown, ChevronRight} from 'lucide-react-native';
-import {Header} from '../../components/ui';
+import React, { useCallback, useState } from 'react';
+import { View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { TrendingUp, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react-native';
+import { Header, Text } from '../../components/ui';
 import RiskBadge from '../../components/recovery/RiskBadge';
 import LineChart from '../../components/charts/LineChart';
-import {colors} from '../../theme/colors';
-import {recoveryService} from '../../services/recovery.service';
-import type {RiskReport} from '../../types/recovery.types';
+import { colors } from '../../theme/colors';
+import { recoveryService } from '../../services/recovery.service';
+import type { RiskReport } from '../../types/recovery.types';
 
 export default function RiskHistoryScreen() {
   const navigation = useNavigation<any>();
@@ -21,16 +21,25 @@ export default function RiskHistoryScreen() {
 
   const loadAll = useCallback(async () => {
     await Promise.allSettled([
-      recoveryService.getCurrentRisk().then(setCurrentRisk).catch(() => {}),
-      recoveryService.getRiskHistory(period).then(data => setHistory(data)).catch(() => {}),
-      recoveryService.getRiskAssessmentReports({limit: 20}).then(setReports).catch(() => {}),
+      recoveryService
+        .getCurrentRisk()
+        .then(setCurrentRisk)
+        .catch(() => {}),
+      recoveryService
+        .getRiskHistory(period)
+        .then((data) => setHistory(data))
+        .catch(() => {}),
+      recoveryService
+        .getRiskAssessmentReports({ limit: 20 })
+        .then(setReports)
+        .catch(() => {}),
     ]);
   }, [period]);
 
   useFocusEffect(
     useCallback(() => {
       loadAll();
-    }, [loadAll]),
+    }, [loadAll])
   );
 
   const onRefresh = async () => {
@@ -39,18 +48,23 @@ export default function RiskHistoryScreen() {
     setRefreshing(false);
   };
 
-  const chartData = history.map(r => ({date: r.created_at, value: r.risk_score}));
+  const chartData = history.map((r) => ({ date: r.created_at, value: r.risk_score }));
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Risk Assessment" onBack={() => navigation.goBack()} />
 
       <ScrollView
-        contentContainerStyle={{padding: 16, paddingBottom: 40, gap: 16}}
+        contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 16 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-        }>
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+          />
+        }
+      >
         {/* Current Risk Hero */}
         {currentRisk && (
           <View
@@ -61,24 +75,41 @@ export default function RiskHistoryScreen() {
               borderRadius: 20,
               padding: 20,
               alignItems: 'center',
-            }}>
+            }}
+          >
             <AlertTriangle size={24} color="#f97316" />
-            <Text style={{fontSize: 40, fontWeight: '800', color: colors.foreground, marginTop: 4}}>
+            <Text
+              style={{ fontSize: 40, fontWeight: '800', color: colors.foreground, marginTop: 4 }}
+            >
               {currentRisk.risk_score}
             </Text>
-            <Text style={{fontSize: 12, color: colors.mutedForeground, fontWeight: '600', marginBottom: 8}}>
+            <Text
+              style={{
+                fontSize: 12,
+                color: colors.mutedForeground,
+                fontWeight: '600',
+                marginBottom: 8,
+              }}
+            >
               Risk Score (0-100)
             </Text>
             <RiskBadge level={currentRisk.risk_level} size="md" />
 
             {currentRisk.top_factors && currentRisk.top_factors.length > 0 && (
-              <View style={{width: '100%', marginTop: 16, gap: 6}}>
-                <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
+              <View style={{ width: '100%', marginTop: 16, gap: 6 }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: colors.foreground }}>
                   Top Risk Factors
                 </Text>
                 {currentRisk.top_factors.slice(0, 5).map((f, i) => (
-                  <View key={i} style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-                    <Text style={{fontSize: 12, color: colors.mutedForeground, flex: 1}}>
+                  <View
+                    key={i}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: colors.mutedForeground, flex: 1 }}>
                       {f.label}
                     </Text>
                     <View
@@ -87,8 +118,9 @@ export default function RiskHistoryScreen() {
                         borderRadius: 6,
                         paddingHorizontal: 6,
                         paddingVertical: 2,
-                      }}>
-                      <Text style={{fontSize: 10, fontWeight: '700', color: colors.destructive}}>
+                      }}
+                    >
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: colors.destructive }}>
                         +{f.contribution}
                       </Text>
                     </View>
@@ -100,28 +132,30 @@ export default function RiskHistoryScreen() {
         )}
 
         {/* Period Selector */}
-        <View style={{flexDirection: 'row', gap: 8}}>
-          {['7d', '30d', '90d'].map(p => (
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          {['7d', '30d', '90d'].map((p) => (
             <TouchableOpacity
               key={p}
               activeOpacity={0.7}
               onPress={() => setPeriod(p)}
               accessibilityRole="tab"
               accessibilityLabel={p === '7d' ? '7 Days' : p === '30d' ? '30 Days' : '90 Days'}
-              accessibilityState={{selected: period === p}}
+              accessibilityState={{ selected: period === p }}
               style={{
                 flex: 1,
                 paddingVertical: 8,
                 borderRadius: 10,
                 backgroundColor: period === p ? colors.primary : colors.muted,
                 alignItems: 'center',
-              }}>
+              }}
+            >
               <Text
                 style={{
                   fontSize: 12,
                   fontWeight: '600',
                   color: period === p ? colors.white : colors.mutedForeground,
-                }}>
+                }}
+              >
                 {p === '7d' ? '7 Days' : p === '30d' ? '30 Days' : '90 Days'}
               </Text>
             </TouchableOpacity>
@@ -135,17 +169,17 @@ export default function RiskHistoryScreen() {
             color="#f97316"
             height={160}
             label="Risk Score Trend"
-            range={{min: 0, max: 100}}
+            range={{ min: 0, max: 100 }}
           />
         )}
 
         {/* Risk Assessment Reports */}
         {reports.length > 0 && (
-          <View style={{gap: 10}}>
-            <Text style={{fontSize: 13, fontWeight: '700', color: colors.foreground}}>
+          <View style={{ gap: 10 }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.foreground }}>
               Assessment Reports
             </Text>
-            {reports.map(report => {
+            {reports.map((report) => {
               const isOpen = expandedReport === report._id;
               return (
                 <View
@@ -156,19 +190,21 @@ export default function RiskHistoryScreen() {
                     borderColor: colors.border,
                     borderRadius: 14,
                     overflow: 'hidden',
-                  }}>
+                  }}
+                >
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => setExpandedReport(isOpen ? null : report._id)}
                     accessibilityRole="button"
                     accessibilityLabel={`Risk assessment, score ${report.risk_score}`}
-                    accessibilityState={{expanded: isOpen}}
-                    style={{padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                    <View style={{flex: 1}}>
-                      <Text style={{fontSize: 13, fontWeight: '600', color: colors.foreground}}>
+                    accessibilityState={{ expanded: isOpen }}
+                    style={{ padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}>
                         Score: {report.risk_score}
                       </Text>
-                      <Text style={{fontSize: 11, color: colors.mutedForeground}}>
+                      <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
                         {formatDate(report.created_at)}
                       </Text>
                     </View>
@@ -181,29 +217,55 @@ export default function RiskHistoryScreen() {
                   </TouchableOpacity>
 
                   {isOpen && (
-                    <View style={{paddingHorizontal: 14, paddingBottom: 14, gap: 12}}>
+                    <View style={{ paddingHorizontal: 14, paddingBottom: 14, gap: 12 }}>
                       {/* Category Breakdown */}
                       {report.categories && report.categories.length > 0 && (
-                        <View style={{gap: 6}}>
-                          <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
+                        <View style={{ gap: 6 }}>
+                          <Text
+                            style={{ fontSize: 12, fontWeight: '700', color: colors.foreground }}
+                          >
                             Score Breakdown
                           </Text>
                           {report.categories.map((cat, i) => (
-                            <View key={i} style={{gap: 3}}>
-                              <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                                <Text style={{fontSize: 12, color: colors.foreground, fontWeight: '500', textTransform: 'capitalize'}}>
+                            <View key={i} style={{ gap: 3 }}>
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    fontSize: 12,
+                                    color: colors.foreground,
+                                    fontWeight: '500',
+                                    textTransform: 'capitalize',
+                                  }}
+                                >
                                   {cat.name.replace(/_/g, ' ')}
                                 </Text>
-                                <Text style={{fontSize: 11, color: colors.mutedForeground}}>
+                                <Text style={{ fontSize: 11, color: colors.mutedForeground }}>
                                   {cat.score}/100 ({Math.round(cat.weight * 100)}% weight)
                                 </Text>
                               </View>
-                              <View style={{height: 4, backgroundColor: colors.muted, borderRadius: 2}}>
+                              <View
+                                style={{
+                                  height: 4,
+                                  backgroundColor: colors.muted,
+                                  borderRadius: 2,
+                                }}
+                              >
                                 <View
                                   style={{
                                     height: 4,
                                     width: `${Math.min(cat.score, 100)}%`,
-                                    backgroundColor: cat.score >= 50 ? '#ef4444' : cat.score >= 30 ? '#f97316' : colors.success,
+                                    backgroundColor:
+                                      cat.score >= 50
+                                        ? '#ef4444'
+                                        : cat.score >= 30
+                                        ? '#f97316'
+                                        : colors.success,
                                     borderRadius: 2,
                                   }}
                                 />
@@ -215,8 +277,10 @@ export default function RiskHistoryScreen() {
 
                       {/* Top Factors */}
                       {report.top_factors && report.top_factors.length > 0 && (
-                        <View style={{gap: 6}}>
-                          <Text style={{fontSize: 12, fontWeight: '700', color: colors.foreground}}>
+                        <View style={{ gap: 6 }}>
+                          <Text
+                            style={{ fontSize: 12, fontWeight: '700', color: colors.foreground }}
+                          >
                             Top Contributing Factors
                           </Text>
                           {report.top_factors.map((factor, i) => (
@@ -227,9 +291,23 @@ export default function RiskHistoryScreen() {
                                 borderRadius: 8,
                                 padding: 10,
                                 gap: 3,
-                              }}>
-                              <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                                <Text style={{fontSize: 12, fontWeight: '600', color: colors.foreground, flex: 1}}>
+                              }}
+                            >
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <Text
+                                  style={{
+                                    fontSize: 12,
+                                    fontWeight: '600',
+                                    color: colors.foreground,
+                                    flex: 1,
+                                  }}
+                                >
                                   {factor.label}
                                 </Text>
                                 <View
@@ -238,17 +316,30 @@ export default function RiskHistoryScreen() {
                                     borderRadius: 6,
                                     paddingHorizontal: 6,
                                     paddingVertical: 2,
-                                  }}>
-                                  <Text style={{fontSize: 10, fontWeight: '700', color: colors.destructive}}>
+                                  }}
+                                >
+                                  <Text
+                                    style={{
+                                      fontSize: 10,
+                                      fontWeight: '700',
+                                      color: colors.destructive,
+                                    }}
+                                  >
                                     +{factor.contribution}
                                   </Text>
                                 </View>
                               </View>
-                              <Text style={{fontSize: 10, color: colors.mutedForeground, textTransform: 'capitalize'}}>
+                              <Text
+                                style={{
+                                  fontSize: 10,
+                                  color: colors.mutedForeground,
+                                  textTransform: 'capitalize',
+                                }}
+                              >
                                 {factor.category.replace(/_/g, ' ')}
                               </Text>
                               {factor.recommendation && (
-                                <Text style={{fontSize: 11, color: colors.primary, marginTop: 2}}>
+                                <Text style={{ fontSize: 11, color: colors.primary, marginTop: 2 }}>
                                   {factor.recommendation}
                                 </Text>
                               )}
@@ -265,12 +356,21 @@ export default function RiskHistoryScreen() {
         )}
 
         {!currentRisk && reports.length === 0 && (
-          <View style={{alignItems: 'center', paddingTop: 40, paddingHorizontal: 40}}>
+          <View style={{ alignItems: 'center', paddingTop: 40, paddingHorizontal: 40 }}>
             <TrendingUp size={40} color={colors.mutedForeground} />
-            <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground, marginTop: 12}}>
+            <Text
+              style={{ fontSize: 14, fontWeight: '600', color: colors.foreground, marginTop: 12 }}
+            >
               No risk assessments yet
             </Text>
-            <Text style={{fontSize: 12, color: colors.mutedForeground, textAlign: 'center', marginTop: 4}}>
+            <Text
+              style={{
+                fontSize: 12,
+                color: colors.mutedForeground,
+                textAlign: 'center',
+                marginTop: 4,
+              }}
+            >
               Risk scores are calculated based on your check-ins and activity.
             </Text>
           </View>
@@ -282,5 +382,5 @@ export default function RiskHistoryScreen() {
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
-  return d.toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'});
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 }

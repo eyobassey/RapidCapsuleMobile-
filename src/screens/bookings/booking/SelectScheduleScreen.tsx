@@ -1,9 +1,9 @@
-import React, {useState, useEffect, useCallback, useMemo} from 'react';
-import {View, Text, ScrollView, TouchableOpacity, ActivityIndicator} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import type {RouteProp} from '@react-navigation/native';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import {
   Clock,
   Video,
@@ -13,20 +13,30 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react-native';
-import {Header, Button, EmptyState} from '../../../components/ui';
-import {useAvailableTimesQuery} from '../../../hooks/queries';
-import {useAppointmentsStore} from '../../../store/appointments';
-import {useAuthStore} from '../../../store/auth';
-import {colors} from '../../../theme/colors';
-import type {BookingsStackParamList} from '../../../navigation/stacks/BookingsStack';
+import { Header, Button, EmptyState, Text } from '../../../components/ui';
+import { useAvailableTimesQuery } from '../../../hooks/queries';
+import { useAppointmentsStore } from '../../../store/appointments';
+import { useAuthStore } from '../../../store/auth';
+import { colors } from '../../../theme/colors';
+import type { BookingsStackParamList } from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 type Route = RouteProp<BookingsStackParamList, 'SelectSchedule'>;
 
 const WEEKDAY_HEADERS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES_FULL = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 // Maps JS getDay() (0=Sun) to backend day names
@@ -41,23 +51,23 @@ const DAY_INDEX_TO_NAME: Record<number, string> = {
 };
 
 const MEETING_CHANNELS = [
-  {key: 'zoom', label: 'Zoom', icon: Video, color: colors.primary},
-  {key: 'google_meet', label: 'Google Meet', icon: Video, color: '#34A853'},
-  {key: 'phone', label: 'Phone Call', icon: Phone, color: colors.secondary},
+  { key: 'zoom', label: 'Zoom', icon: Video, color: colors.primary },
+  { key: 'google_meet', label: 'Google Meet', icon: Video, color: '#34A853' },
+  { key: 'phone', label: 'Phone Call', icon: Phone, color: colors.secondary },
 ];
 
 const COMMON_TIMEZONES = [
-  {label: 'West Africa (WAT)', value: 'Africa/Lagos'},
-  {label: 'East Africa (EAT)', value: 'Africa/Nairobi'},
-  {label: 'South Africa (SAST)', value: 'Africa/Johannesburg'},
-  {label: 'GMT / UTC', value: 'UTC'},
-  {label: 'Eastern US (ET)', value: 'America/New_York'},
-  {label: 'Central US (CT)', value: 'America/Chicago'},
-  {label: 'Pacific US (PT)', value: 'America/Los_Angeles'},
-  {label: 'London (GMT/BST)', value: 'Europe/London'},
-  {label: 'Central Europe (CET)', value: 'Europe/Berlin'},
-  {label: 'Dubai (GST)', value: 'Asia/Dubai'},
-  {label: 'India (IST)', value: 'Asia/Kolkata'},
+  { label: 'West Africa (WAT)', value: 'Africa/Lagos' },
+  { label: 'East Africa (EAT)', value: 'Africa/Nairobi' },
+  { label: 'South Africa (SAST)', value: 'Africa/Johannesburg' },
+  { label: 'GMT / UTC', value: 'UTC' },
+  { label: 'Eastern US (ET)', value: 'America/New_York' },
+  { label: 'Central US (CT)', value: 'America/Chicago' },
+  { label: 'Pacific US (PT)', value: 'America/Los_Angeles' },
+  { label: 'London (GMT/BST)', value: 'Europe/London' },
+  { label: 'Central Europe (CET)', value: 'Europe/Berlin' },
+  { label: 'Dubai (GST)', value: 'Asia/Dubai' },
+  { label: 'India (IST)', value: 'Asia/Kolkata' },
 ];
 
 interface CalendarDay {
@@ -73,7 +83,7 @@ interface CalendarDay {
 function buildCalendarGrid(
   year: number,
   month: number,
-  availableDayNames: string[],
+  availableDayNames: string[]
 ): CalendarDay[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -146,11 +156,11 @@ function formatDateString(d: Date): string {
 export default function SelectScheduleScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const {specialistId} = route.params;
-  const user = useAuthStore(s => s.user);
+  const { specialistId } = route.params;
+  const user = useAuthStore((s) => s.user);
 
   // Keep store for setBookingData and bookingData (client state)
-  const {setBookingData, bookingData} = useAppointmentsStore();
+  const { setBookingData, bookingData } = useAppointmentsStore();
 
   // Calendar month state
   const today = useMemo(() => new Date(), []);
@@ -160,18 +170,16 @@ export default function SelectScheduleScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedChannel, setSelectedChannel] = useState(
-    bookingData.specialist?.meeting_channels?.[0] || 'zoom',
+    bookingData.specialist?.meeting_channels?.[0] || 'zoom'
   );
-  const [timezone, setTimezone] = useState(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
-  );
+  const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [showTimezones, setShowTimezones] = useState(false);
 
   // React Query for available times
-  const {
-    data: availableTimesRaw,
-    isLoading,
-  } = useAvailableTimesQuery(specialistId, selectedDate || '');
+  const { data: availableTimesRaw, isLoading } = useAvailableTimesQuery(
+    specialistId,
+    selectedDate || ''
+  );
 
   const availableTimes = useMemo(() => {
     if (!availableTimesRaw) return [];
@@ -183,14 +191,14 @@ export default function SelectScheduleScreen() {
   // Specialist's available days of the week (e.g. ['Monday', 'Wednesday', 'Friday'])
   const availableDayNames: string[] = useMemo(
     () => bookingData.specialist?.available_days || [],
-    [bookingData.specialist?.available_days],
+    [bookingData.specialist?.available_days]
   );
 
   // Get available channels from specialist
   const specialistChannels = bookingData.specialist?.meeting_channels;
   const availableChannels = useMemo(() => {
     if (specialistChannels?.length) {
-      return MEETING_CHANNELS.filter(ch => specialistChannels.includes(ch.key));
+      return MEETING_CHANNELS.filter((ch) => specialistChannels.includes(ch.key));
     }
     return MEETING_CHANNELS;
   }, [specialistChannels]);
@@ -230,7 +238,7 @@ export default function SelectScheduleScreen() {
   // Build calendar grid for current view month
   const calendarDays = useMemo(
     () => buildCalendarGrid(viewYear, viewMonth, availableDayNames),
-    [viewYear, viewMonth, availableDayNames],
+    [viewYear, viewMonth, availableDayNames]
   );
 
   // Reset selected time when date changes (React Query auto-fetches via useAvailableTimesQuery)
@@ -260,8 +268,7 @@ export default function SelectScheduleScreen() {
     navigation.navigate('ConfirmBooking');
   }, [selectedDate, selectedTime, selectedChannel, timezone, setBookingData, navigation]);
 
-  const currentTzLabel =
-    COMMON_TIMEZONES.find(tz => tz.value === timezone)?.label || timezone;
+  const currentTzLabel = COMMON_TIMEZONES.find((tz) => tz.value === timezone)?.label || timezone;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -271,7 +278,7 @@ export default function SelectScheduleScreen() {
       <View className="px-4 pt-4 pb-2">
         <View className="flex-row items-center gap-2">
           <View className="flex-row gap-1.5">
-            {[1, 2, 3, 4].map(step => (
+            {[1, 2, 3, 4].map((step) => (
               <View
                 key={step}
                 className="h-1.5 rounded-full"
@@ -289,15 +296,13 @@ export default function SelectScheduleScreen() {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{paddingBottom: 100}}>
-
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
         {/* Meeting channel picker */}
         <View className="px-4 pt-2 pb-1">
-          <Text className="text-foreground text-base font-bold mb-3">
-            Meeting Channel
-          </Text>
+          <Text className="text-foreground text-base font-bold mb-3">Meeting Channel</Text>
           <View className="flex-row gap-3">
-            {availableChannels.map(ch => {
+            {availableChannels.map((ch) => {
               const Icon = ch.icon;
               const isSelected = selectedChannel === ch.key;
               return (
@@ -306,22 +311,21 @@ export default function SelectScheduleScreen() {
                   onPress={() => setSelectedChannel(ch.key)}
                   accessibilityRole="tab"
                   accessibilityLabel={`${ch.label} meeting channel`}
-                  accessibilityState={{selected: isSelected}}
+                  accessibilityState={{ selected: isSelected }}
                   activeOpacity={0.7}
                   className={`flex-1 items-center py-3 rounded-xl border ${
                     isSelected ? 'border-primary' : 'border-border'
                   }`}
                   style={{
                     backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
-                  }}>
-                  <Icon
-                    size={20}
-                    color={isSelected ? colors.primary : colors.mutedForeground}
-                  />
+                  }}
+                >
+                  <Icon size={20} color={isSelected ? colors.primary : colors.mutedForeground} />
                   <Text
                     className={`text-xs font-medium mt-1.5 ${
                       isSelected ? 'text-primary' : 'text-muted-foreground'
-                    }`}>
+                    }`}
+                  >
                     {ch.label}
                   </Text>
                 </TouchableOpacity>
@@ -336,7 +340,8 @@ export default function SelectScheduleScreen() {
           <TouchableOpacity
             onPress={() => setShowTimezones(!showTimezones)}
             activeOpacity={0.7}
-            className="flex-row items-center justify-between p-3 bg-card border border-border rounded-xl">
+            className="flex-row items-center justify-between p-3 bg-card border border-border rounded-xl"
+          >
             <View className="flex-row items-center gap-2">
               <Globe size={16} color={colors.mutedForeground} />
               <Text className="text-foreground text-sm">{currentTzLabel}</Text>
@@ -344,13 +349,13 @@ export default function SelectScheduleScreen() {
             <ChevronDown
               size={16}
               color={colors.mutedForeground}
-              style={{transform: [{rotate: showTimezones ? '180deg' : '0deg'}]}}
+              style={{ transform: [{ rotate: showTimezones ? '180deg' : '0deg' }] }}
             />
           </TouchableOpacity>
 
           {showTimezones && (
             <View className="bg-card border border-border rounded-xl mt-1 overflow-hidden">
-              {COMMON_TIMEZONES.map(tz => (
+              {COMMON_TIMEZONES.map((tz) => (
                 <TouchableOpacity
                   key={tz.value}
                   onPress={() => {
@@ -359,13 +364,13 @@ export default function SelectScheduleScreen() {
                   }}
                   className={`px-4 py-3 border-b border-border/50 ${
                     timezone === tz.value ? 'bg-primary/10' : ''
-                  }`}>
+                  }`}
+                >
                   <Text
                     className={`text-sm ${
-                      timezone === tz.value
-                        ? 'text-primary font-bold'
-                        : 'text-foreground'
-                    }`}>
+                      timezone === tz.value ? 'text-primary font-bold' : 'text-foreground'
+                    }`}
+                  >
                     {tz.label}
                   </Text>
                 </TouchableOpacity>
@@ -390,7 +395,8 @@ export default function SelectScheduleScreen() {
               style={{
                 backgroundColor: canGoPrev ? colors.card : 'transparent',
                 opacity: canGoPrev ? 1 : 0.3,
-              }}>
+              }}
+            >
               <ChevronLeft size={20} color={colors.foreground} />
             </TouchableOpacity>
 
@@ -408,18 +414,17 @@ export default function SelectScheduleScreen() {
               style={{
                 backgroundColor: canGoNext ? colors.card : 'transparent',
                 opacity: canGoNext ? 1 : 0.3,
-              }}>
+              }}
+            >
               <ChevronRight size={20} color={colors.foreground} />
             </TouchableOpacity>
           </View>
 
           {/* Weekday headers */}
           <View className="flex-row mb-1">
-            {WEEKDAY_HEADERS.map(day => (
+            {WEEKDAY_HEADERS.map((day) => (
               <View key={day} className="flex-1 items-center py-1">
-                <Text className="text-muted-foreground text-xs font-medium">
-                  {day}
-                </Text>
+                <Text className="text-muted-foreground text-xs font-medium">{day}</Text>
               </View>
             ))}
           </View>
@@ -436,11 +441,14 @@ export default function SelectScheduleScreen() {
                   onPress={() => handleDateSelect(day)}
                   disabled={isDisabled}
                   accessibilityRole="button"
-                  accessibilityLabel={`${day.dateString}${day.isAvailable ? ', available' : ', unavailable'}${isSelected ? ', selected' : ''}`}
-                  accessibilityState={{selected: isSelected, disabled: isDisabled}}
+                  accessibilityLabel={`${day.dateString}${
+                    day.isAvailable ? ', available' : ', unavailable'
+                  }${isSelected ? ', selected' : ''}`}
+                  accessibilityState={{ selected: isSelected, disabled: isDisabled }}
                   activeOpacity={0.7}
-                  style={{width: '14.28%', aspectRatio: 1}}
-                  className="items-center justify-center">
+                  style={{ width: '14.28%', aspectRatio: 1 }}
+                  className="items-center justify-center"
+                >
                   <View
                     className="items-center justify-center rounded-full"
                     style={{
@@ -449,9 +457,10 @@ export default function SelectScheduleScreen() {
                       backgroundColor: isSelected
                         ? colors.primary
                         : day.isToday && day.isAvailable
-                          ? `${colors.primary}15`
-                          : 'transparent',
-                    }}>
+                        ? `${colors.primary}15`
+                        : 'transparent',
+                    }}
+                  >
                     <Text
                       style={{
                         fontSize: 14,
@@ -459,12 +468,13 @@ export default function SelectScheduleScreen() {
                         color: isSelected
                           ? '#FFFFFF'
                           : !day.isCurrentMonth
-                            ? colors.border
-                            : day.isAvailable
-                              ? colors.foreground
-                              : colors.mutedForeground,
+                          ? colors.border
+                          : day.isAvailable
+                          ? colors.foreground
+                          : colors.mutedForeground,
                         opacity: !day.isCurrentMonth ? 0.3 : day.isAvailable ? 1 : 0.35,
-                      }}>
+                      }}
+                    >
                       {day.dayNum}
                     </Text>
                   </View>
@@ -504,7 +514,8 @@ export default function SelectScheduleScreen() {
                   fontSize: 10,
                   color: colors.mutedForeground,
                   opacity: 0.35,
-                }}>
+                }}
+              >
                 15
               </Text>
               <Text className="text-muted-foreground text-xs">Unavailable</Text>
@@ -547,7 +558,7 @@ export default function SelectScheduleScreen() {
                     onPress={() => handleTimeSelect(time)}
                     accessibilityRole="button"
                     accessibilityLabel={`Time slot ${time}`}
-                    accessibilityState={{selected: isSelected}}
+                    accessibilityState={{ selected: isSelected }}
                     activeOpacity={0.7}
                     className={`rounded-xl py-3 border items-center justify-center ${
                       isSelected ? 'border-primary' : 'border-border'
@@ -555,11 +566,13 @@ export default function SelectScheduleScreen() {
                     style={{
                       backgroundColor: isSelected ? colors.primary : colors.card,
                       width: '30%',
-                    }}>
+                    }}
+                  >
                     <Text
                       className={`text-sm font-bold ${
                         isSelected ? 'text-white' : 'text-foreground'
-                      }`}>
+                      }`}
+                    >
                       {time}
                     </Text>
                   </TouchableOpacity>
@@ -575,7 +588,8 @@ export default function SelectScheduleScreen() {
         <Button
           variant="primary"
           onPress={handleContinue}
-          disabled={!selectedDate || !selectedTime}>
+          disabled={!selectedDate || !selectedTime}
+        >
           Continue
         </Button>
       </View>

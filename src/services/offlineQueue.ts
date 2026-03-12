@@ -1,8 +1,8 @@
-import {createMMKV} from 'react-native-mmkv';
+import { createMMKV } from 'react-native-mmkv';
 import NetInfo from '@react-native-community/netinfo';
 import api from './api';
 
-const store = createMMKV({id: 'rc-offline-queue'});
+const store = createMMKV({ id: 'rc-offline-queue' });
 const QUEUE_KEY = 'pending_requests';
 
 interface QueuedRequest {
@@ -26,11 +26,7 @@ export const offlineQueue = {
   /**
    * Add a request to the offline queue
    */
-  enqueue(
-    endpoint: string,
-    method: 'POST' | 'PUT' | 'PATCH',
-    data: any,
-  ): void {
+  enqueue(endpoint: string, method: 'POST' | 'PUT' | 'PATCH', data: any): void {
     const queue = getQueue();
     queue.push({
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -52,10 +48,10 @@ export const offlineQueue = {
   /**
    * Process all queued requests (call when back online)
    */
-  async flush(): Promise<{succeeded: number; failed: number}> {
+  async flush(): Promise<{ succeeded: number; failed: number }> {
     const queue = getQueue();
     if (queue.length === 0) {
-      return {succeeded: 0, failed: 0};
+      return { succeeded: 0, failed: 0 };
     }
 
     let succeeded = 0;
@@ -80,25 +76,23 @@ export const offlineQueue = {
     }
 
     saveQueue(remaining);
-    return {succeeded, failed};
+    return { succeeded, failed };
   },
 
   /**
    * Clear all queued requests
    */
   clear(): void {
-    store.delete(QUEUE_KEY);
+    (store as any).delete(QUEUE_KEY);
   },
 };
 
 // Auto-flush when coming back online
-NetInfo.addEventListener(state => {
+NetInfo.addEventListener((state) => {
   if (state.isConnected) {
-    offlineQueue.flush().then(result => {
+    offlineQueue.flush().then((result) => {
       if (result.succeeded > 0) {
-        console.log(
-          `[OfflineQueue] Synced ${result.succeeded} pending requests`,
-        );
+        console.log(`[OfflineQueue] Synced ${result.succeeded} pending requests`);
       }
     });
   }

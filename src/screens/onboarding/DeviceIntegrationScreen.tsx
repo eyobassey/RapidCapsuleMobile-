@@ -1,7 +1,6 @@
-import React, {useState, useEffect, useCallback} from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
-  Text,
   Switch,
   Alert,
   TouchableOpacity,
@@ -9,7 +8,7 @@ import {
   Linking,
   Modal,
 } from 'react-native';
-import {WebView} from 'react-native-webview';
+import { WebView } from 'react-native-webview';
 import {
   Smartphone,
   Activity,
@@ -22,12 +21,13 @@ import {
   Unlink,
 } from 'lucide-react-native';
 import SectionScreenLayout from '../../components/onboarding/SectionScreenLayout';
-import {colors} from '../../theme/colors';
-import {useAuthStore} from '../../store/auth';
-import {useOnboardingStore} from '../../store/onboarding';
-import {usersService} from '../../services/users.service';
-import {healthIntegrationsService} from '../../services/healthIntegrations.service';
-import {appleHealthService} from '../../services/appleHealth.service';
+import { colors } from '../../theme/colors';
+import { useAuthStore } from '../../store/auth';
+import { useOnboardingStore } from '../../store/onboarding';
+import { usersService } from '../../services/users.service';
+import { healthIntegrationsService } from '../../services/healthIntegrations.service';
+import { appleHealthService } from '../../services/appleHealth.service';
+import { Text } from '../../components/ui';
 
 const HEALTH_APPS = [
   {
@@ -70,13 +70,13 @@ interface Integration {
   provider: string;
   status: IntegrationStatus;
   lastSyncAt?: string;
-  syncSettings?: {autoSync?: boolean};
+  syncSettings?: { autoSync?: boolean };
 }
 
-export default function DeviceIntegrationScreen({navigation}: any) {
-  const user = useAuthStore(s => s.user);
-  const fetchUser = useAuthStore(s => s.fetchUser);
-  const clearDraft = useOnboardingStore(s => s.clearDraft);
+export default function DeviceIntegrationScreen({ navigation }: any) {
+  const user = useAuthStore((s) => s.user);
+  const fetchUser = useAuthStore((s) => s.fetchUser);
+  const clearDraft = useOnboardingStore((s) => s.clearDraft);
 
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loadingIntegrations, setLoadingIntegrations] = useState(true);
@@ -102,10 +102,10 @@ export default function DeviceIntegrationScreen({navigation}: any) {
     const di = user?.device_integration;
     if (di) {
       if (di.data_sharing_consents) {
-        setConsents(prev => ({...prev, ...di.data_sharing_consents}));
+        setConsents((prev) => ({ ...prev, ...di.data_sharing_consents }));
       }
       if (di.notification_preferences) {
-        setNotifications(prev => ({...prev, ...di.notification_preferences}));
+        setNotifications((prev) => ({ ...prev, ...di.notification_preferences }));
       }
     }
   }, [user]);
@@ -127,16 +127,12 @@ export default function DeviceIntegrationScreen({navigation}: any) {
   }, [loadIntegrations]);
 
   const getIntegrationStatus = (appId: string): IntegrationStatus => {
-    const integration = integrations.find(
-      (i: any) => i.provider === appId,
-    );
+    const integration = integrations.find((i: any) => i.provider === appId);
     return (integration?.status as IntegrationStatus) || 'disconnected';
   };
 
   const getLastSync = (appId: string): string | undefined => {
-    const integration = integrations.find(
-      (i: any) => i.provider === appId,
-    );
+    const integration = integrations.find((i: any) => i.provider === appId);
     return (integration as any)?.lastSyncAt || (integration as any)?.updatedAt;
   };
 
@@ -155,7 +151,7 @@ export default function DeviceIntegrationScreen({navigation}: any) {
         if (initialized) {
           Alert.alert(
             'Apple Health Connected',
-            'HealthKit permissions granted. Syncing your health data now...',
+            'HealthKit permissions granted. Syncing your health data now...'
           );
           const syncResult = await appleHealthService.fetchAndSync();
           if (syncResult.synced > 0) {
@@ -165,7 +161,7 @@ export default function DeviceIntegrationScreen({navigation}: any) {
         } else {
           Alert.alert(
             'Permission Denied',
-            'Please enable HealthKit access in Settings > Privacy & Security > Health > RapidCapsule.',
+            'Please enable HealthKit access in Settings > Privacy & Security > Health > RapidCapsule.'
           );
         }
       } else if (result.requiresNativeApp) {
@@ -190,12 +186,12 @@ export default function DeviceIntegrationScreen({navigation}: any) {
 
   // Disconnect
   const handleDisconnect = (appId: string) => {
-    const app = HEALTH_APPS.find(a => a.id === appId);
+    const app = HEALTH_APPS.find((a) => a.id === appId);
     Alert.alert(
       `Disconnect ${app?.name}?`,
       'This will stop syncing health data from this provider. Your existing data will be preserved.',
       [
-        {text: 'Cancel', style: 'cancel'},
+        { text: 'Cancel', style: 'cancel' },
         {
           text: 'Disconnect',
           style: 'destructive',
@@ -211,7 +207,7 @@ export default function DeviceIntegrationScreen({navigation}: any) {
             }
           },
         },
-      ],
+      ]
     );
   };
 
@@ -222,7 +218,10 @@ export default function DeviceIntegrationScreen({navigation}: any) {
       if (appId === 'apple_health' && appleHealthService.isAvailable()) {
         const result = await appleHealthService.fetchAndSync();
         if (result.synced > 0) {
-          Alert.alert('Sync Complete', `${result.synced} health readings synced from Apple Health.`);
+          Alert.alert(
+            'Sync Complete',
+            `${result.synced} health readings synced from Apple Health.`
+          );
         } else {
           Alert.alert('No New Data', 'No new health data found to sync.');
         }
@@ -240,7 +239,7 @@ export default function DeviceIntegrationScreen({navigation}: any) {
 
   // OAuth WebView navigation
   const handleOAuthNavigation = useCallback(
-    (navState: {url: string}) => {
+    (navState: { url: string }) => {
       const url = navState.url || '';
       // Detect callback redirect (backend handles OAuth and redirects)
       if (
@@ -258,7 +257,7 @@ export default function DeviceIntegrationScreen({navigation}: any) {
         loadIntegrations();
       }
     },
-    [oauthUrl, loadIntegrations],
+    [oauthUrl, loadIntegrations]
   );
 
   // Toggle connect/disconnect
@@ -297,7 +296,7 @@ export default function DeviceIntegrationScreen({navigation}: any) {
     }
   };
 
-  const StatusIcon = ({status}: {status: IntegrationStatus}) => {
+  const StatusIcon = ({ status }: { status: IntegrationStatus }) => {
     if (status === 'connected') return <CheckCircle size={16} color={colors.success} />;
     if (status === 'pending') return <Clock size={16} color={colors.secondary} />;
     if (status === 'error') return <XCircle size={16} color={colors.destructive} />;
@@ -310,7 +309,8 @@ export default function DeviceIntegrationScreen({navigation}: any) {
       description="Connect your health apps to automatically sync vitals, activity, and sleep data."
       onBack={() => navigation.goBack()}
       onSave={handleSave}
-      loading={saving}>
+      loading={saving}
+    >
       {/* Health Apps */}
       <Text
         style={{
@@ -321,20 +321,21 @@ export default function DeviceIntegrationScreen({navigation}: any) {
           borderBottomColor: colors.border,
           paddingBottom: 8,
           marginBottom: 16,
-        }}>
+        }}
+      >
         Health Apps
       </Text>
 
       {loadingIntegrations ? (
-        <View style={{alignItems: 'center', paddingVertical: 20}}>
+        <View style={{ alignItems: 'center', paddingVertical: 20 }}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={{fontSize: 12, color: colors.mutedForeground, marginTop: 8}}>
+          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 8 }}>
             Loading integrations...
           </Text>
         </View>
       ) : (
-        <View style={{gap: 10, marginBottom: 24}}>
-          {HEALTH_APPS.map(app => {
+        <View style={{ gap: 10, marginBottom: 24 }}>
+          {HEALTH_APPS.map((app) => {
             const status = getIntegrationStatus(app.id);
             const isConnected = status === 'connected';
             const isConnecting = connecting === app.id;
@@ -351,8 +352,9 @@ export default function DeviceIntegrationScreen({navigation}: any) {
                   borderColor: isConnected ? app.color : colors.border,
                   borderRadius: 16,
                   padding: 16,
-                }}>
-                <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <View
                     style={{
                       width: 44,
@@ -361,17 +363,18 @@ export default function DeviceIntegrationScreen({navigation}: any) {
                       backgroundColor: isConnected ? `${app.color}15` : colors.muted,
                       alignItems: 'center',
                       justifyContent: 'center',
-                    }}>
+                    }}
+                  >
                     <Icon size={20} color={isConnected ? app.color : colors.mutedForeground} />
                   </View>
-                  <View style={{flex: 1}}>
-                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 6}}>
-                      <Text style={{fontSize: 14, fontWeight: '600', color: colors.foreground}}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
                         {app.name}
                       </Text>
                       <StatusIcon status={status} />
                     </View>
-                    <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 2}}>
+                    <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
                       {app.description}
                     </Text>
                   </View>
@@ -384,36 +387,54 @@ export default function DeviceIntegrationScreen({navigation}: any) {
                       onValueChange={() => handleToggle(app.id)}
                       accessibilityRole="switch"
                       accessibilityLabel={`Connect ${app.name}`}
-                      accessibilityState={{checked: isConnected}}
-                      trackColor={{false: colors.border, true: app.color}}
+                      accessibilityState={{ checked: isConnected }}
+                      trackColor={{ false: colors.border, true: app.color }}
                       thumbColor={colors.white}
-                      style={{transform: [{scaleX: 0.85}, {scaleY: 0.85}]}}
+                      style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
                     />
                   )}
                 </View>
 
                 {/* Connected actions */}
                 {isConnected && (
-                  <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border, gap: 12}}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginTop: 12,
+                      paddingTop: 12,
+                      borderTopWidth: 1,
+                      borderTopColor: colors.border,
+                      gap: 12,
+                    }}
+                  >
                     <TouchableOpacity
                       onPress={() => handleSync(app.id)}
                       disabled={isSyncing}
                       accessibilityRole="button"
                       accessibilityLabel={`Sync ${app.name} data`}
                       activeOpacity={0.7}
-                      style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                    >
                       {isSyncing ? (
                         <ActivityIndicator size={14} color={colors.primary} />
                       ) : (
                         <RefreshCw size={14} color={colors.primary} />
                       )}
-                      <Text style={{fontSize: 12, color: colors.primary, fontWeight: '600'}}>
+                      <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
                         {isSyncing ? 'Syncing...' : 'Sync Now'}
                       </Text>
                     </TouchableOpacity>
 
                     {lastSync && (
-                      <Text style={{fontSize: 10, color: colors.mutedForeground, flex: 1, textAlign: 'right'}}>
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          color: colors.mutedForeground,
+                          flex: 1,
+                          textAlign: 'right',
+                        }}
+                      >
                         Last sync: {new Date(lastSync).toLocaleDateString()}
                       </Text>
                     )}
@@ -435,28 +456,29 @@ export default function DeviceIntegrationScreen({navigation}: any) {
           borderBottomColor: colors.border,
           paddingBottom: 8,
           marginBottom: 16,
-        }}>
+        }}
+      >
         Data Sharing
       </Text>
 
-      <View style={{gap: 8, marginBottom: 24}}>
+      <View style={{ gap: 8, marginBottom: 24 }}>
         <ToggleRow
           label="Vitals Auto-Sync"
           description="Automatically sync vital signs from connected apps"
           value={consents.vitals_auto_sync}
-          onToggle={v => setConsents(prev => ({...prev, vitals_auto_sync: v}))}
+          onToggle={(v) => setConsents((prev) => ({ ...prev, vitals_auto_sync: v }))}
         />
         <ToggleRow
           label="Activity Tracking"
           description="Share steps, exercise, and activity data"
           value={consents.activity_tracking}
-          onToggle={v => setConsents(prev => ({...prev, activity_tracking: v}))}
+          onToggle={(v) => setConsents((prev) => ({ ...prev, activity_tracking: v }))}
         />
         <ToggleRow
           label="Sleep Tracking"
           description="Share sleep duration and quality data"
           value={consents.sleep_tracking}
-          onToggle={v => setConsents(prev => ({...prev, sleep_tracking: v}))}
+          onToggle={(v) => setConsents((prev) => ({ ...prev, sleep_tracking: v }))}
         />
       </View>
 
@@ -470,28 +492,29 @@ export default function DeviceIntegrationScreen({navigation}: any) {
           borderBottomColor: colors.border,
           paddingBottom: 8,
           marginBottom: 16,
-        }}>
+        }}
+      >
         Notifications
       </Text>
 
-      <View style={{gap: 8}}>
+      <View style={{ gap: 8 }}>
         <ToggleRow
           label="Health Reminders"
           description="Receive reminders about health checkups"
           value={notifications.health_reminders}
-          onToggle={v => setNotifications(prev => ({...prev, health_reminders: v}))}
+          onToggle={(v) => setNotifications((prev) => ({ ...prev, health_reminders: v }))}
         />
         <ToggleRow
           label="Medication Reminders"
           description="Get reminded to take your medications"
           value={notifications.medication_reminders}
-          onToggle={v => setNotifications(prev => ({...prev, medication_reminders: v}))}
+          onToggle={(v) => setNotifications((prev) => ({ ...prev, medication_reminders: v }))}
         />
         <ToggleRow
           label="Wellness Tips"
           description="Receive personalized wellness tips"
           value={notifications.wellness_tips}
-          onToggle={v => setNotifications(prev => ({...prev, wellness_tips: v}))}
+          onToggle={(v) => setNotifications((prev) => ({ ...prev, wellness_tips: v }))}
         />
       </View>
 
@@ -503,8 +526,9 @@ export default function DeviceIntegrationScreen({navigation}: any) {
           setOauthUrl(null);
           setOauthProvider(null);
           loadIntegrations();
-        }}>
-        <View style={{flex: 1, backgroundColor: colors.background}}>
+        }}
+      >
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
           <View
             style={{
               flexDirection: 'row',
@@ -515,9 +539,10 @@ export default function DeviceIntegrationScreen({navigation}: any) {
               paddingBottom: 16,
               borderBottomWidth: 1,
               borderBottomColor: colors.border,
-            }}>
-            <Text style={{fontSize: 16, fontWeight: '700', color: colors.foreground}}>
-              Connect {HEALTH_APPS.find(a => a.id === oauthProvider)?.name}
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
+              Connect {HEALTH_APPS.find((a) => a.id === oauthProvider)?.name}
             </Text>
             <TouchableOpacity
               onPress={() => {
@@ -527,21 +552,32 @@ export default function DeviceIntegrationScreen({navigation}: any) {
               }}
               accessibilityRole="button"
               accessibilityLabel="Close"
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
               <X size={24} color={colors.foreground} />
             </TouchableOpacity>
           </View>
           {oauthUrl && (
             <WebView
-              source={{uri: oauthUrl}}
+              source={{ uri: oauthUrl }}
               onNavigationStateChange={handleOAuthNavigation}
               startInLoadingState
               renderLoading={() => (
-                <View style={{position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center'}}>
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <ActivityIndicator size="large" color={colors.primary} />
                 </View>
               )}
-              style={{flex: 1}}
+              style={{ flex: 1 }}
             />
           )}
         </View>
@@ -572,12 +608,11 @@ function ToggleRow({
         borderRadius: 16,
         padding: 16,
         gap: 12,
-      }}>
-      <View style={{flex: 1}}>
-        <Text style={{fontSize: 14, fontWeight: '500', color: colors.foreground}}>
-          {label}
-        </Text>
-        <Text style={{fontSize: 11, color: colors.mutedForeground, marginTop: 2}}>
+      }}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14, fontWeight: '500', color: colors.foreground }}>{label}</Text>
+        <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
           {description}
         </Text>
       </View>
@@ -586,10 +621,10 @@ function ToggleRow({
         onValueChange={onToggle}
         accessibilityRole="switch"
         accessibilityLabel={label}
-        accessibilityState={{checked: value}}
-        trackColor={{false: colors.border, true: colors.primary}}
+        accessibilityState={{ checked: value }}
+        trackColor={{ false: colors.border, true: colors.primary }}
         thumbColor={colors.white}
-        style={{transform: [{scaleX: 0.85}, {scaleY: 0.85}]}}
+        style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
       />
     </View>
   );

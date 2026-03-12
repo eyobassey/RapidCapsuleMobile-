@@ -1,31 +1,25 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {View, Text, ScrollView, TouchableOpacity, ActivityIndicator} from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {Brain, Check, HelpCircle} from 'lucide-react-native';
-import {Header, Button} from '../../components/ui';
-import {useHealthCheckupStore} from '../../store/healthCheckup';
-import {colors} from '../../theme/colors';
+import { useNavigation } from '@react-navigation/native';
+import { Brain, Check, HelpCircle } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button, Header } from '../../components/ui';
+import { Text } from '../../components/ui/Text';
+import { useHealthCheckupStore } from '../../store/healthCheckup';
+import { colors } from '../../theme/colors';
 
 type ChoiceId = 'present' | 'absent' | 'unknown';
 
-const SINGLE_OPTIONS: {label: string; value: ChoiceId; color: string}[] = [
-  {label: 'Yes', value: 'present', color: colors.success},
-  {label: 'No', value: 'absent', color: colors.destructive},
-  {label: "Don't know", value: 'unknown', color: colors.mutedForeground},
+const SINGLE_OPTIONS: { label: string; value: ChoiceId; color: string }[] = [
+  { label: 'Yes', value: 'present', color: colors.success },
+  { label: 'No', value: 'absent', color: colors.destructive },
+  { label: "Don't know", value: 'unknown', color: colors.mutedForeground },
 ];
 
 export default function InterviewScreen() {
   const navigation = useNavigation<any>();
-  const {
-    currentQuestion,
-    shouldStop,
-    conditions,
-    isLoading,
-    evidence,
-    addEvidence,
-    submitDiagnosis,
-  } = useHealthCheckupStore();
+  const { currentQuestion, shouldStop, conditions, isLoading, addEvidence, submitDiagnosis } =
+    useHealthCheckupStore();
 
   const [selectedSingle, setSelectedSingle] = useState<string | null>(null);
   const [selectedMultiple, setSelectedMultiple] = useState<Set<string>>(new Set());
@@ -45,9 +39,9 @@ export default function InterviewScreen() {
       const item = currentQuestion.items?.[0];
       if (!item) return;
 
-      addEvidence([{id: item.id, choice_id: choiceId, source: 'interview'}]);
+      addEvidence([{ id: item.id, choice_id: choiceId, source: 'interview' }]);
       setSelectedSingle(null);
-      setQuestionCount(prev => prev + 1);
+      setQuestionCount((prev) => prev + 1);
 
       try {
         await submitDiagnosis(false);
@@ -55,7 +49,7 @@ export default function InterviewScreen() {
         // Error in store
       }
     },
-    [currentQuestion, addEvidence, submitDiagnosis],
+    [currentQuestion, addEvidence, submitDiagnosis]
   );
 
   const handleGroupSingleAnswer = useCallback(
@@ -71,7 +65,7 @@ export default function InterviewScreen() {
 
       addEvidence(newEvidence);
       setSelectedSingle(null);
-      setQuestionCount(prev => prev + 1);
+      setQuestionCount((prev) => prev + 1);
 
       try {
         await submitDiagnosis(false);
@@ -79,7 +73,7 @@ export default function InterviewScreen() {
         // Error in store
       }
     },
-    [currentQuestion, addEvidence, submitDiagnosis],
+    [currentQuestion, addEvidence, submitDiagnosis]
   );
 
   const handleGroupMultipleSubmit = useCallback(async () => {
@@ -93,7 +87,7 @@ export default function InterviewScreen() {
 
     addEvidence(newEvidence);
     setSelectedMultiple(new Set());
-    setQuestionCount(prev => prev + 1);
+    setQuestionCount((prev) => prev + 1);
 
     try {
       await submitDiagnosis(false);
@@ -144,13 +138,14 @@ export default function InterviewScreen() {
   const items = currentQuestion.items || [];
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.background}} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Health Interview" onBack={() => navigation.goBack()} />
 
       <ScrollView
-        style={{flex: 1}}
-        contentContainerStyle={{paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24}}
-        showsVerticalScrollIndicator={false}>
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Step indicator */}
         <View className="flex-row items-center gap-2 mb-6">
           <View className="h-1.5 flex-1 bg-primary rounded-full" />
@@ -176,14 +171,14 @@ export default function InterviewScreen() {
         {/* Answer options based on question type */}
         {questionType === 'single' && (
           <View className="gap-3">
-            {SINGLE_OPTIONS.map(opt => (
+            {SINGLE_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
                 activeOpacity={0.7}
                 disabled={isLoading}
                 accessibilityRole="button"
                 accessibilityLabel={`${opt.label}`}
-                accessibilityState={{disabled: isLoading}}
+                accessibilityState={{ disabled: isLoading }}
                 onPress={() => handleSingleAnswer(opt.value)}
                 style={{
                   backgroundColor: colors.card,
@@ -194,11 +189,13 @@ export default function InterviewScreen() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 12,
-                }}>
+                }}
+              >
                 <View
                   className="w-10 h-10 rounded-full items-center justify-center"
-                  style={{backgroundColor: `${opt.color}20`} as any}>
-                  <Text style={{color: opt.color, fontWeight: 'bold', fontSize: 13}}>
+                  style={{ backgroundColor: `${opt.color}20` } as any}
+                >
+                  <Text style={{ color: opt.color, fontWeight: 'bold', fontSize: 13 }}>
                     {opt.label}
                   </Text>
                 </View>
@@ -217,7 +214,7 @@ export default function InterviewScreen() {
                 disabled={isLoading}
                 accessibilityRole="radio"
                 accessibilityLabel={item.name || item.common_name}
-                accessibilityState={{disabled: isLoading}}
+                accessibilityState={{ disabled: isLoading }}
                 onPress={() => handleGroupSingleAnswer(item.id)}
                 style={{
                   backgroundColor: colors.card,
@@ -225,8 +222,9 @@ export default function InterviewScreen() {
                   borderColor: colors.mutedForeground,
                   borderRadius: 16,
                   padding: 16,
-                }}>
-                <Text style={{fontSize: 14, fontWeight: '500', color: colors.foreground}}>
+                }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '500', color: colors.foreground }}>
                   {item.name || item.common_name}
                 </Text>
               </TouchableOpacity>
@@ -236,7 +234,7 @@ export default function InterviewScreen() {
               disabled={isLoading}
               accessibilityRole="radio"
               accessibilityLabel="None of the above"
-              accessibilityState={{disabled: isLoading}}
+              accessibilityState={{ disabled: isLoading }}
               onPress={() => {
                 // Mark all as absent (none apply)
                 const newEvidence = items.map((item: any) => ({
@@ -245,7 +243,7 @@ export default function InterviewScreen() {
                   source: 'interview' as const,
                 }));
                 addEvidence(newEvidence);
-                setQuestionCount(prev => prev + 1);
+                setQuestionCount((prev) => prev + 1);
                 submitDiagnosis(false);
               }}
               style={{
@@ -254,8 +252,11 @@ export default function InterviewScreen() {
                 borderColor: colors.mutedForeground,
                 borderRadius: 16,
                 padding: 16,
-              }}>
-              <Text style={{fontSize: 14, fontWeight: '500', color: colors.mutedForeground}}>None of the above</Text>
+              }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '500', color: colors.mutedForeground }}>
+                None of the above
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -270,9 +271,9 @@ export default function InterviewScreen() {
                   activeOpacity={0.7}
                   accessibilityRole="checkbox"
                   accessibilityLabel={item.name || item.common_name}
-                  accessibilityState={{checked: isSelected}}
+                  accessibilityState={{ checked: isSelected }}
                   onPress={() => {
-                    setSelectedMultiple(prev => {
+                    setSelectedMultiple((prev) => {
                       const next = new Set(prev);
                       if (next.has(item.id)) next.delete(item.id);
                       else next.add(item.id);
@@ -288,7 +289,8 @@ export default function InterviewScreen() {
                     borderWidth: 1.5,
                     backgroundColor: isSelected ? `${colors.primary}15` : colors.card,
                     borderColor: isSelected ? colors.primary : colors.mutedForeground,
-                  }}>
+                  }}
+                >
                   <View
                     style={{
                       width: 24,
@@ -299,7 +301,8 @@ export default function InterviewScreen() {
                       borderWidth: 2,
                       backgroundColor: isSelected ? colors.primary : 'transparent',
                       borderColor: isSelected ? colors.primary : colors.mutedForeground,
-                    }}>
+                    }}
+                  >
                     {isSelected && <Check size={14} color={colors.white} />}
                   </View>
                   <Text className="text-sm font-medium text-foreground flex-1">
@@ -313,7 +316,7 @@ export default function InterviewScreen() {
 
         {/* Submit button for group_multiple */}
         {questionType === 'group_multiple' && (
-          <View style={{marginTop: 24}}>
+          <View style={{ marginTop: 24 }}>
             <Button variant="primary" onPress={handleGroupMultipleSubmit} loading={isLoading}>
               Continue
             </Button>
@@ -328,10 +331,10 @@ export default function InterviewScreen() {
             disabled={isLoading}
             accessibilityRole="button"
             accessibilityLabel="Stop interview and get results now"
-            style={{marginTop: 24, alignItems: 'center'}}>
+            style={{ marginTop: 24, alignItems: 'center' }}
+          >
             <Text className="text-xs text-muted-foreground">
-              Answered enough?{' '}
-              <Text className="text-primary font-semibold">Get results now</Text>
+              Answered enough? <Text className="text-primary font-semibold">Get results now</Text>
             </Text>
           </TouchableOpacity>
         )}

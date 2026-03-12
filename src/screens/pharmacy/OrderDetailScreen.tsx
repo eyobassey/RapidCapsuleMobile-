@@ -1,19 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  Alert,
-  ActivityIndicator,
-  TextInput,
-} from 'react-native';
+import { View, ScrollView, RefreshControl, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { Package, MapPin, CreditCard, Star, XCircle, Check } from 'lucide-react-native';
 
 import { useOrderQuery, useCancelOrderMutation, useRateOrderMutation } from '../../hooks/queries';
-import { Header, StatusBadge, Button } from '../../components/ui';
+import { Header, StatusBadge, Button, Text, TextInput } from '../../components/ui';
 import { colors } from '../../theme/colors';
 import { formatDateTime } from '../../utils/formatters';
 import { useCurrency } from '../../hooks/useCurrency';

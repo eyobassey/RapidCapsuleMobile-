@@ -1,18 +1,19 @@
+import { Calendar, ChevronRight, Pill, ShoppingCart, Upload, User } from 'lucide-react-native';
 import React from 'react';
-import {View, Text, TouchableOpacity} from 'react-native';
-import {Pill, Calendar, ChevronRight, User, Upload, ShoppingCart} from 'lucide-react-native';
-import {StatusBadge} from '../ui';
-import {colors} from '../../theme/colors';
-import {formatDate} from '../../utils/formatters';
-import {useCurrency} from '../../hooks/useCurrency';
+import { TouchableOpacity, View } from 'react-native';
+import { useCurrency } from '../../hooks/useCurrency';
+import { colors } from '../../theme/colors';
+import { formatDate } from '../../utils/formatters';
+import { StatusBadge } from '../ui';
+import { Text } from '../ui/Text';
 
 interface PrescriptionCardProps {
   prescription: any;
   onPress: () => void;
 }
 
-export default function PrescriptionCard({prescription, onPress}: PrescriptionCardProps) {
-  const {format} = useCurrency();
+export default function PrescriptionCard({ prescription, onPress }: PrescriptionCardProps) {
+  const { format } = useCurrency();
 
   const type = prescription.type;
   const specialist = prescription.specialist_id;
@@ -20,9 +21,13 @@ export default function PrescriptionCard({prescription, onPress}: PrescriptionCa
 
   let doctorName: string | null = null;
   if (typeof specialist === 'object' && specialist?.profile) {
-    doctorName = `Dr. ${specialist.profile.first_name || ''} ${specialist.profile.last_name || ''}`.trim();
+    doctorName = `Dr. ${specialist.profile.first_name || ''} ${
+      specialist.profile.last_name || ''
+    }`.trim();
   } else if (typeof prescribedBy === 'object' && prescribedBy?.profile) {
-    doctorName = `${prescribedBy.profile.first_name || ''} ${prescribedBy.profile.last_name || ''}`.trim();
+    doctorName = `${prescribedBy.profile.first_name || ''} ${
+      prescribedBy.profile.last_name || ''
+    }`.trim();
   } else if (prescription.ocr_data?.doctor_name) {
     doctorName = `Dr. ${prescription.ocr_data.doctor_name}`;
   }
@@ -33,25 +38,35 @@ export default function PrescriptionCard({prescription, onPress}: PrescriptionCa
     type === 'ORDER'
       ? 'Pharmacy Order'
       : prescription.prescription_source === 'patient_upload'
-        ? 'Uploaded'
-        : doctorName || 'Specialist';
+      ? 'Uploaded'
+      : doctorName || 'Specialist';
 
   const IconComponent =
-    type === 'ORDER' ? ShoppingCart : prescription.prescription_source === 'patient_upload' ? Upload : Pill;
+    type === 'ORDER'
+      ? ShoppingCart
+      : prescription.prescription_source === 'patient_upload'
+      ? Upload
+      : Pill;
   const iconColor =
-    type === 'ORDER' ? colors.accent : prescription.prescription_source === 'patient_upload' ? colors.secondary : colors.primary;
+    type === 'ORDER'
+      ? colors.accent
+      : prescription.prescription_source === 'patient_upload'
+      ? colors.secondary
+      : colors.primary;
 
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={onPress}
-      className="bg-card border border-border rounded-2xl p-4 mb-3">
+      className="bg-card border border-border rounded-2xl p-4 mb-3"
+    >
       {/* Top row: prescription number + status */}
       <View className="flex-row items-center justify-between mb-2">
         <View className="flex-row items-center gap-2">
           <View
             className="w-8 h-8 rounded-full items-center justify-center"
-            style={{backgroundColor: `${iconColor}15`}}>
+            style={{ backgroundColor: `${iconColor}15` }}
+          >
             <IconComponent size={16} color={iconColor} />
           </View>
           <Text className="text-sm font-bold text-foreground" numberOfLines={1}>
@@ -72,9 +87,7 @@ export default function PrescriptionCard({prescription, onPress}: PrescriptionCa
       {/* Date */}
       <View className="flex-row items-center gap-1.5 mb-3">
         <Calendar size={13} color={colors.mutedForeground} />
-        <Text className="text-xs text-muted-foreground">
-          {formatDate(prescription.created_at)}
-        </Text>
+        <Text className="text-xs text-muted-foreground">{formatDate(prescription.created_at)}</Text>
       </View>
 
       {/* Bottom row: medication count + total cost */}
@@ -90,7 +103,7 @@ export default function PrescriptionCard({prescription, onPress}: PrescriptionCa
       </View>
 
       {/* Chevron */}
-      <View style={{position: 'absolute', right: 16, top: '50%', marginTop: -8}}>
+      <View style={{ position: 'absolute', right: 16, top: '50%', marginTop: -8 }}>
         <ChevronRight size={16} color={colors.mutedForeground} />
       </View>
     </TouchableOpacity>

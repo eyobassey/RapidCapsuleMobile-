@@ -1,11 +1,11 @@
 import { Calendar, Clock, MapPin, MessageSquare, Phone, Video } from 'lucide-react-native';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { useCurrency } from '../../hooks/useCurrency';
 import { colors } from '../../theme/colors';
 import { MEETING_CHANNEL_LABELS } from '../../utils/constants';
 import { formatDate, formatTime } from '../../utils/formatters';
-import { Avatar, StatusBadge } from '../ui';
+import { Avatar, StatusBadge, Text } from '../ui';
 
 interface AppointmentCardProps {
   appointment: any;
