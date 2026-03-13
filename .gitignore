@@ -67,6 +67,9 @@ yarn-error.log
 # testing
 /coverage
 
+# Detox
+/artifacts
+
 # Yarn
 .yarn/*
 !.yarn/patches
