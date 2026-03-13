@@ -13,7 +13,7 @@ describe('Login passkey / OTP entry', () => {
       await waitFor(element(by.id('splash-login')))
         .toExist()
         .withTimeout(20000);
-      await element(by.id('splash-login')).tapAtPoint({ x: 180, y: 10 });
+      await element(by.id('splash-login')).tap({ x: 180, y: 10 });
       await waitFor(element(by.text('Welcome Back')))
         .toBeVisible()
         .withTimeout(20000);

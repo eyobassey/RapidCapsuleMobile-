@@ -44,11 +44,11 @@ describe('PersonalDetailsScreen', () => {
   });
 
   it('renders form fields without crashing', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: null,
       fetchUser: jest.fn(),
     });
-    (useOnboardingStore as jest.Mock).mockReturnValue({
+    (useOnboardingStore as unknown as jest.Mock).mockReturnValue({
       clearDraft: jest.fn(),
     });
 

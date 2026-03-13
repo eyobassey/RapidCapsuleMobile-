@@ -17,7 +17,7 @@ describe('RootNavigator', () => {
   });
 
   it('mounts without crashing when loading', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       isLoading: true,
       isAuthenticated: false,
       needsOnboarding: false,
@@ -28,7 +28,7 @@ describe('RootNavigator', () => {
   });
 
   it('mounts without crashing when unauthenticated', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       isLoading: false,
       isAuthenticated: false,
       needsOnboarding: false,
@@ -39,7 +39,7 @@ describe('RootNavigator', () => {
   });
 
   it('mounts without crashing when needsOnboarding is true', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
       needsOnboarding: true,

@@ -35,7 +35,7 @@ describe('OtpScreen', () => {
 
   it('calls verify2FA when 6-digit code is entered and button pressed', async () => {
     const verifyMock = jest.fn().mockResolvedValue(undefined);
-    (useAuthStore as jest.Mock).mockImplementation((selector: any) =>
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector: any) =>
       selector({ verify2FA: verifyMock })
     );
 

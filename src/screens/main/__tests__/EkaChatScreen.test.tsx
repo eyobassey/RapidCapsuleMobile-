@@ -44,9 +44,9 @@ describe('EkaChatScreen', () => {
   });
 
   it('mounts without crashing with minimal store state', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({ user: null });
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: null });
 
-    (useEkaStore as jest.Mock).mockImplementation((selector: any) =>
+    (useEkaStore as unknown as jest.Mock).mockImplementation((selector: any) =>
       selector({
         messages: [],
         isStreaming: false,

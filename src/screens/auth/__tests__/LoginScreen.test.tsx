@@ -36,7 +36,7 @@ describe('LoginScreen', () => {
 
   it('submits valid credentials and calls login', async () => {
     const loginMock = jest.fn().mockResolvedValue({ requires2FA: false });
-    (useAuthStore as jest.Mock).mockImplementation((selector: any) =>
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector: any) =>
       selector({ login: loginMock })
     );
 
@@ -54,7 +54,7 @@ describe('LoginScreen', () => {
 
   it('navigates to Otp when requires2FA is true', async () => {
     const loginMock = jest.fn().mockResolvedValue({ requires2FA: true });
-    (useAuthStore as jest.Mock).mockImplementation((selector: any) =>
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector: any) =>
       selector({ login: loginMock })
     );
 

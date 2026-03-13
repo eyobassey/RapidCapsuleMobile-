@@ -41,7 +41,7 @@ describe('AppointmentDetailScreen', () => {
     const fetchAppointmentById = jest.fn();
 
     // First render: loading with no appointment
-    (useAppointmentsStore as jest.Mock).mockReturnValue({
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({
       currentAppointment: null,
       isLoading: true,
       fetchAppointmentById,
@@ -53,7 +53,7 @@ describe('AppointmentDetailScreen', () => {
     expect(fetchAppointmentById).toHaveBeenCalledWith('apt-1');
 
     // Simulate store updating with loaded appointment
-    (useAppointmentsStore as jest.Mock).mockReturnValue({
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({
       currentAppointment: {
         _id: 'apt-1',
         status: 'OPEN',

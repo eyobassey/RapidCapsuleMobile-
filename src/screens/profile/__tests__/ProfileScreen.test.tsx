@@ -44,12 +44,12 @@ describe('ProfileScreen', () => {
   });
 
   it('opens currency modal when Currency row is pressed', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({
       user: null,
       logout: jest.fn(),
     });
 
-    (useCurrencyStore as jest.Mock).mockReturnValue({
+    (useCurrencyStore as unknown as jest.Mock).mockReturnValue({
       currencyCode: 'USD',
       setCurrency: jest.fn(),
     });

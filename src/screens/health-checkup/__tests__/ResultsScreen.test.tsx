@@ -44,7 +44,7 @@ describe('ResultsScreen', () => {
   });
 
   it('renders triage card and conditions list', () => {
-    (useHealthCheckupStore as jest.Mock).mockReturnValue({
+    (useHealthCheckupStore as unknown as jest.Mock).mockReturnValue({
       checkupId: 'chk-1',
       conditions: [{ id: 'c1', name: 'Flu', probability: 0.8 }],
       triageLevel: 'consultation',
@@ -59,7 +59,7 @@ describe('ResultsScreen', () => {
       age: 30,
       reset: jest.fn(),
     });
-    (useAuthStore as jest.Mock).mockReturnValue({ user: null });
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: null });
 
     const { getByText } = renderWithNav();
 
@@ -69,7 +69,7 @@ describe('ResultsScreen', () => {
   });
 
   it('renders self-care triage when no triage level is set', () => {
-    (useHealthCheckupStore as jest.Mock).mockReturnValue({
+    (useHealthCheckupStore as unknown as jest.Mock).mockReturnValue({
       checkupId: 'chk-1',
       conditions: [],
       triageLevel: null,
@@ -84,7 +84,7 @@ describe('ResultsScreen', () => {
       age: 0,
       reset: jest.fn(),
     });
-    (useAuthStore as jest.Mock).mockReturnValue({ user: null });
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: null });
 
     const { getByText } = renderWithNav();
 

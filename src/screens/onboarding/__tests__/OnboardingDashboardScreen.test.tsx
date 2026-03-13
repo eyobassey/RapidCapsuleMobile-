@@ -44,8 +44,8 @@ describe('OnboardingDashboardScreen', () => {
   });
 
   it('renders profile setup header and sections', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({ user: null });
-    (useOnboardingStore as jest.Mock).mockReturnValue({
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: null });
+    (useOnboardingStore as unknown as jest.Mock).mockReturnValue({
       completedSections: {},
       progress: 0,
       summaryData: {},

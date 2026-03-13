@@ -36,7 +36,7 @@ describe('SignupScreen', () => {
 
   it('submits form and navigates to VerifyEmail', async () => {
     const signupMock = jest.fn().mockResolvedValue(undefined);
-    (useAuthStore as jest.Mock).mockImplementation((selector: any) =>
+    (useAuthStore as unknown as jest.Mock).mockImplementation((selector: any) =>
       selector({ signup: signupMock })
     );
 

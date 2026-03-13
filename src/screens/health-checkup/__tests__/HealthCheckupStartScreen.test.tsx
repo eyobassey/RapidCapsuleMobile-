@@ -42,7 +42,7 @@ describe('HealthCheckupStartScreen', () => {
 
   it('fetches recent history on mount', async () => {
     const fetchHistory = jest.fn();
-    (useHealthCheckupStore as jest.Mock).mockReturnValue({
+    (useHealthCheckupStore as unknown as jest.Mock).mockReturnValue({
       history: [],
       fetchHistory,
       reset: jest.fn(),
@@ -56,7 +56,7 @@ describe('HealthCheckupStartScreen', () => {
   });
 
   it('renders hero and start button without crashing', () => {
-    (useHealthCheckupStore as jest.Mock).mockReturnValue({
+    (useHealthCheckupStore as unknown as jest.Mock).mockReturnValue({
       history: [],
       fetchHistory: jest.fn(),
       reset: jest.fn(),

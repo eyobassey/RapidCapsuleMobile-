@@ -48,8 +48,8 @@ describe('ConversationsListScreen', () => {
   });
 
   it('renders header and empty state title', () => {
-    (useAuthStore as jest.Mock).mockReturnValue({ user: { _id: 'user-1' } });
-    (useMessagingStore as jest.Mock).mockImplementation((selector: any) =>
+    (useAuthStore as unknown as jest.Mock).mockReturnValue({ user: { _id: 'user-1' } });
+    (useMessagingStore as unknown as jest.Mock).mockImplementation((selector: any) =>
       selector({
         conversations: [],
         hasMoreConversations: false,
