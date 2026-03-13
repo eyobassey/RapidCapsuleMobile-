@@ -40,7 +40,7 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
   return (
     <View
       className="absolute bottom-0 left-0 right-0 bg-card/95 border-t border-border px-4 pt-3 flex-row justify-between items-center"
-      style={{ paddingBottom: 12 + insets.bottom, zIndex: 1000, elevation: 1000 }}
+      style={{ paddingBottom: insets.bottom, zIndex: 1000, elevation: 1000 }}
     >
       {state.routes.map((route: any, index: number) => {
         const isFocused = state.index === index;
@@ -124,7 +124,7 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
               <View
                 style={{
                   borderWidth: 2,
-                  borderRadius: 14,
+                  borderRadius: 9999,
                   borderColor: isFocused ? colors.primary : 'transparent',
                 }}
               >
