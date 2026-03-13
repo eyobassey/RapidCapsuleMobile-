@@ -1,0 +1,67 @@
+name: Build Mobile
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - ios
+          - android
+          - both
+
+jobs:
+  build:
+    name: Build mobile artifacts
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Ruby and Bundler (for Fastlane)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install CocoaPods
+        if: inputs.platform == 'ios' || inputs.platform == 'both'
+        run: bundle exec pod install --project-directory=ios
+
+      - name: Build iOS debug
+        if: inputs.platform == 'ios' || inputs.platform == 'both'
+        run: |
+          xcodebuild build \
+            -workspace ios/RapidCapsules.xcworkspace \
+            -scheme RapidCapsules \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -20
+
+      - name: Build Android debug APK
+        if: inputs.platform == 'android' || inputs.platform == 'both'
+        run: bundle exec fastlane android build_debug
+
+      - name: Upload build outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-builds
+          path: |
+            ios/*.ipa
+            android/app/build/outputs/**/*.apk
+            android/app/build/outputs/**/*.aab
+          if-no-files-found: ignore
