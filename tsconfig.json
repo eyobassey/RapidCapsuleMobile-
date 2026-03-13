@@ -4,12 +4,12 @@
     "strict": true,
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": false,
-    "types": ["jest", "detox", "nativewind/types"],
+    "types": ["jest", "nativewind/types"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"],
-  "exclude": ["**/node_modules", "**/Pods"]
+  "exclude": ["**/node_modules", "**/Pods", "e2e"]
 }
