@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { Brain, Check, HelpCircle } from 'lucide-react-native';
+import { Brain, Check, CircleX, HelpCircle } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,11 +10,12 @@ import { colors } from '../../theme/colors';
 
 type ChoiceId = 'present' | 'absent' | 'unknown';
 
-const SINGLE_OPTIONS: { label: string; value: ChoiceId; color: string }[] = [
-  { label: 'Yes', value: 'present', color: colors.success },
-  { label: 'No', value: 'absent', color: colors.destructive },
-  { label: "Don't know", value: 'unknown', color: colors.mutedForeground },
-];
+const SINGLE_OPTIONS: { label: string; value: ChoiceId; color: string; icon: React.ElementType }[] =
+  [
+    { label: 'Yes', value: 'present', color: colors.success, icon: Check },
+    { label: 'No', value: 'absent', color: colors.destructive, icon: CircleX },
+    { label: "Don't know", value: 'unknown', color: colors.mutedForeground, icon: HelpCircle },
+  ];
 
 export default function InterviewScreen() {
   const navigation = useNavigation<any>();
@@ -195,9 +196,7 @@ export default function InterviewScreen() {
                   className="w-10 h-10 rounded-full items-center justify-center"
                   style={{ backgroundColor: `${opt.color}20` } as any}
                 >
-                  <Text style={{ color: opt.color, fontWeight: 'bold', fontSize: 13 }}>
-                    {opt.label}
-                  </Text>
+                  <opt.icon size={16} color={opt.color} />
                 </View>
                 <Text className="text-sm font-medium text-foreground">{opt.label}</Text>
               </TouchableOpacity>
