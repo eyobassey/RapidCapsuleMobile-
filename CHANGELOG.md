@@ -1,3 +1,9 @@
+## [1.0.2](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.1...v1.0.2) (2026-03-13)
+
+### Bug Fixes
+
+- **ci:** add root fastlane config, fix permissions and iOS build ([bf31c35](https://github.com/eyobassey/RapidCapsuleMobile-/commit/bf31c357ab39c3e432c1990e43c16370a73d0bcc))
+
 ## [1.0.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.0...v1.0.1) (2026-03-13)
 
 ### Bug Fixes
