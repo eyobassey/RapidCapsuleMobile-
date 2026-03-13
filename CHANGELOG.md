@@ -1,3 +1,9 @@
+## [1.0.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.0...v1.0.1) (2026-03-13)
+
+### Bug Fixes
+
+- **ci:** update Gemfile.lock with fastlane dependency ([1090c30](https://github.com/eyobassey/RapidCapsuleMobile-/commit/1090c30897e529c43e7914b79b35c05ee88c7bdf))
+
 # 1.0.0 (2026-03-13)
 
 ### Bug Fixes
