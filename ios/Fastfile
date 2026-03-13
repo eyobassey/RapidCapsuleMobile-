@@ -1,0 +1,45 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build iOS app for Debug (Detox)"
+  lane :build_debug do
+    gym(
+      workspace: "RapidCapsules.xcworkspace",
+      scheme: "RapidCapsules",
+      configuration: "Debug",
+      export_method: "development",
+      silent: true
+    )
+  end
+
+  desc "Build and upload to TestFlight (credentials required in CI)"
+  lane :beta do
+    gym(
+      workspace: "RapidCapsules.xcworkspace",
+      scheme: "RapidCapsules",
+      configuration: "Release",
+      export_method: "app-store"
+    )
+    # Actual upload; will fail without proper App Store Connect API key or Apple ID session in CI.
+    upload_to_testflight(
+      skip_submission: true,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Build and upload to App Store (production) – credentials required in CI"
+  lane :release do
+    gym(
+      workspace: "RapidCapsules.xcworkspace",
+      scheme: "RapidCapsules",
+      configuration: "Release",
+      export_method: "app-store"
+    )
+    deliver(
+      submit_for_review: false,
+      force: true,
+      automatic_release: false
+    )
+  end
+end
+

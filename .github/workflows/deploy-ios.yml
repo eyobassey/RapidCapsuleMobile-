@@ -1,0 +1,47 @@
+name: Deploy iOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: 'Fastlane lane to run (beta or release)'
+        required: true
+        default: 'beta'
+
+jobs:
+  deploy:
+    name: Deploy iOS via Fastlane
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Setup Ruby for Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+
+      - name: Deploy to TestFlight / App Store
+        working-directory: ios
+        env:
+          # These secrets must be configured in the repo or org:
+          # APP_STORE_CONNECT_API_KEY_JSON, FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD, etc.
+          APP_STORE_CONNECT_API_KEY_JSON: ${{ secrets.APP_STORE_CONNECT_API_KEY_JSON }}
+        run: |
+          bundle exec fastlane ${{ github.event.inputs.lane }} || fastlane ${{ github.event.inputs.lane }}
+

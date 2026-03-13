@@ -22,6 +22,7 @@ describe('RootNavigator', () => {
       isAuthenticated: false,
       needsOnboarding: false,
       hydrate: jest.fn(),
+      bootstrapForApp: jest.fn(),
     });
 
     render(<RootNavigator />);
@@ -33,6 +34,7 @@ describe('RootNavigator', () => {
       isAuthenticated: false,
       needsOnboarding: false,
       hydrate: jest.fn(),
+      bootstrapForApp: jest.fn(),
     });
 
     render(<RootNavigator />);
@@ -44,6 +46,7 @@ describe('RootNavigator', () => {
       isAuthenticated: true,
       needsOnboarding: true,
       hydrate: jest.fn(),
+      bootstrapForApp: jest.fn(),
     });
 
     render(<RootNavigator />);

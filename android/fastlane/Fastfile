@@ -1,0 +1,38 @@
+default_platform(:android)
+
+platform :android do
+  desc "Assemble debug build (e.g. for internal QA / Detox)"
+  lane :build_debug do
+    gradle(
+      task: "assembleDebug"
+    )
+  end
+
+  desc "Build release bundle for Play Store internal/beta tracks"
+  lane :bundle_release do
+    gradle(
+      task: "bundle",
+      build_type: "Release"
+    )
+    # Actual upload; requires GOOGLE_PLAY_JSON_KEY / supply configuration in CI.
+    upload_to_play_store(
+      track: 'internal',
+      skip_upload_apk: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Promote existing bundle to production (once in Play Console)"
+  lane :promote_to_production do
+    upload_to_play_store(
+      track: 'production',
+      rollout: 0.1,
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
+

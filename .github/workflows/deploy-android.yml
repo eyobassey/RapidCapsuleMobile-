@@ -1,0 +1,44 @@
+name: Deploy Android
+
+on:
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: 'Fastlane lane to run (bundle_release or promote_to_production)'
+        required: true
+        default: 'bundle_release'
+
+jobs:
+  deploy:
+    name: Deploy Android via Fastlane
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Ruby for Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: android
+
+      - name: Install Android SDK components
+        uses: android-actions/setup-android@v3
+
+      - name: Deploy to Google Play
+        working-directory: android
+        env:
+          # GOOGLE_PLAY_JSON_KEY should contain the service account JSON (or path) for Play Console.
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          bundle exec fastlane ${{ github.event.inputs.lane }} || fastlane ${{ github.event.inputs.lane }}
+
