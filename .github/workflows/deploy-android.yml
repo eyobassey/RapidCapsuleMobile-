@@ -29,16 +29,12 @@ jobs:
         with:
           ruby-version: '3.3'
           bundler-cache: true
-          working-directory: android
 
       - name: Install Android SDK components
         uses: android-actions/setup-android@v3
 
       - name: Deploy to Google Play
-        working-directory: android
         env:
-          # GOOGLE_PLAY_JSON_KEY should contain the service account JSON (or path) for Play Console.
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
-        run: |
-          bundle exec fastlane ${{ github.event.inputs.lane }} || fastlane ${{ github.event.inputs.lane }}
+        run: bundle exec fastlane android ${{ github.event.inputs.lane }}
 

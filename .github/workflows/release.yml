@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   test:
     name: Verify (unit / typecheck)
@@ -52,18 +55,13 @@ jobs:
           bundler-cache: true
 
       - name: Install CocoaPods
-        working-directory: ios
-        run: pod install
+        run: bundle exec pod install --project-directory=ios
 
       - name: Build iOS debug (Detox) – sanity check
-        working-directory: ios
-        run: |
-          bundle exec fastlane build_debug || fastlane build_debug
+        run: bundle exec fastlane ios build_debug
 
       - name: Build Android debug APK
-        working-directory: android
-        run: |
-          bundle exec fastlane build_debug || fastlane build_debug
+        run: bundle exec fastlane android build_debug
 
       - name: Upload build outputs (archives/bundles) as artifacts
         uses: actions/upload-artifact@v4

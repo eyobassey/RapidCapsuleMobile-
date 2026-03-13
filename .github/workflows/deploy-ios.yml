@@ -33,15 +33,10 @@ jobs:
           bundler-cache: true
 
       - name: Install CocoaPods
-        working-directory: ios
-        run: pod install
+        run: bundle exec pod install --project-directory=ios
 
       - name: Deploy to TestFlight / App Store
-        working-directory: ios
         env:
-          # These secrets must be configured in the repo or org:
-          # APP_STORE_CONNECT_API_KEY_JSON, FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD, etc.
           APP_STORE_CONNECT_API_KEY_JSON: ${{ secrets.APP_STORE_CONNECT_API_KEY_JSON }}
-        run: |
-          bundle exec fastlane ${{ github.event.inputs.lane }} || fastlane ${{ github.event.inputs.lane }}
+        run: bundle exec fastlane ios ${{ github.event.inputs.lane }}
 
