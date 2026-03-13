@@ -21,6 +21,34 @@ export default function RootNavigator() {
   const { isLoading, isAuthenticated, needsOnboarding, hydrate } = useAuthStore();
 
   useEffect(() => {
+    let args: { E2E_SKIP_AUTH?: boolean | string } | undefined;
+    try {
+      // Optional native module used for E2E launchArgs (Detox).
+      // Keep this runtime-safe even if pods aren't installed yet.
+
+      const mod = require('react-native-launch-arguments');
+      args = mod?.LaunchArguments?.value?.();
+    } catch {
+      args = undefined;
+    }
+    const skipAuth = args?.E2E_SKIP_AUTH === true || args?.E2E_SKIP_AUTH === '1';
+    if (skipAuth) {
+      useAuthStore.setState({
+        isLoading: false,
+        isAuthenticated: true,
+        needsOnboarding: false,
+        token: 'e2e-token',
+        user: {
+          _id: 'e2e-user',
+          email: 'e2e@rapidcapsule.local',
+          user_type: 'Patient',
+          profile: { first_name: 'E2E', last_name: 'User' },
+          is_email_verified: true,
+        },
+      } as any);
+      return;
+    }
+
     hydrate();
   }, [hydrate]);
 
