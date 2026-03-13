@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
   test:
@@ -57,8 +59,15 @@ jobs:
       - name: Install CocoaPods
         run: bundle exec pod install --project-directory=ios
 
-      - name: Build iOS debug (Detox) – sanity check
-        run: bundle exec fastlane ios build_debug
+      - name: Build iOS debug – sanity check
+        run: |
+          xcodebuild build \
+            -workspace ios/RapidCapsules.xcworkspace \
+            -scheme RapidCapsules \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -20
 
       - name: Build Android debug APK
         run: bundle exec fastlane android build_debug

@@ -1,0 +1,82 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build iOS app for Debug (Detox)"
+  lane :build_debug do
+    gym(
+      workspace: "ios/RapidCapsules.xcworkspace",
+      scheme: "RapidCapsules",
+      configuration: "Debug",
+      export_method: "development",
+      skip_codesigning: true,
+      skip_archive: true,
+      silent: true
+    )
+  end
+
+  desc "Build and upload to TestFlight (credentials required in CI)"
+  lane :beta do
+    gym(
+      workspace: "ios/RapidCapsules.xcworkspace",
+      scheme: "RapidCapsules",
+      configuration: "Release",
+      export_method: "app-store"
+    )
+    upload_to_testflight(
+      skip_submission: true,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Build and upload to App Store (production) – credentials required in CI"
+  lane :release do
+    gym(
+      workspace: "ios/RapidCapsules.xcworkspace",
+      scheme: "RapidCapsules",
+      configuration: "Release",
+      export_method: "app-store"
+    )
+    deliver(
+      submit_for_review: false,
+      force: true,
+      automatic_release: false
+    )
+  end
+end
+
+platform :android do
+  desc "Assemble debug build (e.g. for internal QA / Detox)"
+  lane :build_debug do
+    gradle(
+      task: "assembleDebug",
+      project_dir: "android"
+    )
+  end
+
+  desc "Build release bundle for Play Store internal/beta tracks"
+  lane :bundle_release do
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      project_dir: "android"
+    )
+    upload_to_play_store(
+      track: 'internal',
+      skip_upload_apk: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Promote existing bundle to production (once in Play Console)"
+  lane :promote_to_production do
+    upload_to_play_store(
+      track: 'production',
+      rollout: 0.1,
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
