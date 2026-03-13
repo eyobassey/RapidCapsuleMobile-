@@ -4,10 +4,10 @@ describe('Auth and onboarding gating', () => {
   });
 
   it('shows auth entry and can navigate to login screen', async () => {
-    // Adjust selectors to your actual entry labels once E2E is run on-device.
-    await expect(element(by.text('RapidCapsule'))).toBeVisible();
-
-    await element(by.text('Sign In to Account')).tap();
+    await waitFor(element(by.id('splash-login')))
+      .toExist()
+      .withTimeout(20000);
+    await element(by.id('splash-login')).tapAtPoint({ x: 180, y: 10 });
 
     await expect(element(by.text('Welcome Back'))).toBeVisible();
   });

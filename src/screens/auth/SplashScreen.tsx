@@ -39,8 +39,14 @@ export default function SplashScreen({ navigation }: Props) {
 
       {/* Bottom CTAs */}
       <View className="px-6 pb-8 gap-3">
-        <Button onPress={() => navigation.navigate('Signup')}>Create Patient Account</Button>
-        <Button variant="outline" onPress={() => navigation.navigate('Login')}>
+        <Button testID="splash-signup" onPress={() => navigation.navigate('Signup')}>
+          Create Patient Account
+        </Button>
+        <Button
+          testID="splash-login"
+          variant="outline"
+          onPress={() => navigation.navigate('Login')}
+        >
           Sign In to Account
         </Button>
       </View>

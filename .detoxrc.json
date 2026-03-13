@@ -1,7 +1,6 @@
 {
   "testRunner": "jest",
-  "runnerConfig": "e2e/jest.config.e2e.js",
-  "specs": "e2e",
+  "runnerConfig": "e2e/jest.e2e.config.js",
   "behavior": {
     "init": {
       "reinstallApp": true,
@@ -14,15 +13,15 @@
   "apps": {
     "ios.debug": {
       "type": "ios.app",
-      "binaryPath": "ios/build/Build/Products/Debug-iphonesimulator/rapidcapsules.app",
-      "build": "xcodebuild -workspace ios/rapidcapsules.xcworkspace -scheme rapidcapsules -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build"
+      "binaryPath": "ios/build/Build/Products/Debug-iphonesimulator/RapidCapsules.app",
+      "build": "xcodebuild -workspace ios/RapidCapsules.xcworkspace -scheme RapidCapsules -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build"
     }
   },
   "devices": {
     "ios.simulator": {
       "type": "ios.simulator",
       "device": {
-        "type": "iPhone 16"
+        "type": "iPhone 17 Pro"
       }
     }
   },
