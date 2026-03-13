@@ -221,7 +221,7 @@ export default function HomeScreen() {
 
   // ---------- render ----------
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView testID="home-screen" className="flex-1 bg-background" edges={['top']}>
       {/* ---- Header ---- */}
       <View className="px-5 pt-2 pb-4 flex-row items-center justify-between">
         <View className="flex-1">
@@ -239,6 +239,7 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={`Messages${msgUnread > 0 ? `, ${msgUnread} unread` : ''}`}
             accessibilityHint="Double tap to open messages"
+            testID="home-messages"
             className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center"
           >
             <MessageCircle size={20} color={colors.foreground} />

@@ -24,7 +24,11 @@ export default function ConsentScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+    <SafeAreaView
+      testID="messaging-consent-screen"
+      style={{ flex: 1, backgroundColor: colors.background }}
+      edges={['top']}
+    >
       <Header title="Messaging" onBack={() => navigation.goBack()} />
 
       <ScrollView

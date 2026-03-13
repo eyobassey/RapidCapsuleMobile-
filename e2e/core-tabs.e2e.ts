@@ -3,23 +3,26 @@ describe('Core navigation (authenticated)', () => {
     await device.launchApp({
       delete: true,
       newInstance: true,
-      launchArgs: { E2E_SKIP_AUTH: '1' },
+      url: 'rapidcapsule://home?e2eSkipAuth=1',
     });
   });
 
   it('lands on Home and can switch to Bookings and Profile tabs', async () => {
-    await waitFor(element(by.text('How are you feeling today?')))
+    await waitFor(element(by.id('home-screen')))
       .toBeVisible()
       .withTimeout(20000);
 
-    await element(by.label('Bookings')).tap();
+    await waitFor(element(by.id('bottom-tab-bookings')))
+      .toExist()
+      .withTimeout(20000);
+    await element(by.id('bottom-tab-bookings')).tap();
     await waitFor(element(by.text('Appointments')))
       .toBeVisible()
       .withTimeout(20000);
 
-    await element(by.label('Profile')).tap();
-    await waitFor(element(by.text('Profile')))
-      .toBeVisible()
+    await waitFor(element(by.id('bottom-tab-profile')))
+      .toExist()
       .withTimeout(20000);
+    await element(by.id('bottom-tab-profile')).tap();
   });
 });

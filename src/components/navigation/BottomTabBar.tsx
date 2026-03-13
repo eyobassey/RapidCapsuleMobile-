@@ -1,6 +1,7 @@
 import { BrainCircuit, Calendar, Home, Pill } from 'lucide-react-native';
 import React from 'react';
 import { TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/auth';
 import { usePharmacyStore } from '../../store/pharmacy';
 import { colors } from '../../theme/colors';
@@ -21,6 +22,7 @@ const TAB_ICONS: Record<string, any> = {
 };
 
 export default function BottomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
   const cartCount = usePharmacyStore((s) => s.cartCount);
   const user = useAuthStore((s) => s.user);
 
@@ -36,7 +38,10 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
   const lastName = user?.profile?.last_name || '';
 
   return (
-    <View className="absolute bottom-0 left-0 right-0 bg-card/95 border-t border-border px-4 pt-3 pb-8 flex-row justify-between items-center">
+    <View
+      className="absolute bottom-0 left-0 right-0 bg-card/95 border-t border-border px-4 pt-3 flex-row justify-between items-center"
+      style={{ paddingBottom: 12 + insets.bottom, zIndex: 1000, elevation: 1000 }}
+    >
       {state.routes.map((route: any, index: number) => {
         const isFocused = state.index === index;
         const isEka = route.name === 'Eka';
@@ -77,6 +82,7 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
               accessibilityRole="tab"
               accessibilityLabel={tabLabel}
               accessibilityState={{ selected: isFocused }}
+              testID="bottom-tab-eka"
               style={{
                 position: 'relative',
                 top: -20,
@@ -112,6 +118,7 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
               accessibilityRole="tab"
               accessibilityLabel="Profile"
               accessibilityState={{ selected: isFocused }}
+              testID="bottom-tab-profile"
               className="items-center gap-1 flex-1"
             >
               <View
@@ -142,6 +149,7 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
             accessibilityRole="tab"
             accessibilityLabel={`${tabLabel}${showBadge ? `, ${cartCount} items in cart` : ''}`}
             accessibilityState={{ selected: isFocused }}
+            testID={`bottom-tab-${String(route.name).toLowerCase()}`}
             className="items-center gap-1 flex-1"
           >
             <View style={{ position: 'relative' }}>

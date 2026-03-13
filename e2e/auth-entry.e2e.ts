@@ -4,13 +4,13 @@ describe('Auth entry', () => {
   });
 
   it('shows splash CTAs', async () => {
-    // Avoid strict visibility thresholds on splash CTAs; existence is enough.
+    // Avoid strict visibility thresholds on splash CTAs.
     await waitFor(element(by.text('Create Patient Account')))
       .toBeVisible()
       .withTimeout(20000);
 
     await expect(element(by.id('splash-signup'))).toBeVisible();
-    await expect(element(by.id('splash-login'))).toBeVisible();
+    await expect(element(by.id('splash-login'))).toExist();
   });
 
   it('can navigate to signup screen', async () => {

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Linking } from 'react-native';
 import { useAuthStore } from '../store/auth';
 import AuthStack from './AuthStack';
 import OnboardingStack from './OnboardingStack';
@@ -21,18 +21,9 @@ export default function RootNavigator() {
   const { isLoading, isAuthenticated, needsOnboarding, hydrate } = useAuthStore();
 
   useEffect(() => {
-    let args: { E2E_SKIP_AUTH?: boolean | string } | undefined;
-    try {
-      // Optional native module used for E2E launchArgs (Detox).
-      // Keep this runtime-safe even if pods aren't installed yet.
+    let cancelled = false;
 
-      const mod = require('react-native-launch-arguments');
-      args = mod?.LaunchArguments?.value?.();
-    } catch {
-      args = undefined;
-    }
-    const skipAuth = args?.E2E_SKIP_AUTH === true || args?.E2E_SKIP_AUTH === '1';
-    if (skipAuth) {
+    const setE2EAuth = () => {
       useAuthStore.setState({
         isLoading: false,
         isAuthenticated: true,
@@ -46,10 +37,38 @@ export default function RootNavigator() {
           is_email_verified: true,
         },
       } as any);
-      return;
-    }
+    };
 
-    hydrate();
+    (async () => {
+      // 1) Detox launchArgs (requires optional native module).
+      let args: { E2E_SKIP_AUTH?: boolean | string } | undefined;
+      try {
+        const mod = require('react-native-launch-arguments');
+        args = mod?.LaunchArguments?.value?.();
+      } catch {
+        args = undefined;
+      }
+      const skipAuthFromArgs = args?.E2E_SKIP_AUTH === true || args?.E2E_SKIP_AUTH === '1';
+
+      // 2) Fallback: deep link query param (works without any extra native modules).
+      const initialUrl = await Linking.getInitialURL();
+      const skipAuthFromUrl =
+        typeof initialUrl === 'string' &&
+        (initialUrl.includes('e2eSkipAuth=1') || initialUrl.includes('E2E_SKIP_AUTH=1'));
+
+      if (cancelled) return;
+
+      if (skipAuthFromArgs || skipAuthFromUrl) {
+        setE2EAuth();
+        return;
+      }
+
+      hydrate();
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [hydrate]);
 
   return (

@@ -3,19 +3,25 @@ describe('Messaging (authenticated)', () => {
     await device.launchApp({
       delete: true,
       newInstance: true,
-      launchArgs: { E2E_SKIP_AUTH: '1' },
+      url: 'rapidcapsule://home?e2eSkipAuth=1',
     });
   });
 
   it('opens messages from Home header', async () => {
-    await waitFor(element(by.label('Messages')))
+    await waitFor(element(by.id('home-messages')))
       .toBeVisible()
       .withTimeout(20000);
 
-    await element(by.label('Messages')).tap();
+    await element(by.id('home-messages')).tap();
 
-    await waitFor(element(by.text('Messages')))
-      .toBeVisible()
-      .withTimeout(20000);
+    try {
+      await waitFor(element(by.id('messages-screen')))
+        .toBeVisible()
+        .withTimeout(15000);
+    } catch {
+      await waitFor(element(by.id('messaging-consent-screen')))
+        .toBeVisible()
+        .withTimeout(20000);
+    }
   });
 });

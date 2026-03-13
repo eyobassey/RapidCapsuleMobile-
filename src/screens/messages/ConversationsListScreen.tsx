@@ -84,7 +84,11 @@ export default function ConversationsListScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+    <SafeAreaView
+      testID="messages-screen"
+      style={{ flex: 1, backgroundColor: colors.background }}
+      edges={['top']}
+    >
       <Header
         title="Messages"
         onBack={() => navigation.goBack()}
