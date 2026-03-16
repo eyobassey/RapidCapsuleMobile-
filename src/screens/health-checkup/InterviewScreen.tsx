@@ -10,6 +10,12 @@ import { colors } from '../../theme/colors';
 
 type ChoiceId = 'present' | 'absent' | 'unknown';
 
+type InterviewItem = {
+  id: string;
+  name?: string;
+  common_name?: string;
+};
+
 const SINGLE_OPTIONS: { label: string; value: ChoiceId; color: string; icon: React.ElementType }[] =
   [
     { label: 'Yes', value: 'present', color: colors.success, icon: Check },
@@ -58,9 +64,9 @@ export default function InterviewScreen() {
       if (!currentQuestion) return;
 
       // Mark selected as present, others as absent
-      const newEvidence = currentQuestion.items.map((item: any) => ({
+      const newEvidence = (currentQuestion.items as InterviewItem[]).map((item) => ({
         id: item.id,
-        choice_id: item.id === itemId ? 'present' : 'absent',
+        choice_id: (item.id === itemId ? 'present' : 'absent') as ChoiceId,
         source: 'interview' as const,
       }));
 
@@ -80,9 +86,9 @@ export default function InterviewScreen() {
   const handleGroupMultipleSubmit = useCallback(async () => {
     if (!currentQuestion) return;
 
-    const newEvidence = currentQuestion.items.map((item: any) => ({
+    const newEvidence = (currentQuestion.items as InterviewItem[]).map((item) => ({
       id: item.id,
-      choice_id: selectedMultiple.has(item.id) ? 'present' : 'absent',
+      choice_id: (selectedMultiple.has(item.id) ? 'present' : 'absent') as ChoiceId,
       source: 'interview' as const,
     }));
 
@@ -139,12 +145,12 @@ export default function InterviewScreen() {
   const items = currentQuestion.items || [];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header title="Health Interview" onBack={() => navigation.goBack()} />
 
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 }}
+        className="flex-1"
+        contentContainerClassName="px-5 pt-6 pb-6"
         showsVerticalScrollIndicator={false}
       >
         {/* Step indicator */}
@@ -206,7 +212,7 @@ export default function InterviewScreen() {
 
         {questionType === 'group_single' && (
           <View className="gap-2">
-            {items.map((item: any) => (
+            {(items as InterviewItem[]).map((item) => (
               <TouchableOpacity
                 key={item.id}
                 activeOpacity={0.7}
@@ -234,16 +240,20 @@ export default function InterviewScreen() {
               accessibilityRole="radio"
               accessibilityLabel="None of the above"
               accessibilityState={{ disabled: isLoading }}
-              onPress={() => {
+              onPress={async () => {
                 // Mark all as absent (none apply)
-                const newEvidence = items.map((item: any) => ({
+                const newEvidence = (items as InterviewItem[]).map((item) => ({
                   id: item.id,
                   choice_id: 'absent' as const,
                   source: 'interview' as const,
                 }));
                 addEvidence(newEvidence);
                 setQuestionCount((prev) => prev + 1);
-                submitDiagnosis(false);
+                try {
+                  await submitDiagnosis(false);
+                } catch {
+                  // Error in store
+                }
               }}
               style={{
                 backgroundColor: colors.muted,
@@ -262,7 +272,7 @@ export default function InterviewScreen() {
 
         {questionType === 'group_multiple' && (
           <View className="gap-2">
-            {items.map((item: any) => {
+            {(items as InterviewItem[]).map((item) => {
               const isSelected = selectedMultiple.has(item.id);
               return (
                 <TouchableOpacity
