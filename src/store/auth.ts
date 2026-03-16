@@ -8,7 +8,6 @@ import {
 import { storage } from '../utils/storage';
 import { useOnboardingStore } from './onboarding';
 import { useCurrencyStore } from './currency';
-import { shouldSkipAuthForE2E } from '../testing/e2eAuthBootstrap';
 
 interface UserProfile {
   first_name: string;
@@ -193,25 +192,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   bootstrapForApp: async (isCancelled) => {
-    const skipAuth = await shouldSkipAuthForE2E();
-    if (isCancelled?.()) return;
+    if (__DEV__) {
+      try {
+        // Keep all E2E bypass data out of production bundles.
 
-    if (skipAuth) {
-      set({
-        isLoading: false,
-        isAuthenticated: true,
-        needsOnboarding: false,
-        token: 'e2e-token',
-        user: {
-          _id: 'e2e-user',
-          email: 'e2e@rapidcapsule.local',
-          user_type: 'Patient',
-          profile: { first_name: 'E2E', last_name: 'User' } as any,
-          is_email_verified: true,
-        } as any,
-      });
-      useCurrencyStore.getState().initCurrency();
-      return;
+        const mod =
+          require('../testing/e2eAuthBootstrap') as typeof import('../testing/e2eAuthBootstrap');
+        const skipAuth = await mod.shouldSkipAuthForE2E();
+        if (isCancelled?.()) return;
+        if (skipAuth) {
+          set(mod.getE2EAuthState());
+          useCurrencyStore.getState().initCurrency();
+          return;
+        }
+      } catch {
+        // ignore and continue to normal hydrate
+      }
     }
 
     await get().hydrate();
