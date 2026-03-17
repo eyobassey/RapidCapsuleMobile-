@@ -1,33 +1,24 @@
-import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View,
-  Switch,
-  Alert,
-  TouchableOpacity,
-  ActivityIndicator,
-  Linking,
-  Modal,
-} from 'react-native';
-import { WebView } from 'react-native-webview';
-import {
-  Smartphone,
   Activity,
-  Heart,
-  X,
-  RefreshCw,
   CheckCircle,
   Clock,
+  Heart,
+  RefreshCw,
+  Smartphone,
+  X,
   XCircle,
-  Unlink,
 } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, Switch, TouchableOpacity, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 import SectionScreenLayout from '../../components/onboarding/SectionScreenLayout';
-import { colors } from '../../theme/colors';
+import { Text } from '../../components/ui';
+import { appleHealthService } from '../../services/appleHealth.service';
+import { healthIntegrationsService } from '../../services/healthIntegrations.service';
+import { usersService } from '../../services/users.service';
 import { useAuthStore } from '../../store/auth';
 import { useOnboardingStore } from '../../store/onboarding';
-import { usersService } from '../../services/users.service';
-import { healthIntegrationsService } from '../../services/healthIntegrations.service';
-import { appleHealthService } from '../../services/appleHealth.service';
-import { Text } from '../../components/ui';
+import { colors } from '../../theme/colors';
 
 const HEALTH_APPS = [
   {
@@ -140,6 +131,17 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
   const handleConnect = async (appId: string) => {
     setConnecting(appId);
     try {
+      if (appId === 'apple_health') {
+        const permitted = await appleHealthService.requestPermissions();
+        if (!permitted) {
+          Alert.alert(
+            'Permission Required',
+            'Please enable HealthKit access in Settings > Privacy & Security > Health > RapidCapsule.'
+          );
+          return;
+        }
+      }
+
       const result = await healthIntegrationsService.connect({
         provider: appId,
         autoSync: true,
@@ -147,23 +149,15 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
 
       if (result.requiresNativeApp && appId === 'apple_health') {
         // Apple Health — use native HealthKit SDK
-        const initialized = await appleHealthService.initialize();
-        if (initialized) {
-          Alert.alert(
-            'Apple Health Connected',
-            'HealthKit permissions granted. Syncing your health data now...'
-          );
-          const syncResult = await appleHealthService.fetchAndSync();
-          if (syncResult.synced > 0) {
-            Alert.alert('Sync Complete', `${syncResult.synced} health readings synced.`);
-          }
-          await loadIntegrations();
-        } else {
-          Alert.alert(
-            'Permission Denied',
-            'Please enable HealthKit access in Settings > Privacy & Security > Health > RapidCapsule.'
-          );
+        Alert.alert(
+          'Apple Health Connected',
+          'HealthKit permissions granted. Syncing your health data now...'
+        );
+        const syncResult = await appleHealthService.fetchAndSync();
+        if (syncResult.synced > 0) {
+          Alert.alert('Sync Complete', `${syncResult.synced} health readings synced.`);
         }
+        await loadIntegrations();
       } else if (result.requiresNativeApp) {
         Alert.alert('Not Available', 'This provider requires native SDK support.');
       } else if (result.authUrl) {
@@ -177,6 +171,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
         Alert.alert('Already Connected', `${appId} is already connected.`);
         await loadIntegrations();
       } else {
+        console.log(err);
         Alert.alert('Connection Error', msg);
       }
     } finally {

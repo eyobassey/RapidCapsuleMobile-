@@ -1,37 +1,48 @@
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
 import AppleHealthKit, {
-  HealthKitPermissions,
-  HealthValue,
-  HealthInputOptions,
+  type HealthInputOptions,
+  type HealthKitPermissions,
+  type HealthValue,
 } from 'react-native-health';
-import {healthIntegrationsService} from './healthIntegrations.service';
+import { healthIntegrationsService } from './healthIntegrations.service';
 
-// Data types we want to read from HealthKit
-const PERMISSIONS: HealthKitPermissions = {
-  permissions: {
-    read: [
-      AppleHealthKit.Constants.Permissions.HeartRate,
-      AppleHealthKit.Constants.Permissions.StepCount,
-      AppleHealthKit.Constants.Permissions.SleepAnalysis,
-      AppleHealthKit.Constants.Permissions.BloodPressureSystolic,
-      AppleHealthKit.Constants.Permissions.BloodPressureDiastolic,
-      AppleHealthKit.Constants.Permissions.OxygenSaturation,
-      AppleHealthKit.Constants.Permissions.BodyTemperature,
-      AppleHealthKit.Constants.Permissions.Weight,
-      AppleHealthKit.Constants.Permissions.Height,
-      AppleHealthKit.Constants.Permissions.RespiratoryRate,
-      AppleHealthKit.Constants.Permissions.ActiveEnergyBurned,
-      AppleHealthKit.Constants.Permissions.BodyFatPercentage,
-      AppleHealthKit.Constants.Permissions.BloodGlucose,
-      AppleHealthKit.Constants.Permissions.DistanceWalkingRunning,
-    ],
-    write: [],
-  },
-};
+function hasHealthKitModule(): boolean {
+  // `react-native-health` is iOS-only and can be absent if pods not installed or module not linked.
+  return (
+    Platform.OS === 'ios' &&
+    typeof (AppleHealthKit as any)?.initHealthKit === 'function' &&
+    !!(AppleHealthKit as any)?.Constants?.Permissions
+  );
+}
+
+function buildPermissions(): HealthKitPermissions {
+  const P = (AppleHealthKit as any)?.Constants?.Permissions;
+  return {
+    permissions: {
+      read: [
+        P?.HeartRate,
+        P?.StepCount,
+        P?.SleepAnalysis,
+        P?.BloodPressureSystolic,
+        P?.BloodPressureDiastolic,
+        P?.OxygenSaturation,
+        P?.BodyTemperature,
+        P?.Weight,
+        P?.Height,
+        P?.RespiratoryRate,
+        P?.ActiveEnergyBurned,
+        P?.BodyFatPercentage,
+        P?.BloodGlucose,
+        P?.DistanceWalkingRunning,
+      ].filter(Boolean),
+      write: [],
+    },
+  };
+}
 
 function promisify<T>(
   fn: (options: any, callback: (err: string, results: T) => void) => void,
-  options: any,
+  options: any
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     fn(options, (err: string, results: T) => {
@@ -43,14 +54,22 @@ function promisify<T>(
 
 export const appleHealthService = {
   isAvailable(): boolean {
-    return Platform.OS === 'ios';
+    return hasHealthKitModule();
+  },
+
+  async requestPermissions(): Promise<boolean> {
+    // `initHealthKit` is the permission request step for react-native-health.
+    return this.initialize();
   },
 
   async initialize(): Promise<boolean> {
-    if (!this.isAvailable()) return false;
+    if (!hasHealthKitModule()) {
+      console.warn('HealthKit not available (module missing or not linked).');
+      return false;
+    }
 
     return new Promise((resolve) => {
-      AppleHealthKit.initHealthKit(PERMISSIONS, (err: string) => {
+      AppleHealthKit.initHealthKit(buildPermissions(), (err: string) => {
         if (err) {
           console.warn('HealthKit init error:', err);
           resolve(false);
@@ -61,9 +80,9 @@ export const appleHealthService = {
     });
   },
 
-  async fetchAndSync(): Promise<{synced: number; errors: string[]}> {
-    if (!this.isAvailable()) {
-      return {synced: 0, errors: ['Not available on this platform']};
+  async fetchAndSync(): Promise<{ synced: number; errors: string[] }> {
+    if (!hasHealthKitModule()) {
+      return { synced: 0, errors: ['HealthKit not available (module missing or not linked)'] };
     }
 
     const startDate = new Date();
@@ -80,9 +99,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getHeartRateSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'heart_rate',
           value: s.value,
@@ -98,9 +117,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getDailyStepCountSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'steps',
           value: s.value,
@@ -116,9 +135,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getSleepSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         const start = new Date(s.startDate).getTime();
         const end = new Date(s.endDate).getTime();
         const hours = (end - start) / (1000 * 60 * 60);
@@ -137,9 +156,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<any[]>(
         AppleHealthKit.getBloodPressureSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'blood_pressure',
           value: `${s.bloodPressureSystolicValue}/${s.bloodPressureDiastolicValue}`,
@@ -155,9 +174,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getOxygenSaturationSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'oxygen_saturation',
           value: Math.round(s.value * 100),
@@ -173,9 +192,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getBodyTemperatureSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'body_temperature',
           value: s.value,
@@ -191,9 +210,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getWeightSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'weight',
           value: Math.round(s.value * 10) / 10,
@@ -209,9 +228,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getRespiratoryRateSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'respiratory_rate',
           value: s.value,
@@ -227,9 +246,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getActiveEnergyBurned.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'calories_burned',
           value: Math.round(s.value),
@@ -245,9 +264,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getBodyFatPercentageSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'body_fat',
           value: Math.round(s.value * 100),
@@ -263,9 +282,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getBloodGlucoseSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'blood_glucose',
           value: s.value,
@@ -281,9 +300,9 @@ export const appleHealthService = {
     try {
       const samples = await promisify<HealthValue[]>(
         AppleHealthKit.getDailyDistanceWalkingRunningSamples.bind(AppleHealthKit),
-        options,
+        options
       );
-      samples.forEach(s => {
+      samples.forEach((s) => {
         healthData.push({
           dataType: 'distance',
           value: Math.round(s.value * 100) / 100,
@@ -307,6 +326,6 @@ export const appleHealthService = {
       }
     }
 
-    return {synced: healthData.length, errors};
+    return { synced: healthData.length, errors };
   },
 };
