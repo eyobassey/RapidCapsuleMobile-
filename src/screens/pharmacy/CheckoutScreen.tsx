@@ -13,7 +13,7 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,6 +36,7 @@ import { checkoutAddressSchema, type CheckoutAddressFormData } from '../../utils
 export default function CheckoutScreen() {
   const { format } = useCurrency();
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { cartItems, clearCart } = usePharmacyStore();
   const { data: addresses = [] } = useAddressesQuery();
   const addAddressMutation = useAddAddressMutation();
@@ -209,7 +210,8 @@ export default function CheckoutScreen() {
 
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-5 pt-4 pb-36"
+        contentContainerClassName="px-5 pt-4"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 220 }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -593,7 +595,10 @@ export default function CheckoutScreen() {
       </ScrollView>
 
       {/* Sticky Bottom */}
-      <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
+      <View
+        className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3"
+        style={{ paddingBottom: insets.bottom + 12 }}
+      >
         <Button
           variant="primary"
           onPress={handlePlaceOrder}
@@ -606,7 +611,14 @@ export default function CheckoutScreen() {
 
       {/* ═══════ PAYSTACK WEBVIEW MODAL ═══════ */}
       <Modal visible={!!paystackUrl} animationType="slide" onRequestClose={handleClosePaystack}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: colors.background,
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          }}
+        >
           <View
             style={{
               flexDirection: 'row',
@@ -644,6 +656,7 @@ export default function CheckoutScreen() {
               source={{ uri: paystackUrl }}
               onNavigationStateChange={handlePaystackNavigation}
               style={{ flex: 1 }}
+              contentInsetAdjustmentBehavior="always"
               startInLoadingState
               renderLoading={() => (
                 <View
@@ -666,7 +679,7 @@ export default function CheckoutScreen() {
               )}
             />
           )}
-        </SafeAreaView>
+        </View>
       </Modal>
     </SafeAreaView>
   );
