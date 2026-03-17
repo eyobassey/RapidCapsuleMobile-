@@ -1,13 +1,13 @@
-import React, { useCallback, useMemo, useState } from 'react';
-import { View, RefreshControl, ActivityIndicator } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { ClipboardList, TrendingUp, CheckCircle, Package } from 'lucide-react-native';
+import { FlashList } from '@shopify/flash-list';
+import { CheckCircle, ClipboardList, Package, TrendingUp } from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, RefreshControl, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useMyOrdersQuery } from '../../hooks/queries';
 import OrderCard from '../../components/pharmacy/OrderCard';
-import { Header, TabBar, EmptyState, Text } from '../../components/ui';
+import { EmptyState, Header, TabBar, Text } from '../../components/ui';
+import { useMyOrdersQuery } from '../../hooks/queries';
 import { colors } from '../../theme/colors';
 import type { PharmacyOrder } from '../../types/pharmacy.types';
 
@@ -71,7 +71,24 @@ export default function MyOrdersScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Header title="My Orders" onBack={() => navigation.goBack()} />
+      <Header
+        title="My Orders"
+        onBack={() => {
+          // MyOrders lives under the Pharmacy stack, but UX expects back to Profile.
+          // Switch to the Profile tab and land on its home screen explicitly.
+          const parent = navigation.getParent?.();
+          if (parent?.navigate) {
+            parent.navigate('Profile', { screen: 'ProfileHome' });
+            return;
+          }
+
+          try {
+            navigation.navigate('Profile', { screen: 'ProfileHome' });
+          } catch {
+            navigation.goBack();
+          }
+        }}
+      />
 
       {/* Stats Bar */}
       {myOrders.length > 0 && (
