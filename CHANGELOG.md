@@ -1,3 +1,9 @@
+## [1.0.9](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.8...v1.0.9) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** pass API key auth args to xcodebuild for auto-provisioning ([e0fa6aa](https://github.com/eyobassey/RapidCapsuleMobile-/commit/e0fa6aa999fde0a8611a594d0753c8d464981342))
+
 ## [1.0.8](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.7...v1.0.8) (2026-03-17)
 
 ### Bug Fixes
