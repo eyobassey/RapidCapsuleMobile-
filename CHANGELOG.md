@@ -1,3 +1,9 @@
+## [1.0.15](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.14...v1.0.15) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** monkey-patch OpenSSL to use PKCS[#8](https://github.com/eyobassey/RapidCapsuleMobile-/issues/8) key for all Apple tools ([66ce011](https://github.com/eyobassey/RapidCapsuleMobile-/commit/66ce0116b9daadf60206f29ced4cb4433c178608))
+
 ## [1.0.14](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.13...v1.0.14) (2026-03-17)
 
 ### Bug Fixes
