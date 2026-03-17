@@ -40,10 +40,17 @@ jobs:
       - name: Install CocoaPods
         run: bundle exec pod install --project-directory=ios
 
+      - name: Write App Store Connect API key
+        env:
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+        run: |
+          mkdir -p private_keys
+          echo "$ASC_KEY_CONTENT" | base64 --decode > private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+
       - name: Deploy to TestFlight / App Store
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          ASC_KEY_FILEPATH: private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
         run: bundle exec fastlane ios ${{ github.event.inputs.lane }}
 
