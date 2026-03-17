@@ -54,6 +54,6 @@ jobs:
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_FILEPATH: private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          ASC_KEY_FILEPATH: ${{ github.workspace }}/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
         run: bundle exec fastlane ios ${{ github.event.inputs.lane }}
 
