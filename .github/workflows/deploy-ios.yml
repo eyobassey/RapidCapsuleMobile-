@@ -30,7 +30,12 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3'
-          bundler-cache: true
+          bundler-cache: false
+
+      - name: Install and update Ruby dependencies
+        run: |
+          bundle install
+          bundle update fastlane
 
       - name: Install CocoaPods
         run: bundle exec pod install --project-directory=ios

@@ -18,4 +18,4 @@ gem 'mutex_m'
 gem 'nkf'
 
 # CI/CD
-gem 'fastlane'
+gem 'fastlane', '>= 2.232.0'
