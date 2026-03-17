@@ -2074,6 +2074,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNDeviceInfo (15.0.2):
+    - React-Core
   - RNFlashList (1.8.3):
     - hermes-engine
     - RCTRequired
@@ -2513,6 +2515,7 @@ DEPENDENCIES:
   - "RNAppleAuthentication (from `../node_modules/@invertase/react-native-apple-authentication`)"
   - RNAppleHealthKit (from `../node_modules/react-native-health`)
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
+  - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - "RNFlashList (from `../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
@@ -2708,6 +2711,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-health"
   RNDateTimePicker:
     :path: "../node_modules/@react-native-community/datetimepicker"
+  RNDeviceInfo:
+    :path: "../node_modules/react-native-device-info"
   RNFlashList:
     :path: "../node_modules/@shopify/flash-list"
   RNGestureHandler:
@@ -2825,6 +2830,7 @@ SPEC CHECKSUMS:
   RNAppleAuthentication: a89c9804592b38ed4ab11f0aee68d05ba12ad432
   RNAppleHealthKit: 86ef7ab70f762b802f5c5289372de360cca701f9
   RNDateTimePicker: 9c0a849bbe1c256f0854fea255734b715f5ea876
+  RNDeviceInfo: 4c852998208b60dc192ae3529e5867817719ad1e
   RNFlashList: aac2d79a6008ddb058507178a2dd8d179c498978
   RNGestureHandler: 07de6f059e0ee5744ae9a56feb07ee345338cc31
   RNGoogleSignin: 104dd7238c56fe354e4b0a8fd267f866039ffdf3
