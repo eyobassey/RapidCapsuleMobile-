@@ -24,13 +24,14 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { Text } from '../../components/ui/Text';
 import { TextInput } from '../../components/ui/TextInput';
@@ -50,6 +51,7 @@ export default function WalletScreen() {
   const { format } = useCurrency();
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState(route?.params?.initialTab || 'wallet');
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -329,7 +331,7 @@ export default function WalletScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 48 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -1004,6 +1006,7 @@ export default function WalletScreen() {
                     onPress={() => {
                       setShowPurchaseModal(false);
                       setActiveTab('wallet');
+                      setShowFundModal(true);
                     }}
                     accessibilityRole="button"
                     accessibilityLabel="Add funds to wallet"
@@ -1157,9 +1160,14 @@ export default function WalletScreen() {
                   style={{
                     flex: 1,
                     fontSize: 24,
+                    lineHeight: 28,
                     fontWeight: '700',
                     color: colors.foreground,
-                    padding: 0,
+                    paddingHorizontal: 0,
+                    paddingVertical: Platform.OS === 'ios' ? 6 : 0,
+                    ...(Platform.OS === 'android'
+                      ? { textAlignVertical: 'center' as const, includeFontPadding: false }
+                      : null),
                   }}
                   placeholder="0.00"
                   placeholderTextColor={`${colors.mutedForeground}80`}
