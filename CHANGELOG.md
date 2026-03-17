@@ -1,3 +1,9 @@
+## [1.0.12](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.11...v1.0.12) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** revert export_method to app-store (fastlane doesn't support app-store-connect) ([4ec21e5](https://github.com/eyobassey/RapidCapsuleMobile-/commit/4ec21e527e43dcd2a21ee20f7bdbfb187756567b))
+
 ## [1.0.11](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.10...v1.0.11) (2026-03-17)
 
 ### Bug Fixes
