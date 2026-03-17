@@ -1,37 +1,37 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, Modal, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { WebView } from 'react-native-webview';
 import {
-  MapPin,
-  Store,
-  Truck,
-  CreditCard,
-  Wallet,
   ChevronDown,
   ChevronUp,
-  X,
   Clock,
+  CreditCard,
+  MapPin,
   Phone,
+  Store,
+  Truck,
+  Wallet,
+  X,
 } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
 
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { Button, FormInput, Header, Input, Text } from '../../components/ui';
 import {
-  useAddressesQuery,
   useAddAddressMutation,
+  useAddressesQuery,
   usePharmacyQuery,
   usePharmacyWalletBalanceQuery,
 } from '../../hooks/queries';
-import { usePharmacyStore } from '../../store/pharmacy';
-import { Header, Input, Button, FormInput, Text } from '../../components/ui';
-import { checkoutAddressSchema, type CheckoutAddressFormData } from '../../utils/validation';
-import { colors } from '../../theme/colors';
 import { useCurrency } from '../../hooks/useCurrency';
-import { DEFAULT_PHARMACY_ID } from '../../utils/constants';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { usePharmacyStore } from '../../store/pharmacy';
+import { colors } from '../../theme/colors';
 import type { DeliveryAddress, DeliveryMethod } from '../../types/pharmacy.types';
+import { DEFAULT_PHARMACY_ID } from '../../utils/constants';
+import { checkoutAddressSchema, type CheckoutAddressFormData } from '../../utils/validation';
 
 export default function CheckoutScreen() {
   const { format } = useCurrency();

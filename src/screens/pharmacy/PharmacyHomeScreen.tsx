@@ -10,18 +10,19 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback } from 'react';
 import { RefreshControl, ScrollView, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import CategoryCard from '../../components/pharmacy/CategoryCard';
 import DrugCard from '../../components/pharmacy/DrugCard';
 import { Skeleton, Text } from '../../components/ui';
-import { usePharmacyCategoriesQuery, useFeaturedDrugsQuery } from '../../hooks/queries';
+import { useFeaturedDrugsQuery, usePharmacyCategoriesQuery } from '../../hooks/queries';
 import { usePharmacyStore } from '../../store/pharmacy';
 import { colors } from '../../theme/colors';
 import type { Drug, DrugCategory } from '../../types/pharmacy.types';
 
 export default function PharmacyHomeScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const cartCount = usePharmacyStore((s) => s.cartCount);
   const {
     data: categories = [],
@@ -53,6 +54,7 @@ export default function PharmacyHomeScreen() {
   };
 
   const isFirstLoad = catalogLoading && featuredDrugs.length === 0;
+  const cartFabBottom = insets.bottom + 76;
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -94,6 +96,57 @@ export default function PharmacyHomeScreen() {
           <Search size={18} color={colors.mutedForeground} />
           <Text className="flex-1 text-muted-foreground text-base ml-3">Search drugs...</Text>
         </TouchableOpacity>
+
+        {/* Quick Links */}
+        <View className="mx-5 mt-6 bg-card border border-border rounded-2xl overflow-hidden">
+          <TouchableOpacity
+            onPress={() => navigation.navigate('UploadPrescription')}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Upload prescription"
+            className="p-4 flex-row items-center justify-between"
+          >
+            <View className="flex-row items-center">
+              <Upload size={20} color={colors.primary} />
+              <Text className="text-sm font-semibold text-foreground ml-3">
+                Upload Prescription
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+
+          <View className="border-t border-border" />
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MyUploads')}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="My prescriptions"
+            className="p-4 flex-row items-center justify-between"
+          >
+            <View className="flex-row items-center">
+              <FileText size={20} color={colors.primary} />
+              <Text className="text-sm font-semibold text-foreground ml-3">My Prescriptions</Text>
+            </View>
+            <ChevronRight size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+
+          <View className="border-t border-border" />
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('MyOrders')}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="My orders"
+            className="p-4 flex-row items-center justify-between"
+          >
+            <View className="flex-row items-center">
+              <ClipboardList size={20} color={colors.primary} />
+              <Text className="text-sm font-semibold text-foreground ml-3">My Orders</Text>
+            </View>
+            <ChevronRight size={18} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </View>
 
         {/* Featured Drugs */}
         {featuredDrugs.length > 0 && (
@@ -151,57 +204,6 @@ export default function PharmacyHomeScreen() {
             </View>
           )}
         </View>
-
-        {/* Quick Links */}
-        <View className="mx-5 mt-6 bg-card border border-border rounded-2xl overflow-hidden">
-          <TouchableOpacity
-            onPress={() => navigation.navigate('UploadPrescription')}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Upload prescription"
-            className="p-4 flex-row items-center justify-between"
-          >
-            <View className="flex-row items-center">
-              <Upload size={20} color={colors.primary} />
-              <Text className="text-sm font-semibold text-foreground ml-3">
-                Upload Prescription
-              </Text>
-            </View>
-            <ChevronRight size={18} color={colors.mutedForeground} />
-          </TouchableOpacity>
-
-          <View className="border-t border-border" />
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('MyUploads')}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="My prescriptions"
-            className="p-4 flex-row items-center justify-between"
-          >
-            <View className="flex-row items-center">
-              <FileText size={20} color={colors.primary} />
-              <Text className="text-sm font-semibold text-foreground ml-3">My Prescriptions</Text>
-            </View>
-            <ChevronRight size={18} color={colors.mutedForeground} />
-          </TouchableOpacity>
-
-          <View className="border-t border-border" />
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('MyOrders')}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="My orders"
-            className="p-4 flex-row items-center justify-between"
-          >
-            <View className="flex-row items-center">
-              <ClipboardList size={20} color={colors.primary} />
-              <Text className="text-sm font-semibold text-foreground ml-3">My Orders</Text>
-            </View>
-            <ChevronRight size={18} color={colors.mutedForeground} />
-          </TouchableOpacity>
-        </View>
       </ScrollView>
 
       {/* Cart FAB */}
@@ -211,8 +213,9 @@ export default function PharmacyHomeScreen() {
           activeOpacity={0.8}
           accessibilityRole="button"
           accessibilityLabel={`View cart, ${cartCount} items`}
-          className="absolute bottom-24 right-5 bg-primary rounded-full w-14 h-14 items-center justify-center"
+          className="absolute right-5 bg-primary rounded-full w-14 h-14 items-center justify-center"
           style={{
+            bottom: cartFabBottom,
             elevation: 6,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 3 },
