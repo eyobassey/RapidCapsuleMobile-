@@ -47,13 +47,11 @@ jobs:
         run: |
           mkdir -p private_keys
           echo "$ASC_KEY_CONTENT" | base64 -d > "private_keys/AuthKey_${ASC_KEY_ID}.p8"
-          openssl ec -in "private_keys/AuthKey_${ASC_KEY_ID}.p8" -out "private_keys/AuthKey_${ASC_KEY_ID}_ec.p8"
 
       - name: Deploy to TestFlight / App Store
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_FILEPATH: ${{ github.workspace }}/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}_ec.p8
-          ASC_KEY_FILEPATH_PKCS8: ${{ github.workspace }}/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+          ASC_KEY_FILEPATH: ${{ github.workspace }}/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
         run: bundle exec fastlane ios ${{ github.event.inputs.lane }}
 
