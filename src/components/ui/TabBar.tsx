@@ -52,8 +52,8 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   contentContainer: {
-    flexGrow: 1,
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 6,
     paddingHorizontal: 4,
   },

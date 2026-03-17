@@ -1,22 +1,22 @@
-import React, {useCallback, useEffect, useState} from 'react';
-import {View, RefreshControl} from 'react-native';
-import {FlashList} from '@shopify/flash-list';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
-import {FileImage, Upload} from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FlashList } from '@shopify/flash-list';
+import { FileImage, Upload } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { RefreshControl, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import {usePrescriptionUploadStore} from '../../store/prescriptionUpload';
 import UploadCard from '../../components/prescriptions/UploadCard';
-import {Header, TabBar, EmptyState, Skeleton} from '../../components/ui';
-import {colors} from '../../theme/colors';
-import type {PrescriptionUpload} from '../../types/prescriptionUpload.types';
+import { EmptyState, Header, Skeleton, TabBar } from '../../components/ui';
+import { usePrescriptionUploadStore } from '../../store/prescriptionUpload';
+import { colors } from '../../theme/colors';
+import type { PrescriptionUpload } from '../../types/prescriptionUpload.types';
 
 const TABS = [
-  {label: 'All', value: ''},
-  {label: 'Pending', value: 'pending'},
-  {label: 'In Progress', value: 'in_progress'},
-  {label: 'Approved', value: 'approved'},
-  {label: 'Rejected', value: 'rejected'},
+  { label: 'All', value: '' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'In Progress', value: 'in_progress' },
+  { label: 'Approved', value: 'approved' },
+  { label: 'Rejected', value: 'rejected' },
 ];
 
 // Map tab value to matching verification statuses for client-side filtering
@@ -37,8 +37,7 @@ const TAB_STATUS_MAP: Record<string, Set<string>> = {
 
 export default function MyUploadsScreen() {
   const navigation = useNavigation<any>();
-  const {uploads, isLoading, fetchUploads, filter, setFilter} =
-    usePrescriptionUploadStore();
+  const { uploads, isLoading, fetchUploads, filter, setFilter } = usePrescriptionUploadStore();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -58,11 +57,11 @@ export default function MyUploadsScreen() {
 
   // Client-side filtering based on tab
   const filteredUploads = filter
-    ? uploads.filter(u => TAB_STATUS_MAP[filter]?.has(u.verification_status))
+    ? uploads.filter((u) => TAB_STATUS_MAP[filter]?.has(u.verification_status))
     : uploads;
 
   const handlePress = (upload: PrescriptionUpload) => {
-    navigation.navigate('UploadDetail', {uploadId: upload._id});
+    navigation.navigate('UploadDetail', { uploadId: upload._id });
   };
 
   const isFirstLoad = isLoading && uploads.length === 0;
@@ -81,22 +80,22 @@ export default function MyUploadsScreen() {
         }
       />
 
-      <TabBar tabs={TABS} activeTab={filter} onChange={handleTabChange} />
+      <View className="px-5 py-2">
+        <TabBar tabs={TABS} activeTab={filter} onChange={handleTabChange} />
+      </View>
 
       {isFirstLoad ? (
         <View className="px-5 pt-4">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3].map((i) => (
             <Skeleton key={i} height={120} borderRadius={16} className="mb-3" />
           ))}
         </View>
       ) : (
         <FlashList
           data={filteredUploads}
-          keyExtractor={item => item._id}
-          renderItem={({item}) => (
-            <UploadCard upload={item} onPress={() => handlePress(item)} />
-          )}
-          contentContainerStyle={{paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100}}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => <UploadCard upload={item} onPress={() => handlePress(item)} />}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 }}
           estimatedItemSize={120}
           refreshControl={
             <RefreshControl
