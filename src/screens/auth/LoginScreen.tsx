@@ -70,9 +70,9 @@ export default function LoginScreen({ navigation }: Props) {
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     try {
-      const { requires2FA } = await login(data.email, data.password);
+      const { requires2FA, method } = await login(data.email, data.password);
       if (requires2FA) {
-        navigation.navigate('Otp', { email: data.email });
+        navigation.navigate('Otp', { email: data.email, method: method || 'email' });
       }
       // If no 2FA, the auth store automatically routes via RootNavigator
     } catch (err: unknown) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Shield } from 'lucide-react-native';
 import { Button, OtpInput, Text } from '../../components/ui';
@@ -15,9 +15,10 @@ export default function OtpScreen({ navigation, route }: Props) {
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(45);
   const verify2FA = useAuthStore((s) => s.verify2FA);
-  const maskedEmail = route.params?.email
-    ? route.params.email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
-    : 's***h@example.com';
+  const resendOTP = useAuthStore((s) => s.resendOTP);
+  const email = route.params?.email || '';
+  const method = route.params?.method || 'email';
+  const maskedEmail = email ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3') : 's***h@example.com';
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -29,12 +30,24 @@ export default function OtpScreen({ navigation, route }: Props) {
   const handleVerify = async () => {
     setLoading(true);
     try {
-      await verify2FA(code, route.params?.method || 'email');
+      await verify2FA(code, method, email);
       // Auth store will route via RootNavigator
     } catch (err: any) {
-      // TODO: show error toast
+      Alert.alert(
+        'Verification Failed',
+        err?.response?.data?.message || 'Invalid or expired code. Please try again.'
+      );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      await resendOTP(email, method);
+      setTimer(45);
+    } catch {
+      Alert.alert('Error', 'Failed to resend code. Please try again.');
     }
   };
 
@@ -74,7 +87,7 @@ export default function OtpScreen({ navigation, route }: Props) {
           </Text>
         ) : (
           <TouchableOpacity
-            onPress={() => setTimer(45)}
+            onPress={handleResend}
             accessibilityRole="button"
             accessibilityLabel="Resend verification code"
           >

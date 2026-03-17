@@ -71,11 +71,16 @@ interface AuthState {
   isAuthenticated: boolean;
   needsOnboarding: boolean;
 
-  login: (email: string, password: string, user_type?: string) => Promise<{ requires2FA: boolean }>;
+  login: (
+    email: string,
+    password: string,
+    user_type?: string
+  ) => Promise<{ requires2FA: boolean; method?: string }>;
   loginWithGoogle: () => Promise<void>;
   signupWithGoogle: () => Promise<void>;
   loginWithApple: () => Promise<void>;
-  verify2FA: (code: string, method: string) => Promise<void>;
+  verify2FA: (code: string, method: string, email: string) => Promise<void>;
+  resendOTP: (email: string, method?: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -95,14 +100,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, password, user_type = 'Patient') => {
     const res = await api.post('/auth/login', { email, password, user_type });
     const data = res.data;
-    if (data.requires_2fa) {
-      return { requires2FA: true };
-    }
     const token = data.data || data.result || data.token;
+
+    // Backend returns a JWT string on direct login, or a settings object when 2FA is triggered
     if (!token || typeof token !== 'string') {
-      throw new Error(
-        `Login succeeded but no token found. Response keys: ${Object.keys(data).join(', ')}`
-      );
+      const msg = (data.message || '').toLowerCase();
+      const method = msg.includes('phone') ? 'sms' : msg.includes('auth app') ? 'totp' : 'email';
+      return { requires2FA: true, method };
     }
     await get().setToken(token);
     await get().fetchUser();
@@ -110,11 +114,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return { requires2FA: false };
   },
 
-  verify2FA: async (code, _method) => {
-    const res = await api.post('/auth/2fa/verify', { code });
-    await get().setToken(res.data.data || res.data.result);
+  verify2FA: async (code, method, email) => {
+    let res;
+    if (method === 'sms') {
+      res = await api.post('/auth/otp/phone/verify', { code, email });
+    } else if (method === 'totp') {
+      res = await api.post('/auth/2fa/verify', { code, email });
+    } else {
+      res = await api.post('/auth/otp/verify', { token: code, email });
+    }
+    const result = res.data?.result || res.data?.data;
+    const jwtToken = typeof result === 'string' ? result : result?.token;
+    await get().setToken(jwtToken);
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
+  },
+
+  resendOTP: async (email, method = 'email') => {
+    if (method === 'sms') {
+      await api.post('/auth/resend-phone-otp', { email });
+    } else {
+      await api.post('/auth/resend-email-otp', { email });
+    }
   },
 
   loginWithGoogle: async () => {
