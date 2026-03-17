@@ -41,7 +41,7 @@ platform :ios do
       workspace: "ios/RapidCapsules.xcworkspace",
       scheme: "RapidCapsules",
       configuration: "Release",
-      export_method: "app-store-connect",
+      export_method: "app-store",
       xcargs: "-allowProvisioningUpdates -authenticationKeyPath '#{key_filepath_pkcs8}' -authenticationKeyID '#{key_id}' -authenticationKeyIssuerID '#{issuer_id}'"
     )
     upload_to_testflight(
@@ -78,7 +78,7 @@ platform :ios do
       workspace: "ios/RapidCapsules.xcworkspace",
       scheme: "RapidCapsules",
       configuration: "Release",
-      export_method: "app-store-connect",
+      export_method: "app-store",
       xcargs: "-allowProvisioningUpdates -authenticationKeyPath '#{key_filepath_pkcs8}' -authenticationKeyID '#{key_id}' -authenticationKeyIssuerID '#{issuer_id}'"
     )
     deliver(
