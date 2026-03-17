@@ -2141,6 +2141,8 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNInAppBrowser (3.7.1):
+    - React-Core
   - RNKeychain (9.2.3):
     - hermes-engine
     - RCTRequired
@@ -2514,6 +2516,7 @@ DEPENDENCIES:
   - "RNFlashList (from `../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
+  - RNInAppBrowser (from `../node_modules/react-native-inappbrowser-reborn`)
   - RNKeychain (from `../node_modules/react-native-keychain`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -2711,6 +2714,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-gesture-handler"
   RNGoogleSignin:
     :path: "../node_modules/@react-native-google-signin/google-signin"
+  RNInAppBrowser:
+    :path: "../node_modules/react-native-inappbrowser-reborn"
   RNKeychain:
     :path: "../node_modules/react-native-keychain"
   RNReanimated:
@@ -2823,6 +2828,7 @@ SPEC CHECKSUMS:
   RNFlashList: aac2d79a6008ddb058507178a2dd8d179c498978
   RNGestureHandler: 07de6f059e0ee5744ae9a56feb07ee345338cc31
   RNGoogleSignin: 104dd7238c56fe354e4b0a8fd267f866039ffdf3
+  RNInAppBrowser: 904d24dc75e8e6c6c98a3160329192608946f9df
   RNKeychain: 1bd9c3e52f71e954437e6429e95d801b190c15fa
   RNReanimated: 66fa99647173f254f731e6aa59a0a2cc8c838ac1
   RNScreens: 6cb648bdad8fe9bee9259fe144df95b6d1d5b707
@@ -2833,4 +2839,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 7f6f0f062ae59d670dd5f6d7873d7aaa8b47253a
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.15.2
