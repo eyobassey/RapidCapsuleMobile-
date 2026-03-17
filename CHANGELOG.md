@@ -1,3 +1,9 @@
+## [1.0.8](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.7...v1.0.8) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** fix base64 decode flag and secret env var references in key step ([47f7a83](https://github.com/eyobassey/RapidCapsuleMobile-/commit/47f7a831e92bfeff3a226a971ec3c278784fba7e))
+
 ## [1.0.7](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.6...v1.0.7) (2026-03-17)
 
 ### Bug Fixes
