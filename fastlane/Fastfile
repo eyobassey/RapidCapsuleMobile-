@@ -42,6 +42,10 @@ platform :ios do
       scheme: "RapidCapsules",
       configuration: "Release",
       export_method: "app-store",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: "NS5XW2Q4P8"
+      },
       xcargs: "-allowProvisioningUpdates -authenticationKeyPath '#{key_filepath_pkcs8}' -authenticationKeyID '#{key_id}' -authenticationKeyIssuerID '#{issuer_id}'"
     )
     upload_to_testflight(
@@ -79,6 +83,10 @@ platform :ios do
       scheme: "RapidCapsules",
       configuration: "Release",
       export_method: "app-store",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: "NS5XW2Q4P8"
+      },
       xcargs: "-allowProvisioningUpdates -authenticationKeyPath '#{key_filepath_pkcs8}' -authenticationKeyID '#{key_id}' -authenticationKeyIssuerID '#{issuer_id}'"
     )
     deliver(
