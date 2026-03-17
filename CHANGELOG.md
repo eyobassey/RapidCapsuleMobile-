@@ -1,3 +1,9 @@
+## [1.0.10](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.9...v1.0.10) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** use absolute path for API key file ([41a104c](https://github.com/eyobassey/RapidCapsuleMobile-/commit/41a104cd073b14f259d1789d9b837df5069414d1))
+
 ## [1.0.9](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.8...v1.0.9) (2026-03-17)
 
 ### Bug Fixes
