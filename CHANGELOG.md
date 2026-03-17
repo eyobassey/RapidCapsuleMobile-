@@ -1,3 +1,9 @@
+## [1.0.5](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.4...v1.0.5) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** upgrade fastlane to >= 2.232.0 to fix invalid curve name error ([e525c6c](https://github.com/eyobassey/RapidCapsuleMobile-/commit/e525c6cb946aa000ac06d4be85a67cc0b469effd))
+
 ## [1.0.4](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.3...v1.0.4) (2026-03-17)
 
 ### Bug Fixes
