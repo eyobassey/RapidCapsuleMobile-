@@ -32,9 +32,9 @@ jest.mock('../currency', () => ({
   },
 }));
 
-import {useAuthStore} from '../auth';
+import { useAuthStore } from '../auth';
 import api from '../../services/api';
-import {storage} from '../../utils/storage';
+import { storage } from '../../utils/storage';
 
 const mockApi = api as jest.Mocked<typeof api>;
 const mockStorage = storage as jest.Mocked<typeof storage>;
@@ -67,7 +67,7 @@ describe('useAuthStore', () => {
   describe('login', () => {
     it('sets user, token, and isAuthenticated on success', async () => {
       mockApi.post.mockResolvedValueOnce({
-        data: {data: 'jwt-token-123'},
+        data: { data: 'jwt-token-123' },
       });
       mockApi.get.mockResolvedValueOnce({
         data: {
@@ -79,7 +79,7 @@ describe('useAuthStore', () => {
               last_name: 'Doe',
               date_of_birth: '1990-01-01',
             },
-            emergency_contacts: [{name: 'Jane'}],
+            emergency_contacts: [{ name: 'Jane' }],
             is_email_verified: true,
           },
         },
@@ -87,7 +87,7 @@ describe('useAuthStore', () => {
 
       const result = await useAuthStore.getState().login('test@test.com', 'pass123');
 
-      expect(result).toEqual({requires2FA: false});
+      expect(result).toEqual({ requires2FA: false });
       expect(mockApi.post).toHaveBeenCalledWith('/auth/login', {
         email: 'test@test.com',
         password: 'pass123',
@@ -102,33 +102,40 @@ describe('useAuthStore', () => {
       expect(state.user?.email).toBe('test@test.com');
     });
 
-    it('returns requires2FA flag when 2FA is needed', async () => {
+    it('returns requires2FA when backend returns non-string result (email OTP)', async () => {
       mockApi.post.mockResolvedValueOnce({
-        data: {requires_2fa: true},
+        data: {
+          message: 'OTP has been sent to your email, kindly verify',
+          result: { twoFA_auth: true },
+        },
       });
 
       const result = await useAuthStore.getState().login('test@test.com', 'pass123');
 
-      expect(result).toEqual({requires2FA: true});
+      expect(result).toEqual({ requires2FA: true, method: 'email' });
       expect(mockStorage.setToken).not.toHaveBeenCalled();
     });
 
-    it('throws error when no token in response', async () => {
+    it('returns requires2FA with sms method when backend sends phone OTP', async () => {
       mockApi.post.mockResolvedValueOnce({
-        data: {success: true},
+        data: {
+          message: 'OTP has been sent to your phone, kindly verify',
+          result: { twoFA_auth: true },
+        },
       });
 
-      await expect(
-        useAuthStore.getState().login('test@test.com', 'pass123'),
-      ).rejects.toThrow('Login succeeded but no token found');
+      const result = await useAuthStore.getState().login('test@test.com', 'pass123');
+
+      expect(result).toEqual({ requires2FA: true, method: 'sms' });
+      expect(mockStorage.setToken).not.toHaveBeenCalled();
     });
 
     it('propagates API errors', async () => {
       mockApi.post.mockRejectedValueOnce(new Error('Invalid credentials'));
 
-      await expect(
-        useAuthStore.getState().login('test@test.com', 'wrong'),
-      ).rejects.toThrow('Invalid credentials');
+      await expect(useAuthStore.getState().login('test@test.com', 'wrong')).rejects.toThrow(
+        'Invalid credentials'
+      );
     });
   });
 
@@ -136,7 +143,13 @@ describe('useAuthStore', () => {
     it('clears state and storage', async () => {
       // Set some state first
       useAuthStore.setState({
-        user: {_id: '1', email: 'x', user_type: 'Patient', profile: {first_name: 'A', last_name: 'B'}, is_email_verified: true},
+        user: {
+          _id: '1',
+          email: 'x',
+          user_type: 'Patient',
+          profile: { first_name: 'A', last_name: 'B' },
+          is_email_verified: true,
+        },
         token: 'token',
         isAuthenticated: true,
         needsOnboarding: true,
@@ -167,7 +180,7 @@ describe('useAuthStore', () => {
               last_name: 'Doe',
               date_of_birth: '1995-05-05',
             },
-            emergency_contacts: [{name: 'Bob'}],
+            emergency_contacts: [{ name: 'Bob' }],
             is_email_verified: true,
           },
         },
@@ -194,13 +207,13 @@ describe('useAuthStore', () => {
 
   describe('fetchUser', () => {
     it('sets needsOnboarding when profile is incomplete', async () => {
-      useAuthStore.setState({token: 'tok'});
+      useAuthStore.setState({ token: 'tok' });
       mockApi.get.mockResolvedValueOnce({
         data: {
           data: {
             _id: 'user1',
             email: 'new@test.com',
-            profile: {first_name: 'A', last_name: 'B'},
+            profile: { first_name: 'A', last_name: 'B' },
             emergency_contacts: [],
             is_email_verified: true,
           },

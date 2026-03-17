@@ -35,8 +35,9 @@ describe('OtpScreen', () => {
 
   it('calls verify2FA when 6-digit code is entered and button pressed', async () => {
     const verifyMock = jest.fn().mockResolvedValue(undefined);
+    const resendMock = jest.fn().mockResolvedValue(undefined);
     (useAuthStore as unknown as jest.Mock).mockImplementation((selector: any) =>
-      selector({ verify2FA: verifyMock })
+      selector({ verify2FA: verifyMock, resendOTP: resendMock })
     );
 
     const { getByText, getAllByDisplayValue } = renderWithNav({ email: 'user@example.com' });
@@ -53,7 +54,7 @@ describe('OtpScreen', () => {
     fireEvent.press(button);
 
     await waitFor(() => {
-      expect(verifyMock).toHaveBeenCalledWith('123456', 'email');
+      expect(verifyMock).toHaveBeenCalledWith('123456', 'email', 'user@example.com');
     });
   });
 });
