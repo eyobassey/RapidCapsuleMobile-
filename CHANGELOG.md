@@ -1,3 +1,9 @@
+## [1.0.11](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.10...v1.0.11) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** use PKCS[#8](https://github.com/eyobassey/RapidCapsuleMobile-/issues/8) key for xcodebuild and EC key for fastlane ([a132d39](https://github.com/eyobassey/RapidCapsuleMobile-/commit/a132d39f63d3a73a3f88b77a847a649edbea5e68))
+
 ## [1.0.10](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.9...v1.0.10) (2026-03-17)
 
 ### Bug Fixes
