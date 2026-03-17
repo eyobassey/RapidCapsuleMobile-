@@ -1,3 +1,9 @@
+## [1.0.3](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.2...v1.0.3) (2026-03-17)
+
+### Bug Fixes
+
+- **auth:** fix 2FA/OTP login flow not navigating to OTP screen ([00687d0](https://github.com/eyobassey/RapidCapsuleMobile-/commit/00687d0980baa85a2fcc7f53a88df938ec0d5230))
+
 ## [1.0.2](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.1...v1.0.2) (2026-03-13)
 
 ### Bug Fixes
