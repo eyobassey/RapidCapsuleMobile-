@@ -1,3 +1,9 @@
+## [1.0.14](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.13...v1.0.14) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** switch to Admin API key XYZ6XN77NT for cloud signing permissions ([6123165](https://github.com/eyobassey/RapidCapsuleMobile-/commit/612316582cea9923bdb66ce9a2e05f07a7c2dffa))
+
 ## [1.0.13](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.12...v1.0.13) (2026-03-17)
 
 ### Bug Fixes
