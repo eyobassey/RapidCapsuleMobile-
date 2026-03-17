@@ -18,7 +18,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui/Text';
 
 import { Header } from '../../components/ui';
@@ -29,6 +29,7 @@ import { formatDate } from '../../utils/formatters';
 
 export default function HealthRecordsScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const [checkups, setCheckups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -127,7 +128,7 @@ export default function HealthRecordsScreen() {
       ) : (
         <ScrollView
           style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 16 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 120, gap: 16 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
