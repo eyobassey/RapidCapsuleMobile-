@@ -26,6 +26,13 @@ import { useCurrencyStore } from '../../store/currency';
 import { colors } from '../../theme/colors';
 import { CURRENCY_LIST, SUPPORTED_CURRENCIES } from '../../utils/currency';
 import { formatDate } from '../../utils/formatters';
+import DeviceInfo from 'react-native-device-info';
+
+function getAppVersionLabel(): string {
+  const version = DeviceInfo.getVersion();
+  const build = DeviceInfo.getBuildNumber();
+  return build ? `${version} (${build})` : version;
+}
 
 interface MenuSection {
   title: string;
@@ -47,6 +54,7 @@ export default function ProfileScreen() {
   const setCurrency = useCurrencyStore((s) => s.setCurrency);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const currentCurrency = SUPPORTED_CURRENCIES[currencyCode] ?? SUPPORTED_CURRENCIES.USD;
+  const appVersionLabel = getAppVersionLabel();
 
   const firstName = user?.profile?.first_name || 'User';
   const lastName = user?.profile?.last_name || '';
@@ -130,7 +138,7 @@ export default function ProfileScreen() {
         {
           icon: <Info size={20} color={colors.mutedForeground} />,
           title: 'About RapidCapsule',
-          subtitle: 'Version 2.1.0',
+          subtitle: `Version ${appVersionLabel}`,
           onPress: () => {},
         },
       ],

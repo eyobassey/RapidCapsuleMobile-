@@ -38,6 +38,12 @@ jest.mock('react-native-webview', () => ({
   WebView: () => null,
 }));
 
+// Mock react-native-device-info (native dependency)
+jest.mock('react-native-device-info', () => ({
+  getVersion: jest.fn(() => '0.0.0'),
+  getBuildNumber: jest.fn(() => '0'),
+}));
+
 // Mock react-native-image-picker (native + ESM)
 jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn((_options, cb) => cb && cb({ didCancel: true })),
