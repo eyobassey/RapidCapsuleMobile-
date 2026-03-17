@@ -1,3 +1,9 @@
+## [1.0.6](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.5...v1.0.6) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** use key_filepath instead of key_content to fix OpenSSL curve error ([270a60a](https://github.com/eyobassey/RapidCapsuleMobile-/commit/270a60ad06bb83cab689289d35fe2826ece4da7c))
+
 ## [1.0.5](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.4...v1.0.5) (2026-03-17)
 
 ### Bug Fixes
