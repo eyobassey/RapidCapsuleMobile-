@@ -1,6 +1,6 @@
 import React from 'react';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import EkaChatScreen from '../screens/main/EkaChatScreen';
 import BottomTabBar from '../components/navigation/BottomTabBar';
 import HomeStack from './stacks/HomeStack';
@@ -86,7 +86,7 @@ const HIDE_TAB_SCREENS = new Set([
 function getTabBarStyle(route: any) {
   const routeName = getFocusedRouteNameFromRoute(route);
   if (routeName && HIDE_TAB_SCREENS.has(routeName)) {
-    return {display: 'none' as const};
+    return { display: 'none' as const };
   }
   return {};
 }
@@ -94,40 +94,42 @@ function getTabBarStyle(route: any) {
 export default function MainTabs() {
   return (
     <Tab.Navigator
-      tabBar={props => <BottomTabBar {...props} />}
+      id="MainTabs"
+      tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-      }}>
+      }}
+    >
       <Tab.Screen
         name="Home"
         component={HomeStack}
-        options={({route}) => ({
+        options={({ route }) => ({
           tabBarStyle: getTabBarStyle(route),
         })}
       />
       <Tab.Screen
         name="Bookings"
         component={BookingsStack}
-        options={({route}) => ({
+        options={({ route }) => ({
           tabBarStyle: getTabBarStyle(route),
         })}
       />
       <Tab.Screen
         name="Eka"
         component={EkaChatScreen}
-        options={{tabBarStyle: {display: 'none'}}}
+        options={{ tabBarStyle: { display: 'none' } }}
       />
       <Tab.Screen
         name="Pharmacy"
         component={PharmacyStack}
-        options={({route}) => ({
+        options={({ route }) => ({
           tabBarStyle: getTabBarStyle(route),
         })}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileStack}
-        options={({route}) => ({
+        options={({ route }) => ({
           tabBarStyle: getTabBarStyle(route),
         })}
       />
