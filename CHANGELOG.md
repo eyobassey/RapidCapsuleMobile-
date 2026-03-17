@@ -1,3 +1,9 @@
+## [1.0.13](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.12...v1.0.13) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** add signingStyle automatic and teamID to export options ([55b08b3](https://github.com/eyobassey/RapidCapsuleMobile-/commit/55b08b3658cff98df66eda3bec482a8d53e7de60))
+
 ## [1.0.12](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.11...v1.0.12) (2026-03-17)
 
 ### Bug Fixes
