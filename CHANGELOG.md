@@ -1,3 +1,9 @@
+## [1.0.4](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.3...v1.0.4) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** add App Store Connect API key auth and automatic signing for iOS CI builds ([f19ec53](https://github.com/eyobassey/RapidCapsuleMobile-/commit/f19ec535c63df818c8877b1db85eef80ca0c8d0e))
+
 ## [1.0.3](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.2...v1.0.3) (2026-03-17)
 
 ### Bug Fixes
