@@ -57,6 +57,27 @@ export const appleHealthService = {
     return hasHealthKitModule();
   },
 
+  async isSupported(): Promise<boolean> {
+    if (!hasHealthKitModule()) return false;
+
+    const isAvailableFn = (AppleHealthKit as any)?.isAvailable;
+    if (typeof isAvailableFn !== 'function') {
+      // Some versions don't expose this; best-effort fallback.
+      return true;
+    }
+
+    return new Promise((resolve) => {
+      try {
+        isAvailableFn((err: any, available: boolean) => {
+          if (err) resolve(false);
+          else resolve(!!available);
+        });
+      } catch {
+        resolve(false);
+      }
+    });
+  },
+
   async requestPermissions(): Promise<boolean> {
     // `initHealthKit` is the permission request step for react-native-health.
     return this.initialize();

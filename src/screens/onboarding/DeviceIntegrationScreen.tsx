@@ -9,7 +9,15 @@ import {
   XCircle,
 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Switch, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  Platform,
+  Switch,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { WebView } from 'react-native-webview';
 import SectionScreenLayout from '../../components/onboarding/SectionScreenLayout';
 import { Text } from '../../components/ui';
@@ -75,6 +83,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
   const [syncing, setSyncing] = useState<string | null>(null);
   const [oauthUrl, setOauthUrl] = useState<string | null>(null);
   const [oauthProvider, setOauthProvider] = useState<string | null>(null);
+  const [healthKitSupported, setHealthKitSupported] = useState<boolean>(false);
 
   const [consents, setConsents] = useState({
     vitals_auto_sync: false,
@@ -117,6 +126,17 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
     loadIntegrations();
   }, [loadIntegrations]);
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const supported = await appleHealthService.isSupported();
+      if (mounted) setHealthKitSupported(supported);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const getIntegrationStatus = (appId: string): IntegrationStatus => {
     const integration = integrations.find((i: any) => i.provider === appId);
     return (integration?.status as IntegrationStatus) || 'disconnected';
@@ -126,6 +146,47 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
     const integration = integrations.find((i: any) => i.provider === appId);
     return (integration as any)?.lastSyncAt || (integration as any)?.updatedAt;
   };
+
+  const openOAuthInSystemBrowser = useCallback(
+    async (appId: string, authUrl: string) => {
+      // Google OAuth (incl. Fit scopes) rejects embedded WebViews (`disallowed_useragent`).
+      // Use system browser (ASWebAuthenticationSession / Chrome Custom Tabs).
+      const redirectUrl = 'rapidcapsule://health-integrations/callback';
+
+      try {
+        // Lazy require to avoid Jest parsing ESM from node_modules.
+
+        const InAppBrowser = require('react-native-inappbrowser-reborn').default;
+
+        const available = await InAppBrowser.isAvailable();
+        if (!available) {
+          return { handled: false as const };
+        }
+
+        const result = await InAppBrowser.openAuth(authUrl, redirectUrl, {
+          // Production-friendly defaults
+          showTitle: true,
+          enableUrlBarHiding: true,
+          enableDefaultShare: false,
+          ephemeralWebSession: false,
+        } as any);
+
+        // Even if the browser is closed/cancelled, the user may have completed auth.
+        // We always refresh integration status after returning to the app.
+        await loadIntegrations();
+
+        if ((result as any)?.type === 'success') {
+          Alert.alert('Connected', `${appId} connected successfully.`);
+        }
+
+        return { handled: true as const };
+      } catch (e: any) {
+        console.warn('OAuth browser flow failed:', e?.message || e);
+        return { handled: false as const };
+      }
+    },
+    [loadIntegrations]
+  );
 
   // Connect
   const handleConnect = async (appId: string) => {
@@ -161,7 +222,12 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
       } else if (result.requiresNativeApp) {
         Alert.alert('Not Available', 'This provider requires native SDK support.');
       } else if (result.authUrl) {
-        // OAuth flow — open in WebView
+        if (appId === 'google_fit') {
+          const handled = await openOAuthInSystemBrowser(appId, result.authUrl);
+          if (handled.handled) return;
+        }
+
+        // OAuth flow fallback — open in WebView (some providers still allow it)
         setOauthProvider(appId);
         setOauthUrl(result.authUrl);
       }
@@ -257,6 +323,13 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
 
   // Toggle connect/disconnect
   const handleToggle = (appId: string) => {
+    if (appId === 'apple_health' && !healthKitSupported) {
+      Alert.alert(
+        'Apple Health Not Available',
+        'Apple Health is only available on a physical iPhone with HealthKit enabled for this app.'
+      );
+      return;
+    }
     const status = getIntegrationStatus(appId);
     if (status === 'connected') {
       handleDisconnect(appId);
@@ -337,6 +410,9 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
             const isSyncing = syncing === app.id;
             const lastSync = getLastSync(app.id);
             const Icon = app.icon;
+            const isAppleHealth = app.id === 'apple_health';
+            const isToggleDisabled =
+              (isAppleHealth && Platform.OS !== 'ios') || (isAppleHealth && !healthKitSupported);
 
             return (
               <View
@@ -347,6 +423,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
                   borderColor: isConnected ? app.color : colors.border,
                   borderRadius: 16,
                   padding: 16,
+                  opacity: isToggleDisabled ? 0.6 : 1,
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -372,6 +449,13 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
                     <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
                       {app.description}
                     </Text>
+                    {isToggleDisabled && (
+                      <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 4 }}>
+                        {Platform.OS !== 'ios'
+                          ? 'Available on iOS only.'
+                          : 'Requires a physical iPhone (HealthKit not available on simulator).'}
+                      </Text>
+                    )}
                   </View>
 
                   {isConnecting ? (
@@ -380,6 +464,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
                     <Switch
                       value={isConnected}
                       onValueChange={() => handleToggle(app.id)}
+                      disabled={isToggleDisabled}
                       accessibilityRole="switch"
                       accessibilityLabel={`Connect ${app.name}`}
                       accessibilityState={{ checked: isConnected }}
