@@ -1,3 +1,9 @@
+## [1.0.7](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.6...v1.0.7) (2026-03-17)
+
+### Bug Fixes
+
+- **ci:** convert .p8 key from PKCS[#8](https://github.com/eyobassey/RapidCapsuleMobile-/issues/8) to EC format for OpenSSL compat ([7e874e3](https://github.com/eyobassey/RapidCapsuleMobile-/commit/7e874e3741d56f4a703dfd0525c86fad0d6f4adb))
+
 ## [1.0.6](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.5...v1.0.6) (2026-03-17)
 
 ### Bug Fixes
