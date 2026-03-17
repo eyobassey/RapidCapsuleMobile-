@@ -43,10 +43,11 @@ jobs:
       - name: Write App Store Connect API key
         env:
           ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
         run: |
           mkdir -p private_keys
-          echo "$ASC_KEY_CONTENT" | base64 --decode > private_keys/AuthKey_pkcs8.p8
-          openssl ec -in private_keys/AuthKey_pkcs8.p8 -out private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 2>/dev/null
+          echo "$ASC_KEY_CONTENT" | base64 -d > private_keys/AuthKey_pkcs8.p8
+          openssl ec -in private_keys/AuthKey_pkcs8.p8 -out "private_keys/AuthKey_${ASC_KEY_ID}.p8"
           rm private_keys/AuthKey_pkcs8.p8
 
       - name: Deploy to TestFlight / App Store
