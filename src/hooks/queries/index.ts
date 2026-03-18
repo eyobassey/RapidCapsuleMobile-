@@ -38,6 +38,10 @@ export {
   notificationKeys,
   useNotificationsQuery,
   useUnreadCountQuery,
+  useNotificationPreferencesQuery,
+  useNotificationStatsQuery,
+  useUpdateNotificationPreferencesMutation,
+  useToggleChannelMutation,
   useMarkReadMutation,
   useMarkAllReadMutation,
 } from './useNotificationsQuery';

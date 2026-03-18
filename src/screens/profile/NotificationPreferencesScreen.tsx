@@ -19,7 +19,7 @@ import {
   Volume2,
   Zap,
 } from 'lucide-react-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -36,14 +36,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '../../components/ui/Text';
 import {
+  useNotificationPreferencesQuery,
+  useNotificationStatsQuery,
+  useToggleChannelMutation,
+  useUpdateNotificationPreferencesMutation,
+} from '../../hooks/queries/useNotificationsQuery';
+import {
   CategoryKey,
   ChannelKey,
   DEFAULT_PREFS,
   MessagingTiming,
   NotificationPreferences,
-  NotificationStats,
   QuietHours,
-  notificationsService,
 } from '../../services/notifications.service';
 import { colors } from '../../theme/colors';
 
@@ -501,82 +505,25 @@ function PickerSheet<T>({
 export default function NotificationPreferencesScreen() {
   const navigation = useNavigation<any>();
 
-  const [prefs, setPrefs] = useState<NotificationPreferences>(DEFAULT_PREFS);
-  const [stats, setStats] = useState<NotificationStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  // ── TanStack queries ──────────────────────────────────────────────────────
+  const prefsQuery = useNotificationPreferencesQuery();
+  const statsQuery = useNotificationStatsQuery();
+  const updatePrefs = useUpdateNotificationPreferencesMutation();
+  const { toggle: toggleChannel } = useToggleChannelMutation();
 
+  // Live preferences — fall back to DEFAULT_PREFS while loading so all
+  // derived values below are always type-safe.
+  const prefs = prefsQuery.data ?? DEFAULT_PREFS;
+  const stats = statsQuery.data ?? null;
+
+  // ── UI-only state (no data) ───────────────────────────────────────────────
   const [showDelayPicker, setShowDelayPicker] = useState(false);
   const [showCooldownPicker, setShowCooldownPicker] = useState(false);
 
+  // Debounce ref — keeps the pattern for timing-sensitive pickers.
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Data fetching ────────────────────────────────────────────────────────────
-
-  const fetchAll = useCallback(async () => {
-    try {
-      const [prefsResult, statsResult] = await Promise.allSettled([
-        notificationsService.getPreferences(),
-        notificationsService.getStats(),
-      ]);
-      if (prefsResult.status === 'fulfilled' && prefsResult.value) {
-        setPrefs({ ...DEFAULT_PREFS, ...prefsResult.value });
-      }
-      if (statsResult.status === 'fulfilled' && statsResult.value) {
-        setStats(statsResult.value);
-      }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchAll();
-  }, [fetchAll]);
-
-  // ── Debounced PATCH ──────────────────────────────────────────────────────────
-
-  const scheduleSave = useCallback((patch: Partial<NotificationPreferences>) => {
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(async () => {
-      setSaving(true);
-      try {
-        await notificationsService.updatePreferences(patch);
-      } catch {
-        Alert.alert('Could not save', 'Your preferences could not be saved. Please try again.');
-      } finally {
-        setSaving(false);
-      }
-    }, 600);
-  }, []);
-
-  // ── Toggle a single channel within a category ────────────────────────────────
-
-  const toggleChannel = useCallback(
-    (category: CategoryKey, channel: ChannelKey) => {
-      setPrefs((prev) => {
-        const updated: NotificationPreferences = {
-          ...prev,
-          [category]: {
-            ...prev[category],
-            [channel]: !prev[category][channel],
-          },
-        };
-        scheduleSave({ [category]: updated[category] });
-        return updated;
-      });
-    },
-    [scheduleSave]
-  );
-
-  // ── Enable / Disable all categories × all channels ──────────────────────────
+  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const setAllCategories = useCallback(
     (value: boolean) => {
@@ -584,44 +531,52 @@ export default function NotificationPreferencesScreen() {
         ChannelKey,
         boolean
       >;
-
       const patch = Object.fromEntries(
         CATEGORIES.map((cat) => [cat.key, { ...allFlags }])
       ) as Partial<NotificationPreferences>;
 
-      setPrefs((prev) => ({ ...prev, ...patch }));
-      scheduleSave(patch);
-    },
-    [scheduleSave]
-  );
-
-  // ── Quiet hours toggle ───────────────────────────────────────────────────────
-
-  const toggleQuietHours = useCallback(() => {
-    setPrefs((prev) => {
-      const updated: QuietHours = {
-        ...prev.quiet_hours,
-        enabled: !prev.quiet_hours.enabled,
-      };
-      scheduleSave({ quiet_hours: updated });
-      return { ...prev, quiet_hours: updated };
-    });
-  }, [scheduleSave]);
-
-  // ── Messaging timing ─────────────────────────────────────────────────────────
-
-  const setMessagingTiming = useCallback(
-    (patch: Partial<MessagingTiming>) => {
-      setPrefs((prev) => {
-        const updated: MessagingTiming = { ...prev.messaging_timing, ...patch };
-        scheduleSave({ messaging_timing: updated });
-        return { ...prev, messaging_timing: updated };
+      updatePrefs.mutate(patch, {
+        onError: () =>
+          Alert.alert('Could not save', 'Your preferences could not be saved. Please try again.'),
       });
     },
-    [scheduleSave]
+    [updatePrefs]
   );
 
-  // ── Derived stats ────────────────────────────────────────────────────────────
+  const toggleQuietHours = useCallback(() => {
+    const updated: QuietHours = { ...prefs.quiet_hours, enabled: !prefs.quiet_hours.enabled };
+    updatePrefs.mutate(
+      { quiet_hours: updated },
+      {
+        onError: () =>
+          Alert.alert('Could not save', 'Your preferences could not be saved. Please try again.'),
+      }
+    );
+  }, [prefs.quiet_hours, updatePrefs]);
+
+  // Debounced — picker selections fire rapidly; avoid sending a request per
+  // scroll step while still keeping the UI instant via the optimistic update.
+  const setMessagingTiming = useCallback(
+    (patch: Partial<MessagingTiming>) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        const updated: MessagingTiming = { ...prefs.messaging_timing, ...patch };
+        updatePrefs.mutate(
+          { messaging_timing: updated },
+          {
+            onError: () =>
+              Alert.alert(
+                'Could not save',
+                'Your preferences could not be saved. Please try again.'
+              ),
+          }
+        );
+      }, 400);
+    },
+    [prefs.messaging_timing, updatePrefs]
+  );
+
+  // ── Derived values ────────────────────────────────────────────────────────
 
   const totalChannelSlots = CATEGORIES.length * CHANNELS.length;
   const activeChannelSlots = CATEGORIES.reduce(
@@ -641,9 +596,9 @@ export default function NotificationPreferencesScreen() {
   const cooldownLabel =
     COOLDOWN_OPTIONS[currentCooldownIndex]?.label ?? `${prefs.messaging_timing.cooldown_hours}h`;
 
-  // ── Loading state ────────────────────────────────────────────────────────────
+  // ── Loading state ─────────────────────────────────────────────────────────
 
-  if (loading) {
+  if (prefsQuery.isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top']}>
         <View className="h-14 bg-card border-b border-border flex-row items-center px-4 gap-3">
@@ -665,7 +620,7 @@ export default function NotificationPreferencesScreen() {
     );
   }
 
-  // ── Main render ──────────────────────────────────────────────────────────────
+  // ── Main render ───────────────────────────────────────────────────────────
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -680,7 +635,7 @@ export default function NotificationPreferencesScreen() {
           <ArrowLeft size={18} color={colors.foreground} />
         </TouchableOpacity>
         <Text className="flex-1 text-base font-bold text-foreground">Notification Preferences</Text>
-        {saving && (
+        {updatePrefs.isPending && (
           <View className="flex-row items-center gap-1.5">
             <ActivityIndicator size="small" color={colors.primary} />
             <Text className="text-xs text-muted-foreground">Saving…</Text>
@@ -694,8 +649,11 @@ export default function NotificationPreferencesScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={prefsQuery.isRefetching && !prefsQuery.isLoading}
+            onRefresh={() => {
+              prefsQuery.refetch();
+              statsQuery.refetch();
+            }}
             tintColor={colors.primary}
           />
         }
