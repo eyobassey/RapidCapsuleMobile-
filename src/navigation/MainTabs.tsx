@@ -39,6 +39,7 @@ const HIDE_TAB_SCREENS = new Set([
   'WalletCredits',
   'WebView',
   'NotificationPreferences',
+  'SecuritySettings',
   // Prescription screens
   'PrescriptionsList',
   'PrescriptionDetail',

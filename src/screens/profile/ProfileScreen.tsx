@@ -122,7 +122,7 @@ export default function ProfileScreen() {
           icon: <Shield size={20} color={colors.accent} />,
           title: 'Security',
           subtitle: 'Password & two-factor auth',
-          onPress: () => navigation.navigate('Settings'),
+          onPress: () => navigation.navigate('SecuritySettings'),
         },
       ],
     },

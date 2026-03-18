@@ -6,6 +6,7 @@ import EditProfileScreen from '../../screens/profile/EditProfileScreen';
 import WalletScreen from '../../screens/profile/WalletScreen';
 import HealthRecordsScreen from '../../screens/profile/HealthRecordsScreen';
 import NotificationPreferencesScreen from '../../screens/profile/NotificationPreferencesScreen';
+import SecuritySettingsScreen from '../../screens/profile/SecuritySettingsScreen';
 import WebViewScreen from '../../screens/profile/WebViewScreen';
 import PrescriptionsListScreen from '../../screens/prescriptions/PrescriptionsListScreen';
 import PrescriptionDetailScreen from '../../screens/prescriptions/PrescriptionDetailScreen';
@@ -28,6 +29,7 @@ export type ProfileStackParamList = {
   PrescriptionsList: undefined;
   PrescriptionDetail: { id: string };
   Settings: undefined;
+  SecuritySettings: undefined;
   NotificationPreferences: undefined;
   WebView: { title: string; url: string };
   // Onboarding screens (reused from onboarding flow)
@@ -62,6 +64,7 @@ export default function ProfileStack() {
       <Stack.Screen name="PrescriptionsList" component={PrescriptionsListScreen} />
       <Stack.Screen name="PrescriptionDetail" component={PrescriptionDetailScreen} />
       <Stack.Screen name="Settings" component={PlaceholderScreen} />
+      <Stack.Screen name="SecuritySettings" component={SecuritySettingsScreen} />
       <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
       <Stack.Screen name="WebView" component={WebViewScreen} />
       {/* Onboarding screens */}
