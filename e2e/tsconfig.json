@@ -1,0 +1,8 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["detox", "jest"],
+    "noEmit": true
+  },
+  "include": ["**/*.ts", "**/*.tsx", "detox-matchers.d.ts"]
+}

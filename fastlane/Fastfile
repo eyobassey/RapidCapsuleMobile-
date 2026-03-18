@@ -1,0 +1,147 @@
+# Fix macOS 15 OpenSSL: EC.new can't parse PKCS#8 keys, but PKey.read can
+require 'openssl'
+class OpenSSL::PKey::EC
+  alias_method :original_initialize, :initialize
+  def initialize(*args, &block)
+    original_initialize(*args, &block)
+  rescue OpenSSL::PKey::ECError => e
+    raise unless args.first.is_a?(String)
+    pkey = OpenSSL::PKey.read(args.first)
+    original_initialize(pkey.to_der)
+  end
+end
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build iOS app for Debug (Detox)"
+  lane :build_debug do
+    gym(
+      workspace: "ios/RapidCapsules.xcworkspace",
+      scheme: "RapidCapsules",
+      configuration: "Debug",
+      export_method: "development",
+      skip_codesigning: true,
+      skip_archive: true,
+      silent: true
+    )
+  end
+
+  desc "Build and upload to TestFlight (credentials required in CI)"
+  lane :beta do
+    setup_ci if is_ci
+
+    key_id = ENV["ASC_KEY_ID"] || "XYZ6XN77NT"
+    issuer_id = ENV["ASC_ISSUER_ID"] || "69a6de93-f1c0-47e3-e053-5b8c7c11a4d1"
+    key_filepath = ENV["ASC_KEY_FILEPATH"]
+
+    api_key = app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_filepath: key_filepath,
+      in_house: false
+    )
+
+    update_code_signing_settings(
+      use_automatic_signing: true,
+      path: "ios/RapidCapsules.xcodeproj",
+      team_id: "NS5XW2Q4P8",
+      bundle_identifier: "com.rapidcapsule.mobileapp"
+    )
+
+    gym(
+      workspace: "ios/RapidCapsules.xcworkspace",
+      scheme: "RapidCapsules",
+      configuration: "Release",
+      export_method: "app-store",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: "NS5XW2Q4P8"
+      },
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath '#{key_filepath}' -authenticationKeyID '#{key_id}' -authenticationKeyIssuerID '#{issuer_id}'"
+    )
+    upload_to_testflight(
+      api_key: api_key,
+      skip_submission: true,
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Build and upload to App Store (production) – credentials required in CI"
+  lane :release do
+    setup_ci if is_ci
+
+    key_id = ENV["ASC_KEY_ID"] || "XYZ6XN77NT"
+    issuer_id = ENV["ASC_ISSUER_ID"] || "69a6de93-f1c0-47e3-e053-5b8c7c11a4d1"
+    key_filepath = ENV["ASC_KEY_FILEPATH"]
+
+    api_key = app_store_connect_api_key(
+      key_id: key_id,
+      issuer_id: issuer_id,
+      key_filepath: key_filepath,
+      in_house: false
+    )
+
+    update_code_signing_settings(
+      use_automatic_signing: true,
+      path: "ios/RapidCapsules.xcodeproj",
+      team_id: "NS5XW2Q4P8",
+      bundle_identifier: "com.rapidcapsule.mobileapp"
+    )
+
+    gym(
+      workspace: "ios/RapidCapsules.xcworkspace",
+      scheme: "RapidCapsules",
+      configuration: "Release",
+      export_method: "app-store",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: "NS5XW2Q4P8"
+      },
+      xcargs: "-allowProvisioningUpdates -authenticationKeyPath '#{key_filepath}' -authenticationKeyID '#{key_id}' -authenticationKeyIssuerID '#{issuer_id}'"
+    )
+    deliver(
+      api_key: api_key,
+      submit_for_review: false,
+      force: true,
+      automatic_release: false
+    )
+  end
+end
+
+platform :android do
+  desc "Assemble debug build (e.g. for internal QA / Detox)"
+  lane :build_debug do
+    gradle(
+      task: "assembleDebug",
+      project_dir: "android"
+    )
+  end
+
+  desc "Build release bundle for Play Store internal/beta tracks"
+  lane :bundle_release do
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      project_dir: "android"
+    )
+    upload_to_play_store(
+      track: 'internal',
+      skip_upload_apk: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Promote existing bundle to production (once in Play Console)"
+  lane :promote_to_production do
+    upload_to_play_store(
+      track: 'production',
+      rollout: 0.1,
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end

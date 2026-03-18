@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   test:
     name: Verify (unit / typecheck)
@@ -26,54 +31,6 @@ jobs:
 
       - name: Unit tests
         run: npm test --silent
-
-  build:
-    name: Build mobile artifacts
-    needs: test
-    runs-on: macos-15
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Install Ruby and Bundler (for Fastlane)
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.3'
-          bundler-cache: true
-
-      - name: Install CocoaPods
-        working-directory: ios
-        run: pod install
-
-      - name: Build iOS debug (Detox) – sanity check
-        working-directory: ios
-        run: |
-          bundle exec fastlane build_debug || fastlane build_debug
-
-      - name: Build Android debug APK
-        working-directory: android
-        run: |
-          bundle exec fastlane build_debug || fastlane build_debug
-
-      - name: Upload build outputs (archives/bundles) as artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: mobile-builds
-          path: |
-            ios/*.ipa
-            android/app/build/outputs/**/*.apk
-            android/app/build/outputs/**/*.aab
-          if-no-files-found: ignore
 
   release:
     name: Semantic Release

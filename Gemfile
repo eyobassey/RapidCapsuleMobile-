@@ -16,3 +16,6 @@ gem 'benchmark'
 gem 'mutex_m'
 # kconv (used by CFPropertyList/xcodeproj) was removed from Ruby 3.4 stdlib
 gem 'nkf'
+
+# CI/CD
+gem 'fastlane', '>= 2.232.0'

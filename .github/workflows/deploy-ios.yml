@@ -30,18 +30,28 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3'
-          bundler-cache: true
+          bundler-cache: false
+
+      - name: Install and update Ruby dependencies
+        run: |
+          bundle install
+          bundle update fastlane
 
       - name: Install CocoaPods
-        working-directory: ios
-        run: pod install
+        run: bundle exec pod install --project-directory=ios
+
+      - name: Write App Store Connect API key
+        env:
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+        run: |
+          mkdir -p private_keys
+          echo "$ASC_KEY_CONTENT" | base64 -d > "private_keys/AuthKey_${ASC_KEY_ID}.p8"
 
       - name: Deploy to TestFlight / App Store
-        working-directory: ios
         env:
-          # These secrets must be configured in the repo or org:
-          # APP_STORE_CONNECT_API_KEY_JSON, FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD, etc.
-          APP_STORE_CONNECT_API_KEY_JSON: ${{ secrets.APP_STORE_CONNECT_API_KEY_JSON }}
-        run: |
-          bundle exec fastlane ${{ github.event.inputs.lane }} || fastlane ${{ github.event.inputs.lane }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_FILEPATH: ${{ github.workspace }}/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8
+        run: bundle exec fastlane ios ${{ github.event.inputs.lane }}
 
