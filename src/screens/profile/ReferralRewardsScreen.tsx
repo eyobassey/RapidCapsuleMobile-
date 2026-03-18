@@ -4,6 +4,7 @@ import {
   Check,
   ChevronRight,
   Copy,
+  Crown,
   Facebook,
   Gift,
   Globe,
@@ -13,6 +14,7 @@ import {
   Mail,
   MessageCircle,
   Share2,
+  Shield,
   Smartphone,
   Star,
   Trophy,
@@ -36,10 +38,11 @@ import { Text } from '../../components/ui/Text';
 import {
   useMyReferralQuery,
   useReferralSettingsQuery,
+  useReferralStatsQuery,
   useShareMessagesQuery,
   useTrackShareMutation,
 } from '../../hooks/queries/useReferralsQuery';
-import { SharePlatform } from '../../services/referrals.service';
+import { ApiMilestone, SharePlatform } from '../../services/referrals.service';
 import { colors } from '../../theme/colors';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -52,96 +55,23 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-function ListRow({
-  icon,
-  label,
-  subtitle,
-  onPress,
-  right,
-  isLast = false,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  subtitle?: string;
-  onPress?: () => void;
-  right?: React.ReactNode;
-  isLast?: boolean;
-}) {
-  const inner = (
-    <View
-      className={`flex-row items-center p-4 bg-card ${!isLast ? 'border-b border-border' : ''}`}
-    >
-      <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">{icon}</View>
-      <View className="flex-1 mr-3">
-        <Text className="font-medium text-sm">{label}</Text>
-        {subtitle ? (
-          <Text className="text-xs text-muted-foreground mt-0.5" numberOfLines={2}>
-            {subtitle}
-          </Text>
-        ) : null}
-      </View>
-      {right ?? (onPress ? <ChevronRight size={16} color={colors.mutedForeground} /> : null)}
-    </View>
-  );
+// ─── Badge icon resolver (maps API badge_icon string → lucide component) ──────
 
-  if (!onPress) return inner;
-  return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      {inner}
-    </TouchableOpacity>
-  );
+function BadgeIcon({ icon, size = 18, color }: { icon: string; size?: number; color: string }) {
+  switch (icon) {
+    case 'trophy':
+      return <Trophy size={size} color={color} />;
+    case 'crown':
+      return <Crown size={size} color={color} />;
+    case 'shield':
+      return <Shield size={size} color={color} />;
+    case 'star':
+    default:
+      return <Star size={size} color={color} />;
+  }
 }
 
-// ─── Milestone definitions (static, unlocked via milestones_achieved) ─────────
-
-type MilestoneDef = {
-  id: string;
-  name: string;
-  description: string;
-  required: number;
-  bonus: number;
-  icon: React.ReactNode;
-};
-
-const MILESTONES: MilestoneDef[] = [
-  {
-    id: 'health_advocate',
-    name: 'Health Advocate',
-    description: '3 referrals',
-    required: 3,
-    bonus: 2,
-    icon: <Star size={18} color={colors.primary} />,
-  },
-  {
-    id: 'wellness_champion',
-    name: 'Wellness Champion',
-    description: '5 referrals',
-    required: 5,
-    bonus: 3,
-    icon: <Trophy size={18} color={colors.secondary} />,
-  },
-  {
-    id: 'health_ambassador',
-    name: 'Health Ambassador',
-    description: '10 referrals',
-    required: 10,
-    bonus: 5,
-    icon: <Zap size={18} color={colors.accent} />,
-  },
-  {
-    id: 'community_leader',
-    name: 'Community Leader',
-    description: '25 referrals',
-    required: 25,
-    bonus: 10,
-    icon: <Users size={18} color={colors.success} />,
-  },
-];
+const MILESTONE_COLORS = [colors.primary, colors.secondary, colors.accent, colors.success];
 
 // ─── Share platform config ─────────────────────────────────────────────────────
 
@@ -197,25 +127,33 @@ export default function ReferralRewardsScreen() {
   const navigation = useNavigation<any>();
 
   const referralQuery = useMyReferralQuery();
+  const statsQuery = useReferralStatsQuery();
   const settingsQuery = useReferralSettingsQuery();
   const shareMessagesQuery = useShareMessagesQuery();
   const trackShare = useTrackShareMutation();
 
   const referral = referralQuery.data;
+  const stats = statsQuery.data;
   const settings = settingsQuery.data;
-  const shareMessages = shareMessagesQuery.data;
+  const shareData = shareMessagesQuery.data;
 
-  const isLoading = referralQuery.isLoading;
-  const isRefreshing = referralQuery.isRefetching;
+  const isLoading = referralQuery.isLoading || settingsQuery.isLoading;
+  const isRefreshing =
+    referralQuery.isRefetching || statsQuery.isRefetching || settingsQuery.isRefetching;
 
   const onRefresh = useCallback(() => {
     referralQuery.refetch();
+    statsQuery.refetch();
     settingsQuery.refetch();
-  }, [referralQuery, settingsQuery]);
+    shareMessagesQuery.refetch();
+  }, [referralQuery, statsQuery, settingsQuery, shareMessagesQuery]);
 
-  const referralLink = referral?.referral_code
-    ? `https://rapidcapsule.com/r/${referral.referral_code}`
-    : '';
+  // Prefer the pre-built link from share-messages endpoint, fall back to constructing it
+  const referralLink =
+    shareData?.referral_link ??
+    (referral?.referral_code ? `https://rapidcapsule.com/r/${referral.referral_code}` : '');
+
+  const referralCode = shareData?.referral_code ?? referral?.referral_code ?? '';
 
   const copyLink = useCallback(() => {
     if (!referralLink) return;
@@ -226,28 +164,43 @@ export default function ReferralRewardsScreen() {
 
   const handleShare = useCallback(
     (platform: SharePlatform) => {
-      if (!referral?.referral_code) return;
-      const code = referral.referral_code;
-      const fallbackMessage = `Join Rapid Capsule using my referral code ${code} and get free health credits! ${referralLink}`;
-      const message = shareMessages?.[platform]
-        ? shareMessages[platform]!.replace('{code}', code).replace('{link}', referralLink)
-        : fallbackMessage;
+      if (!referralLink) return;
+
+      // Use the pre-built message from the API (already has the link injected by the server)
+      const apiMessage = shareData?.messages?.[platform as keyof typeof shareData.messages];
+      const fallback = `Join Rapid Capsule using my referral link and get free health credits! ${referralLink}`;
+      const message = apiMessage ?? fallback;
 
       trackShare.mutate(platform);
 
-      // Inform user with the message to share (deep linking to apps would need native modules)
       Alert.alert(`Share via ${platform}`, message, [
         { text: 'Copy & Close', onPress: () => Clipboard.setString(message) },
         { text: 'Close', style: 'cancel' },
       ]);
     },
-    [referral, referralLink, shareMessages, trackShare]
+    [referralLink, shareData, trackShare]
   );
 
-  const conversionRate =
-    referral && referral.total_clicks > 0
-      ? Math.round((referral.total_signups / referral.total_clicks) * 100)
-      : 0;
+  // Stats data — prefer /stats endpoint (more detailed), fall back to /me
+  const totalClicks = stats?.total_clicks ?? referral?.total_clicks ?? 0;
+  const totalShares = stats?.total_shares ?? referral?.total_shares ?? 0;
+  const totalSignups = stats?.total_signups ?? referral?.total_signups ?? 0;
+  const totalCredits = stats?.total_credits_earned ?? referral?.total_credits_earned ?? 0;
+  const conversionRate = stats?.conversion_rate ?? '0';
+
+  // Milestones — sourced entirely from settings API
+  const milestones: ApiMilestone[] = settings?.milestones ?? [];
+
+  // Which milestones have been achieved — from stats (most up-to-date) or referral
+  const milestonesAchieved: string[] =
+    stats?.milestones_achieved ?? referral?.milestones_achieved ?? [];
+
+  // Hero banner config from settings
+  const heroBg = settings?.hero_banner?.background_color ?? colors.primary;
+  const heroTitle = settings?.hero_banner?.title ?? 'Referrals & Rewards';
+  const heroSubtitle =
+    settings?.hero_banner?.subtitle ?? 'Invite friends and earn rewards for every referral';
+  const showStats = settings?.hero_banner?.show_stats ?? true;
 
   // ── Loading ──────────────────────────────────────────────────────────────────
 
@@ -314,22 +267,9 @@ export default function ReferralRewardsScreen() {
         }
         contentContainerStyle={{ paddingBottom: 40 }}
       >
-        {/* ── Hero Stats Banner ─────────────────────────────────────────────── */}
-        <View
-          style={{
-            marginHorizontal: 16,
-            marginTop: 16,
-            borderRadius: 20,
-            overflow: 'hidden',
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: colors.primary,
-              padding: 20,
-              paddingBottom: 24,
-            }}
-          >
+        {/* ── Hero Banner ───────────────────────────────────────────────────── */}
+        <View style={{ marginHorizontal: 16, marginTop: 16, borderRadius: 20, overflow: 'hidden' }}>
+          <View style={{ backgroundColor: heroBg, padding: 20, paddingBottom: 24 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
               <View
                 style={{
@@ -345,55 +285,51 @@ export default function ReferralRewardsScreen() {
                 <Gift size={20} color="#fff" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700' }}>
-                  Referrals & Rewards
-                </Text>
+                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700' }}>{heroTitle}</Text>
                 <Text style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 }}>
-                  Invite friends, earn rewards for every successful referral
+                  {heroSubtitle}
                 </Text>
               </View>
             </View>
 
-            {/* Stats row */}
-            <View
-              style={{
-                flexDirection: 'row',
-                marginTop: 16,
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                borderRadius: 14,
-                overflow: 'hidden',
-              }}
-            >
-              {[
-                { label: 'Friends Joined', value: referral?.total_signups ?? 0 },
-                { label: 'Credits Earned', value: referral?.total_credits_earned ?? 0 },
-                {
-                  label: 'Conversion',
-                  value: `${conversionRate}%`,
-                },
-              ].map((stat, i, arr) => (
-                <View
-                  key={stat.label}
-                  style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    paddingVertical: 12,
-                    borderRightWidth: i < arr.length - 1 ? 1 : 0,
-                    borderRightColor: 'rgba(255,255,255,0.2)',
-                  }}
-                >
-                  <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700' }}>
-                    {stat.value}
-                  </Text>
-                  <Text
-                    style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10, marginTop: 2 }}
-                    numberOfLines={1}
+            {showStats && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  marginTop: 16,
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 14,
+                  overflow: 'hidden',
+                }}
+              >
+                {[
+                  { label: 'Friends Joined', value: totalSignups },
+                  { label: 'Credits Earned', value: totalCredits },
+                  { label: 'Conversion', value: `${conversionRate}%` },
+                ].map((stat, i, arr) => (
+                  <View
+                    key={stat.label}
+                    style={{
+                      flex: 1,
+                      alignItems: 'center',
+                      paddingVertical: 12,
+                      borderRightWidth: i < arr.length - 1 ? 1 : 0,
+                      borderRightColor: 'rgba(255,255,255,0.2)',
+                    }}
                   >
-                    {stat.label.toUpperCase()}
-                  </Text>
-                </View>
-              ))}
-            </View>
+                    <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700' }}>
+                      {stat.value}
+                    </Text>
+                    <Text
+                      style={{ color: 'rgba(255,255,255,0.75)', fontSize: 10, marginTop: 2 }}
+                      numberOfLines={1}
+                    >
+                      {stat.label.toUpperCase()}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 
@@ -409,18 +345,34 @@ export default function ReferralRewardsScreen() {
               overflow: 'hidden',
             }}
           >
-            <ListRow
-              icon={<Link size={17} color={colors.primary} />}
-              label="Your Referral Link"
-              subtitle="Share this unique link with friends and family"
-              isLast
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: colors.muted,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                }}
+              >
+                <Link size={17} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontWeight: '600', fontSize: 14, color: colors.foreground }}>
+                  Your Referral Link
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+                  Share this unique link with friends and family
+                </Text>
+              </View>
+            </View>
 
-            {/* Link display */}
             <View
               style={{
                 paddingHorizontal: 16,
-                paddingBottom: 12,
+                paddingBottom: 14,
                 borderTopWidth: 1,
                 borderTopColor: colors.border,
               }}
@@ -477,7 +429,7 @@ export default function ReferralRewardsScreen() {
               >
                 <Text style={{ color: colors.mutedForeground, fontSize: 12 }}>Your Code: </Text>
                 <Text style={{ color: colors.primary, fontSize: 12, fontWeight: '700' }}>
-                  {referral?.referral_code ?? '—'}
+                  {referralCode || '—'}
                 </Text>
               </View>
             </View>
@@ -522,15 +474,9 @@ export default function ReferralRewardsScreen() {
               </View>
             </View>
 
-            <View
-              style={{
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                padding: 12,
-              }}
-            >
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', padding: 12 }}>
               {SHARE_PLATFORMS.map((platform) => {
-                const shareCount = referral?.shares_by_platform?.[platform.key] ?? 0;
+                const shareCount = stats?.shares_by_platform?.[platform.key] ?? 0;
                 return (
                   <TouchableOpacity
                     key={platform.key}
@@ -538,11 +484,7 @@ export default function ReferralRewardsScreen() {
                     onPress={() => handleShare(platform.key)}
                     accessibilityRole="button"
                     accessibilityLabel={`Share via ${platform.label}`}
-                    style={{
-                      width: '33.33%',
-                      paddingHorizontal: 4,
-                      marginBottom: 12,
-                    }}
+                    style={{ width: '33.33%', paddingHorizontal: 4, marginBottom: 12 }}
                   >
                     <View style={{ alignItems: 'center' }}>
                       <View
@@ -555,7 +497,6 @@ export default function ReferralRewardsScreen() {
                           justifyContent: 'center',
                           borderWidth: 1,
                           borderColor: platform.color + '30',
-                          position: 'relative',
                         }}
                       >
                         {platform.icon}
@@ -635,40 +576,30 @@ export default function ReferralRewardsScreen() {
               {[
                 {
                   label: 'Link Clicks',
-                  value: referral?.total_clicks ?? 0,
+                  value: totalClicks,
                   icon: <Globe size={16} color={colors.primary} />,
                 },
                 {
                   label: 'Times Shared',
-                  value: referral?.total_shares ?? 0,
+                  value: totalShares,
                   icon: <Share2 size={16} color={colors.secondary} />,
                 },
                 {
                   label: 'Friends Joined',
-                  value: referral?.total_signups ?? 0,
+                  value: totalSignups,
                   icon: <Users size={16} color={colors.success} />,
                 },
                 {
                   label: 'Credits Earned',
-                  value: referral?.total_credits_earned ?? 0,
+                  value: totalCredits,
                   icon: <Zap size={16} color={colors.accent} />,
                 },
               ].map((stat) => (
                 <View
                   key={stat.label}
-                  style={{
-                    width: '50%',
-                    paddingHorizontal: 4,
-                    marginBottom: 8,
-                  }}
+                  style={{ width: '50%', paddingHorizontal: 4, marginBottom: 8 }}
                 >
-                  <View
-                    style={{
-                      backgroundColor: colors.muted,
-                      borderRadius: 12,
-                      padding: 14,
-                    }}
-                  >
+                  <View style={{ backgroundColor: colors.muted, borderRadius: 12, padding: 14 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                       {stat.icon}
                     </View>
@@ -755,7 +686,7 @@ export default function ReferralRewardsScreen() {
           </View>
         </View>
 
-        {/* ── Milestones ────────────────────────────────────────────────────── */}
+        {/* ── Milestones (from API) ─────────────────────────────────────────── */}
         <SectionHeader title="Milestones" />
         <Text
           style={{
@@ -777,81 +708,143 @@ export default function ReferralRewardsScreen() {
               overflow: 'hidden',
             }}
           >
-            {MILESTONES.map((milestone, i) => {
-              const isAchieved = referral?.milestones_achieved?.includes(milestone.id) ?? false;
-              const isLast = i === MILESTONES.length - 1;
+            {milestones.length > 0 ? (
+              milestones.map((milestone, i) => {
+                const isAchieved = milestonesAchieved.includes(milestone.badge_name);
+                const isLast = i === milestones.length - 1;
+                const accentColor = MILESTONE_COLORS[i % MILESTONE_COLORS.length];
 
-              return (
-                <View
-                  key={milestone.id}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: 16,
-                    borderBottomWidth: isLast ? 0 : 1,
-                    borderBottomColor: colors.border,
-                  }}
-                >
+                return (
                   <View
+                    key={`${milestone.badge_name}-${i}`}
                     style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                      backgroundColor: isAchieved ? colors.primary + '20' : colors.muted,
+                      flexDirection: 'row',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      marginRight: 14,
+                      padding: 16,
+                      borderBottomWidth: isLast ? 0 : 1,
+                      borderBottomColor: colors.border,
                     }}
                   >
-                    {isAchieved ? <Trophy size={18} color={colors.primary} /> : milestone.icon}
-                  </View>
-
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        fontWeight: '600',
-                        fontSize: 14,
-                        color: isAchieved ? colors.foreground : colors.mutedForeground,
-                      }}
-                    >
-                      {milestone.name}
-                    </Text>
-                    <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
-                      {milestone.description}
-                    </Text>
-                  </View>
-
-                  {/* Bonus badge + lock/check */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <View
                       style={{
-                        backgroundColor: isAchieved ? colors.success + '20' : colors.muted,
-                        paddingHorizontal: 8,
-                        paddingVertical: 3,
-                        borderRadius: 8,
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: isAchieved ? accentColor + '20' : colors.muted,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 14,
                       }}
                     >
+                      <BadgeIcon
+                        icon={milestone.badge_icon}
+                        size={18}
+                        color={isAchieved ? accentColor : colors.mutedForeground}
+                      />
+                    </View>
+
+                    <View style={{ flex: 1 }}>
                       <Text
                         style={{
-                          fontSize: 11,
-                          fontWeight: '700',
-                          color: isAchieved ? colors.success : colors.mutedForeground,
+                          fontWeight: '600',
+                          fontSize: 14,
+                          color: isAchieved ? colors.foreground : colors.mutedForeground,
                         }}
                       >
-                        +{milestone.bonus}
+                        {milestone.badge_name}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+                        {milestone.referrals_required} referrals
                       </Text>
                     </View>
-                    {isAchieved ? (
-                      <Check size={16} color={colors.success} />
-                    ) : (
-                      <Lock size={14} color={colors.mutedForeground} />
-                    )}
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View
+                        style={{
+                          backgroundColor: isAchieved ? colors.success + '20' : colors.muted,
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                          borderRadius: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            fontWeight: '700',
+                            color: isAchieved ? colors.success : colors.mutedForeground,
+                          }}
+                        >
+                          +{milestone.reward_value}
+                        </Text>
+                      </View>
+                      {isAchieved ? (
+                        <Check size={16} color={colors.success} />
+                      ) : (
+                        <Lock size={14} color={colors.mutedForeground} />
+                      )}
+                    </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              })
+            ) : (
+              <View style={{ alignItems: 'center', padding: 32 }}>
+                <Trophy size={32} color={colors.border} />
+                <Text style={{ fontSize: 13, color: colors.mutedForeground, marginTop: 10 }}>
+                  No milestones available
+                </Text>
+              </View>
+            )}
           </View>
         </View>
+
+        {/* ── Next Milestone progress hint ─────────────────────────────────── */}
+        {stats?.next_milestone && (
+          <>
+            <SectionHeader title="Next Milestone" />
+            <View style={{ marginHorizontal: 16 }}>
+              <View
+                style={{
+                  backgroundColor: colors.card,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  padding: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+              >
+                <View
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: colors.primary + '20',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 14,
+                  }}
+                >
+                  <BadgeIcon
+                    icon={stats.next_milestone.badge_icon}
+                    size={20}
+                    color={colors.primary}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: '600', fontSize: 14, color: colors.foreground }}>
+                    {stats.next_milestone.badge_name}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+                    Refer {stats.next_milestone.referrals_required - totalSignups} more friend
+                    {stats.next_milestone.referrals_required - totalSignups !== 1 ? 's' : ''} to
+                    unlock +{stats.next_milestone.reward_value} credits
+                  </Text>
+                </View>
+                <ChevronRight size={16} color={colors.mutedForeground} />
+              </View>
+            </View>
+          </>
+        )}
 
         {/* ── Recent Referrals ──────────────────────────────────────────────── */}
         <SectionHeader title="Recent Referrals" />
@@ -872,13 +865,13 @@ export default function ReferralRewardsScreen() {
                     width: 36,
                     height: 36,
                     borderRadius: 18,
-                    backgroundColor: '#ef444420',
+                    backgroundColor: colors.destructive + '20',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: 12,
                   }}
                 >
-                  <Users size={17} color="#ef4444" />
+                  <Users size={17} color={colors.destructive} />
                 </View>
                 <View>
                   <Text style={{ fontWeight: '600', fontSize: 14, color: colors.foreground }}>
@@ -891,15 +884,44 @@ export default function ReferralRewardsScreen() {
               </View>
             </View>
 
-            {referral?.referrals && referral.referrals.length > 0 ? (
-              referral.referrals.map((ref, i) => (
+            {/* Use stats.referrals as authoritative source, fall back to referral.referrals */}
+            {(() => {
+              const list = stats?.referrals ?? referral?.referrals ?? [];
+              if (list.length === 0) {
+                return (
+                  <View style={{ alignItems: 'center', padding: 40 }}>
+                    <Users size={40} color={colors.border} />
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        fontWeight: '600',
+                        color: colors.foreground,
+                        marginTop: 14,
+                      }}
+                    >
+                      No referrals yet
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        color: colors.mutedForeground,
+                        marginTop: 6,
+                        textAlign: 'center',
+                      }}
+                    >
+                      Start sharing your link to see your referrals here!
+                    </Text>
+                  </View>
+                );
+              }
+              return list.map((ref, i) => (
                 <View
                   key={ref._id}
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     padding: 16,
-                    borderBottomWidth: i < referral.referrals.length - 1 ? 1 : 0,
+                    borderBottomWidth: i < list.length - 1 ? 1 : 0,
                     borderBottomColor: colors.border,
                   }}
                 >
@@ -937,32 +959,8 @@ export default function ReferralRewardsScreen() {
                     </Text>
                   </View>
                 </View>
-              ))
-            ) : (
-              <View style={{ alignItems: 'center', padding: 40 }}>
-                <Users size={40} color={colors.border} />
-                <Text
-                  style={{
-                    fontSize: 15,
-                    fontWeight: '600',
-                    color: colors.foreground,
-                    marginTop: 14,
-                  }}
-                >
-                  No referrals yet
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 13,
-                    color: colors.mutedForeground,
-                    marginTop: 6,
-                    textAlign: 'center',
-                  }}
-                >
-                  Start sharing your link to see your referrals here!
-                </Text>
-              </View>
-            )}
+              ));
+            })()}
           </View>
         </View>
       </ScrollView>

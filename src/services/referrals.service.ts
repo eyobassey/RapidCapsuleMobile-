@@ -11,7 +11,15 @@ export type SharePlatform =
   | 'sms'
   | 'copy';
 
-export type SharesByPlatform = Record<SharePlatform, number>;
+export type SharesByPlatform = {
+  whatsapp: number;
+  facebook: number;
+  twitter: number;
+  linkedin: number;
+  email: number;
+  copy: number;
+  sms: number;
+};
 
 export type ClicksByPlatform = {
   whatsapp: number;
@@ -48,18 +56,63 @@ export type ReferralData = {
   updated_at: string;
 };
 
+// ─── Stats ────────────────────────────────────────────────────────────────────
+
+export type ApiMilestone = {
+  referrals_required: number;
+  reward_type: string;
+  reward_value: number;
+  badge_name: string;
+  badge_icon: string;
+};
+
 export type ReferralStats = {
+  referral_code: string;
   total_clicks: number;
   total_shares: number;
   total_signups: number;
-  conversion_rate: number;
   total_credits_earned: number;
   total_points_earned: number;
+  conversion_rate: string;
+  recent_clicks: number;
+  clicks_by_day: { date: string; count: number }[];
+  shares_by_platform: SharesByPlatform;
+  clicks_by_platform: ClicksByPlatform;
+  milestones_achieved: string[];
+  next_milestone: ApiMilestone | null;
+  referrals: Referral[];
 };
 
-export type ShareMessages = Partial<Record<SharePlatform, string>>;
+// ─── Share Messages ───────────────────────────────────────────────────────────
+
+export type ShareMessagesMap = {
+  whatsapp?: string;
+  twitter?: string;
+  facebook?: string;
+  linkedin?: string;
+  email_subject?: string;
+  email_body?: string;
+  sms?: string;
+};
+
+export type ShareMessagesResponse = {
+  messages: ShareMessagesMap;
+  referral_link: string;
+  referral_code: string;
+};
+
+// ─── Settings ─────────────────────────────────────────────────────────────────
+
+export type HeroBanner = {
+  title: string;
+  subtitle: string;
+  background_color: string;
+  text_color: string;
+  show_stats: boolean;
+};
 
 export type ReferralSettings = {
+  _id: string;
   is_enabled: boolean;
   referrer_credits: number;
   referee_credits: number;
@@ -67,16 +120,11 @@ export type ReferralSettings = {
   referee_points: number;
   reward_on_signup: boolean;
   reward_on_first_appointment: boolean;
-  share_messages?: ShareMessages;
-};
-
-export type Milestone = {
-  id: string;
-  name: string;
-  description: string;
-  required_referrals: number;
-  bonus_credits: number;
-  icon?: string;
+  share_messages: ShareMessagesMap;
+  hero_banner: HeroBanner;
+  milestones: ApiMilestone[];
+  created_at: string;
+  updated_at: string;
 };
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -92,7 +140,7 @@ export const referralsService = {
     return res.data.data;
   },
 
-  getShareMessages: async (): Promise<ShareMessages> => {
+  getShareMessages: async (): Promise<ShareMessagesResponse> => {
     const res = await api.get('/referrals/share-messages');
     return res.data.data;
   },

@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { SharePlatform, referralsService } from '../../services/referrals.service';
+import {
+  ShareMessagesResponse,
+  SharePlatform,
+  referralsService,
+} from '../../services/referrals.service';
 
 // ─── Query key factory ────────────────────────────────────────────────────────
 
@@ -32,8 +36,9 @@ export function useReferralStatsQuery() {
   });
 }
 
+/** Returns the full response so consumers can access messages, referral_link, and referral_code */
 export function useShareMessagesQuery() {
-  return useQuery({
+  return useQuery<ShareMessagesResponse>({
     queryKey: referralKeys.shareMessages(),
     queryFn: referralsService.getShareMessages,
     staleTime: 5 * 60_000,
