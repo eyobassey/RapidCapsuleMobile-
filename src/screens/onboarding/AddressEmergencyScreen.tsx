@@ -107,35 +107,35 @@ export default function AddressEmergencyScreen({ navigation }: Props) {
   const onSubmit = async (data: AddressEmergencyFormData) => {
     setLoading(true);
     try {
-      const payload: any = {};
-
-      // Delivery address
-      if (data.address.street?.trim() || data.address.city?.trim()) {
-        payload.delivery_addresses = [
-          {
-            label: 'Home',
-            street: data.address.street?.trim() || '',
+      const payload = {
+        profile: {
+          contact: {
+            address1: data.address.street?.trim() || '',
             city: data.address.city?.trim() || '',
             state: data.address.state?.trim() || '',
             country: data.address.country,
-            postal_code: data.address.postal_code?.trim() || '',
-            is_default: true,
+            zip_code: data.address.postal_code?.trim() || '',
           },
-        ];
-      }
-
-      // Emergency contacts
-      payload.emergency_contacts = data.contacts
-        .filter((c) => c.firstName.trim())
-        .map((c) => ({
-          first_name: c.firstName.trim(),
-          last_name: c.lastName?.trim() || '',
-          relationship: c.relationship || 'Other',
-          phone: {
-            country_code: '+234',
-            number: c.phone.trim(),
-          },
-        }));
+        },
+        emergency_contacts: data.contacts
+          .filter((c) => c.firstName.trim())
+          .map((c) => ({
+            first_name: c.firstName.trim(),
+            last_name: c.lastName?.trim() || '',
+            relationship: c.relationship || 'Other',
+            phone: {
+              country_code: '+234',
+              number: c.phone.trim(),
+            },
+            email: '',
+            address1: '',
+            country: '',
+            state: '',
+            city: '',
+            zip_code: '',
+            same_as_patient: false,
+          })),
+      };
 
       await usersService.updateProfile(payload);
       clearDraft('addressEmergency');
