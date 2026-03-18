@@ -1,18 +1,14 @@
 import api from './api';
 
+// Shape returned by GET /notifications/preferences and accepted by PATCH /notifications/preferences
 export type NotificationPreferences = {
   email: boolean;
   push: boolean;
   sms: boolean;
   in_app: boolean;
-  whatsapp: boolean;
   appointment_reminders: boolean;
-  appointment_updates: boolean;
   prescription_updates: boolean;
   payment_alerts: boolean;
-  health_reminders: boolean;
-  vitals_alerts: boolean;
-  message_notifications: boolean;
   promotional: boolean;
 };
 
