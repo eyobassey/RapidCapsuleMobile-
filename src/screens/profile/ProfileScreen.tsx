@@ -8,6 +8,7 @@ import {
   DollarSign,
   Edit3,
   FileText,
+  Gift,
   HelpCircle,
   Info,
   LogOut,
@@ -117,6 +118,12 @@ export default function ProfileScreen() {
           title: 'Notification Preferences',
           subtitle: 'Manage your alerts',
           onPress: () => navigation.navigate('NotificationPreferences'),
+        },
+        {
+          icon: <Gift size={20} color="#f59e0b" />,
+          title: 'Referrals & Rewards',
+          subtitle: 'Invite friends, earn credits',
+          onPress: () => navigation.navigate('ReferralRewards'),
         },
         {
           icon: <Shield size={20} color={colors.accent} />,

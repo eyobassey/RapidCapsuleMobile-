@@ -40,6 +40,7 @@ const HIDE_TAB_SCREENS = new Set([
   'WebView',
   'NotificationPreferences',
   'SecuritySettings',
+  'ReferralRewards',
   // Prescription screens
   'PrescriptionsList',
   'PrescriptionDetail',
