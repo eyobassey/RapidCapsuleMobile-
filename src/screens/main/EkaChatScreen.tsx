@@ -19,6 +19,7 @@ import {
   Home,
   MessageCircle,
   MessageSquarePlus,
+  PanelLeft,
   Phone,
   Pill,
   Plus,
@@ -47,6 +48,7 @@ import {
   View,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Polyline, Circle as SvgCircle, Text as SvgText } from 'react-native-svg';
 import WebView from 'react-native-webview';
@@ -165,35 +167,636 @@ const LANGUAGES = [
   { label: 'Spanish', flag: '🇪🇸' },
 ];
 
-// ─── Tool Loading Messages ──────────────────────────
-const TOOL_LOADING: Record<string, string> = {
-  get_vitals: 'Checking your vitals...',
-  get_health_checkups: 'Looking at your health history...',
-  get_prescriptions: 'Fetching your prescriptions...',
-  get_appointments: 'Looking at your appointments...',
-  search_pharmacy: 'Searching the pharmacy...',
-  get_orders: 'Checking your orders...',
-  get_wallet: 'Checking your wallet...',
-  get_profile: 'Loading your profile...',
-  get_health_score: 'Calculating your health score...',
-  start_health_checkup: 'Starting your health checkup...',
-  submit_checkup_symptoms: 'Processing your symptoms...',
-  run_checkup_interview: 'Continuing the interview...',
-  generate_checkup_report: 'Preparing your health report...',
-  check_drug_interactions: 'Analyzing drug interactions...',
-  analyze_prescription_upload: 'Reading your prescription...',
-  analyze_existing_prescription: 'Analyzing your prescription...',
-  get_recovery_profile: 'Loading your recovery profile...',
-  get_recovery_dashboard: 'Fetching your recovery dashboard...',
-  get_sobriety_stats: 'Loading sobriety stats...',
-  get_daily_logs: 'Checking your daily logs...',
-  log_daily_checkin: 'Saving your check-in...',
-  start_screening: 'Setting up screening...',
-  submit_screening: 'Scoring your responses...',
-  run_coping_exercise: 'Setting up your exercise...',
-  get_risk_assessment: 'Calculating risk assessment...',
-  refine_risk_assessment: 'Refining your assessment...',
+// ─── Tool Loading Witty Phrases ─────────────────────
+// Phrases are keyed by tool name. Each entry has:
+//   - `default`: shown when no keyword context is detected
+//   - `keywords`: map of word → phrase, matched against the user's message
+// This lets the phrase echo what the user actually asked without any backend changes.
+type PhraseEntry = {
+  default: string[];
+  keywords: Record<string, string>;
 };
+
+const TOOL_LOADING_PHRASES: Record<string, PhraseEntry> = {
+  get_vitals: {
+    default: [
+      'Pulling up your vitals… no stethoscope required.',
+      'Checking the numbers — heart rate, BP, the works.',
+      'Fetching your vitals. The body has a lot to say.',
+      "Reading your vitals… let's see what's going on.",
+      'Looking up your health readings — one moment.',
+      "Digging into your biometrics. Data doesn't lie.",
+      'Gathering your latest vital signs…',
+      'Your numbers are loading — almost there.',
+      'Pulling the full vitals picture together…',
+      'Cross-checking your vitals history right now.',
+    ],
+    keywords: {
+      heart: 'Fetching your heart rate data…',
+      'blood pressure': 'Pulling up your blood pressure readings…',
+      bp: "Checking your BP — let's see the trend.",
+      oxygen: 'Looking up your oxygen levels…',
+      spo2: 'Fetching your SpO₂ readings…',
+      sugar: 'Pulling your blood sugar data…',
+      glucose: 'Checking your glucose readings…',
+      weight: 'Fetching your weight history…',
+      temperature: 'Looking up your temperature readings…',
+    },
+  },
+  get_health_checkups: {
+    default: [
+      'Flipping through your health history…',
+      'Consulting past-you to help present-you.',
+      'Digging through the archives — one sec.',
+      'Pulling up your previous checkups…',
+      'Reviewing your health records carefully.',
+      "Looking back at what's been checked before.",
+      'Searching through your checkup history…',
+      'Fetching your past health assessments…',
+      'Loading your checkup timeline…',
+      "Going through what's on file for you.",
+    ],
+    keywords: {
+      last: 'Fetching your most recent checkup…',
+      previous: 'Looking up your previous checkup results…',
+      history: 'Digging into your health history…',
+      report: 'Pulling your health checkup report…',
+      result: 'Fetching your checkup results…',
+    },
+  },
+  get_prescriptions: {
+    default: [
+      'Fetching your prescriptions… no white coat required.',
+      'Rounding up your meds — digitally, of course.',
+      'Checking what the doctor ordered.',
+      'Pulling your prescription list…',
+      'Looking up your current medications.',
+      'Gathering your prescription records.',
+      'Loading your medication history…',
+      'Retrieving your active prescriptions…',
+      'Pulling everything the doctor prescribed…',
+      'Compiling your full medications list.',
+    ],
+    keywords: {
+      medication: 'Looking up your current medications…',
+      medicine: 'Pulling your medicine list…',
+      tablet: 'Checking your prescription for tablets…',
+      capsule: 'Fetching your capsule prescriptions…',
+      dose: 'Looking up your dosage details…',
+      dosage: 'Checking dosage instructions from your prescriptions…',
+      refill: 'Checking which prescriptions are due for a refill…',
+      current: 'Loading your current prescriptions…',
+      active: 'Pulling your active prescriptions…',
+    },
+  },
+  get_appointments: {
+    default: [
+      'Scanning your calendar for appointments…',
+      "Checking what's on the health horizon.",
+      'Pulling your schedule — hopefully not too packed.',
+      'Looking up your upcoming appointments…',
+      'Fetching your bookings — back in a sec.',
+      "Checking what's been lined up for you.",
+      'Loading your appointment history…',
+      'Reviewing your scheduled consultations…',
+      "Looking at what's coming up for you…",
+      'Pulling together your booking details.',
+    ],
+    keywords: {
+      next: 'Looking for your next appointment…',
+      upcoming: 'Checking your upcoming appointments…',
+      today: 'Checking if you have anything booked today…',
+      tomorrow: 'Looking for appointments lined up for tomorrow…',
+      doctor: 'Fetching your doctor appointments…',
+      specialist: 'Looking for your specialist bookings…',
+      missed: 'Checking for any missed appointments…',
+      cancel: 'Pulling up appointments you might want to reschedule…',
+      book: "Looking at what's been scheduled for you…",
+    },
+  },
+  search_pharmacy: {
+    default: [
+      "Searching the pharmacy… won't be long.",
+      'Combing the shelves for what you need.',
+      'Checking availability and prices for you.',
+      'Looking up your medication at nearby pharmacies…',
+      'Scanning pharmacy stock — one moment.',
+      'Finding the best options near you.',
+      'Searching across pharmacies for a match…',
+      'Checking which pharmacies have this in stock…',
+      'Hunting down the best price for you.',
+      'Browsing the pharmacy catalogue right now.',
+    ],
+    keywords: {
+      price: 'Comparing prices across pharmacies…',
+      cost: "Looking up how much that'll cost…",
+      generic: 'Searching for generic alternatives…',
+      brand: 'Looking up branded options…',
+      near: 'Finding pharmacies near you…',
+      cheap: 'Finding the most affordable option…',
+      stock: 'Checking current stock levels…',
+      available: 'Checking availability right now…',
+      deliver: 'Looking for delivery options…',
+    },
+  },
+  get_orders: {
+    default: [
+      'Tracking down your orders…',
+      "Checking what's been dispatched your way.",
+      'Order history incoming — hope they all arrived!',
+      'Pulling up your recent orders…',
+      'Fetching your order details.',
+      "Looking at what's been ordered recently.",
+      'Loading your order history…',
+      'Checking the latest on your deliveries…',
+      'Pulling your full order log…',
+      "Seeing what's been sent and what's pending.",
+    ],
+    keywords: {
+      track: 'Tracking your order right now…',
+      status: 'Checking the status of your order…',
+      deliver: 'Looking up your delivery status…',
+      arrived: 'Checking if your order has arrived…',
+      pending: 'Looking for pending orders…',
+      recent: 'Fetching your most recent orders…',
+      cancel: 'Pulling up your order history…',
+    },
+  },
+  get_wallet: {
+    default: [
+      'Peeking at your wallet… discreetly.',
+      "Counting your credits — won't take long.",
+      'Checking your balance. No judgement here.',
+      'Fetching your wallet details…',
+      'Looking up your credit balance.',
+      'Pulling your RapidCapsule credits…',
+      "Checking what's available to spend…",
+      'Loading your credits and transactions…',
+      'Calculating your current wallet balance…',
+      'Fetching your spending and credit summary.',
+    ],
+    keywords: {
+      balance: 'Checking your current balance…',
+      credit: 'Looking up your available credits…',
+      spend: 'Reviewing your spending history…',
+      transaction: 'Fetching your recent transactions…',
+      topup: 'Checking your wallet for top-up details…',
+      'how much': 'Calculating what you have available…',
+    },
+  },
+  get_profile: {
+    default: [
+      'Loading your profile…',
+      'Getting your details together.',
+      'Pulling up what we know about you.',
+      'Fetching your profile information…',
+      'Looking up your account details.',
+      'Retrieving your profile — one moment.',
+      'Loading your personal health information…',
+      'Checking your account settings and profile…',
+      'Gathering your saved health details…',
+      'Pulling up your full profile now.',
+    ],
+    keywords: {
+      age: 'Checking your profile details…',
+      name: 'Pulling up your profile…',
+      update: 'Loading your current profile to update…',
+      allergies: 'Fetching your health profile including allergies…',
+      blood: 'Looking up your blood type and profile…',
+      address: 'Retrieving your saved address…',
+    },
+  },
+  get_health_score: {
+    default: [
+      'Crunching your health score… the math is good.',
+      'Running the numbers on your wellness.',
+      "Calculating — you're probably doing better than you think.",
+      'Computing your health score…',
+      'Pulling together your wellness metrics.',
+      'Analysing your overall health data…',
+      'Scoring your health across all dimensions…',
+      'Weighing up your health indicators…',
+      'Building your personalised wellness score…',
+      'Putting the full health picture into a number.',
+    ],
+    keywords: {
+      improve: 'Calculating your score and looking for improvement areas…',
+      good: "Checking how well you're doing overall…",
+      bad: 'Honestly assessing your health score…',
+      overall: 'Looking at your overall health picture…',
+      wellness: 'Running your wellness analysis…',
+      fitness: 'Checking your fitness and health metrics…',
+    },
+  },
+  start_health_checkup: {
+    default: [
+      'Firing up the health checkup engine…',
+      'Preparing your personalised checkup.',
+      'Getting the diagnostic wheels turning.',
+      'Setting up your health assessment…',
+      'Initialising your checkup — almost ready.',
+      'Starting the checkup process for you.',
+      'Getting the right questions lined up for you…',
+      'Spinning up your personalised health interview…',
+      'Calibrating the checkup to your profile…',
+      'Warming up the health assessment — nearly there.',
+    ],
+    keywords: {
+      quick: 'Preparing a quick checkup for you…',
+      full: 'Setting up a full health checkup…',
+      start: 'Starting your health checkup now…',
+      begin: 'Beginning the checkup process…',
+      first: 'Getting everything ready for your first checkup…',
+    },
+  },
+  submit_checkup_symptoms: {
+    default: [
+      'Reading your symptoms carefully…',
+      'Processing what your body is telling us.',
+      'Mapping your symptoms — stay with me.',
+      "Analysing what you've described…",
+      'Taking your symptoms seriously — one moment.',
+      'Cross-referencing your symptoms against our database.',
+      'Matching your symptoms to possible causes…',
+      'Thinking through what these symptoms could mean…',
+      'Running your symptoms through the clinical model…',
+      "Parsing every detail of what you've told me.",
+    ],
+    keywords: {
+      pain: "Analysing the pain you've described…",
+      fever: 'Looking at your fever symptoms…',
+      cough: 'Processing your cough and respiratory symptoms…',
+      tired: 'Analysing your fatigue symptoms…',
+      headache: 'Looking into your headache carefully…',
+      nausea: 'Reviewing your nausea and digestive symptoms…',
+      chest: 'Taking your chest symptoms very seriously…',
+      breathe: 'Prioritising your breathing-related symptoms…',
+      dizzy: 'Analysing your dizziness and related symptoms…',
+      rash: 'Reviewing your skin symptoms…',
+    },
+  },
+  run_checkup_interview: {
+    default: [
+      'Following the clinical trail…',
+      'Asking the right questions behind the scenes.',
+      'The interview continues — nearly there.',
+      'Progressing through your health interview…',
+      'Working through the next set of questions.',
+      'Building a clearer picture — just a moment.',
+      'Narrowing things down with the next question…',
+      'Using your answers to guide the next step…',
+      'Thinking about what to ask you next…',
+      'The interview is helping us understand more.',
+    ],
+    keywords: {
+      yes: 'Noted — moving to the next question.',
+      no: 'Got it — adjusting the assessment.',
+      'not sure': 'Understood — factoring in the uncertainty.',
+      sometimes: 'Logged — continuing the interview.',
+    },
+  },
+  generate_checkup_report: {
+    default: [
+      'Compiling your health report…',
+      'Assembling the findings — almost done.',
+      'Writing up your results with care.',
+      'Putting your full report together…',
+      'Generating your personalised health summary.',
+      "Crafting your checkup report — won't be long.",
+      'Translating your answers into clear insights…',
+      'Turning your responses into a health report…',
+      'Building your personalised clinical summary…',
+      'Pulling together everything to give you a clear picture.',
+    ],
+    keywords: {
+      report: 'Building your detailed health report…',
+      summary: 'Summarising your health findings…',
+      result: 'Compiling your checkup results…',
+      recommend: 'Pulling together recommendations based on your results…',
+    },
+  },
+  check_drug_interactions: {
+    default: [
+      'Running interaction analysis… chemistry is complex.',
+      'Cross-referencing your medications — takes a moment.',
+      'Checking for any red flags between your drugs.',
+      'Scanning for drug interactions now…',
+      'Analysing medication compatibility…',
+      'Checking if these can be taken together safely.',
+      'Looking for conflicts in your medication combination…',
+      'Running this through the interaction database…',
+      'Checking the literature on these drug combinations…',
+      'Being thorough — your safety depends on it.',
+    ],
+    keywords: {
+      safe: 'Checking if these medications are safe together…',
+      together: 'Verifying these can be taken at the same time…',
+      combine: 'Analysing what happens when these are combined…',
+      mix: 'Checking for interactions between these drugs…',
+      alcohol: 'Checking interactions including alcohol…',
+      food: 'Looking at drug-food interactions too…',
+      paracetamol: 'Cross-checking paracetamol interactions…',
+      ibuprofen: 'Analysing ibuprofen combination safety…',
+      aspirin: 'Checking aspirin interactions…',
+      antibiotic: 'Reviewing antibiotic interaction profile…',
+    },
+  },
+  analyze_prescription_upload: {
+    default: [
+      'Reading your prescription… including the handwriting.',
+      'Parsing what was prescribed — one sec.',
+      'Decoding your prescription carefully.',
+      'Extracting details from your prescription image…',
+      'Reading the prescription you uploaded…',
+      'Processing your prescription document.',
+      'Running OCR on your prescription…',
+      'Extracting medication details from the image…',
+      'Interpreting the prescription format…',
+      'Digitising what was written for you.',
+    ],
+    keywords: {
+      upload: 'Reading the prescription you just uploaded…',
+      photo: 'Processing the prescription photo…',
+      image: 'Extracting information from the prescription image…',
+      scan: 'Scanning your prescription document…',
+      doctor: 'Reading what your doctor prescribed…',
+    },
+  },
+  analyze_existing_prescription: {
+    default: [
+      'Analysing your prescription on file…',
+      'Taking a closer look at your current meds.',
+      'Deep-diving into your prescription details.',
+      'Reviewing your saved prescription…',
+      'Pulling and analysing your prescription record.',
+      'Going through your prescription carefully.',
+      "Reading through what's been prescribed for you…",
+      'Looking at the details of your existing prescription…',
+      'Checking your prescription for all the key details…',
+      'Reviewing dosage, frequency, and instructions for you.',
+    ],
+    keywords: {
+      what: "Reading what's in your prescription…",
+      how: 'Checking instructions and dosage details…',
+      when: 'Looking at timing and frequency in your prescription…',
+      'side effect': 'Cross-checking your prescription for side effect info…',
+      dosage: 'Reviewing the dosage details in your prescription…',
+    },
+  },
+  get_recovery_profile: {
+    default: [
+      'Loading your recovery profile…',
+      'Checking in on your journey.',
+      'Pulling up where you left off.',
+      'Fetching your recovery details…',
+      'Looking at your recovery setup…',
+      'Retrieving your personalised recovery profile.',
+      'Loading your recovery journey so far…',
+      'Pulling the details of your recovery plan…',
+      'Reviewing your recovery history and current status…',
+      'Getting a full picture of where you are right now.',
+    ],
+    keywords: {
+      progress: 'Loading your recovery progress…',
+      plan: 'Fetching your recovery plan details…',
+      goal: 'Looking at your recovery goals…',
+      support: 'Pulling up your recovery support resources…',
+    },
+  },
+  get_recovery_dashboard: {
+    default: [
+      'Fetching your recovery dashboard…',
+      'Your progress is loading — and it matters.',
+      'Pulling your recovery story together.',
+      'Loading your full recovery overview…',
+      'Gathering everything for your dashboard.',
+      'Compiling your recovery metrics…',
+      'Building your personalised recovery view…',
+      'Loading streaks, logs, and milestones…',
+      "Pulling in everything that shows how far you've come…",
+      'Your recovery data is coming together.',
+    ],
+    keywords: {
+      how: "Pulling together how you've been doing…",
+      today: "Checking in on today's recovery status…",
+      week: 'Looking at your recovery over the past week…',
+      month: 'Reviewing your monthly recovery progress…',
+      overall: 'Loading the full picture of your recovery…',
+      streak: 'Checking your current streak — keep it going.',
+    },
+  },
+  get_sobriety_stats: {
+    default: [
+      'Loading your sobriety stats — every day counts.',
+      "Counting the milestones. You've earned each one.",
+      'Pulling your streak data.',
+      'Fetching your sobriety timeline…',
+      "Looking at how far you've come.",
+      'Tallying up your sober days — this is worth looking at.',
+      'Counting the days, weeks, months — all of it.',
+      'Pulling together your full sobriety journey…',
+      'Your stats are loading — the numbers tell a powerful story.',
+      'Gathering your sobriety milestones right now.',
+    ],
+    keywords: {
+      day: 'Counting your sober days — one moment.',
+      streak: 'Pulling up your current streak…',
+      milestone: "Checking your milestones — you've hit some big ones.",
+      'how long': "Calculating how long you've been on this journey…",
+      since: 'Looking up your stats from when you started…',
+    },
+  },
+  get_daily_logs: {
+    default: [
+      'Checking your daily logs…',
+      'Reviewing how your days have been going.',
+      'Pulling your recent check-in history.',
+      'Fetching your daily log entries…',
+      'Looking over your recent logs.',
+      "Reading through what you've recorded.",
+      'Loading your daily tracking entries…',
+      "Going through what you've logged recently…",
+      'Fetching mood, sleep, and daily notes…',
+      'Pulling your recent daily check-in data.',
+    ],
+    keywords: {
+      today: "Checking if you've logged anything today…",
+      yesterday: "Pulling up yesterday's log…",
+      week: 'Reviewing logs from the past week…',
+      mood: 'Looking at your recent mood logs…',
+      sleep: 'Checking your sleep log entries…',
+      craving: 'Reviewing your craving log history…',
+    },
+  },
+  log_daily_checkin: {
+    default: [
+      'Saving your check-in… noted.',
+      "Logging today's update — it all adds up.",
+      'Recorded. Keep showing up.',
+      'Saving your daily check-in…',
+      'Logging this moment — every entry matters.',
+      'Recording your check-in. You showed up today.',
+      "Saving today's data point in your journey…",
+      'Locking in your check-in for today.',
+      'Adding this to your log — it counts.',
+      'Recording where you are today. That matters.',
+    ],
+    keywords: {
+      good: "Saving today's positive check-in…",
+      bad: 'Logging today — even hard days count.',
+      okay: 'Saving your check-in — okay days matter too.',
+      great: 'Recording your great day — well done.',
+      tough: 'Logging your check-in — tough days are still progress.',
+      struggle: 'Saving this — reaching out takes strength.',
+    },
+  },
+  start_screening: {
+    default: [
+      'Setting up your screening…',
+      'Preparing a few important questions.',
+      'Getting the assessment ready for you.',
+      'Initialising your screening tool…',
+      'Building your personalised screening set.',
+      'Setting the stage for your assessment.',
+      'Loading the clinical screening questions…',
+      'Putting together your tailored assessment…',
+      'Getting the screening framework ready for you…',
+      'This will only take a few questions — starting now.',
+    ],
+    keywords: {
+      anxiety: 'Preparing your anxiety screening…',
+      depression: 'Setting up the depression screening…',
+      stress: 'Getting your stress assessment ready…',
+      mental: 'Preparing your mental health screening…',
+      phq: 'Setting up the PHQ screening…',
+      gad: 'Preparing the GAD anxiety screening…',
+      alcohol: 'Setting up your alcohol use screening…',
+      drug: 'Preparing your substance use screening…',
+    },
+  },
+  submit_screening: {
+    default: [
+      'Scoring your responses… thoughtfully.',
+      'Calculating your results.',
+      'Processing what you shared with us.',
+      'Working through your screening responses…',
+      "Analysing what you've told us…",
+      'Running the scoring model on your answers.',
+      'Applying the clinical scoring framework…',
+      'Translating your answers into a score…',
+      'Interpreting your responses carefully…',
+      'Running the final analysis on your screening.',
+    ],
+    keywords: {
+      done: 'All responses received — calculating your results…',
+      finish: 'Wrapping up — scoring your screening now.',
+      complete: 'Completing your screening analysis…',
+      submit: 'Submitting and scoring your responses…',
+    },
+  },
+  run_coping_exercise: {
+    default: [
+      'Finding just the right coping exercise for you…',
+      'Preparing something that might help.',
+      "Setting up your exercise — this one's for you.",
+      'Curating a coping technique…',
+      "Pulling up an exercise suited to what you're feeling.",
+      'Getting your coping exercise ready.',
+      "Selecting a technique based on how you're doing…",
+      'Matching the exercise to your current state…',
+      'Finding something practical and calming for you…',
+      'Setting up an evidence-based coping technique.',
+    ],
+    keywords: {
+      breathe: 'Preparing a breathing exercise for you…',
+      breathing: 'Setting up a guided breathing technique…',
+      ground: 'Getting a grounding exercise ready…',
+      relax: 'Finding a relaxation technique for you…',
+      calm: 'Preparing something to help you feel calmer…',
+      anxious: 'Finding an exercise to help with anxiety right now…',
+      stress: 'Preparing a stress-relief technique…',
+      mind: 'Setting up a mindfulness exercise…',
+    },
+  },
+  get_risk_assessment: {
+    default: [
+      'Calculating your risk profile…',
+      'Running the assessment models.',
+      'Putting the picture together — carefully.',
+      'Pulling your risk assessment data…',
+      'Running risk analysis — this needs precision.',
+      'Evaluating your risk factors thoughtfully.',
+      'Weighing up the relevant risk indicators…',
+      'Building your personalised risk picture…',
+      'Analysing the factors that matter for your risk score…',
+      'Taking a careful look at your current risk level.',
+    ],
+    keywords: {
+      how: 'Calculating how at-risk you currently are…',
+      relapse: 'Assessing your current relapse risk…',
+      high: 'Running a thorough risk analysis…',
+      low: 'Checking where you stand on the risk scale…',
+      current: 'Fetching your current risk assessment…',
+    },
+  },
+  refine_risk_assessment: {
+    default: [
+      "Refining the assessment with what you've shared…",
+      'Updating your risk picture.',
+      'Getting more precise — one moment.',
+      'Recalculating based on your latest input…',
+      'Fine-tuning the risk model with your answers.',
+      'Adjusting the assessment — almost there.',
+      'Incorporating your latest responses into the model…',
+      'Updating the risk score with what you just told me…',
+      'Running the refined assessment now…',
+      'The picture is getting clearer — recalculating.',
+    ],
+    keywords: {
+      change: 'Updating the assessment with the change you described…',
+      worse: 'Recalibrating — taking your input seriously.',
+      better: 'Good to hear — updating your risk profile accordingly.',
+      different: "Adjusting the assessment based on what's changed…",
+    },
+  },
+};
+
+// Fallback for unknown tools
+const TOOL_LOADING_FALLBACK: PhraseEntry = {
+  default: [
+    'Working on it…',
+    'Just a moment…',
+    'Thinking this through…',
+    'On it — give me a second.',
+    'Pulling the right information together…',
+    'Processing your request carefully.',
+    'Checking on that for you now…',
+    "Won't be long — fetching what you need.",
+    'Gathering the details — nearly ready.',
+    'Almost there — just putting it together.',
+  ],
+  keywords: {},
+};
+
+// Pick the most contextual phrase available for the given tool + user message.
+// Strategy: check user message for keywords first, fall back to rotating defaults.
+function getToolPhrase(
+  tool: string,
+  indexRef: React.MutableRefObject<number>,
+  userMessage: string
+): string {
+  const entry = TOOL_LOADING_PHRASES[tool] ?? TOOL_LOADING_FALLBACK;
+  const lower = userMessage.toLowerCase();
+
+  // Try to find a keyword match in the user's message
+  for (const [kw, phrase] of Object.entries(entry.keywords)) {
+    if (lower.includes(kw)) return phrase;
+  }
+
+  // Fall back to rotating default phrases
+  const idx = indexRef.current % entry.default.length;
+  return entry.default[idx];
+}
 
 // ─── Action Link Navigation ─────────────────────────
 const ACTION_ROUTES: Record<string, { tab: string; screen?: string }> = {
@@ -264,6 +867,9 @@ export default function EkaChatScreen() {
   const sidebarAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  // Cycles through witty phrases on each new tool invocation
+  const toolPhraseIndexRef = useRef(0);
+  const [toolPhrase, setToolPhrase] = useState('');
 
   // Init
   useFocusEffect(
@@ -273,7 +879,60 @@ export default function EkaChatScreen() {
     }, [initLanguage, fetchConversations])
   );
 
-  // Pulsing animation for tool loading
+  // Online dot pulse animation (always running)
+  const onlinePulse = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(onlinePulse, { toValue: 0.3, duration: 900, useNativeDriver: true }),
+        Animated.timing(onlinePulse, { toValue: 1, duration: 900, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [onlinePulse]);
+
+  // Tool loading dots animation
+  const dot1 = useRef(new Animated.Value(0)).current;
+  const dot2 = useRef(new Animated.Value(0)).current;
+  const dot3 = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (loadingTool) {
+      // Find the last user message to make the phrase contextual
+      const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user');
+      const userText = lastUserMsg?.content ?? '';
+
+      // Pick and advance the witty phrase for this tool invocation
+      toolPhraseIndexRef.current += 1;
+      setToolPhrase(getToolPhrase(loadingTool, toolPhraseIndexRef, userText));
+
+      const makeDot = (anim: Animated.Value, delay: number) =>
+        Animated.loop(
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.timing(anim, { toValue: 1, duration: 300, useNativeDriver: true }),
+            Animated.timing(anim, { toValue: 0, duration: 300, useNativeDriver: true }),
+            Animated.delay(600 - delay),
+          ])
+        );
+      const a1 = makeDot(dot1, 0);
+      const a2 = makeDot(dot2, 200);
+      const a3 = makeDot(dot3, 400);
+      a1.start();
+      a2.start();
+      a3.start();
+      return () => {
+        a1.stop();
+        a2.stop();
+        a3.stop();
+        dot1.setValue(0);
+        dot2.setValue(0);
+        dot3.setValue(0);
+      };
+    }
+  }, [loadingTool, dot1, dot2, dot3]);
+
+  // Pulsing animation (kept for backward compat, unused visually now)
   useEffect(() => {
     if (loadingTool) {
       const anim = Animated.loop(
@@ -449,97 +1108,138 @@ export default function EkaChatScreen() {
       {/* ─── Header ─────────────────────────────── */}
       <View
         style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
           paddingHorizontal: 16,
-          paddingTop: 8,
-          paddingBottom: 12,
+          paddingTop: 10,
+          paddingBottom: 10,
           backgroundColor: colors.card,
           borderBottomWidth: 1,
           borderBottomColor: colors.border,
         }}
       >
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Home')}
-            accessibilityRole="button"
-            accessibilityLabel="Go to home"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: colors.background,
-              borderWidth: 1,
-              borderColor: colors.border,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Home size={20} color={colors.foreground} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={openSidebar}
-            accessibilityRole="button"
-            accessibilityLabel="Open conversation history"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: colors.background,
-              borderWidth: 1,
-              borderColor: colors.border,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Clock size={20} color={colors.foreground} />
-          </TouchableOpacity>
-        </View>
+        {/* True-center identity via absolute positioning */}
+        <View
+          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+        >
+          {/* Left — Home + History */}
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Home')}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Go to home"
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                backgroundColor: colors.background,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Home size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={openSidebar}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Open conversation history"
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                backgroundColor: colors.background,
+                borderWidth: 1,
+                borderColor: colors.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <PanelLeft size={18} color={colors.mutedForeground} />
+            </TouchableOpacity>
+          </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {/* Center — Eka identity (absolutely centered) */}
           <View
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              backgroundColor: colors.primary,
+              position: 'absolute',
+              left: 0,
+              right: 0,
               alignItems: 'center',
-              justifyContent: 'center',
+              pointerEvents: 'none',
             }}
           >
-            <BrainCircuit size={16} color={colors.white} />
-          </View>
-          <View>
-            <Text style={{ fontWeight: '700', fontSize: 14, color: colors.foreground }}>
-              Eka AI
-            </Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
               <View
-                style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primary }}
-              />
-              <Text style={{ fontSize: 10, color: colors.primary, fontWeight: '500' }}>Online</Text>
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  backgroundColor: colors.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  shadowColor: colors.primary,
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.4,
+                  shadowRadius: 6,
+                  elevation: 4,
+                }}
+              >
+                <BrainCircuit size={17} color={colors.white} />
+              </View>
+              <View>
+                <Text
+                  style={{
+                    fontWeight: '800',
+                    fontSize: 15,
+                    color: colors.foreground,
+                    letterSpacing: -0.4,
+                    lineHeight: 18,
+                  }}
+                >
+                  Eka AI
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Animated.View
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: 3,
+                      backgroundColor: colors.primary,
+                      opacity: onlinePulse,
+                    }}
+                  />
+                  <Text style={{ fontSize: 10, color: colors.primary, fontWeight: '600' }}>
+                    Online
+                  </Text>
+                </View>
+              </View>
             </View>
           </View>
-        </View>
 
-        <TouchableOpacity
-          onPress={handleNewChat}
-          accessibilityRole="button"
-          accessibilityLabel="New chat"
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: colors.background,
-            borderWidth: 1,
-            borderColor: colors.border,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <MessageSquarePlus size={20} color={colors.foreground} />
-        </TouchableOpacity>
+          {/* Right — New Chat (primary CTA) */}
+          <TouchableOpacity
+            onPress={handleNewChat}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel="New chat"
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 12,
+              backgroundColor: `${colors.primary}18`,
+              borderWidth: 1,
+              borderColor: `${colors.primary}35`,
+            }}
+          >
+            <MessageSquarePlus size={15} color={colors.primary} />
+            <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>New</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ─── Chat Area ──────────────────────────── */}
@@ -559,39 +1259,27 @@ export default function EkaChatScreen() {
           {messages.length === 0 && <WelcomeScreen onAction={handleQuickAction} />}
 
           {/* Messages */}
-          {messages.map((msg, idx) => (
-            <React.Fragment key={msg.id}>
-              <MessageBubble
-                message={msg}
-                isLast={idx === messages.length - 1}
-                isStreaming={isStreaming}
-                onActionLink={navigateAction}
-              />
-              {msg.artifact && <ArtifactCard artifact={msg.artifact} />}
-            </React.Fragment>
-          ))}
+          {messages.map((msg, idx) => {
+            const isLast = idx === messages.length - 1;
+            return (
+              <React.Fragment key={msg.id}>
+                <MessageBubble
+                  message={msg}
+                  isLast={isLast}
+                  isStreaming={isStreaming}
+                  loadingTool={isLast && msg.role === 'assistant' ? loadingTool : null}
+                  toolPhrase={isLast && msg.role === 'assistant' ? toolPhrase : ''}
+                  dot1={dot1}
+                  dot2={dot2}
+                  dot3={dot3}
+                  onActionLink={navigateAction}
+                />
+                {msg.artifact && <ArtifactCard artifact={msg.artifact} />}
+              </React.Fragment>
+            );
+          })}
 
-          {/* Tool Loading */}
-          {loadingTool && (
-            <Animated.View style={{ opacity: pulseAnim, paddingLeft: 44 }}>
-              <View
-                style={{
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  borderRadius: 16,
-                  borderBottomLeftRadius: 4,
-                  padding: 12,
-                  alignSelf: 'flex-start',
-                  maxWidth: '80%',
-                }}
-              >
-                <Text style={{ fontSize: 13, color: colors.mutedForeground, fontStyle: 'italic' }}>
-                  {TOOL_LOADING[loadingTool] || 'Working on it...'}
-                </Text>
-              </View>
-            </Animated.View>
-          )}
+          {/* Loading is now rendered inside the last assistant MessageBubble — no separate element needed */}
 
           {/* Checkup Question Buttons — only show when not streaming (same as web) */}
           {checkupQuestion && !isStreaming && (
@@ -625,20 +1313,20 @@ export default function EkaChatScreen() {
               {suggestions.map((s, i) => (
                 <TouchableOpacity
                   key={i}
-                  activeOpacity={0.7}
+                  activeOpacity={0.6}
                   onPress={() => handleSuggestionTap(s)}
                   accessibilityRole="button"
                   accessibilityLabel={s.label}
                   style={{
                     paddingHorizontal: 14,
-                    paddingVertical: 7,
-                    borderRadius: 16,
-                    backgroundColor: colors.card,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                    backgroundColor: `${colors.primary}12`,
                     borderWidth: 1,
-                    borderColor: colors.border,
+                    borderColor: `${colors.primary}30`,
                   }}
                 >
-                  <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '500' }}>
+                  <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
                     {s.label}
                   </Text>
                 </TouchableOpacity>
@@ -655,15 +1343,29 @@ export default function EkaChatScreen() {
                 gap: 6,
                 marginBottom: 10,
                 backgroundColor: colors.card,
-                borderRadius: 12,
+                borderRadius: 16,
                 borderWidth: 1,
-                borderColor: colors.border,
-                padding: 10,
+                borderColor: `${colors.primary}25`,
+                padding: 12,
               }}
             >
+              <Text
+                style={{
+                  width: '100%',
+                  fontSize: 10,
+                  fontWeight: '700',
+                  color: colors.mutedForeground,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  marginBottom: 4,
+                }}
+              >
+                Response Language
+              </Text>
               {LANGUAGES.map((lang) => (
                 <TouchableOpacity
                   key={lang.label}
+                  activeOpacity={0.7}
                   onPress={() => {
                     setLanguage(lang.label);
                     setLanguageOpen(false);
@@ -672,18 +1374,18 @@ export default function EkaChatScreen() {
                   accessibilityLabel={lang.label}
                   accessibilityState={{ selected: language === lang.label }}
                   style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 5,
-                    borderRadius: 12,
-                    backgroundColor: language === lang.label ? `${colors.primary}20` : colors.muted,
+                    paddingHorizontal: 11,
+                    paddingVertical: 6,
+                    borderRadius: 14,
+                    backgroundColor: language === lang.label ? `${colors.primary}18` : colors.muted,
                     borderWidth: 1,
-                    borderColor: language === lang.label ? colors.primary : colors.border,
+                    borderColor: language === lang.label ? colors.primary : 'transparent',
                   }}
                 >
                   <Text
                     style={{
-                      fontSize: 11,
-                      fontWeight: '500',
+                      fontSize: 12,
+                      fontWeight: language === lang.label ? '700' : '500',
                       color: language === lang.label ? colors.primary : colors.foreground,
                     }}
                   >
@@ -698,12 +1400,13 @@ export default function EkaChatScreen() {
           <View
             style={{
               backgroundColor: colors.card,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 20,
+              borderWidth: 1.5,
+              borderColor: inputText.trim() ? `${colors.primary}50` : colors.border,
+              borderRadius: 24,
               flexDirection: 'row',
               alignItems: 'center',
-              padding: 4,
+              paddingHorizontal: 4,
+              paddingVertical: 4,
             }}
           >
             <TouchableOpacity
@@ -716,31 +1419,49 @@ export default function EkaChatScreen() {
                 borderRadius: 14,
                 alignItems: 'center',
                 justifyContent: 'center',
+                backgroundColor: `${colors.primary}10`,
+                marginLeft: 2,
               }}
             >
-              <Plus size={20} color={colors.mutedForeground} />
+              <Plus size={18} color={colors.primary} />
             </TouchableOpacity>
 
-            <TextInput
-              ref={inputRef}
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Ask Eka anything..."
-              placeholderTextColor={colors.mutedForeground}
-              multiline
-              style={{
-                flex: 1,
-                fontSize: 14,
-                color: colors.foreground,
-                paddingHorizontal: 8,
-                paddingVertical: 6,
-                maxHeight: 100,
-              }}
-              onSubmitEditing={handleSend}
-              blurOnSubmit={false}
-              returnKeyType="send"
-              accessibilityLabel="Ask Eka anything"
-            />
+            <View style={{ flex: 1 }}>
+              <TextInput
+                ref={inputRef}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Ask Eka anything..."
+                placeholderTextColor={colors.mutedForeground}
+                multiline
+                style={{
+                  fontSize: 14,
+                  color: colors.foreground,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  maxHeight: 100,
+                }}
+                onSubmitEditing={handleSend}
+                blurOnSubmit={false}
+                returnKeyType="send"
+                accessibilityLabel="Ask Eka anything"
+              />
+              {/* Subtle character counter — only visible when typing */}
+              {inputText.length > 0 && (
+                <Text
+                  style={{
+                    fontSize: 9,
+                    color: inputText.length > 800 ? colors.destructive : colors.mutedForeground,
+                    textAlign: 'right',
+                    paddingRight: 10,
+                    paddingBottom: 2,
+                    opacity: 0.7,
+                  }}
+                >
+                  {inputText.length}
+                </Text>
+              )}
+            </View>
 
             <TouchableOpacity
               onPress={() => setLanguageOpen(!languageOpen)}
@@ -754,27 +1475,35 @@ export default function EkaChatScreen() {
                 justifyContent: 'center',
               }}
             >
-              <Globe size={16} color={colors.mutedForeground} />
+              <Globe size={16} color={languageOpen ? colors.primary : colors.mutedForeground} />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleSend}
               disabled={isStreaming || !inputText.trim()}
+              activeOpacity={0.75}
               accessibilityRole="button"
               accessibilityLabel="Send message"
               style={{
                 width: 38,
                 height: 38,
-                borderRadius: 14,
-                backgroundColor: isStreaming || !inputText.trim() ? colors.muted : colors.primary,
+                borderRadius: 16,
+                backgroundColor:
+                  isStreaming || !inputText.trim() ? `${colors.muted}` : colors.primary,
                 alignItems: 'center',
                 justifyContent: 'center',
+                marginRight: 2,
+                shadowColor: inputText.trim() ? colors.primary : 'transparent',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.35,
+                shadowRadius: 4,
+                elevation: inputText.trim() ? 3 : 0,
               }}
             >
               {isStreaming ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <Send size={16} color={colors.white} />
+                <Send size={15} color={inputText.trim() ? colors.white : colors.mutedForeground} />
               )}
             </TouchableOpacity>
           </View>
@@ -1030,46 +1759,72 @@ function ConversationGroup({
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                padding: 12,
                 borderRadius: 12,
-                backgroundColor: currentId === convo._id ? `${colors.primary}15` : colors.card,
+                backgroundColor: currentId === convo._id ? `${colors.primary}12` : colors.card,
                 borderWidth: 1,
-                borderColor: currentId === convo._id ? `${colors.primary}40` : colors.border,
-                gap: 10,
+                borderColor: currentId === convo._id ? `${colors.primary}35` : colors.border,
+                overflow: 'hidden',
               }}
             >
-              <BrainCircuit
-                size={16}
-                color={currentId === convo._id ? colors.primary : colors.mutedForeground}
-              />
-              <View style={{ flex: 1 }}>
-                <Text
-                  numberOfLines={1}
-                  style={{ fontSize: 13, fontWeight: '500', color: colors.foreground }}
-                >
-                  {convo.title || 'Untitled'}
-                </Text>
-                <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 2 }}>
-                  {formatRelativeDate(convo.updated_at || convo.created_at)}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => {
-                  Alert.alert('Delete?', 'This conversation will be permanently deleted.', [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                      text: 'Delete',
-                      style: 'destructive',
-                      onPress: () => onDelete(convo._id),
-                    },
-                  ]);
+              {/* Active accent bar */}
+              {currentId === convo._id && (
+                <View
+                  style={{
+                    width: 3,
+                    alignSelf: 'stretch',
+                    backgroundColor: colors.primary,
+                    borderTopLeftRadius: 12,
+                    borderBottomLeftRadius: 12,
+                  }}
+                />
+              )}
+              <View
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: 11,
+                  paddingLeft: currentId === convo._id ? 10 : 12,
+                  gap: 10,
                 }}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                accessibilityRole="button"
-                accessibilityLabel={`Delete ${convo.title || 'conversation'}`}
               >
-                <Trash2 size={14} color={colors.mutedForeground} />
-              </TouchableOpacity>
+                <BrainCircuit
+                  size={15}
+                  color={currentId === convo._id ? colors.primary : colors.mutedForeground}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      fontSize: 13,
+                      fontWeight: currentId === convo._id ? '600' : '500',
+                      color: currentId === convo._id ? colors.foreground : colors.foreground,
+                    }}
+                  >
+                    {convo.title || 'Untitled'}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 2 }}>
+                    {formatRelativeDate(convo.updated_at || convo.created_at)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    Alert.alert('Delete?', 'This conversation will be permanently deleted.', [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Delete',
+                        style: 'destructive',
+                        onPress: () => onDelete(convo._id),
+                      },
+                    ]);
+                  }}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Delete ${convo.title || 'conversation'}`}
+                >
+                  <Trash2 size={13} color={colors.mutedForeground} />
+                </TouchableOpacity>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -1083,43 +1838,70 @@ function ConversationGroup({
 // ═══════════════════════════════════════════════════════
 function WelcomeScreen({ onAction }: { onAction: (a: (typeof QUICK_ACTIONS)[number]) => void }) {
   return (
-    <View style={{ alignItems: 'center', paddingTop: 20, paddingBottom: 20 }}>
-      <View
-        style={{
-          width: 64,
-          height: 64,
-          borderRadius: 20,
-          backgroundColor: colors.primary,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 16,
-        }}
-      >
-        <BrainCircuit size={32} color={colors.white} />
+    <View style={{ alignItems: 'center', paddingTop: 24, paddingBottom: 20 }}>
+      {/* Avatar with glow ring */}
+      <View style={{ position: 'relative', marginBottom: 20 }}>
+        <View
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: 26,
+            backgroundColor: `${colors.primary}18`,
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'absolute',
+            top: -8,
+            left: -8,
+            right: -8,
+            bottom: -8,
+          }}
+        />
+        <View
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 22,
+            backgroundColor: colors.primary,
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.4,
+            shadowRadius: 12,
+            elevation: 8,
+          }}
+        >
+          <BrainCircuit size={36} color={colors.white} />
+        </View>
       </View>
-      <Text style={{ fontSize: 20, fontWeight: '800', color: colors.foreground }}>Hi, I'm Eka</Text>
+
+      <Text
+        style={{ fontSize: 22, fontWeight: '800', color: colors.foreground, letterSpacing: -0.5 }}
+      >
+        Hi, I'm Eka
+      </Text>
       <Text
         style={{
           fontSize: 13,
           color: colors.mutedForeground,
           textAlign: 'center',
           marginTop: 6,
-          paddingHorizontal: 40,
-          lineHeight: 19,
+          paddingHorizontal: 36,
+          lineHeight: 20,
         }}
       >
-        Your AI health companion. I can check symptoms, analyze prescriptions, track your recovery,
-        and more.
+        Your AI health companion. Ask me anything — symptoms, prescriptions, recovery, and more.
       </Text>
 
+      {/* Quick action grid — 3 across for breathing room */}
       <View
         style={{
           flexDirection: 'row',
           flexWrap: 'wrap',
           justifyContent: 'center',
           gap: 10,
-          marginTop: 24,
-          paddingHorizontal: 8,
+          marginTop: 28,
+          paddingHorizontal: 4,
         }}
       >
         {QUICK_ACTIONS.map((action, i) => {
@@ -1127,42 +1909,42 @@ function WelcomeScreen({ onAction }: { onAction: (a: (typeof QUICK_ACTIONS)[numb
           return (
             <TouchableOpacity
               key={i}
-              activeOpacity={0.7}
+              activeOpacity={0.65}
               onPress={() => onAction(action)}
               accessibilityRole="button"
               accessibilityLabel={action.label}
               style={{
-                width: (SCREEN_WIDTH - 72) / 4,
+                width: (SCREEN_WIDTH - 68) / 3,
                 alignItems: 'center',
-                paddingVertical: 12,
-                paddingHorizontal: 4,
+                paddingVertical: 14,
+                paddingHorizontal: 6,
                 backgroundColor: colors.card,
                 borderWidth: 1,
                 borderColor: colors.border,
-                borderRadius: 14,
-                gap: 6,
+                borderRadius: 16,
+                gap: 8,
               }}
             >
               <View
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  backgroundColor: `${action.color}15`,
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: `${action.color}18`,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Icon size={18} color={action.color} />
+                <Icon size={20} color={action.color} />
               </View>
               <Text
                 numberOfLines={2}
                 style={{
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: '600',
                   color: colors.foreground,
                   textAlign: 'center',
-                  lineHeight: 13,
+                  lineHeight: 15,
                 }}
               >
                 {action.label}
@@ -1182,69 +1964,225 @@ function MessageBubble({
   message,
   isLast,
   isStreaming,
+  loadingTool,
+  toolPhrase,
+  dot1,
+  dot2,
+  dot3,
   onActionLink,
 }: {
   message: EkaMessage;
   isLast: boolean;
   isStreaming: boolean;
+  loadingTool: string | null;
+  toolPhrase: string;
+  dot1: Animated.Value;
+  dot2: Animated.Value;
+  dot3: Animated.Value;
   onActionLink: (key: string) => void;
 }) {
   const isUser = message.role === 'user';
+  const hasContent = message.content.length > 0;
+
+  // Entry animation — fade + slide up on mount
+  const entryAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(entryAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 60,
+      friction: 10,
+    }).start();
+  }, []);
+
+  // Controls crossfade between loading shimmer (0) and streamed text (1)
+  // Transitions from 0→1 as soon as content starts arriving
+  const contentReveal = useRef(new Animated.Value(hasContent ? 1 : 0)).current;
+  useEffect(() => {
+    if (hasContent) {
+      Animated.timing(contentReveal, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      contentReveal.setValue(0);
+    }
+  }, [hasContent, contentReveal]);
+
+  // Streaming border pulse — only once content is flowing
+  const streamingBorder = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (isLast && isStreaming && !isUser && hasContent) {
+      const anim = Animated.loop(
+        Animated.sequence([
+          Animated.timing(streamingBorder, { toValue: 1, duration: 700, useNativeDriver: false }),
+          Animated.timing(streamingBorder, { toValue: 0, duration: 700, useNativeDriver: false }),
+        ])
+      );
+      anim.start();
+      return () => {
+        anim.stop();
+        streamingBorder.setValue(0);
+      };
+    } else {
+      streamingBorder.setValue(0);
+    }
+  }, [isLast, isStreaming, isUser, hasContent, streamingBorder]);
+
+  const entryStyle = {
+    opacity: entryAnim,
+    transform: [
+      {
+        translateY: entryAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [10, 0],
+        }),
+      },
+    ],
+  };
 
   if (isUser) {
     return (
-      <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+      <Animated.View style={[{ flexDirection: 'row', justifyContent: 'flex-end' }, entryStyle]}>
         <View
           style={{
-            maxWidth: '80%',
+            maxWidth: '78%',
             backgroundColor: colors.primary,
-            borderRadius: 18,
-            borderBottomRightRadius: 4,
-            padding: 12,
+            borderRadius: 20,
+            borderBottomRightRadius: 5,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 2,
           }}
         >
-          <Text style={{ fontSize: 14, color: colors.white, lineHeight: 20 }}>
+          <Text style={{ fontSize: 14, color: colors.white, lineHeight: 21 }}>
             {message.content}
           </Text>
         </View>
-      </View>
+      </Animated.View>
     );
   }
 
-  // Assistant message
-  const showCursor = isLast && isStreaming && !message.content.endsWith('|');
+  // ── Assistant bubble ──────────────────────────────────
+  const showLoadingLayer = isLast && isStreaming && !hasContent && !!loadingTool;
+  const showCursor = isLast && isStreaming && hasContent && !message.content.endsWith('|');
   const displayText = message.content + (showCursor ? '|' : '');
 
+  const borderColor = streamingBorder.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, `${colors.primary}70`],
+  });
+
   return (
-    <View style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start' }}>
+    <Animated.View style={[{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }, entryStyle]}>
+      {/* Avatar */}
       <View
         style={{
           width: 30,
           height: 30,
-          borderRadius: 15,
+          borderRadius: 10,
           backgroundColor: colors.primary,
           alignItems: 'center',
           justifyContent: 'center',
           marginTop: 2,
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3,
+          elevation: 2,
         }}
       >
         <BrainCircuit size={14} color={colors.white} />
       </View>
-      <View
+
+      {/* Bubble */}
+      <Animated.View
         style={{
           flex: 1,
           maxWidth: '85%',
           backgroundColor: colors.card,
           borderWidth: 1,
-          borderColor: colors.border,
+          borderColor,
           borderRadius: 18,
-          borderBottomLeftRadius: 4,
-          padding: 12,
+          borderTopLeftRadius: 5,
+          borderBottomLeftRadius: 5,
+          paddingHorizontal: 14,
+          paddingVertical: 10,
+          // Ensure bubble has a minimum height while loading so it doesn't collapse
+          minHeight: showLoadingLayer ? 80 : undefined,
         }}
       >
-        <FormattedText text={displayText} onActionLink={onActionLink} />
-      </View>
-    </View>
+        {/* ── Loading layer (shimmer + witty phrase + dots) ── */}
+        {/* Stays mounted until content arrives, then fades out */}
+        {isLast && isStreaming && (
+          <Animated.View
+            style={{
+              opacity: contentReveal.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, 0],
+              }),
+              // Collapse height to 0 after fade so it doesn't push content down
+              // We use absolute + zIndex so both layers overlay at same position
+              position: hasContent ? 'absolute' : 'relative',
+              top: hasContent ? 10 : 0,
+              left: hasContent ? 14 : 0,
+              right: hasContent ? 14 : 0,
+              pointerEvents: 'none',
+              gap: 10,
+            }}
+          >
+            {/* Witty phrase */}
+            {!!toolPhrase && (
+              <Text style={{ fontSize: 12, color: colors.mutedForeground, fontStyle: 'italic' }}>
+                {toolPhrase}
+              </Text>
+            )}
+
+            {/* Shimmer lines */}
+            <View style={{ gap: 7 }}>
+              <ShimmerRow width={SCREEN_WIDTH * 0.42} height={9} />
+              <ShimmerRow width={SCREEN_WIDTH * 0.32} height={9} />
+              <ShimmerRow width={SCREEN_WIDTH * 0.38} height={9} />
+            </View>
+
+            {/* Animated dots */}
+            <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+              {[dot1, dot2, dot3].map((dot, i) => (
+                <Animated.View
+                  key={i}
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: 2.5,
+                    backgroundColor: colors.primary,
+                    opacity: dot,
+                    transform: [
+                      {
+                        scale: dot.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.6, 1],
+                        }),
+                      },
+                    ],
+                  }}
+                />
+              ))}
+            </View>
+          </Animated.View>
+        )}
+
+        {/* ── Content layer (streamed text) ── */}
+        {/* Fades in as content arrives */}
+        <Animated.View style={{ opacity: contentReveal }}>
+          <FormattedText text={displayText} onActionLink={onActionLink} />
+        </Animated.View>
+      </Animated.View>
+    </Animated.View>
   );
 }
 
@@ -1809,6 +2747,7 @@ function ArtifactCard({ artifact }: { artifact: EkaArtifact }) {
   };
 
   const title = getArtifactTitle(artifact.type);
+  const { Icon: ArtifactIcon, color: artifactColor } = getArtifactIcon(artifact.type);
 
   return (
     <View
@@ -1816,7 +2755,7 @@ function ArtifactCard({ artifact }: { artifact: EkaArtifact }) {
         marginLeft: 40,
         backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: `${artifactColor}25`,
         borderRadius: 16,
         overflow: 'hidden',
       }}
@@ -1831,15 +2770,32 @@ function ArtifactCard({ artifact }: { artifact: EkaArtifact }) {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: 12,
-          backgroundColor: `${colors.primary}08`,
+          paddingHorizontal: 12,
+          paddingVertical: 10,
+          backgroundColor: `${artifactColor}12`,
+          borderBottomWidth: expanded ? 1 : 0,
+          borderBottomColor: `${artifactColor}20`,
         }}
       >
-        <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>{title}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <View
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 8,
+              backgroundColor: `${artifactColor}20`,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <ArtifactIcon size={14} color={artifactColor} />
+          </View>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: artifactColor }}>{title}</Text>
+        </View>
         {expanded ? (
-          <ChevronUp size={14} color={colors.primary} />
+          <ChevronUp size={14} color={artifactColor} />
         ) : (
-          <ChevronDown size={14} color={colors.primary} />
+          <ChevronDown size={14} color={artifactColor} />
         )}
       </TouchableOpacity>
       {expanded && <View style={{ padding: 14, gap: 10 }}>{renderContent()}</View>}
@@ -1860,6 +2816,21 @@ function getArtifactTitle(type: string): string {
     risk_assessment: 'Risk Assessment',
   };
   return titles[type] || 'Report';
+}
+
+function getArtifactIcon(type: string) {
+  const map: Record<string, { Icon: React.ComponentType<any>; color: string }> = {
+    health_checkup_start: { Icon: Stethoscope, color: colors.primary },
+    health_checkup_report: { Icon: ClipboardCheck, color: colors.success },
+    drug_interaction_report: { Icon: AlertTriangle, color: '#f97316' },
+    prescription_analysis: { Icon: Pill, color: colors.secondary },
+    recovery_dashboard: { Icon: Heart, color: colors.destructive },
+    screening_report: { Icon: FileText, color: '#f59e0b' },
+    coping_exercise: { Icon: HeartPulse, color: '#ec4899' },
+    safety_plan: { Icon: Shield, color: colors.primary },
+    risk_assessment: { Icon: BarChart3, color: '#8b5cf6' },
+  };
+  return map[type] ?? { Icon: FileText, color: colors.primary };
 }
 
 // ─── Artifact Sub-Cards ─────────────────────────────
@@ -4489,30 +5460,41 @@ function CheckupQuestionUI({
   }, [question.text]);
 
   if (question.type === 'single') {
+    const OPTS = [
+      { label: 'Yes', color: colors.success },
+      { label: 'No', color: colors.destructive },
+      { label: 'Not sure', color: colors.mutedForeground },
+    ];
     return (
       <View style={{ marginLeft: 40, gap: 8 }}>
-        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedForeground }}>
-          Select your answer:
+        <Text
+          style={{
+            fontSize: 11,
+            fontWeight: '600',
+            color: colors.mutedForeground,
+            textTransform: 'uppercase',
+            letterSpacing: 0.4,
+          }}
+        >
+          Select your answer
         </Text>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          {['Yes', 'No', 'Not sure'].map((opt) => (
+          {OPTS.map(({ label, color }) => (
             <TouchableOpacity
-              key={opt}
-              activeOpacity={0.7}
-              onPress={() => onAnswer(opt)}
+              key={label}
+              activeOpacity={0.65}
+              onPress={() => onAnswer(label)}
               style={{
                 flex: 1,
-                paddingVertical: 10,
-                borderRadius: 12,
-                backgroundColor: colors.card,
-                borderWidth: 1,
-                borderColor: colors.border,
+                paddingVertical: 11,
+                borderRadius: 14,
+                backgroundColor: `${color}12`,
+                borderWidth: 1.5,
+                borderColor: `${color}35`,
                 alignItems: 'center',
               }}
             >
-              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}>
-                {opt}
-              </Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color }}>{label}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -4523,26 +5505,46 @@ function CheckupQuestionUI({
   if (question.type === 'group_single') {
     return (
       <View style={{ marginLeft: 40, gap: 6 }}>
-        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedForeground }}>
-          Select one:
+        <Text
+          style={{
+            fontSize: 11,
+            fontWeight: '600',
+            color: colors.mutedForeground,
+            textTransform: 'uppercase',
+            letterSpacing: 0.4,
+          }}
+        >
+          Select one
         </Text>
         {(question.items || []).map((item, idx) => (
           <TouchableOpacity
             key={item.id || item.name || idx}
-            activeOpacity={0.7}
+            activeOpacity={0.65}
             onPress={() => onAnswer(item.common_name || item.name)}
             style={{
-              paddingVertical: 10,
+              paddingVertical: 11,
               paddingHorizontal: 14,
-              borderRadius: 12,
+              borderRadius: 14,
               backgroundColor: colors.card,
               borderWidth: 1,
               borderColor: colors.border,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
             }}
           >
-            <Text style={{ fontSize: 13, color: colors.foreground }}>
+            <Text style={{ fontSize: 13, color: colors.foreground, fontWeight: '500' }}>
               {item.common_name || item.name}
             </Text>
+            <View
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 9,
+                borderWidth: 1.5,
+                borderColor: colors.border,
+              }}
+            />
           </TouchableOpacity>
         ))}
       </View>
@@ -4558,8 +5560,16 @@ function CheckupQuestionUI({
 
   return (
     <View style={{ marginLeft: 40, gap: 8 }}>
-      <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedForeground }}>
-        Select all that apply:
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '600',
+          color: colors.mutedForeground,
+          textTransform: 'uppercase',
+          letterSpacing: 0.4,
+        }}
+      >
+        Select all that apply
       </Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
         {(question.items || []).map((item, idx) => {
@@ -4568,21 +5578,34 @@ function CheckupQuestionUI({
           return (
             <TouchableOpacity
               key={item.id || item.name || idx}
-              activeOpacity={0.7}
+              activeOpacity={0.65}
               onPress={() => toggleItem(name)}
               style={{
                 paddingVertical: 8,
-                paddingHorizontal: 12,
-                borderRadius: 12,
+                paddingHorizontal: 13,
+                borderRadius: 14,
                 backgroundColor: selected ? `${colors.primary}15` : colors.card,
-                borderWidth: 1,
+                borderWidth: 1.5,
                 borderColor: selected ? colors.primary : colors.border,
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 6,
               }}
             >
-              {selected && <Check size={12} color={colors.primary} />}
+              <View
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: 4,
+                  borderWidth: 1.5,
+                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected ? colors.primary : 'transparent',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {selected && <Check size={9} color={colors.white} />}
+              </View>
               <Text
                 style={{
                   fontSize: 12,
@@ -4598,23 +5621,87 @@ function CheckupQuestionUI({
       </View>
       {selectedItems.length > 0 && (
         <TouchableOpacity
-          activeOpacity={0.7}
+          activeOpacity={0.75}
           onPress={() => {
             onAnswer(selectedItems.join(', '));
             setSelectedItems([]);
           }}
           style={{
-            paddingVertical: 10,
-            borderRadius: 12,
+            paddingVertical: 12,
+            borderRadius: 14,
             backgroundColor: colors.primary,
             alignItems: 'center',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: 8,
+            shadowColor: colors.primary,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 6,
+            elevation: 3,
           }}
         >
-          <Text style={{ fontSize: 13, fontWeight: '600', color: colors.white }}>
+          <Check size={14} color={colors.white} />
+          <Text style={{ fontSize: 13, fontWeight: '700', color: colors.white }}>
             Continue with {selectedItems.length} selected
           </Text>
         </TouchableOpacity>
       )}
+    </View>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// Shimmer + Typing Loading Bubble
+// ═══════════════════════════════════════════════════════
+
+function ShimmerRow({ width, height = 10 }: { width: number; height?: number }) {
+  const shimmerAnim = useRef(new Animated.Value(0)).current;
+  const containerWidth = width;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.timing(shimmerAnim, {
+        toValue: 1,
+        duration: 1200,
+        useNativeDriver: true,
+      })
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [shimmerAnim]);
+
+  const translateX = shimmerAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-containerWidth, containerWidth],
+  });
+
+  return (
+    <View
+      style={{
+        width,
+        height,
+        borderRadius: height / 2,
+        backgroundColor: colors.muted,
+        overflow: 'hidden',
+      }}
+    >
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          width: '60%',
+          transform: [{ translateX }],
+        }}
+      >
+        <LinearGradient
+          colors={['transparent', `${colors.border}`, 'transparent']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
     </View>
   );
 }
