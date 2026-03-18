@@ -1,3 +1,9 @@
+## [1.0.16](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.15...v1.0.16) (2026-03-18)
+
+### Bug Fixes
+
+- handle nested notification response format from backend ([5033f1f](https://github.com/eyobassey/RapidCapsuleMobile-/commit/5033f1f9fc06f5ebdaee1d4dfad10c73b26deb89))
+
 ## [1.0.15](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.14...v1.0.15) (2026-03-17)
 
 ### Bug Fixes
