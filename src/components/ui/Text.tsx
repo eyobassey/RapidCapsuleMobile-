@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import { Text as RNText, type TextProps as RNTextProps } from 'react-native';
 import { getFontFamily, getFontStyle, type FontWeight } from '../../config/fonts';
 
-const defaultFontStyle = { fontFamily: getFontFamily('regular') };
+const defaultFontStyle = { fontFamily: getFontFamily('regular'), color: '#f8fafc' };
 
 type TextVariant = 'body' | 'label' | 'caption' | 'heading' | 'title';
 
