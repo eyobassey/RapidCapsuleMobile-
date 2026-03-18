@@ -12,6 +12,13 @@ export type NotificationPreferences = {
   promotional: boolean;
 };
 
+// Shape returned by GET /notifications/stats
+export type NotificationStats = {
+  total: number;
+  unread: number;
+  by_type: Record<string, number>;
+};
+
 export const notificationsService = {
   async list(params?: { page?: number; limit?: number }) {
     const res = await api.get('/notifications', { params });
@@ -35,6 +42,11 @@ export const notificationsService = {
 
   async remove(id: string) {
     const res = await api.delete(`/notifications/${id}`);
+    return res.data.data || res.data.result;
+  },
+
+  async getStats(): Promise<NotificationStats> {
+    const res = await api.get('/notifications/stats');
     return res.data.data || res.data.result;
   },
 
