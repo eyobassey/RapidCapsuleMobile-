@@ -73,3 +73,15 @@ export {
   useCheckInMutation,
   useCelebrateMilestoneMutation,
 } from './useRecoveryQuery';
+
+export {
+  securityKeys,
+  useSessionsQuery,
+  useUserSettingsQuery,
+  useBiometricCredentialsQuery,
+  useRevokeSessionMutation,
+  useRevokeAllSessionsMutation,
+  useUpdateUserSettingsMutation,
+  useChangePasswordMutation,
+  useDeleteBiometricMutation,
+} from './useSecurityQuery';

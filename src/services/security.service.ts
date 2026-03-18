@@ -1,38 +1,59 @@
 import api from './api';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Session ──────────────────────────────────────────────────────────────────
 
-export type TwoFactorMethod = 'email' | 'sms' | 'totp';
+export type Session = {
+  _id: string;
+  userId: string;
+  tokenId: string;
+  deviceName: string;
+  deviceType: 'desktop' | 'mobile' | 'tablet' | string;
+  browser: string;
+  os: string;
+  ipAddress: string;
+  city: string;
+  country: string;
+  location: string;
+  lastActiveAt: string;
+  isRevoked: boolean;
+  isCurrent: boolean;
+  created_at: string;
+  updated_at: string;
+};
 
-export type TwoFactorStatus = {
-  enabled: boolean;
-  method: TwoFactorMethod | null;
+// ─── User Settings ────────────────────────────────────────────────────────────
+
+export type TwoFactorMedium = 'EMAIL' | 'SMS' | 'TOTP';
+
+export type UserSettingsDefaults = {
+  twoFA_auth?: boolean;
+  twoFA_medium?: TwoFactorMedium;
+  whatsapp_notifications?: boolean;
+};
+
+export type UserSettings = {
+  defaults: UserSettingsDefaults;
+};
+
+// ─── Password ─────────────────────────────────────────────────────────────────
+
+export type ChangePasswordPayload = {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+};
+
+// ─── 2FA / Biometrics ────────────────────────────────────────────────────────
+
+export type Generate2FAResponse = {
+  secret: string;
+  qrCodeUrl: string;
 };
 
 export type BiometricCredential = {
   credentialId: string;
   deviceName: string;
   createdAt: string;
-};
-
-export type Session = {
-  id: string;
-  deviceType: string;
-  browser: string;
-  os: string;
-  location: string;
-  lastActive: string;
-  isCurrent: boolean;
-};
-
-export type ChangePasswordPayload = {
-  currentPassword: string;
-  newPassword: string;
-};
-
-export type Generate2FAResponse = {
-  secret: string;
-  qrCodeUrl: string;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -44,12 +65,40 @@ function unwrap<T>(res: { data: any }): T {
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export const securityService = {
+  // Sessions
+  async getSessions(): Promise<Session[]> {
+    const res = await api.get('/auth/sessions');
+    const data = unwrap<any>(res);
+    return Array.isArray(data) ? data : data?.sessions ?? [];
+  },
+
+  async revokeSession(sessionId: string): Promise<void> {
+    await api.delete(`/auth/sessions/${sessionId}`);
+  },
+
+  async revokeAllOtherSessions(): Promise<void> {
+    await api.post('/auth/sessions/revoke-all-other');
+  },
+
+  // User settings (2FA + WhatsApp toggle)
+  async getUserSettings(): Promise<UserSettings> {
+    const res = await api.get('/user-settings');
+    return unwrap<UserSettings>(res);
+  },
+
+  async updateUserSettings(patch: {
+    defaults: Partial<UserSettingsDefaults>;
+  }): Promise<UserSettings> {
+    const res = await api.patch('/user-settings', patch);
+    return unwrap<UserSettings>(res);
+  },
+
   // Password
   async changePassword(payload: ChangePasswordPayload): Promise<void> {
     await api.patch('/auth/change-password', payload);
   },
 
-  // 2FA
+  // 2FA (TOTP secret generation)
   async generate2FASecret(): Promise<Generate2FAResponse> {
     const res = await api.post('/auth/2fa/generate');
     return unwrap<Generate2FAResponse>(res);
@@ -57,10 +106,6 @@ export const securityService = {
 
   async enable2FA(twoFactorCode: string): Promise<void> {
     await api.post('/auth/2fa/turn-on', { twoFactorCode });
-  },
-
-  async verify2FACode(twoFactorCode: string): Promise<void> {
-    await api.post('/auth/2fa/verify', { twoFactorCode });
   },
 
   // Biometrics
@@ -72,26 +117,5 @@ export const securityService = {
 
   async deleteBiometricCredential(credentialId: string): Promise<void> {
     await api.post('/auth/biometric/delete', { credentialId });
-  },
-
-  // Sessions
-  async getSessions(): Promise<Session[]> {
-    const res = await api.get('/auth/sessions');
-    const data = unwrap<any>(res);
-    return Array.isArray(data) ? data : data?.sessions ?? [];
-  },
-
-  async getSessionCount(): Promise<number> {
-    const res = await api.get('/auth/sessions/count');
-    const data = unwrap<any>(res);
-    return typeof data === 'number' ? data : data?.count ?? 0;
-  },
-
-  async revokeSession(sessionId: string): Promise<void> {
-    await api.delete(`/auth/sessions/${sessionId}`);
-  },
-
-  async revokeAllOtherSessions(): Promise<void> {
-    await api.post('/auth/sessions/revoke-all-other');
   },
 };

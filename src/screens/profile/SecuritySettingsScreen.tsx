@@ -20,7 +20,7 @@ import {
   ShieldCheck,
   Smartphone,
 } from 'lucide-react-native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -28,8 +28,8 @@ import {
   Modal,
   Platform,
   Pressable,
-  RefreshControl,
   ScrollView,
+  Switch,
   TextInput,
   TouchableOpacity,
   View,
@@ -37,8 +37,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '../../components/ui/Text';
-import { Session, TwoFactorMethod, securityService } from '../../services/security.service';
-import { useAuthStore } from '../../store/auth';
+import {
+  useBiometricCredentialsQuery,
+  useChangePasswordMutation,
+  useDeleteBiometricMutation,
+  useRevokeAllSessionsMutation,
+  useRevokeSessionMutation,
+  useSessionsQuery,
+  useUpdateUserSettingsMutation,
+  useUserSettingsQuery,
+} from '../../hooks/queries/useSecurityQuery';
+import { TwoFactorMedium, securityService } from '../../services/security.service';
 import { colors } from '../../theme/colors';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -57,7 +66,6 @@ function ListRow({
   subtitle,
   onPress,
   right,
-  isFirst = false,
   isLast = false,
   destructive = false,
 }: {
@@ -66,11 +74,10 @@ function ListRow({
   subtitle?: string;
   onPress?: () => void;
   right?: React.ReactNode;
-  isFirst?: boolean;
   isLast?: boolean;
   destructive?: boolean;
 }) {
-  const content = (
+  const inner = (
     <View
       className={`flex-row items-center p-4 bg-card ${!isLast ? 'border-b border-border' : ''}`}
     >
@@ -92,7 +99,7 @@ function ListRow({
     </View>
   );
 
-  if (!onPress) return content;
+  if (!onPress) return inner;
   return (
     <TouchableOpacity
       activeOpacity={0.7}
@@ -100,12 +107,11 @@ function ListRow({
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      {content}
+      {inner}
     </TouchableOpacity>
   );
 }
 
-/** Password field with show/hide toggle */
 function PasswordInput({
   label,
   value,
@@ -155,7 +161,6 @@ function PasswordInput({
   );
 }
 
-/** Bottom-sheet modal wrapper (reusable) */
 function BottomSheet({
   visible,
   onClose,
@@ -178,10 +183,9 @@ function BottomSheet({
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             paddingBottom: 40,
-            maxHeight: '90%',
+            maxHeight: '92%',
           }}
         >
-          {/* Drag handle */}
           <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
             <View
               style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }}
@@ -194,40 +198,37 @@ function BottomSheet({
   );
 }
 
-/** Relative time helper */
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60_000);
   if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins} min${mins === 1 ? '' : 's'} ago`;
+  if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs} hour${hrs === 1 ? '' : 's'} ago`;
+  if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
-  return `${days} day${days === 1 ? '' : 's'} ago`;
+  return `${days}d ago`;
 }
 
-// ─── 2FA method meta ──────────────────────────────────────────────────────────
-
 const TFA_METHODS: Array<{
-  key: TwoFactorMethod;
+  key: TwoFactorMedium;
   label: string;
   subtitle: string;
   icon: React.ReactNode;
 }> = [
   {
-    key: 'email',
+    key: 'EMAIL',
     label: 'Email',
     subtitle: 'Receive verification codes via email',
     icon: <Mail size={18} color={colors.primary} />,
   },
   {
-    key: 'sms',
+    key: 'SMS',
     label: 'SMS',
     subtitle: 'Receive verification codes via SMS',
     icon: <MessageCircle size={18} color={colors.success} />,
   },
   {
-    key: 'totp',
+    key: 'TOTP',
     label: 'Auth App',
     subtitle: 'Use an authenticator app like Google Authenticator',
     icon: <Shield size={18} color={colors.accent} />,
@@ -238,236 +239,233 @@ const TFA_METHODS: Array<{
 
 export default function SecuritySettingsScreen() {
   const navigation = useNavigation<any>();
-  const user = useAuthStore((s) => s.user);
-  const email = user?.email ?? '';
 
-  // Loading / refreshing
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  // ── TanStack queries ────────────────────────────────────────────────────────
+  const sessionsQuery = useSessionsQuery();
+  const userSettingsQuery = useUserSettingsQuery();
+  const biometricsQuery = useBiometricCredentialsQuery();
 
-  // Security state
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [twoFactorMethod, setTwoFactorMethod] = useState<TwoFactorMethod>('email');
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const revokeSession = useRevokeSessionMutation();
+  const revokeAll = useRevokeAllSessionsMutation();
+  const updateSettings = useUpdateUserSettingsMutation();
+  const changePassword = useChangePasswordMutation();
+  const deleteBiometric = useDeleteBiometricMutation();
 
-  // Sheet visibility
+  // ── Derived state from queries ──────────────────────────────────────────────
+  const sessions = sessionsQuery.data;
+  const settings = userSettingsQuery.data;
+  const biometrics = biometricsQuery.data;
+
+  const twoFactorEnabled = settings?.twoFA_auth ?? false;
+  const twoFactorMedium: TwoFactorMedium = settings?.twoFA_medium ?? 'EMAIL';
+  const whatsappEnabled = settings?.whatsapp_notifications ?? false;
+  const biometricEnabled = biometrics?.isEnabled ?? false;
+
+  const isLoading =
+    sessionsQuery.isLoading && userSettingsQuery.isLoading && biometricsQuery.isLoading;
+
+  // ── Sheet visibility ────────────────────────────────────────────────────────
   const [showPasswordSheet, setShowPasswordSheet] = useState(false);
   const [showTFASheet, setShowTFASheet] = useState(false);
-  const [showSessionsSheet, setShowSessionsSheet] = useState(false);
   const [showTOTPSheet, setShowTOTPSheet] = useState(false);
+  const [showSessionsSheet, setShowSessionsSheet] = useState(false);
 
-  // Change password form
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordSaving, setPasswordSaving] = useState(false);
+  // ── Password form ───────────────────────────────────────────────────────────
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
 
-  // 2FA enable flow
+  // ── 2FA TOTP setup ──────────────────────────────────────────────────────────
   const [tfaCode, setTfaCode] = useState('');
   const [tfaSecret, setTfaSecret] = useState('');
-  const [tfaSaving, setTfaSaving] = useState(false);
+  const [pendingMethod, setPendingMethod] = useState<TwoFactorMedium>('EMAIL');
 
-  // Session actions
-  const [sessionLoading, setSessionLoading] = useState<string | null>(null);
-  const [revokingAll, setRevokingAll] = useState(false);
-
-  // ── Data fetch ─────────────────────────────────────────────────────────────
-
-  const fetchAll = useCallback(async () => {
-    try {
-      const [sessionsResult, bioResult] = await Promise.allSettled([
-        securityService.getSessions(),
-        securityService.getBiometricCredentials(),
-      ]);
-
-      if (sessionsResult.status === 'fulfilled') {
-        setSessions(sessionsResult.value);
-      }
-      if (bioResult.status === 'fulfilled') {
-        setBiometricEnabled(bioResult.value.length > 0);
-      }
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchAll();
-  }, [fetchAll]);
-
-  // ── Change password ────────────────────────────────────────────────────────
+  // ── Handlers ────────────────────────────────────────────────────────────────
 
   const handleChangePassword = useCallback(async () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if (!currentPw || !newPw || !confirmPw) {
       Alert.alert('Missing fields', 'Please fill in all password fields.');
       return;
     }
-    if (newPassword !== confirmPassword) {
+    if (newPw !== confirmPw) {
       Alert.alert('Passwords do not match', 'New password and confirmation must match.');
       return;
     }
-    if (newPassword.length < 8) {
+    if (newPw.length < 8) {
       Alert.alert('Too short', 'Password must be at least 8 characters.');
       return;
     }
-    setPasswordSaving(true);
-    try {
-      await securityService.changePassword({ currentPassword, newPassword });
-      setShowPasswordSheet(false);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      Alert.alert('Password updated', 'Your password has been changed successfully.');
-    } catch (err: any) {
-      Alert.alert('Could not update password', err?.message ?? 'Please try again.');
-    } finally {
-      setPasswordSaving(false);
-    }
-  }, [currentPassword, newPassword, confirmPassword]);
-
-  // ── 2FA ───────────────────────────────────────────────────────────────────
-
-  const handleEnable2FA = useCallback(async () => {
-    if (twoFactorMethod === 'totp') {
-      // Generate secret and show TOTP setup sheet
-      try {
-        const { secret } = await securityService.generate2FASecret();
-        setTfaSecret(secret);
-        setShowTFASheet(false);
-        setShowTOTPSheet(true);
-      } catch {
-        Alert.alert('Error', 'Could not generate 2FA secret. Please try again.');
+    changePassword.mutate(
+      { current_password: currentPw, new_password: newPw, confirm_password: confirmPw },
+      {
+        onSuccess: () => {
+          setShowPasswordSheet(false);
+          setCurrentPw('');
+          setNewPw('');
+          setConfirmPw('');
+          Alert.alert('Password updated', 'Your password has been changed successfully.');
+        },
+        onError: (err: any) => {
+          Alert.alert('Could not update password', err?.message ?? 'Please try again.');
+        },
       }
-    } else {
-      // Email / SMS: just show code input within TFA sheet
-      setTfaCode('');
-      setShowTFASheet(true);
-    }
-  }, [twoFactorMethod]);
+    );
+  }, [currentPw, newPw, confirmPw, changePassword]);
+
+  const handleSelectTFAMethod = useCallback(
+    async (method: TwoFactorMedium) => {
+      setPendingMethod(method);
+      if (!twoFactorEnabled) {
+        if (method === 'TOTP') {
+          try {
+            const { secret } = await securityService.generate2FASecret();
+            setTfaSecret(secret);
+            setTfaCode('');
+            setShowTOTPSheet(true);
+          } catch {
+            Alert.alert('Error', 'Could not generate 2FA secret. Please try again.');
+          }
+        } else {
+          setTfaCode('');
+          setShowTFASheet(true);
+        }
+      } else {
+        // Already enabled — switch method
+        updateSettings.mutate(
+          { twoFA_medium: method },
+          {
+            onError: (err: any) =>
+              Alert.alert('Error', err?.message ?? 'Could not update 2FA method.'),
+          }
+        );
+      }
+    },
+    [twoFactorEnabled, updateSettings]
+  );
 
   const handleVerifyAndEnable = useCallback(async () => {
     if (!tfaCode || tfaCode.length < 6) {
       Alert.alert('Enter code', 'Please enter the 6-digit verification code.');
       return;
     }
-    setTfaSaving(true);
     try {
       await securityService.enable2FA(tfaCode);
-      setTwoFactorEnabled(true);
-      setShowTFASheet(false);
-      setShowTOTPSheet(false);
-      setTfaCode('');
-      Alert.alert('2FA enabled', 'Two-factor authentication is now active.');
+      updateSettings.mutate(
+        { twoFA_auth: true, twoFA_medium: pendingMethod },
+        {
+          onSettled: () => {
+            setShowTFASheet(false);
+            setShowTOTPSheet(false);
+            setTfaCode('');
+          },
+        }
+      );
     } catch (err: any) {
       Alert.alert('Invalid code', err?.message ?? 'Please check the code and try again.');
-    } finally {
-      setTfaSaving(false);
     }
-  }, [tfaCode]);
+  }, [tfaCode, pendingMethod, updateSettings]);
 
-  // ── Sessions ──────────────────────────────────────────────────────────────
+  const handleToggle2FA = useCallback(
+    (enabled: boolean) => {
+      updateSettings.mutate(
+        { twoFA_auth: enabled },
+        {
+          onError: (err: any) =>
+            Alert.alert('Error', err?.message ?? 'Could not update 2FA setting.'),
+        }
+      );
+    },
+    [updateSettings]
+  );
 
-  const handleRevokeSession = useCallback(async (sessionId: string) => {
-    Alert.alert('Revoke session', 'Sign out this device?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          setSessionLoading(sessionId);
-          try {
-            await securityService.revokeSession(sessionId);
-            setSessions((prev) => prev.filter((s) => s.id !== sessionId));
-          } catch {
-            Alert.alert('Error', 'Could not revoke the session. Please try again.');
-          } finally {
-            setSessionLoading(null);
-          }
+  const handleToggleWhatsApp = useCallback(
+    (enabled: boolean) => {
+      updateSettings.mutate(
+        { whatsapp_notifications: enabled },
+        {
+          onError: (err: any) =>
+            Alert.alert('Error', err?.message ?? 'Could not update WhatsApp setting.'),
+        }
+      );
+    },
+    [updateSettings]
+  );
+
+  const handleRevokeSession = useCallback(
+    (sessionId: string, deviceName: string) => {
+      Alert.alert('Sign out device', `Sign out "${deviceName}"?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: () => {
+            revokeSession.mutate(sessionId, {
+              onError: () =>
+                Alert.alert('Error', 'Could not revoke this session. Please try again.'),
+            });
+          },
         },
-      },
-    ]);
-  }, []);
+      ]);
+    },
+    [revokeSession]
+  );
 
-  const handleRevokeAll = useCallback(async () => {
+  const handleRevokeAll = useCallback(() => {
+    const othersCount = sessions?.others.length ?? 0;
     Alert.alert(
       'Sign out all other devices',
-      'This will immediately sign out all other active sessions. You will remain logged in on this device.',
+      `This will sign out ${othersCount} other active session${
+        othersCount === 1 ? '' : 's'
+      }. You will remain logged in here.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Sign Out All',
           style: 'destructive',
-          onPress: async () => {
-            setRevokingAll(true);
-            try {
-              await securityService.revokeAllOtherSessions();
-              setSessions((prev) => prev.filter((s) => s.isCurrent));
-            } catch {
-              Alert.alert('Error', 'Could not revoke sessions. Please try again.');
-            } finally {
-              setRevokingAll(false);
-            }
+          onPress: () => {
+            revokeAll.mutate(undefined, {
+              onError: () => Alert.alert('Error', 'Could not revoke sessions. Please try again.'),
+            });
           },
         },
       ]
     );
-  }, []);
+  }, [revokeAll, sessions?.others.length]);
 
-  // ── Biometric ─────────────────────────────────────────────────────────────
-
-  const handleBiometricSetup = useCallback(() => {
-    Alert.alert(
-      biometricEnabled ? 'Biometric Login' : 'Set Up Biometric Login',
-      biometricEnabled
-        ? 'Biometric login is enabled for this device. Remove it?'
-        : 'Set up Face ID or fingerprint to sign in quickly without a password.',
-      biometricEnabled
-        ? [
-            { text: 'Keep enabled', style: 'cancel' },
-            {
-              text: 'Remove',
-              style: 'destructive',
-              onPress: async () => {
-                try {
-                  const creds = await securityService.getBiometricCredentials();
-                  if (creds[0])
-                    await securityService.deleteBiometricCredential(creds[0].credentialId);
-                  setBiometricEnabled(false);
-                } catch {
-                  Alert.alert('Error', 'Could not remove biometric credentials.');
-                }
-              },
-            },
-          ]
-        : [
-            { text: 'Not now', style: 'cancel' },
-            {
-              text: 'Set Up',
-              onPress: () =>
-                Alert.alert(
-                  'Coming soon',
-                  'Biometric registration will be available in the next update.'
-                ),
-            },
-          ]
-    );
-  }, [biometricEnabled]);
-
-  // ── Derived values ─────────────────────────────────────────────────────────
-
-  const otherSessions = sessions.filter((s) => !s.isCurrent);
-  const currentSession = sessions.find((s) => s.isCurrent);
+  const handleBiometricToggle = useCallback(() => {
+    if (biometricEnabled) {
+      Alert.alert('Remove biometric login', 'Remove Face ID / fingerprint from this device?', [
+        { text: 'Keep', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => {
+            const first = biometrics?.credentials[0];
+            if (!first) return;
+            deleteBiometric.mutate(first.credentialId, {
+              onError: () => Alert.alert('Error', 'Could not remove biometric credentials.'),
+            });
+          },
+        },
+      ]);
+    } else {
+      Alert.alert('Set Up Biometric Login', 'Set up Face ID or fingerprint to sign in quickly.', [
+        { text: 'Not now', style: 'cancel' },
+        {
+          text: 'Set Up',
+          onPress: () =>
+            Alert.alert(
+              'Coming soon',
+              'Biometric registration will be available in the next update.'
+            ),
+        },
+      ]);
+    }
+  }, [biometricEnabled, biometrics, deleteBiometric]);
 
   // ── Loading state ──────────────────────────────────────────────────────────
 
-  if (loading) {
+  if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top']}>
         <View className="h-14 bg-card border-b border-border flex-row items-center px-4 gap-3">
@@ -489,6 +487,8 @@ export default function SecuritySettingsScreen() {
 
   // ── Main render ────────────────────────────────────────────────────────────
 
+  const otherSessionCount = sessions?.others.length ?? 0;
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       {/* Header */}
@@ -502,19 +502,15 @@ export default function SecuritySettingsScreen() {
           <ArrowLeft size={18} color={colors.foreground} />
         </TouchableOpacity>
         <Text className="flex-1 text-base font-bold text-foreground">Security Settings</Text>
+        {(updateSettings.isPending || revokeSession.isPending || revokeAll.isPending) && (
+          <ActivityIndicator size="small" color={colors.primary} />
+        )}
       </View>
 
       <ScrollView
         className="flex-1"
         contentContainerClassName="pb-16"
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-          />
-        }
       >
         {/* ── Status banner ── */}
         <View className="mx-5 mt-5 bg-card border border-border rounded-2xl overflow-hidden">
@@ -537,10 +533,10 @@ export default function SecuritySettingsScreen() {
               </Text>
               <Text className="text-muted-foreground text-xs mt-0.5">
                 {twoFactorEnabled
-                  ? `2FA active · ${sessions.length} device${
-                      sessions.length === 1 ? '' : 's'
+                  ? `2FA active · ${sessions?.all.length ?? 0} device${
+                      sessions?.all.length === 1 ? '' : 's'
                     } logged in`
-                  : `Enable 2FA for stronger account protection`}
+                  : 'Enable 2FA for stronger account protection'}
               </Text>
             </View>
             {twoFactorEnabled && (
@@ -577,7 +573,7 @@ export default function SecuritySettingsScreen() {
         {/* ── Two-Factor Authentication ── */}
         <SectionHeader title="Two-Factor Authentication" />
         <View className="mx-5 bg-card border border-border rounded-2xl overflow-hidden">
-          {/* Status row */}
+          {/* Master toggle row */}
           <View className="flex-row items-center p-4 border-b border-border">
             <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">
               <ShieldCheck
@@ -589,44 +585,38 @@ export default function SecuritySettingsScreen() {
               <Text className="text-foreground font-medium text-sm">Two-Factor Authentication</Text>
               <Text className="text-xs text-muted-foreground mt-0.5">
                 {twoFactorEnabled
-                  ? `Active · ${TFA_METHODS.find((m) => m.key === twoFactorMethod)?.label}`
-                  : 'Not enabled — adds an extra layer of security'}
+                  ? `Active · ${TFA_METHODS.find((m) => m.key === twoFactorMedium)?.label}`
+                  : 'Adds an extra layer of security'}
               </Text>
             </View>
-            {twoFactorEnabled ? (
-              <View
-                style={{
-                  backgroundColor: `${colors.success}20`,
-                  borderRadius: 20,
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                }}
-              >
-                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.success }}>On</Text>
-              </View>
-            ) : null}
+            <Switch
+              value={twoFactorEnabled}
+              onValueChange={handleToggle2FA}
+              trackColor={{ false: colors.border, true: `${colors.success}80` }}
+              thumbColor={twoFactorEnabled ? colors.success : colors.mutedForeground}
+              style={{ alignSelf: 'center' }}
+              accessibilityLabel="Toggle two-factor authentication"
+              accessibilityRole="switch"
+              accessibilityState={{ checked: twoFactorEnabled }}
+            />
           </View>
 
           {/* Method rows */}
           {TFA_METHODS.map((method, i) => {
-            const isActive = twoFactorEnabled && twoFactorMethod === method.key;
-            const isLast = i === TFA_METHODS.length - 1;
+            const isActive = twoFactorEnabled && twoFactorMedium === method.key;
             return (
               <TouchableOpacity
                 key={method.key}
                 activeOpacity={0.7}
                 accessibilityRole="button"
-                accessibilityLabel={`${method.label} two-factor authentication`}
-                onPress={() => {
-                  setTwoFactorMethod(method.key);
-                  if (!twoFactorEnabled) setShowTFASheet(true);
-                }}
+                accessibilityLabel={`Use ${method.label} for two-factor authentication`}
+                onPress={() => handleSelectTFAMethod(method.key)}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   padding: 16,
                   backgroundColor: isActive ? `${colors.primary}0a` : 'transparent',
-                  borderBottomWidth: isLast ? 0 : 1,
+                  borderBottomWidth: i < TFA_METHODS.length - 1 ? 1 : 0,
                   borderBottomColor: colors.border,
                 }}
               >
@@ -634,13 +624,7 @@ export default function SecuritySettingsScreen() {
                   {method.icon}
                 </View>
                 <View className="flex-1 mr-3">
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: isActive ? colors.foreground : colors.foreground,
-                    }}
-                  >
+                  <Text style={{ fontSize: 14, fontWeight: '500', color: colors.foreground }}>
                     {method.label}
                   </Text>
                   <Text className="text-xs text-muted-foreground mt-0.5">{method.subtitle}</Text>
@@ -653,6 +637,34 @@ export default function SecuritySettingsScreen() {
               </TouchableOpacity>
             );
           })}
+        </View>
+
+        {/* ── WhatsApp Notifications ── */}
+        <SectionHeader title="WhatsApp Notifications" />
+        <View className="mx-5 bg-card border border-border rounded-2xl overflow-hidden">
+          <View className="flex-row items-center p-4">
+            <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">
+              <Bell size={18} color={colors.success} />
+            </View>
+            <View className="flex-1 mr-3">
+              <Text className="text-foreground font-medium text-sm">
+                Enable WhatsApp Notifications
+              </Text>
+              <Text className="text-xs text-muted-foreground mt-0.5">
+                Appointment reminders, prescription updates & health tips
+              </Text>
+            </View>
+            <Switch
+              value={whatsappEnabled}
+              onValueChange={handleToggleWhatsApp}
+              trackColor={{ false: colors.border, true: `${colors.success}80` }}
+              thumbColor={whatsappEnabled ? colors.success : colors.mutedForeground}
+              style={{ alignSelf: 'center' }}
+              accessibilityLabel="Toggle WhatsApp notifications"
+              accessibilityRole="switch"
+              accessibilityState={{ checked: whatsappEnabled }}
+            />
+          </View>
         </View>
 
         {/* ── Biometric Login ── */}
@@ -668,10 +680,12 @@ export default function SecuritySettingsScreen() {
                 ? 'Face ID or fingerprint is set up on this device'
                 : 'Sign in using Face ID or fingerprint'
             }
-            onPress={handleBiometricSetup}
+            onPress={handleBiometricToggle}
             isLast
             right={
-              biometricEnabled ? (
+              deleteBiometric.isPending ? (
+                <ActivityIndicator size="small" color={colors.destructive} />
+              ) : biometricEnabled ? (
                 <CheckCircle2 size={18} color={colors.success} />
               ) : (
                 <View
@@ -695,38 +709,6 @@ export default function SecuritySettingsScreen() {
           />
         </View>
 
-        {/* ── WhatsApp Notifications ── */}
-        <SectionHeader title="WhatsApp Notifications" />
-        <View className="mx-5 bg-card border border-border rounded-2xl overflow-hidden">
-          <ListRow
-            icon={<Bell size={18} color={colors.success} />}
-            label="WhatsApp Notifications"
-            subtitle="Appointment reminders, prescription updates & health tips via WhatsApp"
-            onPress={() =>
-              Alert.alert(
-                'WhatsApp Notifications',
-                'Configure which notifications you receive on WhatsApp from the Notification Preferences screen.',
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  {
-                    text: 'Open Preferences',
-                    onPress: () => navigation.navigate('NotificationPreferences'),
-                  },
-                ]
-              )
-            }
-            isLast
-            right={
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
-                  Configure
-                </Text>
-                <ChevronRight size={14} color={colors.primary} />
-              </View>
-            }
-          />
-        </View>
-
         {/* ── Active Sessions ── */}
         <SectionHeader title="Active Sessions" />
         <View className="mx-5 bg-card border border-border rounded-2xl overflow-hidden">
@@ -737,11 +719,14 @@ export default function SecuritySettingsScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-foreground font-medium text-sm">
-                {sessions.length} device{sessions.length === 1 ? '' : 's'} logged in
+                {sessions?.all.length ?? 0} device{sessions?.all.length === 1 ? '' : 's'} logged in
               </Text>
               <Text className="text-xs text-muted-foreground mt-0.5">Including this device</Text>
             </View>
-            {otherSessions.length > 0 && (
+            {sessionsQuery.isFetching && !sessionsQuery.isLoading && (
+              <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 8 }} />
+            )}
+            {otherSessionCount > 0 && (
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => setShowSessionsSheet(true)}
@@ -758,16 +743,17 @@ export default function SecuritySettingsScreen() {
           </View>
 
           {/* Current device */}
-          {currentSession ? (
+          {sessions?.current ? (
             <View className="flex-row items-center p-4 border-b border-border">
               <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">
                 <Smartphone size={16} color={colors.primary} />
               </View>
               <View className="flex-1 mr-2">
-                <View className="flex-row items-center gap-2">
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
+                >
                   <Text className="text-sm font-medium text-foreground">
-                    {currentSession.browser || 'This Device'}
-                    {currentSession.os ? ` on ${currentSession.os}` : ''}
+                    {sessions.current.deviceName}
                   </Text>
                   <View
                     style={{
@@ -777,24 +763,22 @@ export default function SecuritySettingsScreen() {
                       paddingVertical: 2,
                     }}
                   >
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: colors.primary }}>
+                    <Text style={{ fontSize: 9, fontWeight: '700', color: colors.primary }}>
                       THIS DEVICE
                     </Text>
                   </View>
                 </View>
                 <Text className="text-xs text-muted-foreground mt-0.5">
-                  {currentSession.lastActive
-                    ? relativeTime(currentSession.lastActive)
-                    : 'Active now'}
-                  {currentSession.location ? ` · ${currentSession.location}` : ''}
+                  {relativeTime(sessions.current.lastActiveAt)}
+                  {sessions.current.location ? ` · ${sessions.current.location}` : ''}
                 </Text>
               </View>
               <CheckCircle2 size={16} color={colors.success} />
             </View>
           ) : null}
 
-          {/* Revoke all others */}
-          {otherSessions.length > 0 && (
+          {/* Sign out all others */}
+          {otherSessionCount > 0 && (
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={handleRevokeAll}
@@ -802,25 +786,21 @@ export default function SecuritySettingsScreen() {
               accessibilityLabel="Sign out all other devices"
               className="flex-row items-center p-4"
             >
-              {revokingAll ? (
-                <ActivityIndicator
-                  size="small"
-                  color={colors.destructive}
-                  style={{ marginRight: 12 }}
-                />
-              ) : (
-                <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">
+              <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">
+                {revokeAll.isPending ? (
+                  <ActivityIndicator size="small" color={colors.destructive} />
+                ) : (
                   <LogOut size={16} color={colors.destructive} />
-                </View>
-              )}
+                )}
+              </View>
               <Text style={{ flex: 1, fontSize: 14, fontWeight: '500', color: colors.destructive }}>
-                Sign out {otherSessions.length} other device{otherSessions.length === 1 ? '' : 's'}
+                Sign out {otherSessionCount} other device{otherSessionCount === 1 ? '' : 's'}
               </Text>
               <ChevronRight size={16} color={colors.destructive} />
             </TouchableOpacity>
           )}
 
-          {sessions.length === 0 && (
+          {sessions?.all.length === 0 && (
             <View className="p-4">
               <Text className="text-sm text-muted-foreground text-center">
                 No active sessions found
@@ -829,7 +809,7 @@ export default function SecuritySettingsScreen() {
           )}
         </View>
 
-        {/* ── Password tips info note ── */}
+        {/* ── Password tip ── */}
         <View className="mx-5 mt-4 flex-row items-start gap-2.5 bg-muted/50 border border-border rounded-2xl p-4">
           <Key size={15} color={colors.mutedForeground} style={{ marginTop: 1 }} />
           <Text className="flex-1 text-xs text-muted-foreground leading-5">
@@ -839,9 +819,9 @@ export default function SecuritySettingsScreen() {
         </View>
       </ScrollView>
 
-      {/* ════════════════════════════════════════════════════════════════
+      {/* ════════════════════════════════════════════════════════
           Change Password Sheet
-      ════════════════════════════════════════════════════════════════ */}
+      ════════════════════════════════════════════════════════ */}
       <BottomSheet visible={showPasswordSheet} onClose={() => setShowPasswordSheet(false)}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -871,24 +851,19 @@ export default function SecuritySettingsScreen() {
               </Text>
             </View>
 
-            <PasswordInput
-              label="Current password"
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-            />
+            <PasswordInput label="Current password" value={currentPw} onChangeText={setCurrentPw} />
             <PasswordInput
               label="New password"
-              value={newPassword}
-              onChangeText={setNewPassword}
+              value={newPw}
+              onChangeText={setNewPw}
               placeholder="Min. 8 characters"
             />
             <PasswordInput
               label="Confirm new password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
+              value={confirmPw}
+              onChangeText={setConfirmPw}
             />
 
-            {/* Password rules */}
             <View style={{ gap: 6, marginBottom: 20 }}>
               {[
                 'At least 8 characters',
@@ -905,7 +880,7 @@ export default function SecuritySettingsScreen() {
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleChangePassword}
-              disabled={passwordSaving}
+              disabled={changePassword.isPending}
               style={{
                 backgroundColor: colors.primary,
                 borderRadius: 14,
@@ -914,25 +889,25 @@ export default function SecuritySettingsScreen() {
                 flexDirection: 'row',
                 justifyContent: 'center',
                 gap: 8,
-                opacity: passwordSaving ? 0.7 : 1,
+                opacity: changePassword.isPending ? 0.7 : 1,
               }}
             >
-              {passwordSaving ? (
+              {changePassword.isPending ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <Lock size={16} color={colors.white} />
               )}
               <Text style={{ fontSize: 15, fontWeight: '600', color: colors.white }}>
-                {passwordSaving ? 'Updating…' : 'Update Password'}
+                {changePassword.isPending ? 'Updating…' : 'Update Password'}
               </Text>
             </TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
       </BottomSheet>
 
-      {/* ════════════════════════════════════════════════════════════════
-          2FA Enable Sheet
-      ════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════
+          2FA Code Verification Sheet (Email / SMS)
+      ════════════════════════════════════════════════════════ */}
       <BottomSheet visible={showTFASheet} onClose={() => setShowTFASheet(false)}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -956,11 +931,11 @@ export default function SecuritySettingsScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
-                  Enable 2FA via {TFA_METHODS.find((m) => m.key === twoFactorMethod)?.label}
+                  Enable 2FA via {TFA_METHODS.find((m) => m.key === pendingMethod)?.label}
                 </Text>
                 <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
                   Enter the 6-digit code sent to your{' '}
-                  {twoFactorMethod === 'email' ? 'email' : 'phone'}
+                  {pendingMethod === 'EMAIL' ? 'email' : 'phone'}
                 </Text>
               </View>
             </View>
@@ -971,6 +946,7 @@ export default function SecuritySettingsScreen() {
               keyboardType="number-pad"
               placeholder="000000"
               placeholderTextColor={colors.mutedForeground}
+              maxLength={6}
               style={{
                 backgroundColor: colors.muted,
                 borderRadius: 12,
@@ -985,13 +961,12 @@ export default function SecuritySettingsScreen() {
                 letterSpacing: 8,
                 marginBottom: 16,
               }}
-              maxLength={6}
             />
 
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleVerifyAndEnable}
-              disabled={tfaSaving}
+              disabled={updateSettings.isPending}
               style={{
                 backgroundColor: colors.accent,
                 borderRadius: 14,
@@ -1000,26 +975,26 @@ export default function SecuritySettingsScreen() {
                 flexDirection: 'row',
                 justifyContent: 'center',
                 gap: 8,
-                opacity: tfaSaving ? 0.7 : 1,
+                opacity: updateSettings.isPending ? 0.7 : 1,
                 marginBottom: 8,
               }}
             >
-              {tfaSaving ? (
+              {updateSettings.isPending ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <ShieldCheck size={16} color={colors.white} />
               )}
               <Text style={{ fontSize: 15, fontWeight: '600', color: colors.white }}>
-                {tfaSaving ? 'Verifying…' : 'Verify & Enable'}
+                {updateSettings.isPending ? 'Verifying…' : 'Verify & Enable'}
               </Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </BottomSheet>
 
-      {/* ════════════════════════════════════════════════════════════════
-          TOTP Setup Sheet (Auth App)
-      ════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════
+          TOTP Auth App Setup Sheet
+      ════════════════════════════════════════════════════════ */}
       <BottomSheet visible={showTOTPSheet} onClose={() => setShowTOTPSheet(false)}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -1046,12 +1021,11 @@ export default function SecuritySettingsScreen() {
                   Authenticator App
                 </Text>
                 <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
-                  Open your auth app and enter the code below
+                  Add this key in Google Authenticator, Authy, or 1Password
                 </Text>
               </View>
             </View>
 
-            {/* Secret key display */}
             <View
               style={{
                 backgroundColor: colors.muted,
@@ -1066,6 +1040,7 @@ export default function SecuritySettingsScreen() {
                 Manual entry key
               </Text>
               <Text
+                selectable
                 style={{
                   fontSize: 16,
                   fontWeight: '700',
@@ -1073,12 +1048,8 @@ export default function SecuritySettingsScreen() {
                   letterSpacing: 2,
                   fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
                 }}
-                selectable
               >
                 {tfaSecret}
-              </Text>
-              <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 8 }}>
-                Add this key in Google Authenticator, Authy, or 1Password
               </Text>
             </View>
 
@@ -1092,6 +1063,7 @@ export default function SecuritySettingsScreen() {
               keyboardType="number-pad"
               placeholder="000000"
               placeholderTextColor={colors.mutedForeground}
+              maxLength={6}
               style={{
                 backgroundColor: colors.muted,
                 borderRadius: 12,
@@ -1106,13 +1078,12 @@ export default function SecuritySettingsScreen() {
                 letterSpacing: 8,
                 marginBottom: 16,
               }}
-              maxLength={6}
             />
 
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={handleVerifyAndEnable}
-              disabled={tfaSaving}
+              disabled={updateSettings.isPending}
               style={{
                 backgroundColor: colors.accent,
                 borderRadius: 14,
@@ -1121,28 +1092,28 @@ export default function SecuritySettingsScreen() {
                 flexDirection: 'row',
                 justifyContent: 'center',
                 gap: 8,
-                opacity: tfaSaving ? 0.7 : 1,
+                opacity: updateSettings.isPending ? 0.7 : 1,
                 marginBottom: 8,
               }}
             >
-              {tfaSaving ? (
+              {updateSettings.isPending ? (
                 <ActivityIndicator size="small" color={colors.white} />
               ) : (
                 <ShieldCheck size={16} color={colors.white} />
               )}
               <Text style={{ fontSize: 15, fontWeight: '600', color: colors.white }}>
-                {tfaSaving ? 'Verifying…' : 'Verify & Enable'}
+                {updateSettings.isPending ? 'Verifying…' : 'Verify & Enable'}
               </Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </BottomSheet>
 
-      {/* ════════════════════════════════════════════════════════════════
+      {/* ════════════════════════════════════════════════════════
           All Sessions Sheet
-      ════════════════════════════════════════════════════════════════ */}
+      ════════════════════════════════════════════════════════ */}
       <BottomSheet visible={showSessionsSheet} onClose={() => setShowSessionsSheet(false)}>
-        <View style={{ paddingBottom: 8 }}>
+        <View>
           <View
             style={{
               flexDirection: 'row',
@@ -1159,15 +1130,14 @@ export default function SecuritySettingsScreen() {
                 Active Sessions
               </Text>
               <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
-                {sessions.length} device{sessions.length === 1 ? '' : 's'} logged in
+                {sessions?.all.length ?? 0} device{sessions?.all.length === 1 ? '' : 's'} logged in
               </Text>
             </View>
-            {otherSessions.length > 0 && (
+            {otherSessionCount > 0 && (
               <TouchableOpacity
                 activeOpacity={0.7}
                 onPress={() => {
                   setShowSessionsSheet(false);
-                  // Small delay so sheet closes before alert
                   setTimeout(handleRevokeAll, 300);
                 }}
                 style={{
@@ -1182,7 +1152,7 @@ export default function SecuritySettingsScreen() {
                   gap: 4,
                 }}
               >
-                {revokingAll ? (
+                {revokeAll.isPending ? (
                   <ActivityIndicator size="small" color={colors.destructive} />
                 ) : (
                   <RefreshCw size={12} color={colors.destructive} />
@@ -1194,16 +1164,16 @@ export default function SecuritySettingsScreen() {
             )}
           </View>
 
-          <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
-            {sessions.map((session, i) => (
+          <ScrollView style={{ maxHeight: 440 }} showsVerticalScrollIndicator={false}>
+            {(sessions?.all ?? []).map((session, i) => (
               <View
-                key={session.id}
+                key={session._id}
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   paddingHorizontal: 20,
                   paddingVertical: 14,
-                  borderBottomWidth: i < sessions.length - 1 ? 1 : 0,
+                  borderBottomWidth: i < (sessions?.all.length ?? 0) - 1 ? 1 : 0,
                   borderBottomColor: colors.border,
                   backgroundColor: session.isCurrent ? `${colors.primary}08` : 'transparent',
                 }}
@@ -1219,19 +1189,33 @@ export default function SecuritySettingsScreen() {
                     marginRight: 12,
                   }}
                 >
-                  <Monitor
-                    size={16}
-                    color={session.isCurrent ? colors.primary : colors.mutedForeground}
-                  />
+                  {session.deviceType === 'mobile' ? (
+                    <Smartphone
+                      size={16}
+                      color={session.isCurrent ? colors.primary : colors.mutedForeground}
+                    />
+                  ) : (
+                    <Monitor
+                      size={16}
+                      color={session.isCurrent ? colors.primary : colors.mutedForeground}
+                    />
+                  )}
                 </View>
 
                 <View style={{ flex: 1, marginRight: 8 }}>
                   <View
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                      flexWrap: 'wrap',
+                    }}
                   >
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}>
-                      {session.browser || 'Unknown Browser'}
-                      {session.os ? ` on ${session.os}` : ''}
+                    <Text
+                      style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}
+                      numberOfLines={1}
+                    >
+                      {session.deviceName}
                     </Text>
                     {session.isCurrent && (
                       <View
@@ -1249,7 +1233,7 @@ export default function SecuritySettingsScreen() {
                     )}
                   </View>
                   <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
-                    {session.lastActive ? relativeTime(session.lastActive) : 'Unknown'}
+                    {relativeTime(session.lastActiveAt)}
                     {session.location ? ` · ${session.location}` : ''}
                   </Text>
                 </View>
@@ -1257,12 +1241,12 @@ export default function SecuritySettingsScreen() {
                 {!session.isCurrent && (
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    onPress={() => handleRevokeSession(session.id)}
+                    onPress={() => handleRevokeSession(session._id, session.deviceName)}
                     hitSlop={8}
                     accessibilityRole="button"
-                    accessibilityLabel={`Sign out session on ${session.browser}`}
+                    accessibilityLabel={`Sign out ${session.deviceName}`}
                   >
-                    {sessionLoading === session.id ? (
+                    {revokeSession.isPending && revokeSession.variables === session._id ? (
                       <ActivityIndicator size="small" color={colors.destructive} />
                     ) : (
                       <LogOut size={18} color={colors.destructive} />
