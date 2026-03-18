@@ -75,6 +75,13 @@ export const emergencyContactSchema = z.object({
   lastName: z.string().optional(),
   relationship: z.string().optional(),
   phone: z.string().min(1, 'Phone number is required'),
+  email: z.string().optional(),
+  same_as_patient: z.boolean().optional(),
+  address1: z.string().optional(),
+  country: z.string().optional(),
+  state: z.string().optional(),
+  city: z.string().optional(),
+  zip_code: z.string().optional(),
 });
 export type EmergencyContactFormData = z.infer<typeof emergencyContactSchema>;
 
