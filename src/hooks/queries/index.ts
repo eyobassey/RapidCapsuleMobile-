@@ -43,6 +43,12 @@ export {
 } from './useNotificationsQuery';
 
 export {
+  notificationPreferencesKeys,
+  useNotificationPreferencesQuery,
+  useUpdatePreferenceMutation,
+} from './useNotificationPreferencesQuery';
+
+export {
   pharmacyKeys,
   usePharmacyCategoriesQuery,
   useFeaturedDrugsQuery,

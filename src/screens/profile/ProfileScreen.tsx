@@ -108,7 +108,7 @@ export default function ProfileScreen() {
           icon: <Bell size={20} color={colors.secondary} />,
           title: 'Notification Preferences',
           subtitle: 'Manage your alerts',
-          onPress: () => navigation.navigate('Settings'),
+          onPress: () => navigation.navigate('NotificationPreferences'),
         },
         {
           icon: <Shield size={20} color={colors.accent} />,
