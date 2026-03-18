@@ -4,8 +4,6 @@ import {
   ArrowLeft,
   Bell,
   BellOff,
-  Calendar,
-  ChevronRight,
   ClipboardList,
   CreditCard,
   Heart,
@@ -36,29 +34,119 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '../../components/ui/Text';
 import {
+  CategoryKey,
+  ChannelKey,
+  DEFAULT_PREFS,
+  MessagingTiming,
   NotificationPreferences,
   NotificationStats,
+  QuietHours,
   notificationsService,
 } from '../../services/notifications.service';
 import { colors } from '../../theme/colors';
 
-// ─── Defaults (exact API shape) ───────────────────────────────────────────────
+// ─── Channel meta ─────────────────────────────────────────────────────────────
 
-const DEFAULT_PREFS: NotificationPreferences = {
-  email: true,
-  push: true,
-  sms: false,
-  in_app: true,
-  appointment_reminders: true,
-  prescription_updates: true,
-  payment_alerts: true,
-  promotional: false,
-};
+type ChannelMeta = { key: ChannelKey; label: string; icon: React.ReactNode; color: string };
 
-const EMAIL_DELAY_OPTIONS = ['5 minutes', '10 minutes', '20 minutes', '30 minutes', '1 hour'];
-const EMAIL_REPEAT_OPTIONS = ['1 hour', '2 hours', '3 hours', '6 hours', '12 hours', 'Never'];
+const CHANNELS: ChannelMeta[] = [
+  {
+    key: 'in_app',
+    label: 'In-App',
+    icon: <Smartphone size={13} color={colors.white} />,
+    color: colors.primary,
+  },
+  { key: 'email', label: 'Email', icon: <Mail size={13} color={colors.white} />, color: '#3b82f6' },
+  {
+    key: 'sms',
+    label: 'SMS',
+    icon: <MessageCircle size={13} color={colors.white} />,
+    color: colors.success,
+  },
+  {
+    key: 'whatsapp',
+    label: 'WhatsApp',
+    icon: <MessageSquare size={13} color={colors.white} />,
+    color: '#25D366',
+  },
+  { key: 'push', label: 'Push', icon: <Bell size={13} color={colors.white} />, color: '#eab308' },
+];
 
-// ─── Reusable row components ──────────────────────────────────────────────────
+// ─── Category meta ────────────────────────────────────────────────────────────
+
+type CategoryMeta = { key: CategoryKey; label: string; subtitle: string; icon: React.ReactNode };
+
+const CATEGORIES: CategoryMeta[] = [
+  {
+    key: 'appointment_reminders',
+    label: 'Appointment Reminders',
+    subtitle: 'Reminders before your scheduled appointments',
+    icon: <Bell size={20} color={colors.primary} />,
+  },
+  {
+    key: 'appointment_updates',
+    label: 'Appointment Updates',
+    subtitle: 'Booked, confirmed, or cancelled appointments',
+    icon: <ClipboardList size={20} color={colors.secondary} />,
+  },
+  {
+    key: 'prescription_updates',
+    label: 'Prescription Updates',
+    subtitle: 'New prescriptions and pharmacy order updates',
+    icon: <Pill size={20} color={colors.accent} />,
+  },
+  {
+    key: 'payment_updates',
+    label: 'Payment Updates',
+    subtitle: 'Payment confirmations and transaction receipts',
+    icon: <CreditCard size={20} color={colors.success} />,
+  },
+  {
+    key: 'health_reminders',
+    label: 'Health Reminders',
+    subtitle: 'Medication and health checkup reminders',
+    icon: <Heart size={20} color={colors.destructive} />,
+  },
+  {
+    key: 'vitals_alerts',
+    label: 'Vitals Alerts',
+    subtitle: 'Alerts when your vitals need attention',
+    icon: <TrendingUp size={20} color={colors.secondary} />,
+  },
+  {
+    key: 'message_notifications',
+    label: 'Message Notifications',
+    subtitle: 'Notifications for unread messages',
+    icon: <MessageCircle size={20} color={colors.primary} />,
+  },
+  {
+    key: 'promotional',
+    label: 'Promotions & Offers',
+    subtitle: 'Health tips, special offers, and insights',
+    icon: <Tag size={20} color={colors.mutedForeground} />,
+  },
+];
+
+// ─── Email delay options ──────────────────────────────────────────────────────
+
+const DELAY_OPTIONS: Array<{ label: string; minutes: number }> = [
+  { label: '5 minutes', minutes: 5 },
+  { label: '10 minutes', minutes: 10 },
+  { label: '20 minutes', minutes: 20 },
+  { label: '30 minutes', minutes: 30 },
+  { label: '1 hour', minutes: 60 },
+];
+
+const COOLDOWN_OPTIONS: Array<{ label: string; hours: number }> = [
+  { label: '1 hour', hours: 1 },
+  { label: '2 hours', hours: 2 },
+  { label: '3 hours', hours: 3 },
+  { label: '6 hours', hours: 6 },
+  { label: '12 hours', hours: 12 },
+  { label: 'Never', hours: 0 },
+];
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionHeader({ title }: { title: string }) {
   return (
@@ -68,7 +156,101 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-/** Standard toggle row — matches the ProfileScreen ListItem pattern exactly */
+/** Channel icon chip — small coloured square with icon, tappable */
+function ChannelChip({
+  meta,
+  active,
+  onToggle,
+}: {
+  meta: ChannelMeta;
+  active: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onToggle}
+      accessibilityRole="checkbox"
+      accessibilityLabel={`${meta.label} notifications`}
+      accessibilityState={{ checked: active }}
+      className="items-center gap-1"
+    >
+      <View
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: 9,
+          backgroundColor: active ? meta.color : colors.muted,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {meta.icon}
+      </View>
+      <Text
+        style={{
+          fontSize: 9,
+          fontWeight: '600',
+          color: active ? colors.foreground : colors.mutedForeground,
+          textAlign: 'center',
+        }}
+      >
+        {meta.label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+/** One category row: icon + label/subtitle on left, 5 channel chips on right */
+function CategoryRow({
+  meta,
+  channels,
+  onToggleChannel,
+  isLast,
+}: {
+  meta: CategoryMeta;
+  channels: NotificationPreferences[CategoryKey];
+  onToggleChannel: (ch: ChannelKey) => void;
+  isLast: boolean;
+}) {
+  const anyActive = CHANNELS.some((c) => channels[c.key]);
+
+  return (
+    <View className={`p-4 bg-card ${!isLast ? 'border-b border-border' : ''}`}>
+      {/* Top: icon + label */}
+      <View className="flex-row items-center gap-3 mb-3">
+        <View className="w-9 h-9 rounded-full bg-muted items-center justify-center">
+          {meta.icon}
+        </View>
+        <View className="flex-1">
+          <Text
+            className="text-foreground font-medium"
+            style={{ color: anyActive ? colors.foreground : colors.mutedForeground }}
+          >
+            {meta.label}
+          </Text>
+          <Text className="text-xs text-muted-foreground mt-0.5" numberOfLines={1}>
+            {meta.subtitle}
+          </Text>
+        </View>
+      </View>
+
+      {/* Bottom: 5 channel chips */}
+      <View className="flex-row justify-between px-1">
+        {CHANNELS.map((ch) => (
+          <ChannelChip
+            key={ch.key}
+            meta={ch}
+            active={channels[ch.key]}
+            onToggle={() => onToggleChannel(ch.key)}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** Standard toggle row used for simple on/off settings */
 function ToggleRow({
   icon,
   label,
@@ -76,7 +258,6 @@ function ToggleRow({
   value,
   onToggle,
   isLast = false,
-  disabled = false,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -84,61 +265,9 @@ function ToggleRow({
   value: boolean;
   onToggle: () => void;
   isLast?: boolean;
-  disabled?: boolean;
 }) {
   return (
     <View
-      className={`flex-row items-center p-4 bg-card ${!isLast ? 'border-b border-border' : ''}`}
-      style={{ opacity: disabled ? 0.5 : 1 }}
-    >
-      <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">{icon}</View>
-      <View className="flex-1 mr-3">
-        <View className="flex-row items-center gap-2">
-          <Text className="text-foreground font-medium">{label}</Text>
-          {disabled && (
-            <View className="bg-muted rounded px-1.5 py-0.5">
-              <Text className="text-muted-foreground text-xs font-medium">Soon</Text>
-            </View>
-          )}
-        </View>
-        <Text className="text-sm text-muted-foreground mt-0.5" numberOfLines={1}>
-          {subtitle}
-        </Text>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={disabled ? undefined : onToggle}
-        disabled={disabled}
-        trackColor={{ false: colors.muted, true: `${colors.primary}60` }}
-        thumbColor={value ? colors.primary : colors.mutedForeground}
-        accessibilityLabel={label}
-        accessibilityRole="switch"
-        accessibilityState={{ checked: value, disabled }}
-      />
-    </View>
-  );
-}
-
-/** Tappable row that opens a picker / navigates — no toggle */
-function ActionRow({
-  icon,
-  label,
-  subtitle,
-  value,
-  onPress,
-  isLast = false,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  subtitle: string;
-  value: string;
-  onPress: () => void;
-  isLast?: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
       className={`flex-row items-center p-4 bg-card ${!isLast ? 'border-b border-border' : ''}`}
     >
       <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">{icon}</View>
@@ -146,13 +275,20 @@ function ActionRow({
         <Text className="text-foreground font-medium">{label}</Text>
         <Text className="text-sm text-muted-foreground mt-0.5">{subtitle}</Text>
       </View>
-      <Text className="text-sm text-primary font-medium mr-1">{value}</Text>
-      <ChevronRight size={16} color={colors.mutedForeground} />
-    </TouchableOpacity>
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: colors.muted, true: `${colors.primary}60` }}
+        thumbColor={value ? colors.primary : colors.mutedForeground}
+        accessibilityLabel={label}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: value }}
+      />
+    </View>
   );
 }
 
-/** Coming-soon info row (no interactive control) */
+/** Coming-soon row — dimmed, no interaction */
 function ComingSoonRow({
   icon,
   label,
@@ -167,14 +303,12 @@ function ComingSoonRow({
   return (
     <View
       className={`flex-row items-center p-4 bg-card ${!isLast ? 'border-b border-border' : ''}`}
-      style={{ opacity: 0.55 }}
+      style={{ opacity: 0.5 }}
     >
       <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">{icon}</View>
       <View className="flex-1 mr-3">
         <Text className="text-foreground font-medium">{label}</Text>
-        <Text className="text-sm text-muted-foreground mt-0.5" numberOfLines={1}>
-          {subtitle}
-        </Text>
+        <Text className="text-sm text-muted-foreground mt-0.5">{subtitle}</Text>
       </View>
       <View className="bg-muted border border-border rounded-full px-2.5 py-1">
         <Text className="text-xs font-semibold text-muted-foreground">Coming Soon</Text>
@@ -183,21 +317,20 @@ function ComingSoonRow({
   );
 }
 
-// ─── Bottom-sheet picker ──────────────────────────────────────────────────────
-
-function PickerSheet({
+/** Bottom-sheet option picker */
+function PickerSheet<T>({
   visible,
   title,
   options,
-  selected,
+  selectedIndex,
   onSelect,
   onClose,
 }: {
   visible: boolean;
   title: string;
-  options: string[];
-  selected: string;
-  onSelect: (v: string) => void;
+  options: Array<{ label: string; value: T }>;
+  selectedIndex: number;
+  onSelect: (index: number, value: T) => void;
   onClose: () => void;
 }) {
   return (
@@ -231,14 +364,14 @@ function PickerSheet({
           >
             {title}
           </Text>
-          {options.map((opt) => {
-            const sel = opt === selected;
+          {options.map((opt, i) => {
+            const sel = i === selectedIndex;
             return (
               <TouchableOpacity
-                key={opt}
+                key={String(opt.value)}
                 activeOpacity={0.7}
                 onPress={() => {
-                  onSelect(opt);
+                  onSelect(i, opt.value);
                   onClose();
                 }}
                 style={{
@@ -257,7 +390,7 @@ function PickerSheet({
                     color: sel ? colors.primary : colors.foreground,
                   }}
                 >
-                  {opt}
+                  {opt.label}
                 </Text>
                 {sel && (
                   <View
@@ -288,14 +421,13 @@ export default function NotificationPreferencesScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [quietHours, setQuietHours] = useState(false);
-  const [emailDelay, setEmailDelay] = useState('20 minutes');
-  const [emailRepeat, setEmailRepeat] = useState('3 hours');
+
   const [showDelayPicker, setShowDelayPicker] = useState(false);
-  const [showRepeatPicker, setShowRepeatPicker] = useState(false);
+  const [showCooldownPicker, setShowCooldownPicker] = useState(false);
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingPrefs = useRef<NotificationPreferences>(DEFAULT_PREFS);
+
+  // ── Data fetching ────────────────────────────────────────────────────────────
 
   const fetchAll = useCallback(async () => {
     try {
@@ -304,9 +436,7 @@ export default function NotificationPreferencesScreen() {
         notificationsService.getStats(),
       ]);
       if (prefsResult.status === 'fulfilled' && prefsResult.value) {
-        const merged: NotificationPreferences = { ...DEFAULT_PREFS, ...prefsResult.value };
-        setPrefs(merged);
-        pendingPrefs.current = merged;
+        setPrefs({ ...DEFAULT_PREFS, ...prefsResult.value });
       }
       if (statsResult.status === 'fulfilled' && statsResult.value) {
         setStats(statsResult.value);
@@ -326,55 +456,108 @@ export default function NotificationPreferencesScreen() {
     fetchAll();
   }, [fetchAll]);
 
-  const scheduleSave = useCallback((updated: NotificationPreferences) => {
-    pendingPrefs.current = updated;
+  // ── Debounced PATCH ──────────────────────────────────────────────────────────
+
+  const scheduleSave = useCallback((patch: Partial<NotificationPreferences>) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSaving(true);
       try {
-        await notificationsService.updatePreferences(pendingPrefs.current);
+        await notificationsService.updatePreferences(patch);
       } catch {
-        Alert.alert('Could not save', 'Your preferences could not be saved. Please try again.', [
-          { text: 'OK' },
-        ]);
+        Alert.alert('Could not save', 'Your preferences could not be saved. Please try again.');
       } finally {
         setSaving(false);
       }
-    }, 800);
+    }, 600);
   }, []);
 
-  const toggle = useCallback(
-    (key: keyof NotificationPreferences) => {
+  // ── Toggle a single channel within a category ────────────────────────────────
+
+  const toggleChannel = useCallback(
+    (category: CategoryKey, channel: ChannelKey) => {
       setPrefs((prev) => {
-        const updated = { ...prev, [key]: !prev[key] };
-        scheduleSave(updated);
+        const updated: NotificationPreferences = {
+          ...prev,
+          [category]: {
+            ...prev[category],
+            [channel]: !prev[category][channel],
+          },
+        };
+        scheduleSave({ [category]: updated[category] });
         return updated;
       });
     },
     [scheduleSave]
   );
 
-  const enableAll = useCallback(() => {
-    const all = Object.fromEntries(
-      Object.keys(DEFAULT_PREFS).map((k) => [k, true])
-    ) as NotificationPreferences;
-    setPrefs(all);
-    scheduleSave(all);
+  // ── Enable / Disable all categories × all channels ──────────────────────────
+
+  const setAllCategories = useCallback(
+    (value: boolean) => {
+      const allFlags = Object.fromEntries(CHANNELS.map((c) => [c.key, value])) as Record<
+        ChannelKey,
+        boolean
+      >;
+
+      const patch = Object.fromEntries(
+        CATEGORIES.map((cat) => [cat.key, { ...allFlags }])
+      ) as Partial<NotificationPreferences>;
+
+      setPrefs((prev) => ({ ...prev, ...patch }));
+      scheduleSave(patch);
+    },
+    [scheduleSave]
+  );
+
+  // ── Quiet hours toggle ───────────────────────────────────────────────────────
+
+  const toggleQuietHours = useCallback(() => {
+    setPrefs((prev) => {
+      const updated: QuietHours = {
+        ...prev.quiet_hours,
+        enabled: !prev.quiet_hours.enabled,
+      };
+      scheduleSave({ quiet_hours: updated });
+      return { ...prev, quiet_hours: updated };
+    });
   }, [scheduleSave]);
 
-  const disableAll = useCallback(() => {
-    const none = Object.fromEntries(
-      Object.keys(DEFAULT_PREFS).map((k) => [k, false])
-    ) as NotificationPreferences;
-    setPrefs(none);
-    scheduleSave(none);
-  }, [scheduleSave]);
+  // ── Messaging timing ─────────────────────────────────────────────────────────
 
-  const activeCount = Object.values(prefs).filter(Boolean).length;
-  const totalCount = Object.keys(DEFAULT_PREFS).length;
-  const unreadCount = stats?.unread ?? 0;
+  const setMessagingTiming = useCallback(
+    (patch: Partial<MessagingTiming>) => {
+      setPrefs((prev) => {
+        const updated: MessagingTiming = { ...prev.messaging_timing, ...patch };
+        scheduleSave({ messaging_timing: updated });
+        return { ...prev, messaging_timing: updated };
+      });
+    },
+    [scheduleSave]
+  );
 
-  // ── Loading ─────────────────────────────────────────────────────────────────
+  // ── Derived stats ────────────────────────────────────────────────────────────
+
+  const totalChannelSlots = CATEGORIES.length * CHANNELS.length;
+  const activeChannelSlots = CATEGORIES.reduce(
+    (sum, cat) => sum + CHANNELS.filter((ch) => prefs[cat.key][ch.key]).length,
+    0
+  );
+
+  const currentDelayIndex = DELAY_OPTIONS.findIndex(
+    (o) => o.minutes === prefs.messaging_timing.unread_threshold_minutes
+  );
+  const currentCooldownIndex = COOLDOWN_OPTIONS.findIndex(
+    (o) => o.hours === prefs.messaging_timing.cooldown_hours
+  );
+  const delayLabel =
+    DELAY_OPTIONS[currentDelayIndex]?.label ??
+    `${prefs.messaging_timing.unread_threshold_minutes} min`;
+  const cooldownLabel =
+    COOLDOWN_OPTIONS[currentCooldownIndex]?.label ?? `${prefs.messaging_timing.cooldown_hours}h`;
+
+  // ── Loading state ────────────────────────────────────────────────────────────
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -397,10 +580,11 @@ export default function NotificationPreferencesScreen() {
     );
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  // ── Main render ──────────────────────────────────────────────────────────────
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      {/* ── Header ── */}
+      {/* Header */}
       <View className="h-14 bg-card border-b border-border flex-row items-center px-4 gap-3">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -439,11 +623,11 @@ export default function NotificationPreferencesScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-foreground font-semibold text-base">
-                {activeCount} of {totalCount} enabled
+                {activeChannelSlots} of {totalChannelSlots} channels active
               </Text>
               <Text className="text-muted-foreground text-sm mt-0.5">
-                {unreadCount > 0
-                  ? `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`
+                {stats?.unread
+                  ? `${stats.unread} unread notification${stats.unread === 1 ? '' : 's'}`
                   : 'Manage how RapidCapsule reaches you'}
               </Text>
             </View>
@@ -454,7 +638,7 @@ export default function NotificationPreferencesScreen() {
             <View className="h-1.5 bg-muted rounded-full overflow-hidden">
               <View
                 className="h-full bg-primary rounded-full"
-                style={{ width: `${(activeCount / totalCount) * 100}%` }}
+                style={{ width: `${(activeChannelSlots / totalChannelSlots) * 100}%` }}
               />
             </View>
           </View>
@@ -463,7 +647,7 @@ export default function NotificationPreferencesScreen() {
           <View className="flex-row border-t border-border">
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={enableAll}
+              onPress={() => setAllCategories(true)}
               accessibilityRole="button"
               accessibilityLabel="Enable all notifications"
               className="flex-1 flex-row items-center justify-center gap-2 py-3 border-r border-border"
@@ -476,10 +660,14 @@ export default function NotificationPreferencesScreen() {
               onPress={() =>
                 Alert.alert(
                   'Disable All Notifications',
-                  'This will turn off all notifications. Critical security and payment alerts will still be delivered.',
+                  'This will turn off all notification channels. Critical security and payment alerts will still be delivered.',
                   [
                     { text: 'Cancel', style: 'cancel' },
-                    { text: 'Disable All', style: 'destructive', onPress: disableAll },
+                    {
+                      text: 'Disable All',
+                      style: 'destructive',
+                      onPress: () => setAllCategories(false),
+                    },
                   ]
                 )
               }
@@ -493,109 +681,18 @@ export default function NotificationPreferencesScreen() {
           </View>
         </View>
 
-        {/* ── Delivery Channels ── */}
-        <SectionHeader title="Delivery Channels" />
-        <View className="mx-5 bg-card border border-border rounded-2xl overflow-hidden">
-          <ToggleRow
-            icon={<Smartphone size={20} color={colors.primary} />}
-            label="In-App Notifications"
-            subtitle="Alerts inside the app"
-            value={prefs.in_app}
-            onToggle={() => toggle('in_app')}
-          />
-          <ToggleRow
-            icon={<Bell size={20} color={colors.secondary} />}
-            label="Push Notifications"
-            subtitle="Alerts on your device lock screen"
-            value={prefs.push}
-            onToggle={() => toggle('push')}
-          />
-          <ToggleRow
-            icon={<Mail size={20} color={colors.accent} />}
-            label="Email Notifications"
-            subtitle="Updates sent to your email"
-            value={prefs.email}
-            onToggle={() => toggle('email')}
-          />
-          <ToggleRow
-            icon={<MessageCircle size={20} color={colors.success} />}
-            label="SMS Notifications"
-            subtitle="Text messages to your phone"
-            value={prefs.sms}
-            onToggle={() => toggle('sms')}
-          />
-          <ComingSoonRow
-            icon={<MessageSquare size={20} color={colors.mutedForeground} />}
-            label="WhatsApp"
-            subtitle="WhatsApp messages"
-            isLast
-          />
-        </View>
-
         {/* ── Notification Types ── */}
         <SectionHeader title="Notification Types" />
         <View className="mx-5 bg-card border border-border rounded-2xl overflow-hidden">
-          <ToggleRow
-            icon={<Bell size={20} color={colors.primary} />}
-            label="Appointment Reminders"
-            subtitle="Reminders before your scheduled appointments"
-            value={prefs.appointment_reminders}
-            onToggle={() => toggle('appointment_reminders')}
-          />
-          <ToggleRow
-            icon={<ClipboardList size={20} color={colors.mutedForeground} />}
-            label="Appointment Updates"
-            subtitle="Updates when appointments are booked or cancelled"
-            value={false}
-            onToggle={() => {}}
-            disabled
-          />
-          <ToggleRow
-            icon={<Bell size={20} color={colors.secondary} />}
-            label="Prescription Updates"
-            subtitle="New prescriptions and pharmacy order updates"
-            value={prefs.prescription_updates}
-            onToggle={() => toggle('prescription_updates')}
-          />
-          <ToggleRow
-            icon={<CreditCard size={20} color={colors.success} />}
-            label="Payment Alerts"
-            subtitle="Payment confirmations and transaction receipts"
-            value={prefs.payment_alerts}
-            onToggle={() => toggle('payment_alerts')}
-          />
-          <ToggleRow
-            icon={<Heart size={20} color={colors.mutedForeground} />}
-            label="Health Reminders"
-            subtitle="Medication and health checkup reminders"
-            value={false}
-            onToggle={() => {}}
-            disabled
-          />
-          <ToggleRow
-            icon={<TrendingUp size={20} color={colors.mutedForeground} />}
-            label="Vitals Alerts"
-            subtitle="Alerts when your vitals need attention"
-            value={false}
-            onToggle={() => {}}
-            disabled
-          />
-          <ToggleRow
-            icon={<MessageCircle size={20} color={colors.mutedForeground} />}
-            label="Message Notifications"
-            subtitle="Email notifications for unread messages"
-            value={false}
-            onToggle={() => {}}
-            disabled
-          />
-          <ToggleRow
-            icon={<Tag size={20} color={colors.mutedForeground} />}
-            label="Promotions & Offers"
-            subtitle="Health tips, offers, and insights"
-            value={prefs.promotional}
-            onToggle={() => toggle('promotional')}
-            isLast
-          />
+          {CATEGORIES.map((cat, i) => (
+            <CategoryRow
+              key={cat.key}
+              meta={cat}
+              channels={prefs[cat.key]}
+              onToggleChannel={(ch) => toggleChannel(cat.key, ch)}
+              isLast={i === CATEGORIES.length - 1}
+            />
+          ))}
         </View>
 
         {/* ── Critical alerts note ── */}
@@ -610,21 +707,39 @@ export default function NotificationPreferencesScreen() {
         {/* ── Message Email Timing ── */}
         <SectionHeader title="Message Email Timing" />
         <View className="mx-5 bg-card border border-border rounded-2xl overflow-hidden">
-          <ActionRow
-            icon={<Mail size={20} color={colors.accent} />}
-            label="Send email after unread for"
-            subtitle="Delay before first email notification"
-            value={emailDelay}
+          <TouchableOpacity
+            activeOpacity={0.7}
             onPress={() => setShowDelayPicker(true)}
-          />
-          <ActionRow
-            icon={<Bell size={20} color={colors.secondary} />}
-            label="Repeat no more than every"
-            subtitle="Minimum time between repeat emails"
-            value={emailRepeat}
-            onPress={() => setShowRepeatPicker(true)}
-            isLast
-          />
+            className="flex-row items-center p-4 bg-card border-b border-border"
+          >
+            <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">
+              <Mail size={20} color={colors.accent} />
+            </View>
+            <View className="flex-1 mr-2">
+              <Text className="text-foreground font-medium">Send email after unread for</Text>
+              <Text className="text-sm text-muted-foreground mt-0.5">
+                Delay before first email notification
+              </Text>
+            </View>
+            <Text className="text-sm text-primary font-semibold mr-1">{delayLabel}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => setShowCooldownPicker(true)}
+            className="flex-row items-center p-4 bg-card"
+          >
+            <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">
+              <Bell size={20} color={colors.secondary} />
+            </View>
+            <View className="flex-1 mr-2">
+              <Text className="text-foreground font-medium">Repeat no more often than</Text>
+              <Text className="text-sm text-muted-foreground mt-0.5">
+                Cooldown between repeat emails
+              </Text>
+            </View>
+            <Text className="text-sm text-primary font-semibold mr-1">{cooldownLabel}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* ── Additional ── */}
@@ -633,9 +748,13 @@ export default function NotificationPreferencesScreen() {
           <ToggleRow
             icon={<Moon size={20} color={colors.accent} />}
             label="Quiet Hours"
-            subtitle="Pause non-urgent notifications at night"
-            value={quietHours}
-            onToggle={() => setQuietHours((v) => !v)}
+            subtitle={
+              prefs.quiet_hours.enabled
+                ? `${prefs.quiet_hours.start} – ${prefs.quiet_hours.end}`
+                : 'Pause non-urgent notifications at night'
+            }
+            value={prefs.quiet_hours.enabled}
+            onToggle={toggleQuietHours}
           />
           <ComingSoonRow
             icon={<Volume2 size={20} color={colors.secondary} />}
@@ -650,18 +769,18 @@ export default function NotificationPreferencesScreen() {
       <PickerSheet
         visible={showDelayPicker}
         title="Send email after unread for"
-        options={EMAIL_DELAY_OPTIONS}
-        selected={emailDelay}
-        onSelect={setEmailDelay}
+        options={DELAY_OPTIONS.map((o) => ({ label: o.label, value: o.minutes }))}
+        selectedIndex={currentDelayIndex}
+        onSelect={(_, minutes) => setMessagingTiming({ unread_threshold_minutes: minutes })}
         onClose={() => setShowDelayPicker(false)}
       />
       <PickerSheet
-        visible={showRepeatPicker}
-        title="Repeat no more than every"
-        options={EMAIL_REPEAT_OPTIONS}
-        selected={emailRepeat}
-        onSelect={setEmailRepeat}
-        onClose={() => setShowRepeatPicker(false)}
+        visible={showCooldownPicker}
+        title="Repeat no more often than every"
+        options={COOLDOWN_OPTIONS.map((o) => ({ label: o.label, value: o.hours }))}
+        selectedIndex={currentCooldownIndex}
+        onSelect={(_, hours) => setMessagingTiming({ cooldown_hours: hours })}
+        onClose={() => setShowCooldownPicker(false)}
       />
     </SafeAreaView>
   );
