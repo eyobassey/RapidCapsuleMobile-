@@ -1244,14 +1244,14 @@ export default function EkaChatScreen() {
 
       {/* ─── Chat Area ──────────────────────────── */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
-          contentContainerStyle={{ padding: 16, paddingBottom: 180, gap: 12 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 24, gap: 12 }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -1290,10 +1290,6 @@ export default function EkaChatScreen() {
         {/* ─── Bottom Input Area ────────────────── */}
         <View
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
             backgroundColor: colors.background,
             borderTopWidth: 1,
             borderTopColor: colors.border,
