@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Bell,
   BellOff,
+  ChevronDown,
   ClipboardList,
   CreditCard,
   Heart,
@@ -22,6 +23,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Modal,
   Pressable,
   RefreshControl,
@@ -156,52 +158,15 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
-/** Channel icon chip — small coloured square with icon, tappable */
-function ChannelChip({
-  meta,
-  active,
-  onToggle,
-}: {
-  meta: ChannelMeta;
-  active: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onToggle}
-      accessibilityRole="checkbox"
-      accessibilityLabel={`${meta.label} notifications`}
-      accessibilityState={{ checked: active }}
-      className="items-center gap-1"
-    >
-      <View
-        style={{
-          width: 32,
-          height: 32,
-          borderRadius: 9,
-          backgroundColor: active ? meta.color : colors.muted,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        {meta.icon}
-      </View>
-      <Text
-        style={{
-          fontSize: 9,
-          fontWeight: '600',
-          color: active ? colors.foreground : colors.mutedForeground,
-          textAlign: 'center',
-        }}
-      >
-        {meta.label}
-      </Text>
-    </TouchableOpacity>
-  );
-}
-
-/** One category row: icon + label/subtitle on left, 5 channel chips on right */
+/**
+ * CategoryRow — accordion pattern.
+ *
+ * Collapsed: shows icon + label + active-channel badge summary + chevron.
+ * Expanded: slides down a panel with one full-width Switch row per channel.
+ *
+ * This keeps the list scannable at a glance while giving large, accessible
+ * touch targets for each channel toggle.
+ */
 function CategoryRow({
   meta,
   channels,
@@ -213,18 +178,51 @@ function CategoryRow({
   onToggleChannel: (ch: ChannelKey) => void;
   isLast: boolean;
 }) {
-  const anyActive = CHANNELS.some((c) => channels[c.key]);
+  const [open, setOpen] = useState(false);
+  const anim = useRef(new Animated.Value(0)).current;
+  const chevronAnim = useRef(new Animated.Value(0)).current;
+
+  const toggle = useCallback(() => {
+    const toValue = open ? 0 : 1;
+    setOpen(!open);
+    Animated.spring(anim, { toValue, useNativeDriver: false, bounciness: 0 }).start();
+    Animated.spring(chevronAnim, { toValue, useNativeDriver: true, bounciness: 4 }).start();
+  }, [open, anim, chevronAnim]);
+
+  // Each channel row is ~56px; panel height animates between 0 and total
+  const PANEL_ROW_HEIGHT = 56;
+  const panelHeight = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, CHANNELS.length * PANEL_ROW_HEIGHT],
+  });
+  const chevronRotate = chevronAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '180deg'],
+  });
+
+  const activeCount = CHANNELS.filter((c) => channels[c.key]).length;
+  const anyActive = activeCount > 0;
 
   return (
-    <View className={`p-4 bg-card ${!isLast ? 'border-b border-border' : ''}`}>
-      {/* Top: icon + label */}
-      <View className="flex-row items-center gap-3 mb-3">
-        <View className="w-9 h-9 rounded-full bg-muted items-center justify-center">
+    <View className={`bg-card ${!isLast ? 'border-b border-border' : ''}`}>
+      {/* ── Header row (always visible, tappable) ── */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={toggle}
+        accessibilityRole="button"
+        accessibilityLabel={`${meta.label}, ${activeCount} of ${CHANNELS.length} channels active`}
+        accessibilityState={{ expanded: open }}
+        className="flex-row items-center px-4 py-3.5"
+      >
+        {/* Coloured icon container */}
+        <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">
           {meta.icon}
         </View>
-        <View className="flex-1">
+
+        {/* Label + subtitle */}
+        <View className="flex-1 mr-3">
           <Text
-            className="text-foreground font-medium"
+            className="font-semibold text-sm"
             style={{ color: anyActive ? colors.foreground : colors.mutedForeground }}
           >
             {meta.label}
@@ -233,19 +231,101 @@ function CategoryRow({
             {meta.subtitle}
           </Text>
         </View>
-      </View>
 
-      {/* Bottom: 5 channel chips */}
-      <View className="flex-row justify-between px-1">
-        {CHANNELS.map((ch) => (
-          <ChannelChip
-            key={ch.key}
-            meta={ch}
-            active={channels[ch.key]}
-            onToggle={() => onToggleChannel(ch.key)}
-          />
-        ))}
-      </View>
+        {/* Active-channel pill badge */}
+        {anyActive ? (
+          <View
+            style={{
+              backgroundColor: `${colors.primary}20`,
+              borderRadius: 20,
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              marginRight: 8,
+              borderWidth: 1,
+              borderColor: `${colors.primary}40`,
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: '700', color: colors.primary }}>
+              {activeCount}/{CHANNELS.length}
+            </Text>
+          </View>
+        ) : (
+          <View
+            style={{
+              backgroundColor: colors.muted,
+              borderRadius: 20,
+              paddingHorizontal: 8,
+              paddingVertical: 3,
+              marginRight: 8,
+            }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: '600', color: colors.mutedForeground }}>
+              Off
+            </Text>
+          </View>
+        )}
+
+        {/* Animated chevron */}
+        <Animated.View style={{ transform: [{ rotate: chevronRotate }] }}>
+          <ChevronDown size={16} color={colors.mutedForeground} />
+        </Animated.View>
+      </TouchableOpacity>
+
+      {/* ── Expanded channel panel ── */}
+      <Animated.View style={{ height: panelHeight, overflow: 'hidden' }}>
+        {CHANNELS.map((ch) => {
+          const active = channels[ch.key];
+          return (
+            <View
+              key={ch.key}
+              style={{
+                height: PANEL_ROW_HEIGHT,
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 16,
+                paddingLeft: 64, // indent to align with label text above
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+                backgroundColor: colors.muted + '60',
+              }}
+            >
+              {/* Channel colour dot + label */}
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  backgroundColor: active ? ch.color : colors.muted,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 12,
+                }}
+              >
+                {ch.icon}
+              </View>
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: active ? colors.foreground : colors.mutedForeground,
+                }}
+              >
+                {ch.label}
+              </Text>
+              <Switch
+                value={active}
+                onValueChange={() => onToggleChannel(ch.key)}
+                trackColor={{ false: colors.muted, true: `${ch.color}70` }}
+                thumbColor={active ? ch.color : colors.mutedForeground}
+                accessibilityLabel={`${ch.label} for ${meta.label}`}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: active }}
+              />
+            </View>
+          );
+        })}
+      </Animated.View>
     </View>
   );
 }
