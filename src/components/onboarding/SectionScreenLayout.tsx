@@ -1,5 +1,6 @@
 import React from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { Button, Header } from '../ui';
@@ -32,15 +33,14 @@ export default function SectionScreenLayout({
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
             paddingHorizontal: 20,
             paddingTop: 20,
-            paddingBottom: 100,
+            paddingBottom: 20,
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -61,25 +61,26 @@ export default function SectionScreenLayout({
           {children}
         </ScrollView>
 
-        {/* Bottom sticky save button */}
-        <View
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            paddingHorizontal: 20,
-            paddingTop: 12,
-            paddingBottom: Platform.OS === 'ios' ? 28 : 16,
-            backgroundColor: colors.background,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-          }}
-        >
-          <Button variant="primary" onPress={onSave} disabled={saveDisabled} loading={loading}>
-            {saveLabel}
-          </Button>
-        </View>
+        {/*
+         * KeyboardStickyView keeps the save button attached to the top of the
+         * keyboard as it slides up/down — no position:absolute needed.
+         */}
+        <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingTop: 12,
+              paddingBottom: Platform.OS === 'ios' ? 28 : 16,
+              backgroundColor: colors.background,
+              borderTopWidth: 1,
+              borderTopColor: colors.border,
+            }}
+          >
+            <Button variant="primary" onPress={onSave} disabled={saveDisabled} loading={loading}>
+              {saveLabel}
+            </Button>
+          </View>
+        </KeyboardStickyView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

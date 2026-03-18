@@ -6,11 +6,7 @@ import { useForm } from 'react-hook-form';
 import {
   Alert,
   Image,
-  KeyboardAvoidingView,
   Linking,
-  Modal,
-  Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -18,9 +14,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, FormInput, Text } from '../../components/ui';
-import { isAppleAuthAvailable, USER_CANCELLED } from '../../services/socialAuth.service';
+import { Button, FormInput, KeyboardSheet, Text } from '../../components/ui';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
+import { isAppleAuthAvailable, USER_CANCELLED } from '../../services/socialAuth.service';
 import { useAuthStore } from '../../store/auth';
 import { colors } from '../../theme/colors';
 import {
@@ -318,68 +314,56 @@ export default function LoginScreen({ navigation }: Props) {
       </ScrollView>
 
       {/* Forgot Password Sheet */}
-      <Modal
-        visible={showForgotPasswordSheet}
-        transparent
-        animationType="slide"
-        onRequestClose={closeForgotPasswordSheet}
-      >
-        <Pressable onPress={closeForgotPasswordSheet} style={styles.modalOverlay}>
-          <Pressable onPress={(e) => e.stopPropagation()} style={styles.modalSheet}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-              {/* Handle + Close */}
-              <View className="flex-row items-center justify-between pt-4 pb-2">
-                <View className="flex-1 items-center">
-                  <View className="w-10 h-1 rounded-full" style={styles.handleBar} />
-                </View>
-                <TouchableOpacity
-                  onPress={closeForgotPasswordSheet}
-                  accessibilityRole="button"
-                  hitSlop={10}
-                  accessibilityLabel="Close"
-                  className="absolute right-0 top-2 w-10 h-10 rounded-full bg-background border border-border items-center justify-center"
-                >
-                  <X size={20} color={colors.foreground} />
-                </TouchableOpacity>
-              </View>
+      <KeyboardSheet visible={showForgotPasswordSheet} onClose={closeForgotPasswordSheet}>
+        <View style={{ paddingHorizontal: 24, paddingBottom: 8 }}>
+          {/* Close button row */}
+          <View className="flex-row items-center justify-end pt-2 pb-2">
+            <TouchableOpacity
+              onPress={closeForgotPasswordSheet}
+              accessibilityRole="button"
+              hitSlop={10}
+              accessibilityLabel="Close"
+              className="w-10 h-10 rounded-full bg-background border border-border items-center justify-center"
+            >
+              <X size={20} color={colors.foreground} />
+            </TouchableOpacity>
+          </View>
 
-              <Text className="text-xl font-bold text-foreground mb-1">Forgot Password</Text>
-              <Text className="text-sm text-muted-foreground mb-6">
-                Enter your email and we&apos;ll send you a link to reset your password.
+          <Text className="text-xl font-bold text-foreground mb-1">Forgot Password</Text>
+          <Text className="text-sm text-muted-foreground mb-6">
+            Enter your email and we&apos;ll send you a link to reset your password.
+          </Text>
+
+          {forgotPasswordSuccess ? (
+            <View className="py-4">
+              <Text className="text-base text-foreground mb-4">
+                Check your email for a password reset link. You can close this and return to sign
+                in.
               </Text>
-
-              {forgotPasswordSuccess ? (
-                <View className="py-4">
-                  <Text className="text-base text-foreground mb-4">
-                    Check your email for a password reset link. You can close this and return to
-                    sign in.
-                  </Text>
-                  <Button onPress={closeForgotPasswordSheet}>Done</Button>
-                </View>
-              ) : (
-                <>
-                  <FormInput
-                    control={forgotPasswordForm.control}
-                    name="email"
-                    label="Email Address"
-                    placeholder="you@example.com"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    error={forgotPasswordForm.formState.errors.email?.message}
-                    containerClassName="mb-6"
-                  />
-                  <Button
-                    onPress={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)}
-                    loading={forgotPasswordForm.formState.isSubmitting}
-                  >
-                    Send Reset Link
-                  </Button>
-                </>
-              )}
-            </KeyboardAvoidingView>
-          </Pressable>
-        </Pressable>
-      </Modal>
+              <Button onPress={closeForgotPasswordSheet}>Done</Button>
+            </View>
+          ) : (
+            <>
+              <FormInput
+                control={forgotPasswordForm.control}
+                name="email"
+                label="Email Address"
+                placeholder="you@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                error={forgotPasswordForm.formState.errors.email?.message}
+                containerClassName="mb-6"
+              />
+              <Button
+                onPress={forgotPasswordForm.handleSubmit(onForgotPasswordSubmit)}
+                loading={forgotPasswordForm.formState.isSubmitting}
+              >
+                Send Reset Link
+              </Button>
+            </>
+          )}
+        </View>
+      </KeyboardSheet>
     </SafeAreaView>
   );
 }
@@ -387,21 +371,6 @@ export default function LoginScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   switchScale: {
     transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
-  },
-  handleBar: {
-    backgroundColor: colors.border,
   },
   socialIcon: { width: 20, height: 20 },
 });

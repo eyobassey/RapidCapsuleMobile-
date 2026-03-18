@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { Appearance, StatusBar, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { PaystackProvider } from 'react-native-paystack-webview';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
@@ -29,11 +30,13 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <PaystackProvider publicKey={ENV.PAYSTACK_PUBLIC_KEY}>
           <SafeAreaProvider>
-            <ErrorBoundary>
-              <StatusBar barStyle="light-content" backgroundColor="#151c2c" />
-              <OfflineBanner />
-              <RootNavigator />
-            </ErrorBoundary>
+            <KeyboardProvider>
+              <ErrorBoundary>
+                <StatusBar barStyle="light-content" backgroundColor="#151c2c" />
+                <OfflineBanner />
+                <RootNavigator />
+              </ErrorBoundary>
+            </KeyboardProvider>
           </SafeAreaProvider>
         </PaystackProvider>
       </QueryClientProvider>

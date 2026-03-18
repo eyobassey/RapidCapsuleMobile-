@@ -18,14 +18,8 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  TextInput as RNTextInput,
-  ScrollView,
-  View,
-} from 'react-native';
+import { Alert, Platform, TextInput as RNTextInput, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui/Text';
 
@@ -202,7 +196,7 @@ export default function LogVitalsScreen() {
 
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           className="flex-1"

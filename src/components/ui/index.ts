@@ -15,3 +15,4 @@ export { default as ProgressRing } from './ProgressRing';
 export { default as Skeleton } from './Skeleton';
 export { default as FormInput } from './FormInput';
 export { default as DatePickerInput } from './DatePickerInput';
+export { default as KeyboardSheet } from './KeyboardSheet';
