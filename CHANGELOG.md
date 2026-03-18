@@ -1,3 +1,9 @@
+# [1.1.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.16...v1.1.0) (2026-03-18)
+
+### Features
+
+- add notification preferences screen and notification click navigation ([d0efdfb](https://github.com/eyobassey/RapidCapsuleMobile-/commit/d0efdfbdf0a5fa61b8ab18cafbcb4ac636014c3b))
+
 ## [1.0.16](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.15...v1.0.16) (2026-03-18)
 
 ### Bug Fixes
