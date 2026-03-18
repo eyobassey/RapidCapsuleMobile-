@@ -84,6 +84,7 @@ interface AuthState {
   forgotPassword: (email: string) => Promise<void>;
   fetchUser: () => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   setToken: (token: string) => Promise<void>;
   hydrate: () => Promise<void>;
   bootstrapForApp: (isCancelled?: () => boolean) => Promise<void>;
@@ -99,15 +100,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, password, user_type = 'Patient') => {
     const res = await api.post('/auth/login', { email, password, user_type });
     const data = res.data;
-    const token = data.data || data.result || data.token;
+    const payload = data.data || data.result;
 
-    // Backend returns a JWT string on direct login, or a settings object when 2FA is triggered
-    if (!token || typeof token !== 'string') {
+    // Backend returns a JWT string on direct login, or an object when 2FA is triggered
+    if (!payload || typeof payload === 'object') {
       const msg = (data.message || '').toLowerCase();
       const method = msg.includes('phone') ? 'sms' : msg.includes('auth app') ? 'totp' : 'email';
       return { requires2FA: true, method };
     }
-    await get().setToken(token);
+
+    // payload is the access token string
+    await get().setToken(payload);
+    // Refresh token may be returned alongside (some backends wrap it)
+    const refreshToken = data.data?.refresh_token ?? data.result?.refresh_token;
+    if (refreshToken) {
+      await storage.setRefreshToken(refreshToken);
+    }
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
     return { requires2FA: false };
@@ -124,7 +132,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     const result = res.data?.result || res.data?.data;
     const jwtToken = typeof result === 'string' ? result : result?.token;
+    const refreshToken = typeof result === 'object' ? result?.refresh_token : undefined;
     await get().setToken(jwtToken);
+    if (refreshToken) {
+      await storage.setRefreshToken(refreshToken);
+    }
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
   },
@@ -192,6 +204,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    await storage.clear();
+    set({ user: null, token: null, isAuthenticated: false, needsOnboarding: false });
+  },
+
+  deleteAccount: async (password) => {
+    await api.delete('/users/me', { data: { password } });
+    // Clear all local auth state — server has already invalidated all sessions.
     await storage.clear();
     set({ user: null, token: null, isAuthenticated: false, needsOnboarding: false });
   },

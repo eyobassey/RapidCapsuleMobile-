@@ -1,10 +1,10 @@
-import {createMMKV} from 'react-native-mmkv';
+import { createMMKV } from 'react-native-mmkv';
 import * as Keychain from 'react-native-keychain';
 
 let mmkv: ReturnType<typeof createMMKV>;
 function getStore() {
   if (!mmkv) {
-    mmkv = createMMKV({id: 'rc-storage'});
+    mmkv = createMMKV({ id: 'rc-storage' });
   }
   return mmkv;
 }
@@ -16,6 +16,7 @@ const KEYS = {
 } as const;
 
 const KEYCHAIN_SERVICE = 'com.rapidcapsule.auth';
+const KEYCHAIN_REFRESH_SERVICE = 'com.rapidcapsule.refresh';
 
 export const storage = {
   // Secure token storage via Keychain/Keystore
@@ -40,7 +41,32 @@ export const storage = {
   },
 
   async removeToken(): Promise<void> {
-    await Keychain.resetGenericPassword({service: KEYCHAIN_SERVICE});
+    await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
+  },
+
+  // Refresh token — also stored in Keychain (secure)
+  async getRefreshToken(): Promise<string | null> {
+    try {
+      const credentials = await Keychain.getGenericPassword({
+        service: KEYCHAIN_REFRESH_SERVICE,
+      });
+      return credentials ? credentials.password : null;
+    } catch {
+      return null;
+    }
+  },
+
+  async setRefreshToken(token: string): Promise<void> {
+    if (token) {
+      await Keychain.setGenericPassword('refresh_token', token, {
+        service: KEYCHAIN_REFRESH_SERVICE,
+        accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+      });
+    }
+  },
+
+  async removeRefreshToken(): Promise<void> {
+    await Keychain.resetGenericPassword({ service: KEYCHAIN_REFRESH_SERVICE });
   },
 
   // Non-sensitive data stays in MMKV
@@ -64,7 +90,8 @@ export const storage = {
   },
 
   async clear(): Promise<void> {
-    await Keychain.resetGenericPassword({service: KEYCHAIN_SERVICE});
+    await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
+    await Keychain.resetGenericPassword({ service: KEYCHAIN_REFRESH_SERVICE });
     getStore().remove(KEYS.USER);
     getStore().remove(KEYS.REMEMBER_ME);
   },

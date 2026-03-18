@@ -1,5 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Bell,
@@ -19,6 +20,7 @@ import {
   Shield,
   ShieldCheck,
   Smartphone,
+  Trash2,
 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import {
@@ -37,6 +39,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Text } from '../../components/ui/Text';
+import { useAuthStore } from '../../store/auth';
 import {
   useBiometricCredentialsQuery,
   useChangePasswordMutation,
@@ -264,16 +267,23 @@ export default function SecuritySettingsScreen() {
   const isLoading =
     sessionsQuery.isLoading && userSettingsQuery.isLoading && biometricsQuery.isLoading;
 
+  const deleteAccount = useAuthStore((s) => s.deleteAccount);
+
   // ── Sheet visibility ────────────────────────────────────────────────────────
   const [showPasswordSheet, setShowPasswordSheet] = useState(false);
   const [showTFASheet, setShowTFASheet] = useState(false);
   const [showTOTPSheet, setShowTOTPSheet] = useState(false);
   const [showSessionsSheet, setShowSessionsSheet] = useState(false);
+  const [showDeleteSheet, setShowDeleteSheet] = useState(false);
 
   // ── Password form ───────────────────────────────────────────────────────────
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
+
+  // ── Delete account form ─────────────────────────────────────────────────────
+  const [deletePw, setDeletePw] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // ── 2FA TOTP setup ──────────────────────────────────────────────────────────
   const [tfaCode, setTfaCode] = useState('');
@@ -462,6 +472,22 @@ export default function SecuritySettingsScreen() {
       ]);
     }
   }, [biometricEnabled, biometrics, deleteBiometric]);
+
+  const handleDeleteAccount = useCallback(async () => {
+    if (!deletePw) {
+      Alert.alert('Password required', 'Please enter your current password to confirm.');
+      return;
+    }
+    setDeleteLoading(true);
+    try {
+      await deleteAccount(deletePw);
+      // Navigation is handled by the app's auth guard once isAuthenticated flips to false.
+    } catch (err: any) {
+      Alert.alert('Delete failed', err?.message ?? 'Incorrect password or server error.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [deletePw, deleteAccount]);
 
   // ── Loading state ──────────────────────────────────────────────────────────
 
@@ -807,6 +833,20 @@ export default function SecuritySettingsScreen() {
               </Text>
             </View>
           )}
+        </View>
+
+        {/* ── Danger Zone ── */}
+        <SectionHeader title="Danger Zone" />
+        <View className="mx-5 bg-card border border-border rounded-2xl overflow-hidden">
+          <ListRow
+            icon={<Trash2 size={18} color={colors.destructive} />}
+            label="Delete Account"
+            subtitle="Permanently delete your account and all data"
+            onPress={() => setShowDeleteSheet(true)}
+            destructive
+            isLast
+            right={<ChevronRight size={16} color={colors.destructive} />}
+          />
         </View>
 
         {/* ── Password tip ── */}
@@ -1257,6 +1297,142 @@ export default function SecuritySettingsScreen() {
             ))}
           </ScrollView>
         </View>
+      </BottomSheet>
+
+      {/* ════════════════════════════════════════════════════════
+          Delete Account Confirmation Sheet
+      ════════════════════════════════════════════════════════ */}
+      <BottomSheet
+        visible={showDeleteSheet}
+        onClose={() => {
+          setShowDeleteSheet(false);
+          setDeletePw('');
+        }}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={40}
+        >
+          <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
+            {/* Header */}
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 20 }}
+            >
+              <View
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  backgroundColor: `${colors.destructive}18`,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <AlertTriangle size={20} color={colors.destructive} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 17, fontWeight: '700', color: colors.foreground }}>
+                  Delete Account
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+                  This action is permanent and cannot be undone
+                </Text>
+              </View>
+            </View>
+
+            {/* Warning callout */}
+            <View
+              style={{
+                backgroundColor: `${colors.destructive}10`,
+                borderWidth: 1,
+                borderColor: `${colors.destructive}30`,
+                borderRadius: 12,
+                padding: 14,
+                marginBottom: 20,
+                gap: 6,
+              }}
+            >
+              {[
+                'All your health records and data will be deleted',
+                'Your active sessions will be revoked immediately',
+                'This cannot be reversed — there is no recovery option',
+              ].map((line) => (
+                <View key={line} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+                  <AlertTriangle size={12} color={colors.destructive} style={{ marginTop: 2 }} />
+                  <Text
+                    style={{ flex: 1, fontSize: 12, color: colors.destructive, lineHeight: 18 }}
+                  >
+                    {line}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Password confirmation */}
+            <Text
+              style={{
+                fontSize: 13,
+                fontWeight: '600',
+                color: colors.foreground,
+                marginBottom: 8,
+              }}
+            >
+              Enter your password to confirm
+            </Text>
+            <PasswordInput
+              label=""
+              value={deletePw}
+              onChangeText={setDeletePw}
+              placeholder="Your current password"
+            />
+
+            {/* Action buttons */}
+            <View style={{ gap: 10, marginTop: 4 }}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={handleDeleteAccount}
+                disabled={deleteLoading || !deletePw}
+                style={{
+                  backgroundColor: colors.destructive,
+                  borderRadius: 14,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  gap: 8,
+                  opacity: deleteLoading || !deletePw ? 0.6 : 1,
+                }}
+              >
+                {deleteLoading ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <Trash2 size={16} color={colors.white} />
+                )}
+                <Text style={{ fontSize: 15, fontWeight: '600', color: colors.white }}>
+                  {deleteLoading ? 'Deleting…' : 'Delete My Account'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  setShowDeleteSheet(false);
+                  setDeletePw('');
+                }}
+                style={{
+                  borderRadius: 14,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  backgroundColor: colors.muted,
+                }}
+              >
+                <Text style={{ fontSize: 15, fontWeight: '500', color: colors.foreground }}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </BottomSheet>
     </SafeAreaView>
   );
