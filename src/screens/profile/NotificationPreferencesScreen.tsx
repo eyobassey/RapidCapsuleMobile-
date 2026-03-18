@@ -282,37 +282,40 @@ function CategoryRow({
                 height: PANEL_ROW_HEIGHT,
                 flexDirection: 'row',
                 alignItems: 'center',
-                paddingHorizontal: 16,
-                paddingLeft: 64, // indent to align with label text above
+                justifyContent: 'space-between',
+                paddingLeft: 64,
+                paddingRight: 16,
                 borderTopWidth: 1,
                 borderTopColor: colors.border,
                 backgroundColor: colors.muted + '60',
               }}
             >
-              {/* Channel colour dot + label */}
-              <View
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 8,
-                  backgroundColor: active ? ch.color : colors.muted,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: 12,
-                }}
-              >
-                {ch.icon}
+              {/* Left group: icon + label */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
+                    backgroundColor: active ? ch.color : colors.muted,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {ch.icon}
+                </View>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '500',
+                    color: active ? colors.foreground : colors.mutedForeground,
+                  }}
+                >
+                  {ch.label}
+                </Text>
               </View>
-              <Text
-                style={{
-                  flex: 1,
-                  fontSize: 14,
-                  fontWeight: '500',
-                  color: active ? colors.foreground : colors.mutedForeground,
-                }}
-              >
-                {ch.label}
-              </Text>
+
+              {/* Right: Switch flush to edge */}
               <Switch
                 value={active}
                 onValueChange={() => onToggleChannel(ch.key)}
