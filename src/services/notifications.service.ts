@@ -3,12 +3,15 @@ import api from './api';
 export const notificationsService = {
   async list(params?: { page?: number; limit?: number }) {
     const res = await api.get('/notifications', { params });
-    return res.data.data || res.data.result;
+    const data = res.data.data || res.data.result;
+    // Backend may return { notifications, pagination } or a flat array
+    return Array.isArray(data) ? data : data?.notifications || [];
   },
 
   async getUnreadCount() {
     const res = await api.get('/notifications/unread-count');
-    return res.data.data || res.data.result;
+    const data = res.data.data || res.data.result;
+    return data?.unread_count ?? (typeof data === 'number' ? data : 0);
   },
 
   async markAsRead(id: string) {
