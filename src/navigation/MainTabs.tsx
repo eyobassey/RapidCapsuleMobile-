@@ -41,6 +41,7 @@ const HIDE_TAB_SCREENS = new Set([
   'NotificationPreferences',
   'SecuritySettings',
   'ReferralRewards',
+  'About',
   // Prescription screens
   'PrescriptionsList',
   'PrescriptionDetail',

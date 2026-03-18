@@ -149,12 +149,12 @@ export default function ProfileScreen() {
       items: [
         {
           icon: <FileText size={20} color={colors.primary} />,
-          title: 'Terms & Conditions',
-          subtitle: 'Read our terms of service',
+          title: 'Terms of Service',
+          subtitle: 'Read our terms and conditions',
           onPress: () =>
             navigation.navigate('WebView', {
-              title: 'Terms & Conditions',
-              url: 'https://rapidcapsule.com/terms-and-conditions',
+              title: 'Terms of Service',
+              url: 'https://rapidcapsule.com/terms-of-service',
             }),
         },
         {
@@ -171,7 +171,7 @@ export default function ProfileScreen() {
           icon: <Info size={20} color={colors.mutedForeground} />,
           title: 'About RapidCapsule',
           subtitle: `Version ${appVersionLabel}`,
-          onPress: () => {},
+          onPress: () => navigation.navigate('About'),
         },
       ],
     },
