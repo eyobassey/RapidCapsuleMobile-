@@ -27,6 +27,7 @@ import {
 } from '../../hooks/queries';
 import { useCurrency } from '../../hooks/useCurrency';
 import { pharmacyService } from '../../services/pharmacy.service';
+import { useAuthStore } from '../../store/auth';
 import { usePharmacyStore } from '../../store/pharmacy';
 import { colors } from '../../theme/colors';
 import type { DeliveryAddress, DeliveryMethod } from '../../types/pharmacy.types';
@@ -37,6 +38,7 @@ export default function CheckoutScreen() {
   const { format } = useCurrency();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
+  const user = useAuthStore((s) => s.user);
   const { cartItems, clearCart } = usePharmacyStore();
   const { data: addresses = [] } = useAddressesQuery();
   const addAddressMutation = useAddAddressMutation();
@@ -93,6 +95,45 @@ export default function CheckoutScreen() {
       Alert.alert('Error', err?.response?.data?.message || 'Failed to save address');
     }
   });
+
+  const handleUseProfileDetails = useCallback(() => {
+    const profile = user?.profile;
+    const contact = profile?.contact;
+    const savedAddresses = Array.isArray(user?.delivery_addresses) ? user?.delivery_addresses : [];
+    const defaultSavedAddress =
+      (savedAddresses.find((a) => a?.is_default) as Partial<DeliveryAddress> | undefined) ||
+      (savedAddresses[0] as Partial<DeliveryAddress> | undefined);
+
+    const recipientName = [profile?.first_name, profile?.last_name]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    const phone =
+      defaultSavedAddress?.phone ||
+      contact?.phone?.number ||
+      profile?.phone?.number ||
+      profile?.phone_number ||
+      '';
+    const street = defaultSavedAddress?.street || contact?.address1 || profile?.address1 || '';
+    const city = defaultSavedAddress?.city || contact?.city || profile?.city || '';
+    const state = defaultSavedAddress?.state || contact?.state || profile?.state || '';
+
+    const nextValues: CheckoutAddressFormData = {
+      label: 'Home',
+      recipient_name: defaultSavedAddress?.recipient_name || recipientName,
+      phone,
+      street,
+      city,
+      state,
+    };
+
+    addressForm.reset(nextValues);
+    setShowAddressForm(true);
+
+    if (!street || !city || !state || !phone) {
+      Alert.alert('Review Address', 'Please review and complete any missing address details.');
+    }
+  }, [addressForm, user]);
 
   const handlePlaceOrder = async () => {
     if (deliveryMethod === 'DELIVERY' && !selectedAddress) {
@@ -414,14 +455,33 @@ export default function CheckoutScreen() {
                 )}
               </View>
             ) : !showAddressForm ? (
-              <TouchableOpacity
-                onPress={() => setShowAddressForm(true)}
-                className="bg-card border border-border rounded-2xl p-4 items-center"
-                activeOpacity={0.7}
-              >
-                <MapPin size={20} color={colors.mutedForeground} />
-                <Text className="text-sm text-primary font-medium mt-1">Add Delivery Address</Text>
-              </TouchableOpacity>
+              <View className="gap-3">
+                <TouchableOpacity
+                  onPress={() => setShowAddressForm(true)}
+                  className="bg-card border border-border rounded-2xl p-4 items-center"
+                  activeOpacity={0.7}
+                >
+                  <MapPin size={20} color={colors.mutedForeground} />
+                  <Text className="text-sm text-primary font-medium mt-1">
+                    Add Delivery Address
+                  </Text>
+                </TouchableOpacity>
+
+                {user?.profile && (
+                  <TouchableOpacity
+                    onPress={handleUseProfileDetails}
+                    className="bg-card border border-border rounded-2xl p-4 items-center"
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel="Use profile details for delivery address"
+                  >
+                    <Text className="text-sm text-foreground font-medium">Use Profile Details</Text>
+                    <Text className="text-xs text-muted-foreground mt-1">
+                      Prefill name, phone, and address from your profile
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             ) : null}
 
             {/* Inline Address Form */}
