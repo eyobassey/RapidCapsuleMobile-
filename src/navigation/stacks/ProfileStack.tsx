@@ -1,10 +1,11 @@
 import React from 'react';
-import {View, Text} from 'react-native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import { View, Text } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProfileScreen from '../../screens/profile/ProfileScreen';
 import EditProfileScreen from '../../screens/profile/EditProfileScreen';
 import WalletScreen from '../../screens/profile/WalletScreen';
 import HealthRecordsScreen from '../../screens/profile/HealthRecordsScreen';
+import WebViewScreen from '../../screens/profile/WebViewScreen';
 import PrescriptionsListScreen from '../../screens/prescriptions/PrescriptionsListScreen';
 import PrescriptionDetailScreen from '../../screens/prescriptions/PrescriptionDetailScreen';
 // Onboarding screens accessible from profile
@@ -21,11 +22,12 @@ import WalletCreditsScreen from '../../screens/onboarding/WalletCreditsScreen';
 export type ProfileStackParamList = {
   ProfileHome: undefined;
   EditProfile: undefined;
-  Wallet: {initialTab?: string} | undefined;
+  Wallet: { initialTab?: string } | undefined;
   HealthRecords: undefined;
   PrescriptionsList: undefined;
-  PrescriptionDetail: {id: string};
+  PrescriptionDetail: { id: string };
   Settings: undefined;
+  WebView: { title: string; url: string };
   // Onboarding screens (reused from onboarding flow)
   OnboardingDashboard: undefined;
   PersonalDetails: undefined;
@@ -38,7 +40,7 @@ export type ProfileStackParamList = {
   WalletCredits: undefined;
 };
 
-function PlaceholderScreen({route}: any) {
+function PlaceholderScreen({ route }: any) {
   return (
     <View className="flex-1 bg-background items-center justify-center">
       <Text className="text-foreground text-lg">{route.name}</Text>
@@ -50,7 +52,7 @@ const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 export default function ProfileStack() {
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileHome" component={ProfileScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
@@ -58,6 +60,7 @@ export default function ProfileStack() {
       <Stack.Screen name="PrescriptionsList" component={PrescriptionsListScreen} />
       <Stack.Screen name="PrescriptionDetail" component={PrescriptionDetailScreen} />
       <Stack.Screen name="Settings" component={PlaceholderScreen} />
+      <Stack.Screen name="WebView" component={WebViewScreen} />
       {/* Onboarding screens */}
       <Stack.Screen name="OnboardingDashboard" component={OnboardingDashboardScreen} />
       <Stack.Screen name="PersonalDetails" component={PersonalDetailsScreen} />

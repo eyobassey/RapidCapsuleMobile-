@@ -37,6 +37,7 @@ const HIDE_TAB_SCREENS = new Set([
   'MedicalHistory',
   'DeviceIntegration',
   'WalletCredits',
+  'WebView',
   // Prescription screens
   'PrescriptionsList',
   'PrescriptionDetail',

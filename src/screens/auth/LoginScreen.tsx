@@ -7,6 +7,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -296,6 +297,23 @@ export default function LoginScreen({ navigation }: Props) {
           >
             <Text className="text-sm font-semibold text-primary">Create account</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Legal links */}
+        <View className="flex-row justify-center items-center gap-1 pb-8">
+          <Text
+            className="text-xs text-muted-foreground"
+            onPress={() => Linking.openURL('https://rapidcapsule.com/terms-and-conditions')}
+          >
+            Terms & Conditions
+          </Text>
+          <Text className="text-xs text-muted-foreground">·</Text>
+          <Text
+            className="text-xs text-muted-foreground"
+            onPress={() => Linking.openURL('https://rapidcapsule.com/privacy-policy')}
+          >
+            Privacy Policy
+          </Text>
         </View>
       </ScrollView>
 

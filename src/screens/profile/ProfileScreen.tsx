@@ -135,6 +135,31 @@ export default function ProfileScreen() {
           subtitle: 'FAQs, contact us',
           onPress: () => {},
         },
+      ],
+    },
+    {
+      title: 'About',
+      items: [
+        {
+          icon: <FileText size={20} color={colors.primary} />,
+          title: 'Terms & Conditions',
+          subtitle: 'Read our terms of service',
+          onPress: () =>
+            navigation.navigate('WebView', {
+              title: 'Terms & Conditions',
+              url: 'https://rapidcapsule.com/terms-and-conditions',
+            }),
+        },
+        {
+          icon: <Shield size={20} color={colors.secondary} />,
+          title: 'Privacy Policy',
+          subtitle: 'How we handle your data',
+          onPress: () =>
+            navigation.navigate('WebView', {
+              title: 'Privacy Policy',
+              url: 'https://rapidcapsule.com/privacy-policy',
+            }),
+        },
         {
           icon: <Info size={20} color={colors.mutedForeground} />,
           title: 'About RapidCapsule',

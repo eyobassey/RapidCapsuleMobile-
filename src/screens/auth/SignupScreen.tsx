@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Switch, Image, StyleSheet, Alert } from 'react-native';
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+  Image,
+  StyleSheet,
+  Alert,
+  Linking,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { useForm } from 'react-hook-form';
@@ -220,8 +229,21 @@ export default function SignupScreen({ navigation }: Props) {
             style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
           />
           <Text className="flex-1 text-xs text-foreground/80 leading-tight">
-            I agree to the <Text className="text-primary">Terms of Service</Text> and{' '}
-            <Text className="text-primary">Privacy Policy</Text>.
+            I agree to the{' '}
+            <Text
+              className="text-primary"
+              onPress={() => Linking.openURL('https://rapidcapsule.com/terms-and-conditions')}
+            >
+              Terms of Service
+            </Text>{' '}
+            and{' '}
+            <Text
+              className="text-primary"
+              onPress={() => Linking.openURL('https://rapidcapsule.com/privacy-policy')}
+            >
+              Privacy Policy
+            </Text>
+            .
           </Text>
         </View>
 
