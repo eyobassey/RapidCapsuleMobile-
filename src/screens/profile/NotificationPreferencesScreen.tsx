@@ -282,45 +282,47 @@ function CategoryRow({
                 height: PANEL_ROW_HEIGHT,
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingLeft: 64,
-                paddingRight: 16,
                 borderTopWidth: 1,
                 borderTopColor: colors.border,
                 backgroundColor: colors.muted + '60',
+                paddingLeft: 20,
+                paddingRight: 16,
               }}
             >
-              {/* Left group: icon + label */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 8,
-                    backgroundColor: active ? ch.color : colors.muted,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {ch.icon}
-                </View>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: active ? colors.foreground : colors.mutedForeground,
-                  }}
-                >
-                  {ch.label}
-                </Text>
+              {/* Icon */}
+              <View
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  backgroundColor: active ? ch.color : colors.muted,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 14,
+                }}
+              >
+                {ch.icon}
               </View>
 
-              {/* Right: Switch flush to edge */}
+              {/* Label — flex: 1 pushes Switch to far right */}
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize: 14,
+                  fontWeight: '500',
+                  color: active ? colors.foreground : colors.mutedForeground,
+                }}
+              >
+                {ch.label}
+              </Text>
+
+              {/* Switch — alignSelf centres it inside the fixed-height row */}
               <Switch
                 value={active}
                 onValueChange={() => onToggleChannel(ch.key)}
-                trackColor={{ false: colors.muted, true: `${ch.color}70` }}
+                trackColor={{ false: colors.border, true: `${ch.color}80` }}
                 thumbColor={active ? ch.color : colors.mutedForeground}
+                style={{ alignSelf: 'center' }}
                 accessibilityLabel={`${ch.label} for ${meta.label}`}
                 accessibilityRole="switch"
                 accessibilityState={{ checked: active }}
