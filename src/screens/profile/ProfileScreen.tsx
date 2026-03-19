@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import {
   Bell,
+  Calendar,
   Check,
   ChevronRight,
   ClipboardList,
@@ -33,8 +34,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DeviceInfo from 'react-native-device-info';
 import { Avatar, KeyboardSheet } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
+import { useAppointmentsQuery } from '../../hooks/queries/useAppointmentsQuery';
 import { useHealthScoreQuery } from '../../hooks/queries/useHealthScoreQuery';
-import { useReferralStatsQuery } from '../../hooks/queries/useReferralsQuery';
 import { useWalletBalanceQuery } from '../../hooks/queries/useWalletQuery';
 import { useCurrency } from '../../hooks/useCurrency';
 import { useAuthStore } from '../../store/auth';
@@ -76,7 +77,7 @@ export default function ProfileScreen() {
   const { format } = useCurrency();
   const healthQuery = useHealthScoreQuery();
   const walletQuery = useWalletBalanceQuery();
-  const referralsQuery = useReferralStatsQuery();
+  const appointmentsQuery = useAppointmentsQuery('upcoming');
 
   const firstName = user?.profile?.first_name || 'User';
   const lastName = user?.profile?.last_name || '';
@@ -86,7 +87,7 @@ export default function ProfileScreen() {
 
   const healthScore = healthQuery.data?.totalScore ?? healthQuery.data?.score ?? 0;
   const walletBalance = walletQuery.data?.currentBalance ?? walletQuery.data?.balance ?? 0;
-  const referralCount = referralsQuery.data?.total_referrals ?? 0;
+  const upcomingCount = appointmentsQuery.data?.length ?? 0;
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out of your account?', [
@@ -282,13 +283,13 @@ export default function ProfileScreen() {
 
             <View style={styles.metricCard}>
               <View style={[styles.metricIconContainer, { backgroundColor: `${colors.accent}15` }]}>
-                <Gift size={16} color={colors.accent} strokeWidth={2.5} />
+                <Calendar size={16} color={colors.accent} strokeWidth={2.5} />
               </View>
-              <Text style={styles.metricLabel}>Referrals</Text>
-              {referralsQuery.isLoading ? (
+              <Text style={styles.metricLabel}>Upcoming</Text>
+              {appointmentsQuery.isLoading ? (
                 <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 2 }} />
               ) : (
-                <Text style={styles.metricValue}>{referralCount}</Text>
+                <Text style={styles.metricValue}>{upcomingCount}</Text>
               )}
             </View>
           </View>
@@ -344,7 +345,7 @@ export default function ProfileScreen() {
         </View>
 
         <View className="items-center mt-8 mb-4">
-          <Text style={styles.footerText}>RapidCapsule Premium v{DeviceInfo.getVersion()}</Text>
+          <Text style={styles.footerText}>RapidCapsule v{DeviceInfo.getVersion()}</Text>
         </View>
       </ScrollView>
 
@@ -482,7 +483,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
-    marginTop: 12,
+    marginTop: 20,
   },
   metricCard: {
     flex: 1,
