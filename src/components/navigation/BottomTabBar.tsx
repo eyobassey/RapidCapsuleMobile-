@@ -71,7 +71,7 @@ function TabItem({
           <View
             style={{
               borderWidth: 1.5,
-              borderRadius: 14,
+              borderRadius: 9999,
               borderColor: isFocused ? colors.primary : 'transparent',
               padding: 1.5,
               backgroundColor: isFocused ? `${colors.primary}10` : 'transparent',
