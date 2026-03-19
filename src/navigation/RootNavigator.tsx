@@ -8,6 +8,7 @@ import OnboardingStack from './OnboardingStack';
 import MainTabs from './MainTabs';
 import { colors } from '../theme/colors';
 import linking from '../config/linking';
+import { navigationRef } from './navigationRef';
 
 export type RootStackParamList = {
   Auth: undefined;
@@ -33,7 +34,7 @@ export default function RootNavigator() {
   }, [bootstrapForApp]);
 
   return (
-    <NavigationContainer linking={linking} theme={DarkTheme}>
+    <NavigationContainer ref={navigationRef} linking={linking} theme={DarkTheme}>
       {isLoading ? (
         <View className="flex-1 bg-background items-center justify-center">
           <ActivityIndicator size="large" color={colors.primary} />

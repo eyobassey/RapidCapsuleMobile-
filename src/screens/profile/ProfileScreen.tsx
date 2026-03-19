@@ -20,6 +20,7 @@ import React, { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import DeviceInfo from 'react-native-device-info';
 import { Avatar, ListItem } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
 import { useAuthStore } from '../../store/auth';
@@ -27,7 +28,6 @@ import { useCurrencyStore } from '../../store/currency';
 import { colors } from '../../theme/colors';
 import { CURRENCY_LIST, SUPPORTED_CURRENCIES } from '../../utils/currency';
 import { formatDate } from '../../utils/formatters';
-import DeviceInfo from 'react-native-device-info';
 
 function getAppVersionLabel(): string {
   const version = DeviceInfo.getVersion();

@@ -5,6 +5,7 @@ import {
   signInWithGoogle,
   signUpWithGoogle,
 } from '../services/socialAuth.service';
+import { identifyOneSignalUser, clearOneSignalUser } from '../services/onesignal.service';
 import { storage } from '../utils/storage';
 import { useCurrencyStore } from './currency';
 import { useOnboardingStore } from './onboarding';
@@ -194,6 +195,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       await storage.setUser(user);
       set({ user, isAuthenticated: true, needsOnboarding, isLoading: false });
+
+      // Associate this user with their OneSignal push subscription
+      if (user?._id) {
+        identifyOneSignalUser(user._id);
+      }
     } catch (err: any) {
       const msg = err?.response?.data
         ? JSON.stringify(err.response.data)
@@ -204,6 +210,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    clearOneSignalUser();
     await storage.clear();
     set({ user: null, token: null, isAuthenticated: false, needsOnboarding: false });
   },

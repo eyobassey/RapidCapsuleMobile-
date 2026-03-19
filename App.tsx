@@ -12,8 +12,12 @@ import OfflineBanner from './src/components/ui/OfflineBanner';
 import ENV from './src/config/env';
 import { queryClient } from './src/config/queryClient';
 import RootNavigator from './src/navigation/RootNavigator';
+import { initOneSignal } from './src/services/onesignal.service';
 
 Appearance.setColorScheme('dark');
+
+// Initialise OneSignal push notifications
+initOneSignal();
 
 // Configure Google Sign-In
 if (ENV.GOOGLE_WEB_CLIENT_ID) {

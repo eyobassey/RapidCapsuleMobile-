@@ -1,26 +1,26 @@
-import React from 'react';
-import { View, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ProfileScreen from '../../screens/profile/ProfileScreen';
+import React from 'react';
+import { Text, View } from 'react-native';
+import PrescriptionDetailScreen from '../../screens/prescriptions/PrescriptionDetailScreen';
+import PrescriptionsListScreen from '../../screens/prescriptions/PrescriptionsListScreen';
+import AboutScreen from '../../screens/profile/AboutScreen';
 import EditProfileScreen from '../../screens/profile/EditProfileScreen';
-import WalletScreen from '../../screens/profile/WalletScreen';
 import HealthRecordsScreen from '../../screens/profile/HealthRecordsScreen';
 import NotificationPreferencesScreen from '../../screens/profile/NotificationPreferencesScreen';
-import AboutScreen from '../../screens/profile/AboutScreen';
+import ProfileScreen from '../../screens/profile/ProfileScreen';
 import ReferralRewardsScreen from '../../screens/profile/ReferralRewardsScreen';
 import SecuritySettingsScreen from '../../screens/profile/SecuritySettingsScreen';
+import WalletScreen from '../../screens/profile/WalletScreen';
 import WebViewScreen from '../../screens/profile/WebViewScreen';
-import PrescriptionsListScreen from '../../screens/prescriptions/PrescriptionsListScreen';
-import PrescriptionDetailScreen from '../../screens/prescriptions/PrescriptionDetailScreen';
 // Onboarding screens accessible from profile
+import AddressEmergencyScreen from '../../screens/onboarding/AddressEmergencyScreen';
+import AllergiesScreen from '../../screens/onboarding/AllergiesScreen';
+import DependantsScreen from '../../screens/onboarding/DependantsScreen';
+import DeviceIntegrationScreen from '../../screens/onboarding/DeviceIntegrationScreen';
+import MedicalHistoryScreen from '../../screens/onboarding/MedicalHistoryScreen';
 import OnboardingDashboardScreen from '../../screens/onboarding/OnboardingDashboardScreen';
 import PersonalDetailsScreen from '../../screens/onboarding/PersonalDetailsScreen';
-import AddressEmergencyScreen from '../../screens/onboarding/AddressEmergencyScreen';
-import DependantsScreen from '../../screens/onboarding/DependantsScreen';
 import VitalsMetricsScreen from '../../screens/onboarding/VitalsMetricsScreen';
-import AllergiesScreen from '../../screens/onboarding/AllergiesScreen';
-import MedicalHistoryScreen from '../../screens/onboarding/MedicalHistoryScreen';
-import DeviceIntegrationScreen from '../../screens/onboarding/DeviceIntegrationScreen';
 import WalletCreditsScreen from '../../screens/onboarding/WalletCreditsScreen';
 
 export type ProfileStackParamList = {
@@ -67,6 +67,7 @@ export default function ProfileStack() {
       <Stack.Screen name="HealthRecords" component={HealthRecordsScreen} />
       <Stack.Screen name="PrescriptionsList" component={PrescriptionsListScreen} />
       <Stack.Screen name="PrescriptionDetail" component={PrescriptionDetailScreen} />
+      <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
       <Stack.Screen name="Settings" component={PlaceholderScreen} />
       <Stack.Screen name="SecuritySettings" component={SecuritySettingsScreen} />
       <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />

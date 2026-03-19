@@ -34,7 +34,7 @@ export function useUnreadCountQuery() {
     queryKey: notificationKeys.unreadCount(),
     queryFn: async () => {
       const data = await notificationsService.getUnreadCount();
-      return typeof data === 'number' ? data : data?.count || 0;
+      return typeof data === 'number' ? data : 0;
     },
     staleTime: 60 * 1000,
   });
@@ -72,6 +72,7 @@ export function useMarkReadMutation() {
   return useMutation({
     mutationFn: (id: string) => notificationsService.markAsRead(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
       queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });

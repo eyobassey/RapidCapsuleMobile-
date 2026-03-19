@@ -1,3 +1,25 @@
+# [1.2.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.1.0...v1.2.0) (2026-03-18)
+
+### Bug Fixes
+
+- **test:** add Jest mock for react-native-onesignal ([e76792d](https://github.com/eyobassey/RapidCapsuleMobile-/commit/e76792dd7d326c70fcc8aee819409ffb9a05376c))
+
+### Features
+
+- integrate OneSignal push notifications ([9b9bbc3](https://github.com/eyobassey/RapidCapsuleMobile-/commit/9b9bbc3cfaf6a5e0509d23f5e843d45681c9516b))
+
+# [1.1.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.16...v1.1.0) (2026-03-18)
+
+### Features
+
+- add notification preferences screen and notification click navigation ([d0efdfb](https://github.com/eyobassey/RapidCapsuleMobile-/commit/d0efdfbdf0a5fa61b8ab18cafbcb4ac636014c3b))
+
+## [1.0.16](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.15...v1.0.16) (2026-03-18)
+
+### Bug Fixes
+
+- handle nested notification response format from backend ([5033f1f](https://github.com/eyobassey/RapidCapsuleMobile-/commit/5033f1f9fc06f5ebdaee1d4dfad10c73b26deb89))
+
 ## [1.0.15](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.0.14...v1.0.15) (2026-03-17)
 
 ### Bug Fixes

@@ -82,6 +82,49 @@ const ICON_MAP: Record<string, { icon: React.ElementType; color: string }> = {
 
 const DEFAULT_ICON = { icon: Bell, color: colors.primary };
 
+// ---- Navigation routing ----
+// Maps notification type prefixes to a tab + screen for cross-tab navigation.
+// Uses the longest matching prefix so e.g. "pharmacy_order_shipped" matches "pharmacy_order".
+const NOTIFICATION_ROUTES: Array<{
+  prefix: string;
+  tab: string;
+  screen: string;
+}> = [
+  // Appointments → Bookings tab
+  { prefix: 'appointment_', tab: 'Bookings', screen: 'AppointmentsList' },
+
+  // Prescriptions → Profile tab
+  { prefix: 'prescription_', tab: 'Profile', screen: 'PrescriptionsList' },
+
+  // Pharmacy orders → Pharmacy tab
+  { prefix: 'pharmacy_', tab: 'Pharmacy', screen: 'MyOrders' },
+
+  // Payments & wallet → Profile tab (Wallet screen)
+  { prefix: 'payment_', tab: 'Profile', screen: 'Wallet' },
+  { prefix: 'wallet_', tab: 'Profile', screen: 'Wallet' },
+  { prefix: 'refund_', tab: 'Profile', screen: 'Wallet' },
+
+  // Health checkup → Home tab
+  { prefix: 'health_checkup_', tab: 'Home', screen: 'HealthCheckupHistory' },
+  { prefix: 'health_score_', tab: 'Home', screen: 'Vitals' },
+
+  // Vitals → Home tab
+  { prefix: 'vitals_', tab: 'Home', screen: 'Vitals' },
+
+  // Recovery → Home tab
+  { prefix: 'recovery_', tab: 'Home', screen: 'RecoveryDashboard' },
+];
+
+function getRouteForNotification(type?: string): { tab: string; screen: string } | null {
+  if (!type) return null;
+  for (const route of NOTIFICATION_ROUTES) {
+    if (type.startsWith(route.prefix)) {
+      return { tab: route.tab, screen: route.screen };
+    }
+  }
+  return null;
+}
+
 function getNotificationIcon(type?: string): { icon: React.ElementType; color: string } {
   if (!type) return DEFAULT_ICON;
   return ICON_MAP[type] ?? DEFAULT_ICON;
@@ -231,11 +274,21 @@ export default function NotificationsScreen() {
   const handlePress = useCallback(
     (id: string) => {
       const notif = notifications.find((n: any) => n._id === id);
-      if (notif && !notif.is_read) {
+      if (!notif) return;
+
+      // Mark as read
+      if (!notif.is_read) {
         markReadMutation.mutate(id);
       }
+
+      // Navigate based on notification type
+      const notifType = notif.type || notif.notification_type;
+      const route = getRouteForNotification(notifType);
+      if (route) {
+        navigation.navigate(route.tab, { screen: route.screen });
+      }
     },
-    [notifications, markReadMutation]
+    [notifications, markReadMutation, navigation]
   );
 
   const handleRemove = useCallback(
