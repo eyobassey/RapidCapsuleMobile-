@@ -6,11 +6,13 @@ import {
   Alert,
   Animated,
   Dimensions,
+  Platform,
   ScrollView,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BodyAvatar from '../../components/health-checkup/BodyAvatar';
 import { Button, Header } from '../../components/ui';
@@ -131,7 +133,7 @@ export default function SymptomSearchScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Symptoms" onBack={() => navigation.goBack()} />
 
-      <View style={{ flex: 1 }}>
+      <KeyboardAvoidingView style={{ flex: 1 }}>
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 }}
@@ -319,14 +321,8 @@ export default function SymptomSearchScreen() {
               </View>
             )}
 
-            {/* Continue button */}
-            <View style={{ marginTop: 24, paddingBottom: 40 }}>
-              <Button variant="primary" onPress={handleNext} loading={isLoading}>
-                {selected.size > 0
-                  ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
-                  : 'Select Symptoms'}
-              </Button>
-            </View>
+            {/* Spacer for sticky button */}
+            <View style={{ height: 100 }} />
           </View>
 
           {/* ── Body Map Tab ── */}
@@ -355,21 +351,32 @@ export default function SymptomSearchScreen() {
               </View>
             )}
 
-            {/* Spacer so content doesn't hide behind sheet */}
-            {selectedRegion && <View style={{ height: SHEET_HEIGHT + 20 }} />}
-
-            {/* Continue button (when no sheet) */}
-            {!selectedRegion && (
-              <View style={{ marginTop: 8, paddingBottom: 40 }}>
-                <Button variant="primary" onPress={handleNext} loading={isLoading}>
-                  {selected.size > 0
-                    ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
-                    : 'Select Symptoms'}
-                </Button>
-              </View>
-            )}
+            {/* Spacer so content doesn't hide behind sheet or button */}
+            <View style={{ height: selectedRegion ? SHEET_HEIGHT + 20 : 100 }} />
           </View>
         </ScrollView>
+
+        {/* ── Fixed/Sticky Next Button ── */}
+        {!selectedRegion && (
+          <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
+            <View
+              style={{
+                backgroundColor: colors.background,
+                borderTopWidth: 1,
+                borderTopColor: colors.border,
+                paddingHorizontal: 20,
+                paddingTop: 12,
+                paddingBottom: Platform.OS === 'ios' ? 28 : 16,
+              }}
+            >
+              <Button variant="primary" onPress={handleNext} loading={isLoading}>
+                {selected.size > 0
+                  ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
+                  : 'Select Symptoms'}
+              </Button>
+            </View>
+          </KeyboardStickyView>
+        )}
 
         {/* ── Bottom Sheet for Body Map Symptoms ── */}
         {tab === 'body' && selectedRegion && (
@@ -558,7 +565,7 @@ export default function SymptomSearchScreen() {
             </View>
           </Animated.View>
         )}
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

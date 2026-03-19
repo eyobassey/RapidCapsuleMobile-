@@ -31,10 +31,7 @@ export default function SectionScreenLayout({
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title={title} onBack={onBack} />
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }}>
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{

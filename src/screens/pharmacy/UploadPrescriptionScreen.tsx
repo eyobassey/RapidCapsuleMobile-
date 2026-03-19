@@ -1,8 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Image, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import {
+  View,
+  Image,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+  Platform,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import {
   Camera,
   ImageIcon,
@@ -168,7 +177,7 @@ export default function UploadPrescriptionScreen() {
 
         <ScrollView
           className="flex-1"
-          contentContainerClassName="px-5 pt-6 pb-32"
+          contentContainerClassName="px-5 pt-6 pb-10"
           showsVerticalScrollIndicator={false}
         >
           <Text className="text-lg font-bold text-foreground text-center mb-2">
@@ -267,7 +276,7 @@ export default function UploadPrescriptionScreen() {
 
         {/* Bottom Actions */}
         {isTerminal && (
-          <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
+          <View className="bg-background border-t border-border px-5 pt-3 pb-8">
             <View className="flex-row gap-3">
               <View className="flex-1">
                 <Button variant="outline" onPress={() => navigation.navigate('MyUploads')}>
@@ -312,87 +321,95 @@ export default function UploadPrescriptionScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header title="Upload Prescription" onBack={() => navigation.goBack()} />
 
-      <ScrollView
-        className="flex-1"
-        contentContainerClassName="px-5 pt-4 pb-32"
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text className="text-sm text-muted-foreground mb-4">
-          Take a photo or select an image of your prescription for AI-powered verification.
-        </Text>
+      <KeyboardAvoidingView className="flex-1">
+        <ScrollView
+          className="flex-1"
+          contentContainerClassName="px-5 pt-4 pb-10"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text className="text-sm text-muted-foreground mb-4">
+            Take a photo or select an image of your prescription for AI-powered verification.
+          </Text>
 
-        {/* Camera / Gallery Buttons */}
-        {!imageUri && (
-          <View className="flex-row gap-3 mb-6">
-            <TouchableOpacity
-              onPress={pickFromCamera}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel="Take a photo of prescription"
-              className="flex-1 bg-card border border-border rounded-2xl p-6 items-center"
-            >
-              <Camera size={32} color={colors.primary} />
-              <Text className="text-sm font-semibold text-foreground mt-3">Camera</Text>
-              <Text className="text-xs text-muted-foreground mt-0.5">Take a photo</Text>
-            </TouchableOpacity>
+          {/* Camera / Gallery Buttons */}
+          {!imageUri && (
+            <View className="flex-row gap-3 mb-6">
+              <TouchableOpacity
+                onPress={pickFromCamera}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Take a photo of prescription"
+                className="flex-1 bg-card border border-border rounded-2xl p-6 items-center"
+              >
+                <Camera size={32} color={colors.primary} />
+                <Text className="text-sm font-semibold text-foreground mt-3">Camera</Text>
+                <Text className="text-xs text-muted-foreground mt-0.5">Take a photo</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={pickFromGallery}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel="Choose image from gallery"
-              className="flex-1 bg-card border border-border rounded-2xl p-6 items-center"
-            >
-              <ImageIcon size={32} color={colors.primary} />
-              <Text className="text-sm font-semibold text-foreground mt-3">Gallery</Text>
-              <Text className="text-xs text-muted-foreground mt-0.5">Choose image</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+              <TouchableOpacity
+                onPress={pickFromGallery}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Choose image from gallery"
+                className="flex-1 bg-card border border-border rounded-2xl p-6 items-center"
+              >
+                <ImageIcon size={32} color={colors.primary} />
+                <Text className="text-sm font-semibold text-foreground mt-3">Gallery</Text>
+                <Text className="text-xs text-muted-foreground mt-0.5">Choose image</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
-        {/* Image Preview */}
+          {/* Image Preview */}
+          {imageUri && (
+            <View className="mb-4">
+              <Image
+                source={{ uri: imageUri }}
+                className="w-full h-64 rounded-2xl"
+                resizeMode="cover"
+              />
+              <TouchableOpacity
+                onPress={() => setImageUri(null)}
+                className="mt-2 self-center"
+                accessibilityRole="button"
+                accessibilityLabel="Change prescription image"
+              >
+                <Text className="text-sm text-primary font-semibold">Change Image</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Doctor Name (optional) */}
+          {imageUri && (
+            <View className="mb-6">
+              <Text className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-2">
+                Doctor Name (Optional)
+              </Text>
+              <Input
+                placeholder="Enter prescribing doctor's name"
+                value={doctorName}
+                onChangeText={setDoctorName}
+              />
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Upload Button */}
         {imageUri && (
-          <View className="mb-4">
-            <Image
-              source={{ uri: imageUri }}
-              className="w-full h-64 rounded-2xl"
-              resizeMode="cover"
-            />
-            <TouchableOpacity
-              onPress={() => setImageUri(null)}
-              className="mt-2 self-center"
-              accessibilityRole="button"
-              accessibilityLabel="Change prescription image"
-            >
-              <Text className="text-sm text-primary font-semibold">Change Image</Text>
-            </TouchableOpacity>
-          </View>
+          <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
+            <View className="bg-background border-t border-border px-5 pt-3 pb-8">
+              <Button
+                variant="primary"
+                icon={<Upload size={18} color="#fff" />}
+                onPress={handleUpload}
+              >
+                Upload Prescription
+              </Button>
+            </View>
+          </KeyboardStickyView>
         )}
-
-        {/* Doctor Name (optional) */}
-        {imageUri && (
-          <View className="mb-6">
-            <Text className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-2">
-              Doctor Name (Optional)
-            </Text>
-            <Input
-              placeholder="Enter prescribing doctor's name"
-              value={doctorName}
-              onChangeText={setDoctorName}
-            />
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Upload Button */}
-      {imageUri && (
-        <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
-          <Button variant="primary" icon={<Upload size={18} color="#fff" />} onPress={handleUpload}>
-            Upload Prescription
-          </Button>
-        </View>
-      )}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

@@ -19,7 +19,7 @@ import {
 import React, { useCallback, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Alert, Platform, TextInput as RNTextInput, ScrollView, View } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui/Text';
 
@@ -194,13 +194,10 @@ export default function LogVitalsScreen() {
         onBack={() => navigation.goBack()}
       />
 
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView className="flex-1">
         <ScrollView
           className="flex-1"
-          contentContainerClassName="px-5 pt-4 pb-32"
+          contentContainerClassName="px-5 pt-4 pb-10"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -338,21 +335,22 @@ export default function LogVitalsScreen() {
             </View>
           )}
         </ScrollView>
-      </KeyboardAvoidingView>
 
-      {/* Bottom Save Button */}
-      <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
-        <Button
-          variant="primary"
-          onPress={handleSubmit(onSubmit)}
-          loading={saving}
-          disabled={filledCount === 0}
-        >
-          {`Save ${
-            filledCount > 0 ? `(${filledCount} vital${filledCount > 1 ? 's' : ''})` : 'Vitals'
-          }`}
-        </Button>
-      </View>
+        <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
+          <View className="bg-background border-t border-border px-5 pt-3 pb-8">
+            <Button
+              variant="primary"
+              onPress={handleSubmit(onSubmit)}
+              loading={saving}
+              disabled={filledCount === 0}
+            >
+              {`Save ${
+                filledCount > 0 ? `(${filledCount} vital${filledCount > 1 ? 's' : ''})` : 'Vitals'
+              }`}
+            </Button>
+          </View>
+        </KeyboardStickyView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

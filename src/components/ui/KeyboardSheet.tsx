@@ -20,14 +20,15 @@
 
 import React from 'react';
 import { Modal, Pressable, View, useWindowDimensions } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView, useKeyboardAnimation } from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
 import { colors } from '../../theme/colors';
 
 interface KeyboardSheetProps {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
-  /** Extra bottom padding inside the sheet (default 32). */
+  /** Extra bottom padding inside the sheet when keyboard is closed (default 32). */
   bottomPadding?: number;
 }
 
@@ -38,6 +39,17 @@ export default function KeyboardSheet({
   bottomPadding = 32,
 }: KeyboardSheetProps) {
   const { width: windowWidth } = useWindowDimensions();
+  const { height } = useKeyboardAnimation();
+
+  // Dynamically reduce padding as keyboard opens to avoid a 'huge distance' gap.
+  // When height is 0 (closed), we use full bottomPadding.
+  // As height increases (absolute value), we interpolate towards a smaller padding.
+  const animatedStyle = useAnimatedStyle(() => {
+    const padding = interpolate(Math.abs(height.value), [0, 300], [bottomPadding, 12], 'clamp');
+    return {
+      paddingBottom: padding,
+    };
+  });
 
   return (
     <Modal
@@ -68,15 +80,17 @@ export default function KeyboardSheet({
         >
           {/* Stop taps on the sheet from closing the modal */}
           <Pressable onPress={(e) => e.stopPropagation()} style={{ width: windowWidth }}>
-            <View
-              style={{
-                backgroundColor: colors.card,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                paddingBottom: bottomPadding,
-                width: windowWidth,
-                maxWidth: windowWidth,
-              }}
+            <Animated.View
+              style={[
+                {
+                  backgroundColor: colors.card,
+                  borderTopLeftRadius: 24,
+                  borderTopRightRadius: 24,
+                  width: windowWidth,
+                  maxWidth: windowWidth,
+                },
+                animatedStyle,
+              ]}
             >
               {/* Drag handle */}
               <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
@@ -91,7 +105,7 @@ export default function KeyboardSheet({
               </View>
 
               {children}
-            </View>
+            </Animated.View>
           </Pressable>
         </KeyboardAvoidingView>
       </Pressable>

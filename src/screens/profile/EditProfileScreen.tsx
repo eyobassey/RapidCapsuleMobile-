@@ -24,7 +24,7 @@ import {
   View,
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui/Text';
 
@@ -233,13 +233,10 @@ export default function EditProfileScreen() {
         }
       />
 
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView className="flex-1">
         <ScrollView
           className="flex-1"
-          contentContainerClassName="px-5 pt-6 pb-32"
+          contentContainerClassName="px-5 pt-6 pb-10"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -512,14 +509,15 @@ export default function EditProfileScreen() {
             />
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
 
-      {/* Bottom Save Button */}
-      <View className="absolute bottom-0 left-0 right-0 bg-background border-t border-border px-5 pt-3 pb-8">
-        <Button variant="primary" onPress={handleSave} loading={saving}>
-          Save Changes
-        </Button>
-      </View>
+        <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
+          <View className="bg-background border-t border-border px-5 pt-3 pb-8">
+            <Button variant="primary" onPress={handleSave} loading={saving}>
+              Save Changes
+            </Button>
+          </View>
+        </KeyboardStickyView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
