@@ -11,4 +11,11 @@ export const usersService = {
     const res = await api.patch('/users', data);
     return res.data.data || res.data.result;
   },
+
+  async getPresignedUrl(filename: string, contentType: string) {
+    const res = await api.get('/users/file/presigned-url', {
+      params: { filename, content_type: contentType },
+    });
+    return res.data.data || res.data.result;
+  },
 };

@@ -23,6 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui/Text';
@@ -52,6 +53,7 @@ export default function EditProfileScreen() {
   const totalSections = Object.keys(completedSections).length;
 
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Form state
   const [firstName, setFirstName] = useState(user?.profile?.first_name || '');
@@ -85,6 +87,71 @@ export default function EditProfileScreen() {
   );
 
   const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
+
+  const handlePressPhoto = () => {
+    Alert.alert('Change Profile Photo', 'Choose an option', [
+      {
+        text: 'Take Photo',
+        onPress: () =>
+          launchCamera({ mediaType: 'photo', quality: 0.8 }, (res) =>
+            handleImagePickerResponse(res)
+          ),
+      },
+      {
+        text: 'Choose from Gallery',
+        onPress: () =>
+          launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) =>
+            handleImagePickerResponse(res)
+          ),
+      },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const handleImagePickerResponse = async (response: any) => {
+    if (response.didCancel || !response.assets?.[0]) return;
+
+    const asset = response.assets[0];
+    const filename = asset.fileName || `profile_${Date.now()}.jpg`;
+    const contentType = asset.type || 'image/jpeg';
+    const uri = asset.uri;
+
+    if (!uri) return;
+
+    setUploadingPhoto(true);
+    try {
+      // 1. Get presigned URL
+      const { presigned_url, file_url } = await usersService.getPresignedUrl(filename, contentType);
+
+      // 2. Upload to S3
+      const fileData = await fetch(uri);
+      const blob = await fileData.blob();
+
+      const uploadRes = await fetch(presigned_url, {
+        method: 'PUT',
+        body: blob,
+        headers: {
+          'Content-Type': contentType,
+        },
+      });
+
+      if (!uploadRes.ok) throw new Error('Failed to upload image to storage');
+
+      // 3. Update user profile with the new file URL
+      await usersService.updateProfile({
+        profile: {
+          profile_photo: file_url,
+        },
+      });
+
+      await fetchUser();
+      Alert.alert('Success', 'Profile photo updated successfully.');
+    } catch (err: any) {
+      Alert.alert('Upload Failed', err?.message || 'Could not update profile photo.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!firstName.trim()) {
@@ -182,8 +249,17 @@ export default function EditProfileScreen() {
               accessibilityRole="button"
               accessibilityLabel="Change profile photo"
               className="relative"
+              onPress={handlePressPhoto}
+              disabled={uploadingPhoto}
             >
-              <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="lg" />
+              <View className="relative">
+                <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="lg" />
+                {uploadingPhoto && (
+                  <View className="absolute inset-0 bg-black/30 rounded-full items-center justify-center">
+                    <ActivityIndicator color={colors.white} />
+                  </View>
+                )}
+              </View>
               <View
                 className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary items-center justify-center border-2"
                 style={{ borderColor: colors.background }}
@@ -191,7 +267,9 @@ export default function EditProfileScreen() {
                 <Camera size={14} color={colors.white} />
               </View>
             </TouchableOpacity>
-            <Text className="text-xs text-muted-foreground mt-2">Tap to change photo</Text>
+            <Text className="text-xs text-muted-foreground mt-2">
+              {uploadingPhoto ? 'Uploading...' : 'Tap to change photo'}
+            </Text>
           </View>
 
           {/* Profile Completion Card */}
