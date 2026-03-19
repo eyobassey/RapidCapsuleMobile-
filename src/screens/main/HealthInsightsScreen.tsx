@@ -25,6 +25,7 @@ import {
 } from '../../hooks/queries';
 import type { TipCategory, TipPriority } from '../../services/healthTips.service';
 import { colors } from '../../theme/colors';
+import { timeAgo } from '../../utils/formatters';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -107,7 +108,12 @@ function TipCard({
       <Text className="text-sm font-bold text-foreground mb-1.5">{tip.title}</Text>
 
       {/* Content */}
-      <Text className="text-xs text-muted-foreground leading-relaxed mb-3">{tip.content}</Text>
+      <Text className="text-xs text-muted-foreground leading-relaxed">{tip.content}</Text>
+
+      {/* Timestamp */}
+      <Text className="text-[10px] text-muted-foreground/60 mt-1.5 mb-3">
+        {timeAgo(tip.created_at || tip.createdAt)}
+      </Text>
 
       {/* Actions */}
       <View className="flex-row items-center gap-2">
