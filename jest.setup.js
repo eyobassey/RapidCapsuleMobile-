@@ -66,6 +66,41 @@ jest.mock('react-native-keychain', () => ({
   },
 }));
 
+// Mock react-native-onesignal
+jest.mock('react-native-onesignal', () => ({
+  OneSignal: {
+    initialize: jest.fn(),
+    login: jest.fn(),
+    logout: jest.fn(),
+    Notifications: {
+      requestPermission: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    },
+    User: {
+      addTag: jest.fn(),
+      addTags: jest.fn(),
+      removeTag: jest.fn(),
+      removeTags: jest.fn(),
+      getTags: jest.fn(),
+      addAlias: jest.fn(),
+      removeAlias: jest.fn(),
+      pushSubscription: {
+        id: 'mock-push-id',
+        token: 'mock-push-token',
+        optedIn: true,
+      },
+    },
+    InAppMessages: {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    },
+    Debug: {
+      setLogLevel: jest.fn(),
+    },
+  },
+}));
+
 // react-native-gesture-handler requires a Jest setup shim
 require('react-native-gesture-handler/jestSetup');
 
