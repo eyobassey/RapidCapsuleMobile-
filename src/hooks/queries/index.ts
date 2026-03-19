@@ -103,3 +103,12 @@ export {
   useReferralSettingsQuery,
   useTrackShareMutation,
 } from './useReferralsQuery';
+
+export {
+  healthTipKeys,
+  useHealthTipsFeaturedQuery,
+  useHealthTipsQuery,
+  useGenerateTipsMutation,
+  useDismissTipMutation,
+  useMarkActedMutation,
+} from './useHealthTipsQuery';

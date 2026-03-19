@@ -1,5 +1,5 @@
 import React from 'react';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../../screens/main/HomeScreen';
 import NotificationsScreen from '../../screens/notifications/NotificationsScreen';
 import VitalsScreen from '../../screens/vitals/VitalsScreen';
@@ -38,13 +38,15 @@ import MATDashboardScreen from '../../screens/recovery/MATDashboardScreen';
 import HarmReductionScreen from '../../screens/recovery/HarmReductionScreen';
 import RiskHistoryScreen from '../../screens/recovery/RiskHistoryScreen';
 import ExerciseHistoryScreen from '../../screens/recovery/ExerciseHistoryScreen';
+// Health Insights
+import HealthInsightsScreen from '../../screens/main/HealthInsightsScreen';
 
 export type HomeStackParamList = {
   HomeScreen: undefined;
   Notifications: undefined;
   Vitals: undefined;
-  VitalDetail: {vitalType: string};
-  LogVitals: {vitalType?: string} | undefined;
+  VitalDetail: { vitalType: string };
+  LogVitals: { vitalType?: string } | undefined;
   HealthCheckupStart: undefined;
   HealthCheckupPatientInfo: undefined;
   HealthCheckupRiskFactors: undefined;
@@ -52,25 +54,25 @@ export type HomeStackParamList = {
   HealthCheckupInterview: undefined;
   HealthCheckupResults: undefined;
   HealthCheckupHistory: undefined;
-  HealthCheckupDetail: {id: string};
+  HealthCheckupDetail: { id: string };
   // Messages
   MessagingConsent: undefined;
   ConversationsList: undefined;
-  Chat: {conversationId: string; conversation?: any};
+  Chat: { conversationId: string; conversation?: any };
   NewConversation: undefined;
-  MediaPreview: {url: string; type: string};
+  MediaPreview: { url: string; type: string };
   // Recovery
   RecoveryEnroll: undefined;
   RecoveryDashboard: undefined;
   DailyCheckIn: undefined;
   ScreeningSelect: undefined;
-  ScreeningFlow: {instrument: string; questions: any[]};
-  ScreeningResult: {screeningId: string; result: any};
+  ScreeningFlow: { instrument: string; questions: any[] };
+  ScreeningResult: { screeningId: string; result: any };
   ScreeningHistory: undefined;
   Milestones: undefined;
   Crisis: undefined;
   CheckInHistory: undefined;
-  CompanionChat: {sessionId?: string};
+  CompanionChat: { sessionId?: string };
   RecoveryPlan: undefined;
   GroupSessions: undefined;
   PeerSupport: undefined;
@@ -78,13 +80,15 @@ export type HomeStackParamList = {
   HarmReduction: undefined;
   RiskHistory: undefined;
   ExerciseHistory: undefined;
+  // Health Insights
+  HealthInsights: undefined;
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
 export default function HomeStack() {
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Vitals" component={VitalsScreen} />
@@ -103,7 +107,11 @@ export default function HomeStack() {
       <Stack.Screen name="ConversationsList" component={ConversationsListScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="NewConversation" component={NewConversationScreen} />
-      <Stack.Screen name="MediaPreview" component={MediaPreviewScreen} options={{animation: 'fade'}} />
+      <Stack.Screen
+        name="MediaPreview"
+        component={MediaPreviewScreen}
+        options={{ animation: 'fade' }}
+      />
       {/* Recovery */}
       <Stack.Screen name="RecoveryEnroll" component={RecoveryEnrollScreen} />
       <Stack.Screen name="RecoveryDashboard" component={RecoveryDashboardScreen} />
@@ -123,6 +131,8 @@ export default function HomeStack() {
       <Stack.Screen name="HarmReduction" component={HarmReductionScreen} />
       <Stack.Screen name="RiskHistory" component={RiskHistoryScreen} />
       <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} />
+      {/* Health Insights */}
+      <Stack.Screen name="HealthInsights" component={HealthInsightsScreen} />
     </Stack.Navigator>
   );
 }
