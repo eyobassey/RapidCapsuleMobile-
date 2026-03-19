@@ -199,79 +199,77 @@ export default function ProfileScreen() {
         contentContainerClassName="pb-32"
         showsVerticalScrollIndicator={false}
       >
-        {/* High-Fidelity Hero Card */}
-        <View className="mx-4 mt-6">
-          <View style={styles.heroWrapper}>
-            <LinearGradient
-              colors={[`${colors.primary}20`, `${colors.card}`]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.heroCard}
+        {/* Apple-Style Integrated Header */}
+        <View style={styles.headerContainer}>
+          <LinearGradient
+            colors={[`${colors.primary}10`, 'transparent']}
+            style={styles.headerGradient}
+          />
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('EditProfile')}
+              style={styles.avatarWrapper}
             >
-              {/* Inner Glossy Border */}
-              <View style={styles.heroInnerBorder} />
-
-              <View className="flex-row items-center">
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => navigation.navigate('EditProfile')}
-                  style={styles.avatarWrapper}
-                >
-                  <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="lg" />
-                  <View style={styles.editBadge}>
-                    <Edit3 size={10} color={colors.white} strokeWidth={2.5} />
-                  </View>
-                </TouchableOpacity>
-
-                <View className="flex-1 ml-5">
-                  <Text style={styles.userName} numberOfLines={1}>
-                    {firstName} {lastName}
-                  </Text>
-                  <Text style={styles.userEmail} numberOfLines={1}>
-                    {email}
-                  </Text>
-                  {memberSince ? (
-                    <View style={styles.memberSinceRow}>
-                      <ShieldCheck size={12} color={colors.success} strokeWidth={2.5} />
-                      <Text style={styles.memberSinceText}>Verified • Since {memberSince}</Text>
-                    </View>
-                  ) : null}
-                </View>
+              <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="lg" />
+              <View style={styles.editBadge}>
+                <Edit3 size={10} color={colors.white} strokeWidth={2.5} />
               </View>
+            </TouchableOpacity>
 
-              {/* Identity Metrics Row */}
-              <View style={styles.metricsRow}>
-                <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>Health Score</Text>
-                  <View style={styles.metricValueRow}>
-                    <HeartPulse size={14} color={colors.primary} strokeWidth={2.5} />
-                    <Text style={styles.metricValue}>84</Text>
-                  </View>
+            <View style={styles.headerInfo}>
+              <Text style={styles.userName} numberOfLines={1}>
+                {firstName} {lastName}
+              </Text>
+              <Text style={styles.userEmail} numberOfLines={1}>
+                {email}
+              </Text>
+              {memberSince ? (
+                <View style={styles.verifiedBadge}>
+                  <ShieldCheck size={12} color={colors.success} strokeWidth={2.5} />
+                  <Text style={styles.verifiedText}>Member since {memberSince}</Text>
                 </View>
-                <View style={styles.metricDivider} />
-                <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>Currency</Text>
-                  <Text style={styles.metricValue}>
-                    {currentCurrency.symbol} {currentCurrency.code}
-                  </Text>
-                </View>
-                <View style={styles.metricDivider} />
-                <View style={styles.metricItem}>
-                  <Text style={styles.metricLabel}>Status</Text>
-                  <View style={styles.statusPill}>
-                    <Text style={styles.statusText}>Active</Text>
-                  </View>
-                </View>
+              ) : null}
+            </View>
+          </View>
+
+          {/* New Horizontal Metric Cards */}
+          <View style={styles.metricsContainer}>
+            <View style={styles.metricCard}>
+              <View
+                style={[styles.metricIconContainer, { backgroundColor: `${colors.primary}15` }]}
+              >
+                <HeartPulse size={16} color={colors.primary} strokeWidth={2.5} />
               </View>
-            </LinearGradient>
+              <Text style={styles.metricLabel}>Health</Text>
+              <Text style={styles.metricValue}>84</Text>
+            </View>
+
+            <View style={styles.metricCard}>
+              <View
+                style={[styles.metricIconContainer, { backgroundColor: `${colors.success}15` }]}
+              >
+                <Wallet size={16} color={colors.success} strokeWidth={2.5} />
+              </View>
+              <Text style={styles.metricLabel}>Credits</Text>
+              <Text style={styles.metricValue}>$42</Text>
+            </View>
+
+            <View style={styles.metricCard}>
+              <View style={[styles.metricIconContainer, { backgroundColor: `${colors.accent}15` }]}>
+                <ShieldCheck size={16} color={colors.accent} strokeWidth={2.5} />
+              </View>
+              <Text style={styles.metricLabel}>Status</Text>
+              <Text style={[styles.metricValue, { color: colors.success }]}>Active</Text>
+            </View>
           </View>
         </View>
 
-        {/* Menu Sections with Refined Spacing */}
+        {/* Menu Sections */}
         {sections.map((section) => (
-          <View key={section.title} className="mt-8">
+          <View key={section.title} className="mt-6">
             <Text style={styles.sectionHeader}>{section.title}</Text>
-            <View className="mx-4 mt-2 bg-card border border-border/40 rounded-[28px] overflow-hidden">
+            <View className="mx-4 mt-2 bg-card border border-border/40 rounded-[20px] overflow-hidden">
               {section.items.map((item, idx) => (
                 <TouchableOpacity
                   key={item.title}
@@ -281,7 +279,7 @@ export default function ProfileScreen() {
                 >
                   <View
                     style={{ backgroundColor: item.iconBg }}
-                    className="w-10 h-10 rounded-[14px] items-center justify-center mr-4"
+                    className="w-10 h-10 rounded-[12px] items-center justify-center mr-4"
                   >
                     {item.icon}
                   </View>
@@ -302,27 +300,26 @@ export default function ProfileScreen() {
           </View>
         ))}
 
-        {/* High-Contrast Logout Action */}
-        <View className="mx-4 mt-10 mb-4">
-          <TouchableOpacity activeOpacity={0.7} onPress={handleLogout} style={styles.logoutButton}>
-            <View className="w-10 h-10 rounded-[14px] bg-destructive/10 items-center justify-center mr-4">
+        {/* Action List Section (Logout) */}
+        <View className="mx-4 mt-8">
+          <TouchableOpacity activeOpacity={0.7} onPress={handleLogout} style={styles.logoutItem}>
+            <View className="w-10 h-10 rounded-[12px] bg-destructive/10 items-center justify-center mr-4">
               <LogOut size={20} color={colors.destructive} />
             </View>
             <View className="flex-1">
               <Text style={styles.logoutText}>Sign Out</Text>
-              <Text style={styles.logoutSubtitle}>Safely end your current session</Text>
+              <Text style={styles.logoutSubtitle}>Sign out of your account</Text>
             </View>
             <ChevronRight size={16} color={colors.destructive} opacity={0.4} />
           </TouchableOpacity>
         </View>
 
-        {/* Minimal Footer */}
-        <View className="items-center mt-6 mb-8">
+        <View className="items-center mt-8 mb-4">
           <Text style={styles.footerText}>RapidCapsule Premium v{DeviceInfo.getVersion()}</Text>
         </View>
       </ScrollView>
 
-      {/* Modern Currency Sheet */}
+      {/* Premium Currency Selector */}
       <KeyboardSheet
         visible={showCurrencyModal}
         onClose={() => setShowCurrencyModal(false)}
@@ -343,7 +340,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View className="bg-background/40 rounded-[28px] border border-border/40 overflow-hidden mb-4">
+          <View className="bg-background/40 rounded-[20px] border border-border/40 overflow-hidden mb-4">
             {CURRENCY_LIST.map((cur, idx) => {
               const isSelected = cur.code === currencyCode;
               const isLast = idx === CURRENCY_LIST.length - 1;
@@ -391,36 +388,26 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  heroWrapper: {
-    borderRadius: 32,
-    backgroundColor: colors.card,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 12,
+  headerContainer: {
+    paddingTop: 20,
+    paddingHorizontal: 16,
   },
-  heroCard: {
-    borderRadius: 32,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    overflow: 'hidden',
-  },
-  heroInnerBorder: {
+  headerGradient: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 32,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.08)',
-    margin: 1,
+    height: 200,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   avatarWrapper: {
     position: 'relative',
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   editBadge: {
     position: 'absolute',
@@ -428,15 +415,19 @@ const styles = StyleSheet.create({
     right: -2,
     backgroundColor: colors.primary,
     width: 24,
-    height: 22,
+    height: 24,
     borderRadius: 12,
     borderWidth: 3,
-    borderColor: colors.card,
+    borderColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerInfo: {
+    flex: 1,
+    marginLeft: 16,
+  },
   userName: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
     color: colors.foreground,
     letterSpacing: -0.5,
@@ -444,85 +435,65 @@ const styles = StyleSheet.create({
   userEmail: {
     fontSize: 14,
     color: colors.mutedForeground,
-    marginTop: 2,
     fontWeight: '500',
+    marginTop: 2,
   },
-  memberSinceRow: {
+  verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    marginTop: 8,
   },
-  memberSinceText: {
-    fontSize: 10,
+  verifiedText: {
+    fontSize: 11,
     fontWeight: '700',
     color: colors.success,
     marginLeft: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  metricsRow: {
+  metricsContainer: {
     flexDirection: 'row',
-    marginTop: 24,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'space-between',
+    gap: 12,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
     alignItems: 'center',
   },
-  metricItem: {
+  metricIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'center',
+    marginBottom: 8,
   },
   metricLabel: {
     fontSize: 10,
     fontWeight: '700',
     color: colors.mutedForeground,
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 6,
-  },
-  metricValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    letterSpacing: 0.5,
   },
   metricValue: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
     color: colors.foreground,
-    marginLeft: 4,
-  },
-  metricDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  statusPill: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.2)',
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.success,
-    textTransform: 'uppercase',
+    marginTop: 2,
   },
   sectionHeader: {
     fontSize: 12,
     fontWeight: '800',
     color: colors.mutedForeground,
     textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    paddingLeft: 28,
-    opacity: 0.6,
+    letterSpacing: 1.2,
+    paddingLeft: 24,
+    opacity: 0.5,
   },
   menuItem: {
     flexDirection: 'row',
@@ -545,19 +516,14 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontWeight: '400',
   },
-  logoutButton: {
-    backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: 'rgba(244, 63, 94, 0.2)',
-    borderRadius: 28,
+  logoutItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    shadowColor: colors.destructive,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(244, 63, 94, 0.1)',
   },
   logoutText: {
     fontSize: 16,
@@ -577,6 +543,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 2,
-    opacity: 0.3,
+    opacity: 0.2,
   },
 });
