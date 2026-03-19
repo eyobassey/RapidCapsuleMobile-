@@ -350,7 +350,7 @@ export default function HomeScreen() {
             </View>
           ) : score != null ? (
             <View className="flex-row items-center gap-4">
-              <HealthGauge score={score} size={130} strokeWidth={10} />
+              <HealthGauge score={score} size={130} />
               <View className="flex-1 gap-1.5">
                 <View className="flex-row items-center gap-2">
                   <View
