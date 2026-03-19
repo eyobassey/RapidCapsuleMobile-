@@ -1,3 +1,9 @@
+# [1.7.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.6.0...v1.7.0) (2026-03-19)
+
+### Features
+
+- **ui:** add action buttons to health insight tip cards ([c653a6f](https://github.com/eyobassey/RapidCapsuleMobile-/commit/c653a6fa7e318eb1fc8e9eb7976fcb2fe2811db4))
+
 # [1.6.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.5.1...v1.6.0) (2026-03-19)
 
 ### Features
