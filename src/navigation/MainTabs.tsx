@@ -1,10 +1,10 @@
-import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
-import EkaChatScreen from '../screens/main/EkaChatScreen';
+import React from 'react';
 import BottomTabBar from '../components/navigation/BottomTabBar';
-import HomeStack from './stacks/HomeStack';
+import EkaChatScreen from '../screens/main/EkaChatScreen';
 import BookingsStack from './stacks/BookingsStack';
+import HomeStack from './stacks/HomeStack';
 import PharmacyStack from './stacks/PharmacyStack';
 import ProfileStack from './stacks/ProfileStack';
 
@@ -86,6 +86,7 @@ const HIDE_TAB_SCREENS = new Set([
   'HarmReduction',
   'RiskHistory',
   'ExerciseHistory',
+  'EditProfile',
 ]);
 
 function getTabBarStyle(route: any) {

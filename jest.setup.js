@@ -26,7 +26,8 @@ jest.mock('react-native-reanimated', () => {
     useDerivedValue: jest.fn((cb) => ({ value: cb() })),
     cancelAnimation: jest.fn(),
     interpolate: jest.fn((v) => v),
-    Extrapolate: { CLAMP: 'clamp' },
+    Extrapolate: { CLAMP: 'clamp', IDENTITY: 'identity', EXTEND: 'extend' },
+    Extrapolation: { CLAMP: 'clamp', IDENTITY: 'identity', EXTEND: 'extend' },
     Animated: {
       View: View,
       Text: require('react-native').Text,
@@ -50,8 +51,14 @@ jest.mock('react-native-keyboard-controller', () => {
       <View style={style}>{children}</View>
     ),
     useKeyboardHandler: jest.fn(),
-    useKeyboardAnimation: jest.fn(() => ({ height: 0, progress: 0 })),
-    useReanimatedKeyboardAnimation: jest.fn(() => ({ height: 0, progress: 0 })),
+    useKeyboardAnimation: jest.fn(() => ({
+      height: { value: 0 },
+      progress: { value: 0 },
+    })),
+    useReanimatedKeyboardAnimation: jest.fn(() => ({
+      height: { value: 0 },
+      progress: { value: 0 },
+    })),
     useKeyboardController: jest.fn(() => ({ setEnabled: jest.fn(), isEnabled: true })),
   };
 });

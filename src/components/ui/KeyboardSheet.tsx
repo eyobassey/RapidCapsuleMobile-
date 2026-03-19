@@ -20,8 +20,11 @@
 
 import React from 'react';
 import { Modal, Pressable, View, useWindowDimensions } from 'react-native';
-import { KeyboardAvoidingView, useKeyboardAnimation } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
+import {
+  KeyboardAvoidingView,
+  useReanimatedKeyboardAnimation,
+} from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
 import { colors } from '../../theme/colors';
 
 interface KeyboardSheetProps {
@@ -39,13 +42,14 @@ export default function KeyboardSheet({
   bottomPadding = 32,
 }: KeyboardSheetProps) {
   const { width: windowWidth } = useWindowDimensions();
-  const { height } = useKeyboardAnimation();
+  const keyboard = useReanimatedKeyboardAnimation();
 
   // Dynamically reduce padding as keyboard opens to avoid a 'huge distance' gap.
   // When height is 0 (closed), we use full bottomPadding.
   // As height increases (absolute value), we interpolate towards a smaller padding.
   const animatedStyle = useAnimatedStyle(() => {
-    const padding = interpolate(Math.abs(height.value), [0, 300], [bottomPadding, 12], 'clamp');
+    const height = Math.abs(keyboard.height.value || 0);
+    const padding = interpolate(height, [0, 300], [bottomPadding, 12], 'clamp');
     return {
       paddingBottom: padding,
     };
