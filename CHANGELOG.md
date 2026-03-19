@@ -1,3 +1,13 @@
+# [1.5.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.4.1...v1.5.0) (2026-03-19)
+
+### Bug Fixes
+
+- remove strokeWidth prop from HealthGauge (no longer accepted) ([a115e27](https://github.com/eyobassey/RapidCapsuleMobile-/commit/a115e279e27d6851aa923d14f8e7ed0310ed43bc))
+
+### Features
+
+- add AI Health Insights section with dashboard cards and full screen ([0dd464c](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0dd464c251ac9bcb6c8a0df17114b16a57850650))
+
 ## [1.4.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.4.0...v1.4.1) (2026-03-19)
 
 ### Bug Fixes
