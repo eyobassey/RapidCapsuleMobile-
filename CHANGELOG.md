@@ -1,3 +1,9 @@
+# [1.6.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.5.1...v1.6.0) (2026-03-19)
+
+### Features
+
+- **ui:** add relative timestamp to health insight tip cards ([7ae1f71](https://github.com/eyobassey/RapidCapsuleMobile-/commit/7ae1f7183e612b9a857c362b3ec2317bf41234f5))
+
 ## [1.5.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.5.0...v1.5.1) (2026-03-19)
 
 ### Bug Fixes
