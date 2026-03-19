@@ -3,6 +3,7 @@ import {
   Apple,
   Brain,
   Check,
+  ChevronRight,
   Dumbbell,
   Droplets,
   Moon,
@@ -72,10 +73,12 @@ function TipCard({
   tip,
   onDismiss,
   onMarkActed,
+  navigation,
 }: {
   tip: any;
   onDismiss: (id: string) => void;
   onMarkActed: (id: string) => void;
+  navigation: any;
 }) {
   const category = CATEGORY_CONFIG[tip.category as TipCategory];
   const priorityColor = PRIORITY_COLORS[tip.priority as TipPriority] || PRIORITY_COLORS.low;
@@ -115,9 +118,34 @@ function TipCard({
         {timeAgo(tip.created_at || tip.createdAt)}
       </Text>
 
+      {/* Action Button (Book Appointment, Log BP, etc.) */}
+      {tip.action_text && tip.action_route ? (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => {
+            onMarkActed(tip._id);
+            // Navigate based on action_route
+            const route = tip.action_route;
+            if (route?.includes('vitals') || route?.includes('health-monitor')) {
+              navigation.navigate('Home', { screen: 'Vitals' });
+            } else if (route?.includes('appointment') || route?.includes('book')) {
+              navigation.navigate('Bookings', { screen: 'AppointmentsList' });
+            } else if (route?.includes('prescription')) {
+              navigation.navigate('Profile', { screen: 'PrescriptionsList' });
+            }
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={tip.action_text}
+          className="bg-primary rounded-xl py-2.5 mb-2 flex-row items-center justify-center gap-1.5"
+        >
+          <Text className="text-xs font-bold text-white">{tip.action_text}</Text>
+          <ChevronRight size={14} color={colors.white} />
+        </TouchableOpacity>
+      ) : null}
+
       {/* Actions */}
       <View className="flex-row items-center gap-2">
-        {!tip.is_acted && (
+        {!tip.is_acted && !tip.action_text && (
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => onMarkActed(tip._id)}
@@ -272,7 +300,12 @@ export default function HealthInsightsScreen() {
         data={tips}
         keyExtractor={(item: any) => item._id}
         renderItem={({ item }) => (
-          <TipCard tip={item} onDismiss={handleDismiss} onMarkActed={handleMarkActed} />
+          <TipCard
+            tip={item}
+            onDismiss={handleDismiss}
+            onMarkActed={handleMarkActed}
+            navigation={navigation}
+          />
         )}
         contentContainerStyle={tips.length === 0 ? { flex: 1 } : { paddingBottom: 40 }}
         ListEmptyComponent={
