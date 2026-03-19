@@ -128,6 +128,52 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - OneSignalXCFramework (5.5.0):
+    - OneSignalXCFramework/OneSignalComplete (= 5.5.0)
+  - OneSignalXCFramework/OneSignal (5.5.0):
+    - OneSignalXCFramework/OneSignalCore
+    - OneSignalXCFramework/OneSignalExtension
+    - OneSignalXCFramework/OneSignalLiveActivities
+    - OneSignalXCFramework/OneSignalNotifications
+    - OneSignalXCFramework/OneSignalOSCore
+    - OneSignalXCFramework/OneSignalOutcomes
+    - OneSignalXCFramework/OneSignalUser
+  - OneSignalXCFramework/OneSignalComplete (5.5.0):
+    - OneSignalXCFramework/OneSignal
+    - OneSignalXCFramework/OneSignalInAppMessages
+    - OneSignalXCFramework/OneSignalLocation
+  - OneSignalXCFramework/OneSignalCore (5.5.0)
+  - OneSignalXCFramework/OneSignalExtension (5.5.0):
+    - OneSignalXCFramework/OneSignalCore
+    - OneSignalXCFramework/OneSignalOutcomes
+  - OneSignalXCFramework/OneSignalInAppMessages (5.5.0):
+    - OneSignalXCFramework/OneSignalCore
+    - OneSignalXCFramework/OneSignalNotifications
+    - OneSignalXCFramework/OneSignalOSCore
+    - OneSignalXCFramework/OneSignalOutcomes
+    - OneSignalXCFramework/OneSignalUser
+  - OneSignalXCFramework/OneSignalLiveActivities (5.5.0):
+    - OneSignalXCFramework/OneSignalCore
+    - OneSignalXCFramework/OneSignalOSCore
+    - OneSignalXCFramework/OneSignalUser
+  - OneSignalXCFramework/OneSignalLocation (5.5.0):
+    - OneSignalXCFramework/OneSignalCore
+    - OneSignalXCFramework/OneSignalNotifications
+    - OneSignalXCFramework/OneSignalOSCore
+    - OneSignalXCFramework/OneSignalUser
+  - OneSignalXCFramework/OneSignalNotifications (5.5.0):
+    - OneSignalXCFramework/OneSignalCore
+    - OneSignalXCFramework/OneSignalExtension
+    - OneSignalXCFramework/OneSignalOutcomes
+  - OneSignalXCFramework/OneSignalOSCore (5.5.0):
+    - OneSignalXCFramework/OneSignalCore
+  - OneSignalXCFramework/OneSignalOutcomes (5.5.0):
+    - OneSignalXCFramework/OneSignalCore
+  - OneSignalXCFramework/OneSignalUser (5.5.0):
+    - OneSignalXCFramework/OneSignalCore
+    - OneSignalXCFramework/OneSignalNotifications
+    - OneSignalXCFramework/OneSignalOSCore
+    - OneSignalXCFramework/OneSignalOutcomes
   - PromisesObjC (2.4.0)
   - RCTDeprecation (0.84.1)
   - RCTRequired (0.84.1)
@@ -1617,6 +1663,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-onesignal (5.3.6):
+    - OneSignalXCFramework (= 5.5.0)
+    - React (< 1.0.0, >= 0.13.0)
   - react-native-safe-area-context (5.7.0):
     - hermes-engine
     - RCTRequired
@@ -2522,6 +2571,7 @@ DEPENDENCIES:
   - react-native-keyboard-controller (from `../node_modules/react-native-keyboard-controller`)
   - react-native-launch-arguments (from `../node_modules/react-native-launch-arguments`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
+  - react-native-onesignal (from `../node_modules/react-native-onesignal`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2583,6 +2633,7 @@ SPEC REPOS:
     - GTMAppAuth
     - GTMSessionFetcher
     - MMKVCore
+    - OneSignalXCFramework
     - PromisesObjC
 
 EXTERNAL SOURCES:
@@ -2681,6 +2732,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-launch-arguments"
   react-native-netinfo:
     :path: "../node_modules/@react-native-community/netinfo"
+  react-native-onesignal:
+    :path: "../node_modules/react-native-onesignal"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-webview:
@@ -2799,6 +2852,7 @@ SPEC CHECKSUMS:
   NitroAudioRecorderPlayer: 3d0f51dcf18faf4a55cf607deab58b5fe92a9bb1
   NitroMmkv: c9fd61d98afd00a6e4e1656a415c28f7be0fd74e
   NitroModules: 1cebf8f4ba098b9f950a3d18127bb741325d9849
+  OneSignalXCFramework: 943852e7d70d719f73e9669d48620aeec1b93022
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCTDeprecation: af44b104091a34482596cd9bd7e8d90c4e9b4bd7
   RCTRequired: bb77b070f75f53398ce43c0aaaa58337cebe2bf6
@@ -2840,6 +2894,7 @@ SPEC CHECKSUMS:
   react-native-keyboard-controller: ae5cb6d68db0d0e4bdc48461bcde1092b525d546
   react-native-launch-arguments: eab68037b01ea7c78a0b3b55da3a5e967e9aaf92
   react-native-netinfo: f852c868bf5175e46165c7e4db48a204a95c3800
+  react-native-onesignal: 43e278433205c5cf4c3c0dc64ec3e8390a2a7b6f
   react-native-safe-area-context: ae7587b95fb580d1800c5b0b2a7bd48c2868e67a
   react-native-webview: 0ed52ddb2eafc64a502871218440b8b4d37961c3
   React-NativeModulesApple: 5ba0903927f6b8d335a091700e9fda143980f819
