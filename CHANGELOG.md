@@ -1,3 +1,9 @@
+## [1.4.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.4.0...v1.4.1) (2026-03-19)
+
+### Bug Fixes
+
+- **ui:** fix health gauge arc clipping at top ([41b7ebb](https://github.com/eyobassey/RapidCapsuleMobile-/commit/41b7ebb7b6228e91407753702bd594896f567566))
+
 # [1.4.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.3.1...v1.4.0) (2026-03-19)
 
 ### Features
