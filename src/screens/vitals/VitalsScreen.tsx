@@ -7,13 +7,16 @@ import {
   Droplets,
   Flame,
   Footprints,
+  Gauge,
   GlassWater,
   Heart,
+  HeartCrack,
   HeartPulse,
   Moon,
   Percent,
   Plus,
   Scale,
+  Smile,
   Thermometer,
   TrendingUp,
   Wind,
@@ -35,6 +38,7 @@ import { formatVitalValue, timeAgo } from '../../utils/formatters';
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Heart,
   HeartPulse,
+  HeartCrack,
   Thermometer,
   Droplets,
   Wind,
@@ -46,6 +50,8 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Brain,
   Percent,
   GlassWater,
+  Smile,
+  Gauge,
   Zap,
 };
 

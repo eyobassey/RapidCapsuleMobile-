@@ -1,4 +1,4 @@
-import type {VitalTypeConfig} from '../types/vital.types';
+import type { VitalTypeConfig } from '../types/vital.types';
 
 export const VITAL_TYPES: VitalTypeConfig[] = [
   {
@@ -6,7 +6,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Blood Pressure',
     icon: 'Heart',
     unit: 'mmHg',
-    normalRange: {min: 90, max: 140},
+    normalRange: { min: 90, max: 140 },
     color: '#EF4444',
   },
   {
@@ -14,7 +14,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Heart Rate',
     icon: 'HeartPulse',
     unit: 'bpm',
-    normalRange: {min: 60, max: 100},
+    normalRange: { min: 60, max: 100 },
     color: '#F97316',
   },
   {
@@ -22,7 +22,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Temperature',
     icon: 'Thermometer',
     unit: '\u00B0C',
-    normalRange: {min: 36.1, max: 37.2},
+    normalRange: { min: 36.1, max: 37.2 },
     color: '#EAB308',
   },
   {
@@ -30,7 +30,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Blood Sugar',
     icon: 'Droplets',
     unit: 'mg/dL',
-    normalRange: {min: 70, max: 140},
+    normalRange: { min: 70, max: 140 },
     color: '#8B5CF6',
   },
   {
@@ -38,7 +38,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Oxygen Saturation',
     icon: 'Wind',
     unit: '%',
-    normalRange: {min: 95, max: 100},
+    normalRange: { min: 95, max: 100 },
     color: '#3B82F6',
   },
   {
@@ -46,7 +46,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Respiratory Rate',
     icon: 'Activity',
     unit: 'breaths/min',
-    normalRange: {min: 12, max: 20},
+    normalRange: { min: 12, max: 20 },
     color: '#06B6D4',
   },
   {
@@ -54,7 +54,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Weight',
     icon: 'Scale',
     unit: 'kg',
-    normalRange: {min: 40, max: 120},
+    normalRange: { min: 40, max: 120 },
     color: '#10B981',
   },
   {
@@ -62,7 +62,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Steps',
     icon: 'Footprints',
     unit: 'steps',
-    normalRange: {min: 0, max: 15000},
+    normalRange: { min: 0, max: 15000 },
     color: '#14B8A6',
   },
   {
@@ -70,7 +70,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Sleep',
     icon: 'Moon',
     unit: 'hours',
-    normalRange: {min: 7, max: 9},
+    normalRange: { min: 7, max: 9 },
     color: '#6366F1',
   },
   {
@@ -78,7 +78,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Calories Burned',
     icon: 'Flame',
     unit: 'kcal',
-    normalRange: {min: 0, max: 3000},
+    normalRange: { min: 0, max: 3000 },
     color: '#F59E0B',
   },
   {
@@ -86,7 +86,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Stress Level',
     icon: 'Brain',
     unit: '/10',
-    normalRange: {min: 0, max: 5},
+    normalRange: { min: 0, max: 5 },
     color: '#EC4899',
   },
   {
@@ -94,7 +94,7 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Body Fat',
     icon: 'Percent',
     unit: '%',
-    normalRange: {min: 10, max: 30},
+    normalRange: { min: 10, max: 30 },
     color: '#84CC16',
   },
   {
@@ -102,15 +102,47 @@ export const VITAL_TYPES: VitalTypeConfig[] = [
     name: 'Hydration',
     icon: 'GlassWater',
     unit: 'mL',
-    normalRange: {min: 2000, max: 3500},
+    normalRange: { min: 2000, max: 3500 },
     color: '#0EA5E9',
+  },
+  {
+    key: 'mood_score',
+    name: 'Mood',
+    icon: 'Smile',
+    unit: '/10',
+    normalRange: { min: 5, max: 10 },
+    color: '#F472B6',
+  },
+  {
+    key: 'anxiety_level',
+    name: 'Anxiety',
+    icon: 'HeartCrack',
+    unit: '/10',
+    normalRange: { min: 0, max: 4 },
+    color: '#FB923C',
+  },
+  {
+    key: 'craving_level',
+    name: 'Cravings',
+    icon: 'Flame',
+    unit: '/10',
+    normalRange: { min: 0, max: 3 },
+    color: '#F87171',
+  },
+  {
+    key: 'motivation_level',
+    name: 'Energy / Motivation',
+    icon: 'Zap',
+    unit: '/10',
+    normalRange: { min: 5, max: 10 },
+    color: '#FBBF24',
   },
   {
     key: 'bmr',
     name: 'Basal Metabolic Rate',
-    icon: 'Zap',
+    icon: 'Gauge',
     unit: 'kcal/day',
-    normalRange: {min: 1200, max: 2400},
+    normalRange: { min: 1200, max: 2400 },
     color: '#A855F7',
   },
 ];
