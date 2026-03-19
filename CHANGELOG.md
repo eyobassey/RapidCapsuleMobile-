@@ -1,3 +1,47 @@
+# [1.3.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.2.0...v1.3.0) (2026-03-19)
+
+### Bug Fixes
+
+- **auth:** gate e2e auth bypass behind **DEV** ([3dbff28](https://github.com/eyobassey/RapidCapsuleMobile-/commit/3dbff288afaef63c03ef1ed0b7bd1cb7cfe90168))
+- **chat:** adjust padding in ChatScreen to accommodate safe area insets ([86def5d](https://github.com/eyobassey/RapidCapsuleMobile-/commit/86def5d04d68bee746092ad4b3c83b7f553a8ee9))
+- keyboard covers chat input — remove absolute positioning from input bar ([6604c85](https://github.com/eyobassey/RapidCapsuleMobile-/commit/6604c85f26d7b0119d20d394617839faaac7523a))
+- **navigation:** add 'DrugSearch' to HIDE_TAB_SCREENS to prevent tab visibility ([160f6e9](https://github.com/eyobassey/RapidCapsuleMobile-/commit/160f6e90a245e1d114a0da8dd556dcde8ae6d0eb))
+- **notifications:** fix accordion row layout — space-between + centred Switch ([1e2bee4](https://github.com/eyobassey/RapidCapsuleMobile-/commit/1e2bee43268506fbf85dedefb384660973f712c2))
+- **notifications:** properly centre Switch in accordion rows ([73c01f7](https://github.com/eyobassey/RapidCapsuleMobile-/commit/73c01f749a2100902d97a18505dc2366735d9bb0))
+- **pharmacy:** keep cart fab above tab bar ([1a9a1bf](https://github.com/eyobassey/RapidCapsuleMobile-/commit/1a9a1bf2e2cd46c5a521b81a60a2d34b68c5b9a9))
+- **pharmacy:** respect safe areas in checkout and payment modal ([8c1c33a](https://github.com/eyobassey/RapidCapsuleMobile-/commit/8c1c33a22d1862282b85d7ee6c2b9c437d5db680))
+- **pharmacy:** route My Orders back to Profile ([bc5000b](https://github.com/eyobassey/RapidCapsuleMobile-/commit/bc5000b1de861ae4d469d0a54172e6b9811410a1))
+- **profile:** adjust HealthRecordsScreen padding to account for safe area insets ([e56ff22](https://github.com/eyobassey/RapidCapsuleMobile-/commit/e56ff22ff5cf9da20efa8dc093706dff29776a21))
+- set default foreground color on Text component to prevent black-on-dark ([bda2ab7](https://github.com/eyobassey/RapidCapsuleMobile-/commit/bda2ab739db0cc40532e4e89f9564b5661ec4e5b))
+- **ui:** ensure KeyboardSheet spans full width and refactor SecuritySettingsScreen ([4237bf3](https://github.com/eyobassey/RapidCapsuleMobile-/commit/4237bf37757419a566af6ba8a2f51deb56f872f6))
+- **ui:** ensure LoginScreen forgot password sheet spans full width ([3a5d248](https://github.com/eyobassey/RapidCapsuleMobile-/commit/3a5d24823a1f3baeb7a0fdf1a25d4631a2b4dcac))
+- **ui:** ensure TextInputs are respected and fix button spacing using dynamic keyboard padding ([76dadba](https://github.com/eyobassey/RapidCapsuleMobile-/commit/76dadbafbf474ea45c78043217f7cb3224a8297f))
+- **ui:** prevent tab bar from stretching in empty states ([78ece44](https://github.com/eyobassey/RapidCapsuleMobile-/commit/78ece446c0a92786df465d9e3822504cfc632d42))
+- **ui:** resolve 'huge distance' issue between keyboard and buttons across multiple screens ([a0ac680](https://github.com/eyobassey/RapidCapsuleMobile-/commit/a0ac68069a0a813cbab2907d2cab8802b46cf476))
+- **ui:** resolve Reanimated error in KeyboardSheet and hide tab bar on EditProfile ([a6ff929](https://github.com/eyobassey/RapidCapsuleMobile-/commit/a6ff9293472a8fec3652a89079831c83d681a584))
+- **wallet:** improve funding flow and modal input layout ([84f8c4b](https://github.com/eyobassey/RapidCapsuleMobile-/commit/84f8c4bc07077b6c21b046fcf8ada406891c7f01))
+
+### Features
+
+- add About screen and fix legal URLs ([7dccc58](https://github.com/eyobassey/RapidCapsuleMobile-/commit/7dccc5827fbe0b72966bfff790e9b09935e74123))
+- add Referrals & Rewards screen with TanStack Query ([c07b8c9](https://github.com/eyobassey/RapidCapsuleMobile-/commit/c07b8c997b9ef0715bdaa67fcf799c16d640af25))
+- add Terms & Conditions and Privacy Policy screens ([fc56a4c](https://github.com/eyobassey/RapidCapsuleMobile-/commit/fc56a4cce6fec049b9c72f34f91d7d004edc9840))
+- align referral types and screen to real API payloads ([0223ec8](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0223ec83aec05d4dc8a6f77c69068ab0212d7a73))
+- **eka-chat:** improve loading UX with shimmer skeletons and contextual witty phrases ([197b32b](https://github.com/eyobassey/RapidCapsuleMobile-/commit/197b32b984ab557fe1c71891806b42b5e5303583))
+- fix keyboard overlap app-wide with react-native-keyboard-controller ([0ec3e2c](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0ec3e2c65c285dbf5c08072cb4070fe355721c4f))
+- **notifications:** align preferences to real API payload structure ([83850c0](https://github.com/eyobassey/RapidCapsuleMobile-/commit/83850c0c1dde369a8c10344656c4bf5898ff9233))
+- **notifications:** implement full notification preferences screen matching web UI ([8bb0cd0](https://github.com/eyobassey/RapidCapsuleMobile-/commit/8bb0cd0d8e5ce939bb1129e9c0f53cefb45d903e))
+- **onboarding:** extend emergency contact details ([df32452](https://github.com/eyobassey/RapidCapsuleMobile-/commit/df324523e0e9b503d5200c8083ef1f6fff8ef2b3))
+- **onboarding:** gate Apple Health and use system browser for Google Fit ([0816305](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0816305cae537d27849ec51a4565aee1ce813889))
+- **pharmacy:** add cart functionality to DrugCard and integrate with DrugCategoryScreen ([b42d85b](https://github.com/eyobassey/RapidCapsuleMobile-/commit/b42d85b974f24eed034eba4cebdb76754195b2b0))
+- **pharmacy:** prefill delivery address from profile ([6817118](https://github.com/eyobassey/RapidCapsuleMobile-/commit/6817118dc6238fb905406c72e2ea5cedad1c600b))
+- **profile:** add Notification Preferences screen ([1fe4ada](https://github.com/eyobassey/RapidCapsuleMobile-/commit/1fe4ada49b19a309952208f7d365e1485c024a46))
+- **profile:** implement tap to change photo with S3 presigned upload ([56ef240](https://github.com/eyobassey/RapidCapsuleMobile-/commit/56ef2401e01cb5a1c98597a26f23338422a58e05))
+- **profile:** show app version in About section ([7ee7fbb](https://github.com/eyobassey/RapidCapsuleMobile-/commit/7ee7fbbefbacdf0546476ee05ac02f57b66b24c8))
+- **profile:** switch photo upload to direct Base64 patching and fix social auth token extraction ([c3d90fe](https://github.com/eyobassey/RapidCapsuleMobile-/commit/c3d90fe795fd21d2a8945782be6a6bbd6b4c961c))
+- **security:** add Security Settings screen ([6fef614](https://github.com/eyobassey/RapidCapsuleMobile-/commit/6fef614f222b8a152a8d5588d835904967979b8f))
+- token refresh interceptor + delete account ([6fcc1b5](https://github.com/eyobassey/RapidCapsuleMobile-/commit/6fcc1b59ab17432f6182ae3c7d67eb3b26220405))
+
 # [1.2.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.1.0...v1.2.0) (2026-03-18)
 
 ### Bug Fixes
