@@ -1,3 +1,9 @@
+## [1.5.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.5.0...v1.5.1) (2026-03-19)
+
+### Bug Fixes
+
+- **ui:** move Health Insights after Next Appointment and fix filter chips ([114d5c7](https://github.com/eyobassey/RapidCapsuleMobile-/commit/114d5c79599e3078b1882d5b199555e98e849861))
+
 # [1.5.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.4.1...v1.5.0) (2026-03-19)
 
 ### Bug Fixes
