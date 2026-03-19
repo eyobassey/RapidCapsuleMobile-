@@ -108,12 +108,21 @@ api.interceptors.response.use(
         { headers: { 'Content-Type': 'application/json' }, timeout: ENV.REQUEST_TIMEOUT }
       );
 
-      const newToken: string = data.data.token;
-      const newRefreshToken: string = data.data.refresh_token;
+      const newToken: string | undefined = data.data?.token;
+      const newRefreshToken: string | undefined = data.data?.refresh_token;
+
+      if (!newToken) {
+        // Refresh response did not contain a valid token — force logout.
+        rejectQueue(error);
+        await forceLogout();
+        return Promise.reject(parseApiError(error));
+      }
 
       // Persist both tokens (refresh token is rotated on every call).
       await storage.setToken(newToken);
-      await storage.setRefreshToken(newRefreshToken);
+      if (newRefreshToken) {
+        await storage.setRefreshToken(newRefreshToken);
+      }
 
       // Let the auth store know about the updated access token.
       const { useAuthStore } = await import('../store/auth');

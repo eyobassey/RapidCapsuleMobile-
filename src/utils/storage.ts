@@ -72,7 +72,12 @@ export const storage = {
   // Non-sensitive data stays in MMKV
   async getUser(): Promise<any | null> {
     const data = getStore().getString(KEYS.USER);
-    return data ? JSON.parse(data) : null;
+    if (!data) return null;
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
   },
 
   async setUser(user: any): Promise<void> {

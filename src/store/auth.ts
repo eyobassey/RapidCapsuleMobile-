@@ -103,19 +103,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const data = res.data;
     const payload = data.data || data.result;
 
-    // Backend returns a JWT string on direct login, or an object when 2FA is triggered
-    if (!payload || typeof payload === 'object') {
+    // Backend now returns { token, refresh_token } on successful login,
+    // or an object without token when 2FA is triggered, or a plain JWT string (legacy).
+    if (payload && typeof payload === 'object' && payload.token) {
+      // Successful login — object with token (and optional refresh_token)
+      await get().setToken(payload.token);
+      if (payload.refresh_token) {
+        await storage.setRefreshToken(payload.refresh_token);
+      }
+    } else if (payload && typeof payload === 'string') {
+      // Legacy: plain JWT string
+      await get().setToken(payload);
+    } else {
+      // No token present — 2FA is required
       const msg = (data.message || '').toLowerCase();
       const method = msg.includes('phone') ? 'sms' : msg.includes('auth app') ? 'totp' : 'email';
       return { requires2FA: true, method };
-    }
-
-    // payload is the access token string
-    await get().setToken(payload);
-    // Refresh token may be returned alongside (some backends wrap it)
-    const refreshToken = data.data?.refresh_token ?? data.result?.refresh_token;
-    if (refreshToken) {
-      await storage.setRefreshToken(refreshToken);
     }
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
@@ -210,6 +213,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    // Attempt to revoke the server session; don't block logout on failure.
+    try {
+      const refreshToken = await storage.getRefreshToken();
+      await api.post('/auth/logout', refreshToken ? { refresh_token: refreshToken } : {});
+    } catch {
+      // Server call failed — continue with local cleanup.
+    }
     clearOneSignalUser();
     await storage.clear();
     set({ user: null, token: null, isAuthenticated: false, needsOnboarding: false });
