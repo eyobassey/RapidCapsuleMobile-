@@ -1,3 +1,22 @@
+// Mock react-native-keyboard-controller
+jest.mock('react-native-keyboard-controller', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    KeyboardAvoidingView: ({ children, style }) => (
+      <View style={style}>{children}</View>
+    ),
+    KeyboardProvider: ({ children }) => children,
+    KeyboardStickyView: ({ children, style }) => (
+      <View style={style}>{children}</View>
+    ),
+    useKeyboardHandler: jest.fn(),
+    useKeyboardAnimation: jest.fn(() => ({ height: 0, progress: 0 })),
+    useReanimatedKeyboardAnimation: jest.fn(() => ({ height: 0, progress: 0 })),
+    useKeyboardController: jest.fn(() => ({ setEnabled: jest.fn(), isEnabled: true })),
+  };
+});
+
 // Mock react-native-keychain
 jest.mock('react-native-keychain', () => ({
   setGenericPassword: jest.fn(() => Promise.resolve(true)),

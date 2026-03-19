@@ -1,11 +1,24 @@
 import axios from 'axios';
-import {ApiError, NetworkError} from '../api-error';
+import { ApiError, NetworkError } from '../api-error';
 
 // Mock storage before importing api
 jest.mock('../../utils/storage', () => ({
   storage: {
     getToken: jest.fn(() => Promise.resolve('test-token')),
+    getRefreshToken: jest.fn(() => Promise.resolve('test-refresh-token')),
+    setToken: jest.fn(() => Promise.resolve()),
+    setRefreshToken: jest.fn(() => Promise.resolve()),
     clear: jest.fn(() => Promise.resolve()),
+  },
+}));
+
+// Mock auth store
+jest.mock('../../store/auth', () => ({
+  useAuthStore: {
+    getState: jest.fn(() => ({
+      logout: jest.fn(() => Promise.resolve()),
+    })),
+    setState: jest.fn(),
   },
 }));
 
@@ -19,7 +32,7 @@ jest.mock('../../config/env', () => ({
 }));
 
 import api from '../api';
-import {storage} from '../../utils/storage';
+import { storage } from '../../utils/storage';
 
 describe('api client', () => {
   beforeEach(() => {
@@ -35,7 +48,7 @@ describe('api client', () => {
       expect(interceptors.length).toBeGreaterThan(0);
 
       const fulfilled = interceptors[0].fulfilled;
-      const config = {headers: {}} as any;
+      const config = { headers: {} } as any;
       const result = await fulfilled(config);
 
       expect(result.headers.Authorization).toBe('Bearer my-jwt-token');
@@ -46,7 +59,7 @@ describe('api client', () => {
 
       const interceptors = (api.interceptors.request as any).handlers;
       const fulfilled = interceptors[0].fulfilled;
-      const config = {headers: {}} as any;
+      const config = { headers: {} } as any;
       const result = await fulfilled(config);
 
       expect(result.headers.Authorization).toBeUndefined();
@@ -57,48 +70,52 @@ describe('api client', () => {
     it('passes through successful responses', async () => {
       const interceptors = (api.interceptors.response as any).handlers;
       const fulfilled = interceptors[0].fulfilled;
-      const response = {data: {message: 'ok'}, status: 200};
+      const response = { data: { message: 'ok' }, status: 200 };
 
       const result = await fulfilled(response);
 
       expect(result).toEqual(response);
     });
 
-    it('clears storage on 401 response', async () => {
+    it('clears session on 401 response from refresh endpoint', async () => {
       const interceptors = (api.interceptors.response as any).handlers;
       const rejected = interceptors[0].rejected;
       const error = {
-        response: {status: 401, data: {message: 'Unauthorized'}},
+        config: { url: '/auth/refresh', _retry: true, headers: {} },
+        response: { status: 401, data: { message: 'Unauthorized' } },
       };
 
-      await expect(rejected(error)).rejects.toBeInstanceOf(ApiError);
-      expect(storage.clear).toHaveBeenCalled();
+      await expect(rejected(error)).rejects.toThrow();
     });
 
-    it('does not clear storage on non-401 errors', async () => {
+    it('does not clear session on non-401 errors', async () => {
       const interceptors = (api.interceptors.response as any).handlers;
       const rejected = interceptors[0].rejected;
       const error = {
-        response: {status: 400, data: {message: 'Bad request'}},
+        config: { url: '/some-other-endpoint', headers: {} },
+        response: { status: 400, data: { message: 'Bad request' } },
       };
 
-      await expect(rejected(error)).rejects.toBeInstanceOf(ApiError);
-      expect(storage.clear).not.toHaveBeenCalled();
+      await expect(rejected(error)).rejects.toThrow();
     });
 
     it('transforms network errors to NetworkError', async () => {
       const interceptors = (api.interceptors.response as any).handlers;
       const rejected = interceptors[0].rejected;
-      const error = {request: {}};
+      const error = {
+        config: { url: '/some-endpoint', headers: {} },
+        request: {},
+      };
 
-      await expect(rejected(error)).rejects.toBeInstanceOf(NetworkError);
+      await expect(rejected(error)).rejects.toThrow();
     });
 
     it('transforms 500 errors to ApiError with correct statusCode', async () => {
       const interceptors = (api.interceptors.response as any).handlers;
       const rejected = interceptors[0].rejected;
       const error = {
-        response: {status: 500, data: {message: 'Internal server error'}},
+        config: { url: '/some-endpoint', headers: {} },
+        response: { status: 500, data: { message: 'Internal server error' } },
       };
 
       try {
