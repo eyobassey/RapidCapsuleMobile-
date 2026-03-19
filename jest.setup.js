@@ -1,3 +1,42 @@
+// Mock react-native-reanimated
+jest.mock('react-native-reanimated', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: {
+      View: View,
+      createAnimatedComponent: (comp) => comp,
+      addWhitelistedNativeProps: jest.fn(),
+      addWhitelistedUIProps: jest.fn(),
+    },
+    useSharedValue: jest.fn((val) => ({ value: val })),
+    useAnimatedStyle: jest.fn((cb) => cb()),
+    useAnimatedProps: jest.fn((cb) => cb()),
+    withSpring: jest.fn((val) => val),
+    withTiming: jest.fn((val) => val),
+    withRepeat: jest.fn((val) => val),
+    withSequence: jest.fn((val) => val),
+    withDelay: jest.fn((val) => val),
+    runOnJS: jest.fn((fn) => fn),
+    runOnUI: jest.fn((fn) => fn),
+    makeMutable: jest.fn((val) => ({ value: val })),
+    measure: jest.fn(() => ({ x: 0, y: 0, width: 0, height: 0, pageX: 0, pageY: 0 })),
+    scrollTo: jest.fn(),
+    useDerivedValue: jest.fn((cb) => ({ value: cb() })),
+    cancelAnimation: jest.fn(),
+    interpolate: jest.fn((v) => v),
+    Extrapolate: { CLAMP: 'clamp' },
+    Animated: {
+      View: View,
+      Text: require('react-native').Text,
+      Image: require('react-native').Image,
+      ScrollView: require('react-native').ScrollView,
+      createAnimatedComponent: (comp) => comp,
+    },
+  };
+});
+
 // Mock react-native-keyboard-controller
 jest.mock('react-native-keyboard-controller', () => {
   const React = require('react');
