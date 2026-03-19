@@ -219,36 +219,48 @@ export default function HealthInsightsScreen() {
       <Header title="Health Insights" onBack={() => navigation.goBack()} />
 
       {/* Category filter chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 12, gap: 8 }}
-      >
-        {FILTER_CHIPS.map((chip) => {
-          const isActive = selectedCategory === chip.key;
-          return (
-            <TouchableOpacity
-              key={chip.key}
-              activeOpacity={0.7}
-              onPress={() => setSelectedCategory(chip.key)}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isActive }}
-              accessibilityLabel={`Filter by ${chip.label}`}
-              className={`rounded-full px-4 py-2 border ${
-                isActive ? 'bg-primary border-primary' : 'bg-card border-border'
-              }`}
-            >
-              <Text
-                className={`text-xs font-semibold ${
-                  isActive ? 'text-white' : 'text-muted-foreground'
-                }`}
+      <View className="border-b border-border">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 16,
+            paddingBottom: 16,
+            gap: 10,
+          }}
+        >
+          {FILTER_CHIPS.map((chip) => {
+            const isActive = selectedCategory === chip.key;
+            return (
+              <TouchableOpacity
+                key={chip.key}
+                activeOpacity={0.7}
+                onPress={() => setSelectedCategory(chip.key)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={`Filter by ${chip.label}`}
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  borderRadius: 20,
+                  backgroundColor: isActive ? colors.primary : colors.muted,
+                }}
               >
-                {chip.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color: isActive ? colors.white : colors.mutedForeground,
+                  }}
+                >
+                  {chip.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       <FlatList
         data={tips}

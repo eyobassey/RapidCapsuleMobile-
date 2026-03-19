@@ -542,107 +542,6 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* ---- Health Insights ---- */}
-        <View className="mx-5 mt-6">
-          <View className="flex-row items-center justify-between mb-3 px-1">
-            <View className="flex-row items-center gap-2">
-              <Sparkles size={16} color={colors.accent} />
-              <Text className="text-sm font-bold text-foreground">Health Insights</Text>
-            </View>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('HealthInsights')}
-              accessibilityRole="button"
-              accessibilityLabel="View all health insights"
-            >
-              <Text className="text-xs font-semibold text-primary">View All</Text>
-            </TouchableOpacity>
-          </View>
-
-          {tipsLoading ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 12 }}
-            >
-              {[1, 2, 3].map((i) => (
-                <View
-                  key={i}
-                  className="bg-card border border-border rounded-2xl p-3.5"
-                  style={{ width: 220 }}
-                >
-                  <Skeleton width={100} height={10} />
-                  <View className="mt-2">
-                    <Skeleton width={180} height={12} />
-                  </View>
-                  <View className="mt-1.5">
-                    <Skeleton width={160} height={10} />
-                  </View>
-                  <View className="mt-1">
-                    <Skeleton width={120} height={10} />
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-          ) : featuredTips.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 12 }}
-            >
-              {featuredTips.map((tip: any) => {
-                const IconComp = TIP_CATEGORY_ICONS[tip.category] || ShieldCheck;
-                const priorityColor = TIP_PRIORITY_COLORS[tip.priority] || TIP_PRIORITY_COLORS.low;
-                return (
-                  <TouchableOpacity
-                    key={tip._id}
-                    activeOpacity={0.7}
-                    onPress={() => navigation.navigate('HealthInsights')}
-                    className="bg-card border border-border rounded-2xl p-3.5"
-                    style={{ width: 220 }}
-                  >
-                    <View className="flex-row items-center gap-2 mb-2">
-                      <View className="w-7 h-7 rounded-full bg-muted items-center justify-center">
-                        <IconComp size={14} color={colors.mutedForeground} />
-                      </View>
-                      <View className="flex-1" />
-                      <View
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: priorityColor }}
-                      />
-                    </View>
-                    <Text className="text-xs font-bold text-foreground" numberOfLines={1}>
-                      {tip.title}
-                    </Text>
-                    <Text
-                      className="text-[10px] text-muted-foreground mt-1 leading-relaxed"
-                      numberOfLines={2}
-                    >
-                      {tip.content}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          ) : (
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => generateTipsMutation.mutate()}
-              disabled={generateTipsMutation.isPending}
-              className="bg-card border border-border rounded-2xl p-4 flex-row items-center justify-center gap-2"
-            >
-              {generateTipsMutation.isPending ? (
-                <ActivityIndicator size="small" color={colors.primary} />
-              ) : (
-                <Sparkles size={16} color={colors.primary} />
-              )}
-              <Text className="text-xs font-semibold text-primary">
-                {generateTipsMutation.isPending ? 'Generating...' : 'Generate Health Insights'}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
         {/* ---- Next Appointment ---- */}
         {nextAppointment && (
           <View className="mx-5 mt-6">
@@ -745,6 +644,107 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         )}
+
+        {/* ---- Health Insights ---- */}
+        <View className="mx-5 mt-6">
+          <View className="flex-row items-center justify-between mb-3 px-1">
+            <View className="flex-row items-center gap-2">
+              <Sparkles size={16} color={colors.accent} />
+              <Text className="text-sm font-bold text-foreground">Health Insights</Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('HealthInsights')}
+              accessibilityRole="button"
+              accessibilityLabel="View all health insights"
+            >
+              <Text className="text-xs font-semibold text-primary">View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {tipsLoading ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 12 }}
+            >
+              {[1, 2, 3].map((i) => (
+                <View
+                  key={i}
+                  className="bg-card border border-border rounded-2xl p-3.5"
+                  style={{ width: 220 }}
+                >
+                  <Skeleton width={100} height={10} />
+                  <View className="mt-2">
+                    <Skeleton width={180} height={12} />
+                  </View>
+                  <View className="mt-1.5">
+                    <Skeleton width={160} height={10} />
+                  </View>
+                  <View className="mt-1">
+                    <Skeleton width={120} height={10} />
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          ) : featuredTips.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 12 }}
+            >
+              {featuredTips.map((tip: any) => {
+                const IconComp = TIP_CATEGORY_ICONS[tip.category] || ShieldCheck;
+                const priorityColor = TIP_PRIORITY_COLORS[tip.priority] || TIP_PRIORITY_COLORS.low;
+                return (
+                  <TouchableOpacity
+                    key={tip._id}
+                    activeOpacity={0.7}
+                    onPress={() => navigation.navigate('HealthInsights')}
+                    className="bg-card border border-border rounded-2xl p-3.5"
+                    style={{ width: 220 }}
+                  >
+                    <View className="flex-row items-center gap-2 mb-2">
+                      <View className="w-7 h-7 rounded-full bg-muted items-center justify-center">
+                        <IconComp size={14} color={colors.mutedForeground} />
+                      </View>
+                      <View className="flex-1" />
+                      <View
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: priorityColor }}
+                      />
+                    </View>
+                    <Text className="text-xs font-bold text-foreground" numberOfLines={1}>
+                      {tip.title}
+                    </Text>
+                    <Text
+                      className="text-[10px] text-muted-foreground mt-1 leading-relaxed"
+                      numberOfLines={2}
+                    >
+                      {tip.content}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          ) : (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => generateTipsMutation.mutate()}
+              disabled={generateTipsMutation.isPending}
+              className="bg-card border border-border rounded-2xl p-4 flex-row items-center justify-center gap-2"
+            >
+              {generateTipsMutation.isPending ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Sparkles size={16} color={colors.primary} />
+              )}
+              <Text className="text-xs font-semibold text-primary">
+                {generateTipsMutation.isPending ? 'Generating...' : 'Generate Health Insights'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* Bottom spacer */}
         <View className="h-4" />
