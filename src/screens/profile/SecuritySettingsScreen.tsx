@@ -29,13 +29,12 @@ import {
   Platform,
   ScrollView,
   Switch,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { KeyboardSheet, Text } from '../../components/ui';
+import { KeyboardSheet, Text, TextInput } from '../../components/ui';
 import { useAuthStore } from '../../store/auth';
 import {
   useBiometricCredentialsQuery,
@@ -54,7 +53,11 @@ import { colors } from '../../theme/colors';
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <Text className="text-xs text-muted-foreground uppercase tracking-wider px-5 pt-6 pb-2 font-semibold">
+    <Text
+      variant="label"
+      weight="semibold"
+      className="text-xs text-muted-foreground uppercase tracking-wider px-5 pt-6 pb-2"
+    >
       {title}
     </Text>
   );
@@ -84,13 +87,15 @@ function ListRow({
       <View className="w-9 h-9 rounded-full bg-muted items-center justify-center mr-3">{icon}</View>
       <View className="flex-1 mr-3">
         <Text
-          className="font-medium text-sm"
+          variant="body"
+          weight="medium"
+          className="text-sm"
           style={{ color: destructive ? colors.destructive : colors.foreground }}
         >
           {label}
         </Text>
         {subtitle ? (
-          <Text className="text-xs text-muted-foreground mt-0.5" numberOfLines={2}>
+          <Text variant="caption" className="text-muted-foreground mt-0.5" numberOfLines={2}>
             {subtitle}
           </Text>
         ) : null}
@@ -125,27 +130,24 @@ function PasswordInput({
 }) {
   const [visible, setVisible] = useState(false);
   return (
-    <View style={{ marginBottom: 12 }}>
-      <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 6 }}>{label}</Text>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          backgroundColor: colors.muted,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: colors.border,
-          paddingHorizontal: 14,
-          paddingVertical: 12,
-        }}
-      >
+    <View className="mb-4">
+      {label ? (
+        <Text
+          variant="caption"
+          weight="bold"
+          className="text-foreground/70 uppercase tracking-wider mb-2 ml-1"
+        >
+          {label}
+        </Text>
+      ) : null}
+      <View className="flex-row items-center h-14 rounded-2xl bg-card border border-border px-4">
         <TextInput
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={!visible}
           placeholder={placeholder ?? label}
-          placeholderTextColor={colors.mutedForeground}
-          style={{ flex: 1, fontSize: 14, color: colors.foreground }}
+          placeholderTextColor="#7c8ba3"
+          className="flex-1 text-foreground text-base h-full"
           autoCapitalize="none"
           autoCorrect={false}
         />
@@ -464,11 +466,15 @@ export default function SecuritySettingsScreen() {
           >
             <ArrowLeft size={18} color={colors.foreground} />
           </TouchableOpacity>
-          <Text className="flex-1 text-base font-bold text-foreground">Security Settings</Text>
+          <Text variant="heading" weight="bold" className="flex-1 text-base">
+            Security Settings
+          </Text>
         </View>
         <View className="flex-1 items-center justify-center gap-3">
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text className="text-sm text-muted-foreground">Loading security settings…</Text>
+          <Text variant="body" className="text-muted-foreground">
+            Loading security settings…
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -490,7 +496,9 @@ export default function SecuritySettingsScreen() {
         >
           <ArrowLeft size={18} color={colors.foreground} />
         </TouchableOpacity>
-        <Text className="flex-1 text-base font-bold text-foreground">Security Settings</Text>
+        <Text variant="heading" weight="bold" className="flex-1 text-base">
+          Security Settings
+        </Text>
         {(updateSettings.isPending || revokeSession.isPending || revokeAll.isPending) && (
           <ActivityIndicator size="small" color={colors.primary} />
         )}
@@ -517,10 +525,10 @@ export default function SecuritySettingsScreen() {
               <ShieldCheck size={24} color={twoFactorEnabled ? colors.success : colors.secondary} />
             </View>
             <View className="flex-1">
-              <Text className="text-foreground font-semibold text-base">
+              <Text variant="heading" weight="semibold" className="text-base text-foreground">
                 {twoFactorEnabled ? 'Account Protected' : 'Improve Your Security'}
               </Text>
-              <Text className="text-muted-foreground text-xs mt-0.5">
+              <Text variant="caption" className="text-muted-foreground mt-0.5">
                 {twoFactorEnabled
                   ? `2FA active · ${sessions?.all.length ?? 0} device${
                       sessions?.all.length === 1 ? '' : 's'
@@ -539,7 +547,11 @@ export default function SecuritySettingsScreen() {
                   borderColor: `${colors.success}40`,
                 }}
               >
-                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.success }}>
+                <Text
+                  variant="caption"
+                  weight="bold"
+                  style={{ fontSize: 11, color: colors.success }}
+                >
                   Enabled
                 </Text>
               </View>
@@ -571,8 +583,10 @@ export default function SecuritySettingsScreen() {
               />
             </View>
             <View className="flex-1 mr-3">
-              <Text className="text-foreground font-medium text-sm">Two-Factor Authentication</Text>
-              <Text className="text-xs text-muted-foreground mt-0.5">
+              <Text variant="body" weight="medium" className="text-foreground">
+                Two-Factor Authentication
+              </Text>
+              <Text variant="caption" className="text-muted-foreground mt-0.5">
                 {twoFactorEnabled
                   ? `Active · ${TFA_METHODS.find((m) => m.key === twoFactorMedium)?.label}`
                   : 'Adds an extra layer of security'}
@@ -613,10 +627,12 @@ export default function SecuritySettingsScreen() {
                   {method.icon}
                 </View>
                 <View className="flex-1 mr-3">
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: colors.foreground }}>
+                  <Text variant="body" weight="medium" style={{ color: colors.foreground }}>
                     {method.label}
                   </Text>
-                  <Text className="text-xs text-muted-foreground mt-0.5">{method.subtitle}</Text>
+                  <Text variant="caption" className="text-muted-foreground mt-0.5">
+                    {method.subtitle}
+                  </Text>
                 </View>
                 {isActive ? (
                   <CheckCircle2 size={18} color={colors.success} />
@@ -636,10 +652,10 @@ export default function SecuritySettingsScreen() {
               <Bell size={18} color={colors.success} />
             </View>
             <View className="flex-1 mr-3">
-              <Text className="text-foreground font-medium text-sm">
+              <Text variant="body" weight="medium" className="text-foreground">
                 Enable WhatsApp Notifications
               </Text>
-              <Text className="text-xs text-muted-foreground mt-0.5">
+              <Text variant="caption" className="text-muted-foreground mt-0.5">
                 Appointment reminders, prescription updates & health tips
               </Text>
             </View>
@@ -688,7 +704,11 @@ export default function SecuritySettingsScreen() {
                     gap: 4,
                   }}
                 >
-                  <Text style={{ fontSize: 12, fontWeight: '600', color: colors.white }}>
+                  <Text
+                    variant="label"
+                    weight="semibold"
+                    style={{ fontSize: 12, color: colors.white }}
+                  >
                     Set Up
                   </Text>
                   <ArrowRight size={12} color={colors.white} />
@@ -707,10 +727,12 @@ export default function SecuritySettingsScreen() {
               <Monitor size={18} color={colors.accent} />
             </View>
             <View className="flex-1">
-              <Text className="text-foreground font-medium text-sm">
+              <Text variant="body" weight="medium" className="text-foreground">
                 {sessions?.all.length ?? 0} device{sessions?.all.length === 1 ? '' : 's'} logged in
               </Text>
-              <Text className="text-xs text-muted-foreground mt-0.5">Including this device</Text>
+              <Text variant="caption" className="text-muted-foreground mt-0.5">
+                Including this device
+              </Text>
             </View>
             {sessionsQuery.isFetching && !sessionsQuery.isLoading && (
               <ActivityIndicator size="small" color={colors.primary} style={{ marginRight: 8 }} />
@@ -723,7 +745,11 @@ export default function SecuritySettingsScreen() {
                 accessibilityLabel="View all sessions"
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
               >
-                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
+                <Text
+                  variant="label"
+                  weight="semibold"
+                  style={{ fontSize: 12, color: colors.primary }}
+                >
                   View all
                 </Text>
                 <ChevronRight size={14} color={colors.primary} />
@@ -741,7 +767,7 @@ export default function SecuritySettingsScreen() {
                 <View
                   style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
                 >
-                  <Text className="text-sm font-medium text-foreground">
+                  <Text variant="body" weight="medium" className="text-foreground">
                     {sessions.current.deviceName}
                   </Text>
                   <View
@@ -752,12 +778,16 @@ export default function SecuritySettingsScreen() {
                       paddingVertical: 2,
                     }}
                   >
-                    <Text style={{ fontSize: 9, fontWeight: '700', color: colors.primary }}>
+                    <Text
+                      variant="caption"
+                      weight="bold"
+                      style={{ fontSize: 9, color: colors.primary }}
+                    >
                       THIS DEVICE
                     </Text>
                   </View>
                 </View>
-                <Text className="text-xs text-muted-foreground mt-0.5">
+                <Text variant="caption" className="text-muted-foreground mt-0.5">
                   {relativeTime(sessions.current.lastActiveAt)}
                   {sessions.current.location ? ` · ${sessions.current.location}` : ''}
                 </Text>
@@ -782,7 +812,7 @@ export default function SecuritySettingsScreen() {
                   <LogOut size={16} color={colors.destructive} />
                 )}
               </View>
-              <Text style={{ flex: 1, fontSize: 14, fontWeight: '500', color: colors.destructive }}>
+              <Text variant="body" weight="medium" style={{ flex: 1, color: colors.destructive }}>
                 Sign out {otherSessionCount} other device{otherSessionCount === 1 ? '' : 's'}
               </Text>
               <ChevronRight size={16} color={colors.destructive} />
@@ -791,7 +821,7 @@ export default function SecuritySettingsScreen() {
 
           {sessions?.all.length === 0 && (
             <View className="p-4">
-              <Text className="text-sm text-muted-foreground text-center">
+              <Text variant="body" className="text-muted-foreground text-center">
                 No active sessions found
               </Text>
             </View>
@@ -815,7 +845,7 @@ export default function SecuritySettingsScreen() {
         {/* ── Password tip ── */}
         <View className="mx-5 mt-4 flex-row items-start gap-2.5 bg-muted/50 border border-border rounded-2xl p-4">
           <Key size={15} color={colors.mutedForeground} style={{ marginTop: 1 }} />
-          <Text className="flex-1 text-xs text-muted-foreground leading-5">
+          <Text variant="caption" className="flex-1 text-muted-foreground leading-5">
             Use at least 8 characters including numbers and symbols. Never reuse passwords across
             different services.
           </Text>
@@ -825,10 +855,19 @@ export default function SecuritySettingsScreen() {
       {/* ════════════════════════════════════════════════════════
           Change Password Sheet
       ════════════════════════════════════════════════════════ */}
-      <BottomSheet visible={showPasswordSheet} onClose={() => setShowPasswordSheet(false)}>
+      <BottomSheet
+        visible={showPasswordSheet}
+        onClose={() => {
+          setShowPasswordSheet(false);
+          setCurrentPw('');
+          setNewPw('');
+          setConfirmPw('');
+        }}
+      >
         <ScrollView
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 8 }}
+          style={{ flexGrow: 0, width: '100%' }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
         >
           <View
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 16 }}
@@ -845,7 +884,11 @@ export default function SecuritySettingsScreen() {
             >
               <Lock size={18} color={colors.primary} />
             </View>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
+            <Text
+              variant="heading"
+              weight="bold"
+              style={{ fontSize: 16, color: colors.foreground }}
+            >
               Change Password
             </Text>
           </View>
@@ -868,7 +911,9 @@ export default function SecuritySettingsScreen() {
               (rule) => (
                 <View key={rule} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Check size={13} color={colors.success} />
-                  <Text style={{ fontSize: 12, color: colors.mutedForeground }}>{rule}</Text>
+                  <Text variant="caption" style={{ color: colors.mutedForeground }}>
+                    {rule}
+                  </Text>
                 </View>
               )
             )}
@@ -894,7 +939,7 @@ export default function SecuritySettingsScreen() {
             ) : (
               <Lock size={16} color={colors.white} />
             )}
-            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.white }}>
+            <Text variant="body" weight="semibold" style={{ fontSize: 15, color: colors.white }}>
               {changePassword.isPending ? 'Updating…' : 'Update Password'}
             </Text>
           </TouchableOpacity>
@@ -904,8 +949,14 @@ export default function SecuritySettingsScreen() {
       {/* ════════════════════════════════════════════════════════
           2FA Code Verification Sheet (Email / SMS)
       ════════════════════════════════════════════════════════ */}
-      <BottomSheet visible={showTFASheet} onClose={() => setShowTFASheet(false)}>
-        <View style={{ paddingHorizontal: 20, paddingBottom: 8 }}>
+      <BottomSheet
+        visible={showTFASheet}
+        onClose={() => {
+          setShowTFASheet(false);
+          setTfaCode('');
+        }}
+      >
+        <View style={{ paddingHorizontal: 20, paddingBottom: 24, width: '100%' }}>
           <View
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 16 }}
           >
@@ -922,10 +973,14 @@ export default function SecuritySettingsScreen() {
               <ShieldCheck size={18} color={colors.accent} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
+              <Text
+                variant="heading"
+                weight="bold"
+                style={{ fontSize: 16, color: colors.foreground }}
+              >
                 Enable 2FA via {TFA_METHODS.find((m) => m.key === pendingMethod)?.label}
               </Text>
-              <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+              <Text variant="caption" style={{ color: colors.mutedForeground, marginTop: 2 }}>
                 Enter the 6-digit code sent to your {pendingMethod === 'EMAIL' ? 'email' : 'phone'}
               </Text>
             </View>
@@ -936,7 +991,7 @@ export default function SecuritySettingsScreen() {
             onChangeText={(v) => setTfaCode(v.replace(/\D/g, '').slice(0, 6))}
             keyboardType="number-pad"
             placeholder="000000"
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor="#7c8ba3"
             maxLength={6}
             style={{
               backgroundColor: colors.muted,
@@ -975,7 +1030,7 @@ export default function SecuritySettingsScreen() {
             ) : (
               <ShieldCheck size={16} color={colors.white} />
             )}
-            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.white }}>
+            <Text variant="body" weight="semibold" style={{ fontSize: 15, color: colors.white }}>
               {updateSettings.isPending ? 'Verifying…' : 'Verify & Enable'}
             </Text>
           </TouchableOpacity>
@@ -985,8 +1040,14 @@ export default function SecuritySettingsScreen() {
       {/* ════════════════════════════════════════════════════════
           TOTP Auth App Setup Sheet
       ════════════════════════════════════════════════════════ */}
-      <BottomSheet visible={showTOTPSheet} onClose={() => setShowTOTPSheet(false)}>
-        <View style={{ paddingHorizontal: 20, paddingBottom: 8 }}>
+      <BottomSheet
+        visible={showTOTPSheet}
+        onClose={() => {
+          setShowTOTPSheet(false);
+          setTfaCode('');
+        }}
+      >
+        <View style={{ paddingHorizontal: 20, paddingBottom: 24, width: '100%' }}>
           <View
             style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 16 }}
           >
@@ -1003,10 +1064,14 @@ export default function SecuritySettingsScreen() {
               <Smartphone size={18} color={colors.accent} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
+              <Text
+                variant="heading"
+                weight="bold"
+                style={{ fontSize: 16, color: colors.foreground }}
+              >
                 Authenticator App
               </Text>
-              <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+              <Text variant="caption" style={{ color: colors.mutedForeground, marginTop: 2 }}>
                 Add this key in Google Authenticator, Authy, or 1Password
               </Text>
             </View>
@@ -1022,14 +1087,18 @@ export default function SecuritySettingsScreen() {
               borderColor: colors.border,
             }}
           >
-            <Text style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 6 }}>
+            <Text
+              variant="caption"
+              style={{ fontSize: 11, color: colors.mutedForeground, marginBottom: 6 }}
+            >
               Manual entry key
             </Text>
             <Text
               selectable
+              variant="body"
+              weight="bold"
               style={{
                 fontSize: 16,
-                fontWeight: '700',
                 color: colors.foreground,
                 letterSpacing: 2,
                 fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
@@ -1039,7 +1108,7 @@ export default function SecuritySettingsScreen() {
             </Text>
           </View>
 
-          <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 8 }}>
+          <Text variant="caption" style={{ color: colors.mutedForeground, marginBottom: 8 }}>
             Enter the 6-digit code from your app to verify
           </Text>
 
@@ -1048,7 +1117,7 @@ export default function SecuritySettingsScreen() {
             onChangeText={(v) => setTfaCode(v.replace(/\D/g, '').slice(0, 6))}
             keyboardType="number-pad"
             placeholder="000000"
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor="#7c8ba3"
             maxLength={6}
             style={{
               backgroundColor: colors.muted,
@@ -1087,7 +1156,7 @@ export default function SecuritySettingsScreen() {
             ) : (
               <ShieldCheck size={16} color={colors.white} />
             )}
-            <Text style={{ fontSize: 15, fontWeight: '600', color: colors.white }}>
+            <Text variant="body" weight="semibold" style={{ fontSize: 15, color: colors.white }}>
               {updateSettings.isPending ? 'Verifying…' : 'Verify & Enable'}
             </Text>
           </TouchableOpacity>
@@ -1098,7 +1167,7 @@ export default function SecuritySettingsScreen() {
           All Sessions Sheet
       ════════════════════════════════════════════════════════ */}
       <BottomSheet visible={showSessionsSheet} onClose={() => setShowSessionsSheet(false)}>
-        <View>
+        <View style={{ paddingBottom: 24, width: '100%' }}>
           <View
             style={{
               flexDirection: 'row',
@@ -1111,10 +1180,14 @@ export default function SecuritySettingsScreen() {
             }}
           >
             <View>
-              <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
+              <Text
+                variant="heading"
+                weight="bold"
+                style={{ fontSize: 16, color: colors.foreground }}
+              >
                 Active Sessions
               </Text>
-              <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+              <Text variant="caption" style={{ color: colors.mutedForeground, marginTop: 2 }}>
                 {sessions?.all.length ?? 0} device{sessions?.all.length === 1 ? '' : 's'} logged in
               </Text>
             </View>
@@ -1142,7 +1215,11 @@ export default function SecuritySettingsScreen() {
                 ) : (
                   <RefreshCw size={12} color={colors.destructive} />
                 )}
-                <Text style={{ fontSize: 12, fontWeight: '600', color: colors.destructive }}>
+                <Text
+                  variant="label"
+                  weight="semibold"
+                  style={{ fontSize: 12, color: colors.destructive }}
+                >
                   Logout All Others
                 </Text>
               </TouchableOpacity>
@@ -1197,7 +1274,9 @@ export default function SecuritySettingsScreen() {
                     }}
                   >
                     <Text
-                      style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}
+                      variant="body"
+                      weight="semibold"
+                      style={{ fontSize: 13, color: colors.foreground }}
                       numberOfLines={1}
                     >
                       {session.deviceName}
@@ -1211,13 +1290,17 @@ export default function SecuritySettingsScreen() {
                           paddingVertical: 1,
                         }}
                       >
-                        <Text style={{ fontSize: 9, fontWeight: '700', color: colors.primary }}>
+                        <Text
+                          variant="caption"
+                          weight="bold"
+                          style={{ fontSize: 9, color: colors.primary }}
+                        >
                           THIS DEVICE
                         </Text>
                       </View>
                     )}
                   </View>
-                  <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
+                  <Text variant="caption" style={{ color: colors.mutedForeground, marginTop: 2 }}>
                     {relativeTime(session.lastActiveAt)}
                     {session.location ? ` · ${session.location}` : ''}
                   </Text>
@@ -1254,7 +1337,7 @@ export default function SecuritySettingsScreen() {
           setDeletePw('');
         }}
       >
-        <View style={{ paddingHorizontal: 20, paddingBottom: 24 }}>
+        <View style={{ paddingHorizontal: 20, paddingBottom: 32, width: '100%' }}>
           {/* Header */}
           <View
             style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 20 }}
@@ -1272,10 +1355,14 @@ export default function SecuritySettingsScreen() {
               <AlertTriangle size={20} color={colors.destructive} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.foreground }}>
+              <Text
+                variant="heading"
+                weight="bold"
+                style={{ fontSize: 17, color: colors.foreground }}
+              >
                 Delete Account
               </Text>
-              <Text style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>
+              <Text variant="caption" style={{ color: colors.mutedForeground, marginTop: 2 }}>
                 This action is permanent and cannot be undone
               </Text>
             </View>
@@ -1300,7 +1387,10 @@ export default function SecuritySettingsScreen() {
             ].map((line) => (
               <View key={line} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
                 <AlertTriangle size={12} color={colors.destructive} style={{ marginTop: 2 }} />
-                <Text style={{ flex: 1, fontSize: 12, color: colors.destructive, lineHeight: 18 }}>
+                <Text
+                  variant="caption"
+                  style={{ flex: 1, color: colors.destructive, lineHeight: 18 }}
+                >
                   {line}
                 </Text>
               </View>
@@ -1309,9 +1399,10 @@ export default function SecuritySettingsScreen() {
 
           {/* Password confirmation */}
           <Text
+            variant="body"
+            weight="semibold"
             style={{
               fontSize: 13,
-              fontWeight: '600',
               color: colors.foreground,
               marginBottom: 8,
             }}
@@ -1347,7 +1438,7 @@ export default function SecuritySettingsScreen() {
               ) : (
                 <Trash2 size={16} color={colors.white} />
               )}
-              <Text style={{ fontSize: 15, fontWeight: '600', color: colors.white }}>
+              <Text variant="body" weight="semibold" style={{ fontSize: 15, color: colors.white }}>
                 {deleteLoading ? 'Deleting…' : 'Delete My Account'}
               </Text>
             </TouchableOpacity>
@@ -1365,7 +1456,11 @@ export default function SecuritySettingsScreen() {
                 backgroundColor: colors.muted,
               }}
             >
-              <Text style={{ fontSize: 15, fontWeight: '500', color: colors.foreground }}>
+              <Text
+                variant="body"
+                weight="medium"
+                style={{ fontSize: 15, color: colors.foreground }}
+              >
                 Cancel
               </Text>
             </TouchableOpacity>

@@ -19,7 +19,7 @@
  */
 
 import React from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { Modal, Pressable, View, useWindowDimensions } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { colors } from '../../theme/colors';
 
@@ -37,6 +37,8 @@ export default function KeyboardSheet({
   children,
   bottomPadding = 32,
 }: KeyboardSheetProps) {
+  const { width: windowWidth } = useWindowDimensions();
+
   return (
     <Modal
       visible={visible}
@@ -48,23 +50,32 @@ export default function KeyboardSheet({
       {/* Tap-away overlay */}
       <Pressable
         onPress={onClose}
-        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' }}
+        style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.55)',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+        }}
       >
         {/*
          * KeyboardAvoidingView from react-native-keyboard-controller:
          *  - behavior="padding" pushes the sheet content up by the keyboard height
          *  - Works correctly inside a Modal on both platforms
          */}
-        <KeyboardAvoidingView behavior="padding">
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={{ width: windowWidth, alignItems: 'center' }}
+        >
           {/* Stop taps on the sheet from closing the modal */}
-          <Pressable onPress={(e) => e.stopPropagation()}>
+          <Pressable onPress={(e) => e.stopPropagation()} style={{ width: windowWidth }}>
             <View
               style={{
                 backgroundColor: colors.card,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
                 paddingBottom: bottomPadding,
-                maxHeight: '92%',
+                width: windowWidth,
+                maxWidth: windowWidth,
               }}
             >
               {/* Drag handle */}
