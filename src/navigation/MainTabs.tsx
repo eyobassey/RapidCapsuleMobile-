@@ -87,6 +87,7 @@ const HIDE_TAB_SCREENS = new Set([
   'RiskHistory',
   'ExerciseHistory',
   'EditProfile',
+  'DrugSearch',
 ]);
 
 function getTabBarStyle(route: any) {
