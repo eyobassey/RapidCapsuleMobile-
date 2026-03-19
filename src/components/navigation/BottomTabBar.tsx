@@ -1,7 +1,9 @@
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BrainCircuit, Calendar, Home, Pill } from 'lucide-react-native';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import React from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/auth';
 import { usePharmacyStore } from '../../store/pharmacy';
@@ -16,6 +18,121 @@ const TAB_ICONS: Record<string, any> = {
   Pharmacy: Pill,
 };
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function TabItem({
+  route,
+  isFocused,
+  onPress,
+  Icon,
+  cartCount,
+  user,
+}: {
+  route: any;
+  isFocused: boolean;
+  onPress: () => void;
+  Icon: any;
+  cartCount: number;
+  user: any;
+}) {
+  const isProfile = route.name === 'Profile';
+  const isPharmacy = route.name === 'Pharmacy';
+  const showBadge = isPharmacy && cartCount > 0;
+
+  // Animation values
+  const scale = useSharedValue(isFocused ? 1.15 : 1);
+  const opacity = useSharedValue(isFocused ? 1 : 0.65);
+
+  useEffect(() => {
+    scale.value = withSpring(isFocused ? 1.15 : 1, { damping: 12, stiffness: 120 });
+    opacity.value = withSpring(isFocused ? 1 : 0.65);
+  }, [isFocused, scale, opacity]);
+
+  const animatedIconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const tabLabel = route.name === 'Eka' ? 'Eka AI' : route.name;
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.8}
+      accessibilityRole="tab"
+      accessibilityLabel={`${tabLabel}${showBadge ? `, ${cartCount} items in cart` : ''}`}
+      accessibilityState={{ selected: isFocused }}
+      testID={`bottom-tab-${String(route.name).toLowerCase()}`}
+      className="items-center justify-center flex-1 h-full"
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+    >
+      <Animated.View style={[styles.itemContainer, animatedIconStyle]}>
+        {isProfile ? (
+          <View
+            style={{
+              borderWidth: 1.5,
+              borderRadius: 14,
+              borderColor: isFocused ? colors.primary : 'transparent',
+              padding: 1.5,
+              backgroundColor: isFocused ? `${colors.primary}10` : 'transparent',
+            }}
+          >
+            <Avatar
+              uri={user?.profile?.profile_photo || user?.profile?.profile_image}
+              firstName={user?.profile?.first_name || 'U'}
+              lastName={user?.profile?.last_name || ''}
+              size="sm"
+            />
+          </View>
+        ) : (
+          <View style={{ position: 'relative' }}>
+            <Icon
+              size={22}
+              color={isFocused ? colors.primary : colors.mutedForeground}
+              strokeWidth={isFocused ? 2.5 : 2}
+            />
+            {showBadge && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -6,
+                  right: -10,
+                  backgroundColor: colors.destructive,
+                  borderRadius: 8,
+                  minWidth: 16,
+                  height: 16,
+                  paddingHorizontal: 4,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderWidth: 1.5,
+                  borderColor: colors.card,
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 8, fontWeight: '800' }}>
+                  {cartCount > 9 ? '9+' : cartCount}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+      </Animated.View>
+      <Text
+        style={{
+          fontSize: 9,
+          fontWeight: isFocused ? '700' : '600',
+          color: isFocused ? colors.primary : colors.mutedForeground,
+          marginTop: 2,
+          opacity: isFocused ? 1 : 0.8,
+        }}
+      >
+        {tabLabel}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+// ─── Main Tab Bar ─────────────────────────────────────────────────────────────
+
 export default function BottomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const cartCount = usePharmacyStore((s) => s.cartCount);
@@ -28,157 +145,124 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
     return null;
   }
 
-  const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
-  const firstName = user?.profile?.first_name || 'User';
-  const lastName = user?.profile?.last_name || '';
-
   return (
-    <View
-      className="absolute bottom-0 left-0 right-0 bg-card/95 border-t border-border px-4 pt-3 flex-row justify-between items-center"
-      style={{ paddingBottom: insets.bottom, zIndex: 1000, elevation: 1000 }}
-    >
-      {state.routes.map((route: any, index: number) => {
-        const isFocused = state.index === index;
-        const isEka = route.name === 'Eka';
-        const isProfile = route.name === 'Profile';
-        const Icon = TAB_ICONS[route.name];
+    <View style={[styles.container, { paddingBottom: insets.bottom + 6 }]}>
+      {/* Background with slight translucency */}
+      <View style={styles.blurBackground} />
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-          if (!event.defaultPrevented) {
-            // Map tab name to its initial screen name
-            const initialScreen = route.name === 'Profile' ? 'ProfileHome' : route.name;
-            if (isFocused) {
-              // Already on this tab — reset to initial screen
-              navigation.navigate(route.name, { screen: initialScreen });
-            } else {
-              // Switch tab and reset its stack to initial screen
-              navigation.navigate(
-                route.name,
-                route.name !== 'Eka' ? { screen: initialScreen } : undefined
-              );
+      <View style={styles.contentContainer}>
+        {state.routes.map((route: any, index: number) => {
+          const isFocused = state.index === index;
+          const isEka = route.name === 'Eka';
+          const Icon = TAB_ICONS[route.name];
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+            if (!event.defaultPrevented) {
+              const initialScreen = route.name === 'Profile' ? 'ProfileHome' : route.name;
+              if (isFocused) {
+                navigation.navigate(route.name, { screen: initialScreen });
+              } else {
+                navigation.navigate(
+                  route.name,
+                  route.name !== 'Eka' ? { screen: initialScreen } : undefined
+                );
+              }
             }
-          }
-        };
+          };
 
-        const tabLabel = route.name === 'Eka' ? 'Eka AI' : route.name;
-
-        // Eka FAB (elevated center button)
-        if (isEka) {
-          return (
-            <TouchableOpacity
-              key={route.key}
-              onPress={onPress}
-              activeOpacity={0.8}
-              accessibilityRole="tab"
-              accessibilityLabel={tabLabel}
-              accessibilityState={{ selected: isFocused }}
-              testID="bottom-tab-eka"
-              style={{
-                position: 'relative',
-                top: -20,
-                width: 56,
-                height: 56,
-                borderRadius: 28,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 4,
-                borderColor: colors.background,
-                backgroundColor: colors.primary,
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 8,
-              }}
-            >
-              <Icon size={24} color={colors.white} />
-            </TouchableOpacity>
-          );
-        }
-
-        const showBadge = route.name === 'Pharmacy' && cartCount > 0;
-
-        // Profile tab: show avatar instead of icon
-        if (isProfile) {
-          return (
-            <TouchableOpacity
-              key={route.key}
-              onPress={onPress}
-              activeOpacity={0.7}
-              accessibilityRole="tab"
-              accessibilityLabel="Profile"
-              accessibilityState={{ selected: isFocused }}
-              testID="bottom-tab-profile"
-              className="items-center gap-1 flex-1"
-            >
-              <View
-                style={{
-                  borderWidth: 2,
-                  borderRadius: 9999,
-                  borderColor: isFocused ? colors.primary : 'transparent',
-                }}
-              >
-                <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="sm" />
-              </View>
-              <Text
-                className={`text-[10px] ${
-                  isFocused ? 'font-bold text-primary' : 'font-medium text-muted-foreground'
-                }`}
-              >
-                {route.name}
-              </Text>
-            </TouchableOpacity>
-          );
-        }
-
-        return (
-          <TouchableOpacity
-            key={route.key}
-            onPress={onPress}
-            activeOpacity={0.7}
-            accessibilityRole="tab"
-            accessibilityLabel={`${tabLabel}${showBadge ? `, ${cartCount} items in cart` : ''}`}
-            accessibilityState={{ selected: isFocused }}
-            testID={`bottom-tab-${String(route.name).toLowerCase()}`}
-            className="items-center gap-1 flex-1"
-          >
-            <View style={{ position: 'relative' }}>
-              <Icon size={24} color={isFocused ? colors.primary : colors.mutedForeground} />
-              {showBadge && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: -4,
-                    right: -8,
-                    backgroundColor: colors.destructive,
-                    borderRadius: 9999,
-                    width: 16,
-                    height: 16,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+          // Eka FAB (elevated center button with Premium Gradient)
+          if (isEka) {
+            return (
+              <View key={route.key} style={styles.ekaWrapper}>
+                <TouchableOpacity
+                  onPress={onPress}
+                  activeOpacity={0.9}
+                  accessibilityRole="tab"
+                  accessibilityLabel="Eka AI"
+                  accessibilityState={{ selected: isFocused }}
+                  testID="bottom-tab-eka"
                 >
-                  <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>
-                    {cartCount > 9 ? '9+' : cartCount}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <Text
-              className={`text-[10px] ${
-                isFocused ? 'font-bold text-primary' : 'font-medium text-muted-foreground'
-              }`}
-            >
-              {route.name}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+                  <LinearGradient
+                    colors={['#0ea5e9', '#6366f1']} // primary to indigo
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.ekaButton}
+                  >
+                    <Icon size={26} color={colors.white} strokeWidth={2.5} />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            );
+          }
+
+          return (
+            <TabItem
+              key={route.key}
+              route={route}
+              isFocused={isFocused}
+              onPress={onPress}
+              Icon={Icon}
+              cartCount={cartCount}
+              user={user}
+            />
+          );
+        })}
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  blurBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: `${colors.card}F2`, // high opacity card color for glassmorphism effect
+    borderTopWidth: 0.5,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    height: 54,
+  },
+  itemContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  ekaWrapper: {
+    width: 68,
+    height: 68,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -28, // Floating effect
+  },
+  ekaButton: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: colors.background, // Standard floating button border trick
+    shadowColor: '#0ea5e9',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+});
