@@ -8,23 +8,34 @@ import {
   Edit3,
   FileText,
   Gift,
+  HeartPulse,
   HelpCircle,
   Info,
   LogOut,
   Pill,
   Shield,
-  Wallet,
   ShieldCheck,
-  HeartPulse,
+  Wallet,
 } from 'lucide-react-native';
-import React, { useState, useMemo } from 'react';
-import { Alert, ScrollView, TouchableOpacity, View, StyleSheet, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import DeviceInfo from 'react-native-device-info';
 import { Avatar, KeyboardSheet } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
+import { useHealthScoreQuery } from '../../hooks/queries/useHealthScoreQuery';
+import { useWalletBalanceQuery } from '../../hooks/queries/useWalletQuery';
+import { useCurrency } from '../../hooks/useCurrency';
 import { useAuthStore } from '../../store/auth';
 import { useCurrencyStore } from '../../store/currency';
 import { colors } from '../../theme/colors';
@@ -61,11 +72,19 @@ export default function ProfileScreen() {
   const currentCurrency = SUPPORTED_CURRENCIES[currencyCode] ?? SUPPORTED_CURRENCIES.USD;
   const appVersionLabel = getAppVersionLabel();
 
+  const { format } = useCurrency();
+  const healthQuery = useHealthScoreQuery();
+  const walletQuery = useWalletBalanceQuery();
+
   const firstName = user?.profile?.first_name || 'User';
   const lastName = user?.profile?.last_name || '';
   const email = user?.email || '';
   const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
   const memberSince = (user as any)?.created_at ? formatDate((user as any).created_at) : '';
+
+  const healthScore = healthQuery.data?.totalScore ?? healthQuery.data?.score ?? 0;
+  const walletBalance = walletQuery.data?.balance ?? 0;
+  const accountStatus = user?.onboarding_completed ? 'Active' : 'Pending';
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out of your account?', [
@@ -242,7 +261,11 @@ export default function ProfileScreen() {
                 <HeartPulse size={16} color={colors.primary} strokeWidth={2.5} />
               </View>
               <Text style={styles.metricLabel}>Health</Text>
-              <Text style={styles.metricValue}>84</Text>
+              {healthQuery.isLoading ? (
+                <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 2 }} />
+              ) : (
+                <Text style={styles.metricValue}>{healthScore}</Text>
+              )}
             </View>
 
             <View style={styles.metricCard}>
@@ -252,15 +275,36 @@ export default function ProfileScreen() {
                 <Wallet size={16} color={colors.success} strokeWidth={2.5} />
               </View>
               <Text style={styles.metricLabel}>Credits</Text>
-              <Text style={styles.metricValue}>$42</Text>
+              <Text style={styles.metricValue}>
+                {walletQuery.isLoading ? '...' : format(walletBalance)}
+              </Text>
             </View>
 
             <View style={styles.metricCard}>
-              <View style={[styles.metricIconContainer, { backgroundColor: `${colors.accent}15` }]}>
-                <ShieldCheck size={16} color={colors.accent} strokeWidth={2.5} />
+              <View
+                style={[
+                  styles.metricIconContainer,
+                  {
+                    backgroundColor:
+                      accountStatus === 'Active' ? `${colors.success}15` : '#f59e0b15',
+                  },
+                ]}
+              >
+                <ShieldCheck
+                  size={16}
+                  color={accountStatus === 'Active' ? colors.success : '#f59e0b'}
+                  strokeWidth={2.5}
+                />
               </View>
               <Text style={styles.metricLabel}>Status</Text>
-              <Text style={[styles.metricValue, { color: colors.success }]}>Active</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  { color: accountStatus === 'Active' ? colors.success : '#f59e0b' },
+                ]}
+              >
+                {accountStatus}
+              </Text>
             </View>
           </View>
         </View>
