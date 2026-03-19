@@ -56,7 +56,7 @@ describe('ProfileScreen', () => {
 
     const { getByText } = renderWithNav();
 
-    fireEvent.press(getByText('Currency'));
+    fireEvent.press(getByText('Display Currency'));
 
     expect(getByText('Select Currency')).toBeTruthy();
   });
