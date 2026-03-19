@@ -1,3 +1,9 @@
+# [1.8.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.7.0...v1.8.0) (2026-03-19)
+
+### Features
+
+- **vitals:** add mood, anxiety, cravings, and motivation vital types ([5e92665](https://github.com/eyobassey/RapidCapsuleMobile-/commit/5e92665e63656056a58f0606d46891ec556689d4))
+
 # [1.7.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.6.0...v1.7.0) (2026-03-19)
 
 ### Features
