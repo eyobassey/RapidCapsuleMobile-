@@ -67,7 +67,6 @@ export default function ProfileStack() {
       <Stack.Screen name="HealthRecords" component={HealthRecordsScreen} />
       <Stack.Screen name="PrescriptionsList" component={PrescriptionsListScreen} />
       <Stack.Screen name="PrescriptionDetail" component={PrescriptionDetailScreen} />
-      <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
       <Stack.Screen name="Settings" component={PlaceholderScreen} />
       <Stack.Screen name="SecuritySettings" component={SecuritySettingsScreen} />
       <Stack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
