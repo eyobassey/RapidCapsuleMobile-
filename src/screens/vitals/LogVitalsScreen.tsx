@@ -19,8 +19,12 @@ import {
 import React, { useCallback, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Alert, Platform, TextInput as RNTextInput, ScrollView, View } from 'react-native';
-import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  KeyboardAvoidingView,
+  useReanimatedKeyboardAnimation,
+} from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui/Text';
 
 import { Button, Header, Input } from '../../components/ui';
@@ -59,10 +63,21 @@ function validateNumericField(value: string | undefined): string | undefined {
 
 export default function LogVitalsScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const route = useRoute<RouteProp<HomeStackParamList, 'LogVitals'>>();
   const focusedVitalType = route.params?.vitalType;
   const { logVital } = useVitalsStore();
   const bpDiastolicRef = useRef<RNTextInput>(null);
+
+  // Keyboard animation for dynamic padding
+  const keyboard = useReanimatedKeyboardAnimation();
+  const animatedFooterStyle = useAnimatedStyle(() => {
+    const height = Math.abs(keyboard.height.value || 0);
+    const padding = interpolate(height, [0, 300], [Math.max(insets.bottom, 16), 12], 'clamp');
+    return {
+      paddingBottom: padding,
+    };
+  });
 
   const {
     control,
@@ -194,7 +209,10 @@ export default function LogVitalsScreen() {
         onBack={() => navigation.goBack()}
       />
 
-      <KeyboardAvoidingView className="flex-1">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView
           className="flex-1"
           contentContainerClassName="px-5 pt-4 pb-10"
@@ -336,20 +354,21 @@ export default function LogVitalsScreen() {
           )}
         </ScrollView>
 
-        <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-          <View className="bg-background border-t border-border px-5 pt-3 pb-8">
-            <Button
-              variant="primary"
-              onPress={handleSubmit(onSubmit)}
-              loading={saving}
-              disabled={filledCount === 0}
-            >
-              {`Save ${
-                filledCount > 0 ? `(${filledCount} vital${filledCount > 1 ? 's' : ''})` : 'Vitals'
-              }`}
-            </Button>
-          </View>
-        </KeyboardStickyView>
+        <Animated.View
+          className="bg-background border-t border-border px-5 pt-3"
+          style={animatedFooterStyle}
+        >
+          <Button
+            variant="primary"
+            onPress={handleSubmit(onSubmit)}
+            loading={saving}
+            disabled={filledCount === 0}
+          >
+            {`Save ${
+              filledCount > 0 ? `(${filledCount} vital${filledCount > 1 ? 's' : ''})` : 'Vitals'
+            }`}
+          </Button>
+        </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

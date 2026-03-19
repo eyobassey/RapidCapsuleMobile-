@@ -22,7 +22,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
+import {
+  KeyboardAvoidingView,
+  useReanimatedKeyboardAnimation,
+} from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
 import { WebView } from 'react-native-webview';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -60,6 +64,16 @@ export default function CheckoutScreen() {
   const [patientNotes, setPatientNotes] = useState('');
   const [placing, setPlacing] = useState(false);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
+
+  // Keyboard animation for dynamic padding
+  const keyboard = useReanimatedKeyboardAnimation();
+  const animatedFooterStyle = useAnimatedStyle(() => {
+    const height = Math.abs(keyboard.height.value || 0);
+    const padding = interpolate(height, [0, 300], [Math.max(insets.bottom, 16), 12], 'clamp');
+    return {
+      paddingBottom: padding,
+    };
+  });
 
   // Address form
   const [selectedAddress, setSelectedAddress] = useState<DeliveryAddress | null>(null);
@@ -258,7 +272,10 @@ export default function CheckoutScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header title="Checkout" onBack={() => navigation.goBack()} />
 
-      <KeyboardAvoidingView className="flex-1">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView
           className="flex-1"
           contentContainerClassName="px-5 pt-4 pb-10"
@@ -669,18 +686,19 @@ export default function CheckoutScreen() {
           </View>
         </ScrollView>
 
-        <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-          <View className="bg-background border-t border-border px-5 pt-3 pb-8">
-            <Button
-              variant="primary"
-              onPress={handlePlaceOrder}
-              loading={placing}
-              disabled={cartItems.length === 0}
-            >
-              Place Order - {format(total)}
-            </Button>
-          </View>
-        </KeyboardStickyView>
+        <Animated.View
+          className="bg-background border-t border-border px-5 pt-3"
+          style={animatedFooterStyle}
+        >
+          <Button
+            variant="primary"
+            onPress={handlePlaceOrder}
+            loading={placing}
+            disabled={cartItems.length === 0}
+          >
+            Place Order - {format(total)}
+          </Button>
+        </Animated.View>
       </KeyboardAvoidingView>
 
       {/* ═══════ PAYSTACK WEBVIEW MODAL ═══════ */}

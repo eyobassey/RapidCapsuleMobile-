@@ -24,8 +24,12 @@ import {
   View,
 } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  KeyboardAvoidingView,
+  useReanimatedKeyboardAnimation,
+} from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui/Text';
 
 import SelectPicker from '../../components/onboarding/SelectPicker';
@@ -46,6 +50,7 @@ const MARITAL_OPTIONS = [
 
 export default function EditProfileScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const fetchUser = useAuthStore((s) => s.fetchUser);
   const { progress, completedSections } = useOnboardingStore();
@@ -54,6 +59,18 @@ export default function EditProfileScreen() {
 
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  // Keyboard animation for dynamic padding
+  const keyboard = useReanimatedKeyboardAnimation();
+  const animatedFooterStyle = useAnimatedStyle(() => {
+    const height = Math.abs(keyboard.height.value || 0);
+    // When keyboard is closed (height=0), padding is insets.bottom.
+    // When keyboard is open (height>0), padding is reduced to 8.
+    const padding = interpolate(height, [0, 300], [Math.max(insets.bottom, 16), 8], 'clamp');
+    return {
+      paddingBottom: padding,
+    };
+  });
 
   // Form state
   const [firstName, setFirstName] = useState(user?.profile?.first_name || '');
@@ -233,7 +250,10 @@ export default function EditProfileScreen() {
         }
       />
 
-      <KeyboardAvoidingView className="flex-1">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView
           className="flex-1"
           contentContainerClassName="px-5 pt-6 pb-10"
@@ -510,13 +530,14 @@ export default function EditProfileScreen() {
           </View>
         </ScrollView>
 
-        <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-          <View className="bg-background border-t border-border px-5 pt-3 pb-8">
-            <Button variant="primary" onPress={handleSave} loading={saving}>
-              Save Changes
-            </Button>
-          </View>
-        </KeyboardStickyView>
+        <Animated.View
+          className="bg-background border-t border-border px-5 pt-3"
+          style={animatedFooterStyle}
+        >
+          <Button variant="primary" onPress={handleSave} loading={saving}>
+            Save Changes
+          </Button>
+        </Animated.View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

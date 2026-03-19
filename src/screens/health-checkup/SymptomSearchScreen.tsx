@@ -12,8 +12,12 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  KeyboardAvoidingView,
+  useReanimatedKeyboardAnimation,
+} from 'react-native-keyboard-controller';
+import AnimatedRN, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import BodyAvatar from '../../components/health-checkup/BodyAvatar';
 import { Button, Header } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
@@ -27,6 +31,7 @@ const SHEET_HEIGHT = SCREEN_HEIGHT * 0.48;
 
 export default function SymptomSearchScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { addEvidence, submitDiagnosis, isLoading, searchSymptoms, sex } = useHealthCheckupStore();
 
   const [tab, setTab] = useState<Tab>('search');
@@ -35,6 +40,16 @@ export default function SymptomSearchScreen() {
   const [selected, setSelected] = useState<Map<string, any>>(new Map());
   const [searching, setSearching] = useState(false);
   const debounceRef = useRef<any>(null);
+
+  // Keyboard animation for dynamic padding
+  const keyboard = useReanimatedKeyboardAnimation();
+  const animatedFooterStyle = useAnimatedStyle(() => {
+    const height = Math.abs(keyboard.height.value || 0);
+    const padding = interpolate(height, [0, 300], [Platform.OS === 'ios' ? 28 : 16, 12], 'clamp');
+    return {
+      paddingBottom: padding,
+    };
+  });
 
   // Body map state
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -133,7 +148,10 @@ export default function SymptomSearchScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header title="Symptoms" onBack={() => navigation.goBack()} />
 
-      <KeyboardAvoidingView style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 }}
@@ -358,24 +376,24 @@ export default function SymptomSearchScreen() {
 
         {/* ── Fixed/Sticky Next Button ── */}
         {!selectedRegion && (
-          <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-            <View
-              style={{
+          <AnimatedRN.View
+            style={[
+              {
                 backgroundColor: colors.background,
                 borderTopWidth: 1,
                 borderTopColor: colors.border,
                 paddingHorizontal: 20,
                 paddingTop: 12,
-                paddingBottom: Platform.OS === 'ios' ? 28 : 16,
-              }}
-            >
-              <Button variant="primary" onPress={handleNext} loading={isLoading}>
-                {selected.size > 0
-                  ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
-                  : 'Select Symptoms'}
-              </Button>
-            </View>
-          </KeyboardStickyView>
+              },
+              animatedFooterStyle,
+            ]}
+          >
+            <Button variant="primary" onPress={handleNext} loading={isLoading}>
+              {selected.size > 0
+                ? `Continue with ${selected.size} symptom${selected.size > 1 ? 's' : ''}`
+                : 'Select Symptoms'}
+            </Button>
+          </AnimatedRN.View>
         )}
 
         {/* ── Bottom Sheet for Body Map Symptoms ── */}

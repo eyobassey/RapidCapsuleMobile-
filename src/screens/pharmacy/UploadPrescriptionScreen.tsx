@@ -8,10 +8,14 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { KeyboardAvoidingView, KeyboardStickyView } from 'react-native-keyboard-controller';
+import {
+  KeyboardAvoidingView,
+  useReanimatedKeyboardAnimation,
+} from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
 import {
   Camera,
   ImageIcon,
@@ -71,6 +75,7 @@ function StepIcon({ state }: { state: 'done' | 'active' | 'pending' | 'failed' }
 
 export default function UploadPrescriptionScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { uploadPrescription, fetchVerification, isUploading } = usePrescriptionUploadStore();
 
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -78,6 +83,16 @@ export default function UploadPrescriptionScreen() {
   const [uploadId, setUploadId] = useState<string | null>(null);
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Keyboard animation for dynamic padding
+  const keyboard = useReanimatedKeyboardAnimation();
+  const animatedFooterStyle = useAnimatedStyle(() => {
+    const height = Math.abs(keyboard.height.value || 0);
+    const padding = interpolate(height, [0, 300], [Math.max(insets.bottom, 16), 12], 'clamp');
+    return {
+      paddingBottom: padding,
+    };
+  });
 
   // ── Image Picker ──
   const pickFromCamera = () => {
@@ -276,7 +291,10 @@ export default function UploadPrescriptionScreen() {
 
         {/* Bottom Actions */}
         {isTerminal && (
-          <View className="bg-background border-t border-border px-5 pt-3 pb-8">
+          <View
+            className="bg-background border-t border-border px-5 pt-3"
+            style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          >
             <View className="flex-row gap-3">
               <View className="flex-1">
                 <Button variant="outline" onPress={() => navigation.navigate('MyUploads')}>
@@ -321,7 +339,10 @@ export default function UploadPrescriptionScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header title="Upload Prescription" onBack={() => navigation.goBack()} />
 
-      <KeyboardAvoidingView className="flex-1">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView
           className="flex-1"
           contentContainerClassName="px-5 pt-4 pb-10"
@@ -397,17 +418,18 @@ export default function UploadPrescriptionScreen() {
 
         {/* Upload Button */}
         {imageUri && (
-          <KeyboardStickyView offset={{ closed: 0, opened: 0 }}>
-            <View className="bg-background border-t border-border px-5 pt-3 pb-8">
-              <Button
-                variant="primary"
-                icon={<Upload size={18} color="#fff" />}
-                onPress={handleUpload}
-              >
-                Upload Prescription
-              </Button>
-            </View>
-          </KeyboardStickyView>
+          <Animated.View
+            className="bg-background border-t border-border px-5 pt-3"
+            style={animatedFooterStyle}
+          >
+            <Button
+              variant="primary"
+              icon={<Upload size={18} color="#fff" />}
+              onPress={handleUpload}
+            >
+              Upload Prescription
+            </Button>
+          </Animated.View>
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>
