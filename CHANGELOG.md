@@ -1,3 +1,9 @@
+# [1.4.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.3.1...v1.4.0) (2026-03-19)
+
+### Features
+
+- **ui:** replace health score ring with semicircular gauge ([ef37149](https://github.com/eyobassey/RapidCapsuleMobile-/commit/ef371494f65a2159cad5b4732bd3dcc055d3f797))
+
 ## [1.3.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.3.0...v1.3.1) (2026-03-19)
 
 ### Bug Fixes
