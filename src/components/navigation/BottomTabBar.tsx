@@ -88,7 +88,7 @@ function TabItem({
               uri={user?.profile?.profile_photo || user?.profile?.profile_image}
               firstName={user?.profile?.first_name || 'U'}
               lastName={user?.profile?.last_name || ''}
-              size="sm"
+              size="xs"
             />
           </View>
         ) : (

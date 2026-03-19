@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Image } from 'react-native';
+import { Image, View } from 'react-native';
 import { colors } from '../../theme/colors';
 import { getInitials } from '../../utils/formatters';
 import { Text } from './Text';
 
-type AvatarSize = 'sm' | 'md' | 'lg';
+type AvatarSize = 'xs' | 'sm' | 'md' | 'lg';
 
 interface AvatarProps {
   uri?: string | null;
@@ -14,12 +14,14 @@ interface AvatarProps {
 }
 
 const sizeMap: Record<AvatarSize, number> = {
+  xs: 24,
   sm: 32,
   md: 40,
   lg: 56,
 };
 
 const fontSizeMap: Record<AvatarSize, number> = {
+  xs: 10,
   sm: 12,
   md: 14,
   lg: 18,
