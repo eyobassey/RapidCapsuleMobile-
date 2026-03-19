@@ -1,3 +1,9 @@
+## [1.3.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.3.0...v1.3.1) (2026-03-19)
+
+### Bug Fixes
+
+- address code quality issues in auth, storage, and notifications ([efe9918](https://github.com/eyobassey/RapidCapsuleMobile-/commit/efe991840620e6f5c465a4e3ac76376dd08b16b9))
+
 # [1.3.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.2.0...v1.3.0) (2026-03-19)
 
 ### Bug Fixes
