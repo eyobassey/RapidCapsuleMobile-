@@ -13,9 +13,9 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Platform, TouchableOpacity, View } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import MessageBubble from '../../components/messages/MessageBubble';
 import TypingIndicator from '../../components/messages/TypingIndicator';
@@ -55,6 +55,7 @@ export default function ChatScreen() {
     conversationId: string;
     conversation?: Conversation;
   };
+  const { bottom } = useSafeAreaInsets();
 
   const myUserId = useAuthStore((s) => s.user?._id) || '';
   const allMessages = useMessagingStore((s) => s.messages);
@@ -732,6 +733,7 @@ export default function ChatScreen() {
               borderTopWidth: 1,
               borderTopColor: colors.border,
               backgroundColor: colors.background,
+              paddingBottom: bottom,
             }}
           >
             <TouchableOpacity
