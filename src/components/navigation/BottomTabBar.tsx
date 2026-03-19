@@ -200,7 +200,7 @@ function EkaButton({
         testID="bottom-tab-eka"
       >
         <LinearGradient
-          colors={['#0ea5e9', '#6366f1', '#a855f7']} // blue -> indigo -> purple
+          colors={[colors.primary, colors.accent]} // Sky Blue -> Indigo
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.ekaButton, { borderColor: colors.background }]}
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
-    shadowColor: '#0ea5e9',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.45,
     shadowRadius: 12,
