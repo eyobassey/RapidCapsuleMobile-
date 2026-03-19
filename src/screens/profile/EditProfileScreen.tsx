@@ -93,15 +93,29 @@ export default function EditProfileScreen() {
       {
         text: 'Take Photo',
         onPress: () =>
-          launchCamera({ mediaType: 'photo', quality: 0.8 }, (res) =>
-            handleImagePickerResponse(res)
+          launchCamera(
+            {
+              mediaType: 'photo',
+              quality: 0.7,
+              includeBase64: true,
+              maxWidth: 800,
+              maxHeight: 800,
+            },
+            (res) => handleImagePickerResponse(res)
           ),
       },
       {
         text: 'Choose from Gallery',
         onPress: () =>
-          launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (res) =>
-            handleImagePickerResponse(res)
+          launchImageLibrary(
+            {
+              mediaType: 'photo',
+              quality: 0.7,
+              includeBase64: true,
+              maxWidth: 800,
+              maxHeight: 800,
+            },
+            (res) => handleImagePickerResponse(res)
           ),
       },
       { text: 'Cancel', style: 'cancel' },
@@ -112,35 +126,22 @@ export default function EditProfileScreen() {
     if (response.didCancel || !response.assets?.[0]) return;
 
     const asset = response.assets[0];
-    const filename = asset.fileName || `profile_${Date.now()}.jpg`;
+    const base64 = asset.base64;
     const contentType = asset.type || 'image/jpeg';
-    const uri = asset.uri;
 
-    if (!uri) return;
+    if (!base64) {
+      Alert.alert('Error', 'Could not get image data.');
+      return;
+    }
+
+    const dataUri = `data:${contentType};base64,${base64}`;
 
     setUploadingPhoto(true);
     try {
-      // 1. Get presigned URL
-      const { presigned_url, file_url } = await usersService.getPresignedUrl(filename, contentType);
-
-      // 2. Upload to S3
-      const fileData = await fetch(uri);
-      const blob = await fileData.blob();
-
-      const uploadRes = await fetch(presigned_url, {
-        method: 'PUT',
-        body: blob,
-        headers: {
-          'Content-Type': contentType,
-        },
-      });
-
-      if (!uploadRes.ok) throw new Error('Failed to upload image to storage');
-
-      // 3. Update user profile with the new file URL
+      // Direct PATCH with Base64 as shown in the updated API collection/curl
       await usersService.updateProfile({
         profile: {
-          profile_photo: file_url,
+          profile_photo: dataUri,
         },
       });
 

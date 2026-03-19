@@ -67,7 +67,7 @@ export async function signInWithGoogle(): Promise<string> {
     token: idToken,
     user_type: 'Patient',
   });
-  const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
+  const token = apiRes.data?.data?.token || apiRes.data?.result || apiRes.data?.token;
   if (!token || typeof token !== 'string') {
     throw new Error('Backend did not return auth token');
   }
