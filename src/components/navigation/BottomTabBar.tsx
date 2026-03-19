@@ -218,7 +218,9 @@ function EkaButton({
               borderColor: 'rgba(255,255,255,0.15)',
             }}
           />
-          <Animated.View style={animatedIconStyle}>
+          <Animated.View
+            style={[animatedIconStyle, { alignItems: 'center', justifyContent: 'center' }]}
+          >
             <Icon size={26} color={colors.white} strokeWidth={2.5} />
           </Animated.View>
         </LinearGradient>
