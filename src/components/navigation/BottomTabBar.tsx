@@ -6,7 +6,6 @@ import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withDelay,
   withRepeat,
   withSequence,
   withSpring,
@@ -336,7 +335,7 @@ const styles = StyleSheet.create({
     borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
+    borderWidth: 2,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.45,
