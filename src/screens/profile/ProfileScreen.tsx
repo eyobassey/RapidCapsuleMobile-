@@ -34,6 +34,7 @@ import DeviceInfo from 'react-native-device-info';
 import { Avatar, KeyboardSheet } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
 import { useHealthScoreQuery } from '../../hooks/queries/useHealthScoreQuery';
+import { useReferralStatsQuery } from '../../hooks/queries/useReferralsQuery';
 import { useWalletBalanceQuery } from '../../hooks/queries/useWalletQuery';
 import { useCurrency } from '../../hooks/useCurrency';
 import { useAuthStore } from '../../store/auth';
@@ -75,6 +76,7 @@ export default function ProfileScreen() {
   const { format } = useCurrency();
   const healthQuery = useHealthScoreQuery();
   const walletQuery = useWalletBalanceQuery();
+  const referralsQuery = useReferralStatsQuery();
 
   const firstName = user?.profile?.first_name || 'User';
   const lastName = user?.profile?.last_name || '';
@@ -83,8 +85,8 @@ export default function ProfileScreen() {
   const memberSince = (user as any)?.created_at ? formatDate((user as any).created_at) : '';
 
   const healthScore = healthQuery.data?.totalScore ?? healthQuery.data?.score ?? 0;
-  const walletBalance = walletQuery.data?.balance ?? 0;
-  const accountStatus = user?.onboarding_completed ? 'Active' : 'Pending';
+  const walletBalance = walletQuery.data?.currentBalance ?? walletQuery.data?.balance ?? 0;
+  const referralCount = referralsQuery.data?.total_referrals ?? 0;
 
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out of your account?', [
@@ -218,7 +220,6 @@ export default function ProfileScreen() {
         contentContainerClassName="pb-32"
         showsVerticalScrollIndicator={false}
       >
-        {/* Apple-Style Integrated Header */}
         <View style={styles.headerContainer}>
           <LinearGradient
             colors={[`${colors.primary}10`, 'transparent']}
@@ -252,7 +253,6 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          {/* New Horizontal Metric Cards */}
           <View style={styles.metricsContainer}>
             <View style={styles.metricCard}>
               <View
@@ -281,30 +281,15 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.metricCard}>
-              <View
-                style={[
-                  styles.metricIconContainer,
-                  {
-                    backgroundColor:
-                      accountStatus === 'Active' ? `${colors.success}15` : '#f59e0b15',
-                  },
-                ]}
-              >
-                <ShieldCheck
-                  size={16}
-                  color={accountStatus === 'Active' ? colors.success : '#f59e0b'}
-                  strokeWidth={2.5}
-                />
+              <View style={[styles.metricIconContainer, { backgroundColor: `${colors.accent}15` }]}>
+                <Gift size={16} color={colors.accent} strokeWidth={2.5} />
               </View>
-              <Text style={styles.metricLabel}>Status</Text>
-              <Text
-                style={[
-                  styles.metricValue,
-                  { color: accountStatus === 'Active' ? colors.success : '#f59e0b' },
-                ]}
-              >
-                {accountStatus}
-              </Text>
+              <Text style={styles.metricLabel}>Referrals</Text>
+              {referralsQuery.isLoading ? (
+                <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 2 }} />
+              ) : (
+                <Text style={styles.metricValue}>{referralCount}</Text>
+              )}
             </View>
           </View>
         </View>
@@ -443,7 +428,7 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    gap: 12,
   },
   avatarWrapper: {
     position: 'relative',
@@ -468,37 +453,36 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     flex: 1,
-    marginLeft: 16,
   },
   userName: {
-    fontSize: 26,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '700',
     color: colors.foreground,
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
   userEmail: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.mutedForeground,
-    fontWeight: '500',
-    marginTop: 2,
+    fontWeight: '400',
+    marginTop: 0,
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
   },
   verifiedText: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '600',
     color: colors.success,
     marginLeft: 4,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
   metricsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
+    marginTop: 12,
   },
   metricCard: {
     flex: 1,
@@ -518,24 +502,24 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   metricLabel: {
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 9,
+    fontWeight: '600',
     color: colors.mutedForeground,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   metricValue: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '700',
     color: colors.foreground,
     marginTop: 2,
   },
   sectionHeader: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '700',
     color: colors.mutedForeground,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
+    letterSpacing: 1.1,
     paddingLeft: 24,
     opacity: 0.5,
   },
@@ -549,10 +533,10 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   menuItemTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '500',
     color: colors.foreground,
-    letterSpacing: -0.2,
+    letterSpacing: -0.1,
   },
   menuItemSubtitle: {
     fontSize: 12,
