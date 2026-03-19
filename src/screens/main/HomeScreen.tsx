@@ -32,7 +32,7 @@ import {
 } from '../../hooks/queries';
 
 import RecoveryHomeCard from '../../components/recovery/RecoveryHomeCard';
-import { ProgressRing, Skeleton } from '../../components/ui';
+import { HealthGauge, Skeleton } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
 import { useCurrency } from '../../hooks/useCurrency';
 import { colors } from '../../theme/colors';
@@ -299,31 +299,33 @@ export default function HomeScreen() {
           <View className="absolute -top-10 -right-10 w-40 h-40 bg-success/5 rounded-full" />
 
           {scoreLoading ? (
-            <View className="items-center py-4 gap-3">
-              <Skeleton width={120} height={120} borderRadius={60} />
-              <Skeleton width={100} height={14} />
+            <View className="flex-row items-center gap-4 py-2">
+              <Skeleton width={120} height={90} borderRadius={12} />
+              <View className="flex-1 gap-2">
+                <Skeleton width={80} height={14} />
+                <Skeleton width={140} height={10} />
+              </View>
             </View>
           ) : score != null ? (
-            <View className="items-center">
-              <ProgressRing
-                progress={score}
-                size={130}
-                strokeWidth={8}
-                color={getScoreColor(score)}
-              >
-                <View className="items-center">
-                  <Text className="text-3xl font-bold text-foreground leading-none">{score}</Text>
-                  <Text
-                    className="text-[10px] font-bold uppercase tracking-wider mt-0.5"
-                    style={{ color: getScoreColor(score) }}
-                  >
+            <View className="flex-row items-center gap-4">
+              <HealthGauge score={score} size={130} strokeWidth={10} />
+              <View className="flex-1 gap-1.5">
+                <View className="flex-row items-center gap-2">
+                  <View
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: getScoreColor(score) }}
+                  />
+                  <Text className="text-sm font-bold" style={{ color: getScoreColor(score) }}>
                     {healthStatus || 'Score'}
                   </Text>
                 </View>
-              </ProgressRing>
-              <Text className="text-xs text-muted-foreground mt-3 text-center max-w-[260px]">
-                Your health score is based on vitals, checkups, and activity data.
-              </Text>
+                <Text className="text-sm font-semibold text-foreground">
+                  Your health score is {score}
+                </Text>
+                <Text className="text-[11px] text-muted-foreground leading-relaxed">
+                  It is based on your vitals, checkups and activity data.
+                </Text>
+              </View>
             </View>
           ) : (
             <TouchableOpacity

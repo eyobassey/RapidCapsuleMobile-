@@ -12,6 +12,7 @@ export { default as EmptyState } from './EmptyState';
 export { default as ListItem } from './ListItem';
 export { default as SearchInput } from './SearchInput';
 export { default as ProgressRing } from './ProgressRing';
+export { default as HealthGauge } from './HealthGauge';
 export { default as Skeleton } from './Skeleton';
 export { default as FormInput } from './FormInput';
 export { default as DatePickerInput } from './DatePickerInput';
