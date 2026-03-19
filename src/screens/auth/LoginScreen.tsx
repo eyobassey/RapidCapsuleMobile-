@@ -315,7 +315,7 @@ export default function LoginScreen({ navigation }: Props) {
 
       {/* Forgot Password Sheet */}
       <KeyboardSheet visible={showForgotPasswordSheet} onClose={closeForgotPasswordSheet}>
-        <View style={{ paddingHorizontal: 24, paddingBottom: 8 }}>
+        <View style={{ paddingHorizontal: 24, paddingBottom: 8, width: '100%' }}>
           {/* Close button row */}
           <View className="flex-row items-center justify-end pt-2 pb-2">
             <TouchableOpacity
