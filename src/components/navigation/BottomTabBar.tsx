@@ -3,7 +3,15 @@ import { BrainCircuit, Calendar, Home, Pill } from 'lucide-react-native';
 import React, { useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/auth';
 import { usePharmacyStore } from '../../store/pharmacy';
@@ -131,6 +139,94 @@ function TabItem({
   );
 }
 
+function EkaButton({
+  isFocused,
+  onPress,
+  Icon,
+}: {
+  isFocused: boolean;
+  onPress: () => void;
+  Icon: any;
+}) {
+  // Glow halo animation
+  const glowScale = useSharedValue(1);
+  const glowOpacity = useSharedValue(0.4);
+
+  useEffect(() => {
+    // Breathing/Pulse effect
+    glowScale.value = withRepeat(
+      withSequence(withTiming(1.2, { duration: 1500 }), withTiming(1, { duration: 1500 })),
+      -1,
+      true
+    );
+    glowOpacity.value = withRepeat(
+      withSequence(withTiming(0.6, { duration: 1500 }), withTiming(0.3, { duration: 1500 })),
+      -1,
+      true
+    );
+  }, [glowScale, glowOpacity]);
+
+  const animatedGlowStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: glowScale.value }],
+    opacity: isFocused ? glowOpacity.value + 0.2 : glowOpacity.value,
+  }));
+
+  const animatedIconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: isFocused ? withSpring(1.2) : withSpring(1) }],
+  }));
+
+  return (
+    <View style={styles.ekaWrapper}>
+      {/* Background Pulse Halo */}
+      <Animated.View
+        style={[
+          {
+            position: 'absolute',
+            width: 50,
+            height: 50,
+            borderRadius: 25,
+            backgroundColor: colors.primary,
+          },
+          animatedGlowStyle,
+        ]}
+      />
+
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.9}
+        accessibilityRole="tab"
+        accessibilityLabel="Eka AI"
+        accessibilityState={{ selected: isFocused }}
+        testID="bottom-tab-eka"
+      >
+        <LinearGradient
+          colors={['#0ea5e9', '#6366f1', '#a855f7']} // blue -> indigo -> purple
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.ekaButton, { borderColor: colors.background }]}
+        >
+          {/* Inner Highlight Ring (Glass Effect) */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 1,
+              left: 1,
+              right: 1,
+              bottom: 1,
+              borderRadius: 29,
+              borderWidth: 1.5,
+              borderColor: 'rgba(255,255,255,0.15)',
+            }}
+          />
+          <Animated.View style={animatedIconStyle}>
+            <Icon size={26} color={colors.white} strokeWidth={2.5} />
+          </Animated.View>
+        </LinearGradient>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 // ─── Main Tab Bar ─────────────────────────────────────────────────────────────
 
 export default function BottomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -175,28 +271,9 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
             }
           };
 
-          // Eka FAB (elevated center button with Premium Gradient)
           if (isEka) {
             return (
-              <View key={route.key} style={styles.ekaWrapper}>
-                <TouchableOpacity
-                  onPress={onPress}
-                  activeOpacity={0.9}
-                  accessibilityRole="tab"
-                  accessibilityLabel="Eka AI"
-                  accessibilityState={{ selected: isFocused }}
-                  testID="bottom-tab-eka"
-                >
-                  <LinearGradient
-                    colors={['#0ea5e9', '#6366f1']} // primary to indigo
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.ekaButton}
-                  >
-                    <Icon size={26} color={colors.white} strokeWidth={2.5} />
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
+              <EkaButton key={route.key} isFocused={isFocused} onPress={onPress} Icon={Icon} />
             );
           }
 
@@ -258,11 +335,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
-    borderColor: colors.background, // Standard floating button border trick
     shadowColor: '#0ea5e9',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 10,
+    shadowRadius: 12,
+    elevation: 12,
   },
 });
