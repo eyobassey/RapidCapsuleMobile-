@@ -1,3 +1,9 @@
+# [1.10.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.9.2...v1.10.0) (2026-03-20)
+
+### Features
+
+- **ui:** add medical disclaimer to all Dr Eka tabs and report views ([2baffb1](https://github.com/eyobassey/RapidCapsuleMobile-/commit/2baffb1369e7c1eddc8cc50a8bd84138ad7ed088))
+
 ## [1.9.2](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.9.1...v1.9.2) (2026-03-20)
 
 ### Bug Fixes
