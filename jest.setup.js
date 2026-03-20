@@ -217,5 +217,16 @@ jest.mock('@invertase/react-native-apple-authentication', () => ({
   },
 }));
 
+// Mock react-native-passkey (native module — WebAuthn / FIDO2)
+jest.mock('react-native-passkey', () => ({
+  Passkey: {
+    create: jest.fn(() => Promise.resolve({})),
+    get: jest.fn(() => Promise.resolve({})),
+    isSupported: jest.fn(() => false),
+  },
+  UserCancelledError: { error: 'UserCancelled', message: 'The user cancelled the request.' },
+  NotSupportedError: { error: 'NotSupported', message: 'Passkeys are not supported.' },
+}));
+
 // NOTE: We rely on built-in matchers from React Native Testing Library v12+,
 // so we intentionally do not import '@testing-library/jest-native/extend-expect'
