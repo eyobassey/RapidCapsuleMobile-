@@ -1,3 +1,9 @@
+## [1.8.2](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.8.1...v1.8.2) (2026-03-20)
+
+### Bug Fixes
+
+- route health insight notifications to Health Insights screen ([84d1788](https://github.com/eyobassey/RapidCapsuleMobile-/commit/84d1788d2f657c6e680326763313dbb2a0f5a7a5))
+
 ## [1.8.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.8.0...v1.8.1) (2026-03-20)
 
 ### Bug Fixes
