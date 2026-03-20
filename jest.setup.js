@@ -160,28 +160,14 @@ jest.mock('react-native-share', () => ({
   open: jest.fn(() => Promise.resolve({ success: true })),
 }));
 
-// Mock react-native-health (native + ESM)
-jest.mock('react-native-health', () => {
-  const permissionsProxy = new Proxy(
-    {},
-    {
-      get: (_target, prop) => String(prop),
-    }
-  );
-  return {
-    __esModule: true,
-    default: {
-      Constants: {
-        Permissions: permissionsProxy,
-      },
-      initHealthKit: jest.fn((_perms, cb) => cb && cb(null)),
-    },
-    // Named exports are only used for TS types; keep placeholders for runtime imports.
-    HealthKitPermissions: {},
-    HealthValue: {},
-    HealthInputOptions: {},
-  };
-});
+// Mock @kingstinct/react-native-healthkit (native + Nitro Modules, iOS-only)
+jest.mock('@kingstinct/react-native-healthkit', () => ({
+  isHealthDataAvailable: jest.fn(() => false),
+  requestAuthorization: jest.fn(() => Promise.resolve(false)),
+  queryQuantitySamples: jest.fn(() => Promise.resolve([])),
+  queryCategorySamples: jest.fn(() => Promise.resolve([])),
+  CategoryValueSleepAnalysis: { inBed: 0, asleepUnspecified: 1, awake: 2, asleepCore: 3, asleepDeep: 4, asleepREM: 5 },
+}));
 
 // Mock Paystack WebView (ships untranspiled JSX in some builds)
 jest.mock('react-native-paystack-webview', () => {
