@@ -1,22 +1,23 @@
-import React, { useCallback, useState } from 'react';
-import { View, TouchableOpacity, Linking } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { FlashList } from '@shopify/flash-list';
 import {
-  Plus,
+  AlertTriangle,
+  CalendarCheck,
   CalendarPlus,
   CalendarX,
-  CalendarCheck,
   Clock,
-  AlertTriangle,
+  Plus,
 } from 'lucide-react-native';
-import { Header, TabBar, EmptyState, Skeleton, Text } from '../../components/ui';
+import React, { useCallback, useState } from 'react';
+import { Linking, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AppointmentCard from '../../components/appointments/AppointmentCard';
+import { EmptyState, Header, Skeleton, TabBar, Text } from '../../components/ui';
 import { useAppointmentsQuery } from '../../hooks/queries';
-import { colors } from '../../theme/colors';
+import { useRefreshOnFocus } from '../../hooks/useRefresh';
 import type { BookingsStackParamList } from '../../navigation/stacks/BookingsStack';
+import { colors } from '../../theme/colors';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 
@@ -84,6 +85,8 @@ export default function AppointmentsListScreen() {
   const handleTabChange = useCallback((value: string) => {
     setFilter(value as 'upcoming' | 'past' | 'missed' | 'cancelled');
   }, []);
+
+  useRefreshOnFocus(refetch);
 
   const navigateToBook = useCallback(() => {
     navigation.navigate('SelectSpecialty');
