@@ -181,12 +181,10 @@ export default function SelectScheduleScreen() {
     selectedDate || ''
   );
 
-  const availableTimes = useMemo(() => {
-    if (!availableTimesRaw) return [];
-    return Array.isArray(availableTimesRaw)
-      ? availableTimesRaw
-      : availableTimesRaw?.data || availableTimesRaw?.slots || [];
-  }, [availableTimesRaw]);
+  const availableTimes = useMemo<string[]>(() => {
+    if (!availableTimesRaw || !selectedDate) return [];
+    return availableTimesRaw[selectedDate]?.available ?? [];
+  }, [availableTimesRaw, selectedDate]);
 
   // Specialist's available days of the week (e.g. ['Monday', 'Wednesday', 'Friday'])
   const availableDayNames: string[] = useMemo(
