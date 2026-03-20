@@ -6,14 +6,17 @@ import {
   Droplets,
   Flame,
   Footprints,
+  Gauge,
   GlassWater,
   Heart,
+  HeartCrack,
   HeartPulse,
   Info,
   Moon,
   Percent,
   Plus,
   Scale,
+  Smile,
   Thermometer,
   TrendingUp,
   Wind,
@@ -36,6 +39,7 @@ import { formatDate, formatDateTime, formatVitalValue, timeAgo } from '../../uti
 const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Heart,
   HeartPulse,
+  HeartCrack,
   Thermometer,
   Droplets,
   Wind,
@@ -47,6 +51,8 @@ const ICON_MAP: Record<string, React.ComponentType<any>> = {
   Brain,
   Percent,
   GlassWater,
+  Smile,
+  Gauge,
   Zap,
 };
 
@@ -253,12 +259,55 @@ export default function VitalDetailScreen() {
     await Promise.allSettled([refetchVitals(), refetchChart()]);
   }, [refetchVitals, refetchChart]);
 
+  // Cumulative vitals (steps, calories, etc.) should be summed per day
+  const CUMULATIVE_VITALS = new Set([
+    'steps',
+    'calories_burned',
+    'active_minutes',
+    'distance',
+    'sleep',
+  ]);
+
   // Extract history entries for this vital from the merged vitals object
   const history = useMemo(() => {
     const entries: { value: string; unit: string; date: string; status: VitalStatus }[] = [];
     const readings = vitalsData[vitalType];
 
-    if (Array.isArray(readings)) {
+    if (Array.isArray(readings) && CUMULATIVE_VITALS.has(vitalType)) {
+      // Aggregate by day for cumulative vitals
+      const dailyMap = new Map<string, { sum: number; unit: string; latestDate: string }>();
+      for (const r of readings) {
+        const dateObj = new Date(r.updatedAt || r.created_at);
+        const dayKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+        const val = parseFloat(String(r.value) || '0');
+        const existing = dailyMap.get(dayKey);
+        if (existing) {
+          existing.sum += val;
+          if (new Date(r.updatedAt || r.created_at) > new Date(existing.latestDate)) {
+            existing.latestDate = r.updatedAt || r.created_at;
+          }
+        } else {
+          dailyMap.set(dayKey, {
+            sum: val,
+            unit: r.unit || config?.unit || '',
+            latestDate: r.updatedAt || r.created_at,
+          });
+        }
+      }
+      for (const [, day] of dailyMap) {
+        const rounded =
+          vitalType === 'distance' || vitalType === 'sleep'
+            ? parseFloat(day.sum.toFixed(1))
+            : Math.round(day.sum);
+        const numVal = rounded;
+        entries.push({
+          value: String(rounded),
+          unit: day.unit,
+          date: day.latestDate,
+          status: !isNaN(numVal) && config ? getVitalStatus(numVal, config) : 'Normal',
+        });
+      }
+    } else if (Array.isArray(readings)) {
       for (const r of readings) {
         const numVal = parseFloat(
           vitalType === 'blood_pressure' ? String(r.value).split('/')[0] : String(r.value)
@@ -271,7 +320,6 @@ export default function VitalDetailScreen() {
         });
       }
     } else if (readings && readings.value != null) {
-      // Single flat reading
       const numVal = parseFloat(
         vitalType === 'blood_pressure'
           ? String(readings.value).split('/')[0]
