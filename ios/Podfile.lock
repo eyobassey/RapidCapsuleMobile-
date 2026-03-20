@@ -1666,6 +1666,28 @@ PODS:
   - react-native-onesignal (5.3.6):
     - OneSignalXCFramework (= 5.5.0)
     - React (< 1.0.0, >= 0.13.0)
+  - react-native-passkey (3.3.2):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - react-native-safe-area-context (5.7.0):
     - hermes-engine
     - RCTRequired
@@ -2594,6 +2616,7 @@ DEPENDENCIES:
   - react-native-launch-arguments (from `../node_modules/react-native-launch-arguments`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-onesignal (from `../node_modules/react-native-onesignal`)
+  - react-native-passkey (from `../node_modules/react-native-passkey`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2756,6 +2779,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/netinfo"
   react-native-onesignal:
     :path: "../node_modules/react-native-onesignal"
+  react-native-passkey:
+    :path: "../node_modules/react-native-passkey"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-webview:
@@ -2917,6 +2942,7 @@ SPEC CHECKSUMS:
   react-native-launch-arguments: eab68037b01ea7c78a0b3b55da3a5e967e9aaf92
   react-native-netinfo: f852c868bf5175e46165c7e4db48a204a95c3800
   react-native-onesignal: 43e278433205c5cf4c3c0dc64ec3e8390a2a7b6f
+  react-native-passkey: 55f5766cd41ab9d86fc4dd33ae5356b0229c77b9
   react-native-safe-area-context: ae7587b95fb580d1800c5b0b2a7bd48c2868e67a
   react-native-webview: 0ed52ddb2eafc64a502871218440b8b4d37961c3
   React-NativeModulesApple: 5ba0903927f6b8d335a091700e9fda143980f819
