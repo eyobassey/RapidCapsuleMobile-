@@ -1,3 +1,9 @@
+## [1.9.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.9.0...v1.9.1) (2026-03-20)
+
+### Bug Fixes
+
+- guard against Invalid Date in Dr Eka reports and add null checks ([0575e57](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0575e572bed8dc33c3547cd7c3765b8ea194d70e))
+
 # [1.9.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.8.2...v1.9.0) (2026-03-20)
 
 ### Features
