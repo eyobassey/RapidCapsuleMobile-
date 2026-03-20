@@ -1,3 +1,9 @@
+# [1.9.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.8.2...v1.9.0) (2026-03-20)
+
+### Features
+
+- add Dr. Eka AI physician screens to mobile app ([bf556e2](https://github.com/eyobassey/RapidCapsuleMobile-/commit/bf556e219222a94d1f053e610077ab8c5602df58))
+
 ## [1.8.2](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.8.1...v1.8.2) (2026-03-20)
 
 ### Bug Fixes
