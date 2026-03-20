@@ -35,7 +35,7 @@ const HEALTH_APPS = [
     icon: Activity,
     color: '#4285F4',
     description: 'Steps, heart rate, activity, sleep',
-    platform: 'all',
+    platform: 'android',
   },
   {
     id: 'apple_health',
@@ -403,126 +403,128 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
         </View>
       ) : (
         <View style={{ gap: 10, marginBottom: 24 }}>
-          {HEALTH_APPS.map((app) => {
-            const status = getIntegrationStatus(app.id);
-            const isConnected = status === 'connected';
-            const isConnecting = connecting === app.id;
-            const isSyncing = syncing === app.id;
-            const lastSync = getLastSync(app.id);
-            const Icon = app.icon;
-            const isAppleHealth = app.id === 'apple_health';
-            const isToggleDisabled =
-              (isAppleHealth && Platform.OS !== 'ios') || (isAppleHealth && !healthKitSupported);
+          {HEALTH_APPS.filter((app) => app.platform === 'all' || app.platform === Platform.OS).map(
+            (app) => {
+              const status = getIntegrationStatus(app.id);
+              const isConnected = status === 'connected';
+              const isConnecting = connecting === app.id;
+              const isSyncing = syncing === app.id;
+              const lastSync = getLastSync(app.id);
+              const Icon = app.icon;
+              const isAppleHealth = app.id === 'apple_health';
+              const isToggleDisabled =
+                (isAppleHealth && Platform.OS !== 'ios') || (isAppleHealth && !healthKitSupported);
 
-            return (
-              <View
-                key={app.id}
-                style={{
-                  backgroundColor: colors.card,
-                  borderWidth: 1,
-                  borderColor: isConnected ? app.color : colors.border,
-                  borderRadius: 16,
-                  padding: 16,
-                  opacity: isToggleDisabled ? 0.6 : 1,
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 22,
-                      backgroundColor: isConnected ? `${app.color}15` : colors.muted,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Icon size={20} color={isConnected ? app.color : colors.mutedForeground} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
-                        {app.name}
-                      </Text>
-                      <StatusIcon status={status} />
+              return (
+                <View
+                  key={app.id}
+                  style={{
+                    backgroundColor: colors.card,
+                    borderWidth: 1,
+                    borderColor: isConnected ? app.color : colors.border,
+                    borderRadius: 16,
+                    padding: 16,
+                    opacity: isToggleDisabled ? 0.6 : 1,
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <View
+                      style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        backgroundColor: isConnected ? `${app.color}15` : colors.muted,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Icon size={20} color={isConnected ? app.color : colors.mutedForeground} />
                     </View>
-                    <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
-                      {app.description}
-                    </Text>
-                    {isToggleDisabled && (
-                      <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 4 }}>
-                        {Platform.OS !== 'ios'
-                          ? 'Available on iOS only.'
-                          : 'Requires a physical iPhone (HealthKit not available on simulator).'}
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
+                          {app.name}
+                        </Text>
+                        <StatusIcon status={status} />
+                      </View>
+                      <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
+                        {app.description}
                       </Text>
+                      {isToggleDisabled && (
+                        <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 4 }}>
+                          {Platform.OS !== 'ios'
+                            ? 'Available on iOS only.'
+                            : 'Requires a physical iPhone (HealthKit not available on simulator).'}
+                        </Text>
+                      )}
+                    </View>
+
+                    {isConnecting ? (
+                      <ActivityIndicator size="small" color={app.color} />
+                    ) : (
+                      <Switch
+                        value={isConnected}
+                        onValueChange={() => handleToggle(app.id)}
+                        disabled={isToggleDisabled}
+                        accessibilityRole="switch"
+                        accessibilityLabel={`Connect ${app.name}`}
+                        accessibilityState={{ checked: isConnected }}
+                        trackColor={{ false: colors.border, true: app.color }}
+                        thumbColor={colors.white}
+                        style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
+                      />
                     )}
                   </View>
 
-                  {isConnecting ? (
-                    <ActivityIndicator size="small" color={app.color} />
-                  ) : (
-                    <Switch
-                      value={isConnected}
-                      onValueChange={() => handleToggle(app.id)}
-                      disabled={isToggleDisabled}
-                      accessibilityRole="switch"
-                      accessibilityLabel={`Connect ${app.name}`}
-                      accessibilityState={{ checked: isConnected }}
-                      trackColor={{ false: colors.border, true: app.color }}
-                      thumbColor={colors.white}
-                      style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
-                    />
+                  {/* Connected actions */}
+                  {isConnected && (
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        marginTop: 12,
+                        paddingTop: 12,
+                        borderTopWidth: 1,
+                        borderTopColor: colors.border,
+                        gap: 12,
+                      }}
+                    >
+                      <TouchableOpacity
+                        onPress={() => handleSync(app.id)}
+                        disabled={isSyncing}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Sync ${app.name} data`}
+                        activeOpacity={0.7}
+                        style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+                      >
+                        {isSyncing ? (
+                          <ActivityIndicator size={14} color={colors.primary} />
+                        ) : (
+                          <RefreshCw size={14} color={colors.primary} />
+                        )}
+                        <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
+                          {isSyncing ? 'Syncing...' : 'Sync Now'}
+                        </Text>
+                      </TouchableOpacity>
+
+                      {lastSync && (
+                        <Text
+                          style={{
+                            fontSize: 10,
+                            color: colors.mutedForeground,
+                            flex: 1,
+                            textAlign: 'right',
+                          }}
+                        >
+                          Last sync: {new Date(lastSync).toLocaleDateString()}
+                        </Text>
+                      )}
+                    </View>
                   )}
                 </View>
-
-                {/* Connected actions */}
-                {isConnected && (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      marginTop: 12,
-                      paddingTop: 12,
-                      borderTopWidth: 1,
-                      borderTopColor: colors.border,
-                      gap: 12,
-                    }}
-                  >
-                    <TouchableOpacity
-                      onPress={() => handleSync(app.id)}
-                      disabled={isSyncing}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Sync ${app.name} data`}
-                      activeOpacity={0.7}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-                    >
-                      {isSyncing ? (
-                        <ActivityIndicator size={14} color={colors.primary} />
-                      ) : (
-                        <RefreshCw size={14} color={colors.primary} />
-                      )}
-                      <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
-                        {isSyncing ? 'Syncing...' : 'Sync Now'}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {lastSync && (
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          color: colors.mutedForeground,
-                          flex: 1,
-                          textAlign: 'right',
-                        }}
-                      >
-                        Last sync: {new Date(lastSync).toLocaleDateString()}
-                      </Text>
-                    )}
-                  </View>
-                )}
-              </View>
-            );
-          })}
+              );
+            }
+          )}
         </View>
       )}
 
