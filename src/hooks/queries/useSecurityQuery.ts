@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Passkey } from 'react-native-passkey';
 
 import {
   ChangePasswordPayload,
@@ -172,6 +173,31 @@ export function useDeleteBiometricMutation() {
 
   return useMutation({
     mutationFn: (credentialId: string) => securityService.deleteBiometricCredential(credentialId),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: securityKeys.biometrics() });
+    },
+  });
+}
+
+/**
+ * Runs the full WebAuthn passkey registration ceremony:
+ * 1. Fetch options from the server.
+ * 2. Invoke the platform authenticator (Face ID / fingerprint prompt).
+ * 3. Send the credential back to the server for verification.
+ *
+ * Invalidates the biometrics cache on success so the UI updates immediately.
+ */
+export function useRegisterPasskeyMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (deviceName?: string) => {
+      const options = await securityService.getPasskeyRegistrationOptions();
+      console.log('[Passkey] registration options rpId:', options.rp?.id);
+      const credential = await Passkey.create(options);
+      await securityService.verifyPasskeyRegistration(credential, deviceName);
+    },
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: securityKeys.biometrics() });

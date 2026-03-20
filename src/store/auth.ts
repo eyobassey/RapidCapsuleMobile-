@@ -1,5 +1,7 @@
 import { create } from 'zustand';
+import { Passkey } from 'react-native-passkey';
 import api from '../services/api';
+import { securityService } from '../services/security.service';
 import {
   signInWithApple,
   signInWithGoogle,
@@ -79,6 +81,7 @@ interface AuthState {
   loginWithGoogle: () => Promise<void>;
   signupWithGoogle: () => Promise<void>;
   loginWithApple: () => Promise<void>;
+  loginWithPasskey: () => Promise<void>;
   verify2FA: (code: string, method: string, email: string) => Promise<void>;
   resendOTP: (email: string, method?: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
@@ -170,6 +173,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loginWithApple: async () => {
     const token = await signInWithApple();
     await get().setToken(token);
+    await get().fetchUser();
+    useCurrencyStore.getState().initCurrency();
+  },
+
+  loginWithPasskey: async () => {
+    const options = await securityService.getPasskeyLoginOptions();
+    const credential = await Passkey.get(options);
+    const result = await securityService.verifyPasskeyLogin(credential);
+    await get().setToken(result.token);
+    if (result.refreshToken) {
+      await storage.setRefreshToken(result.refreshToken);
+    }
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
   },

@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, FormInput, KeyboardSheet, Text } from '../../components/ui';
 import type { AuthStackParamList } from '../../navigation/AuthStack';
+import { Passkey } from 'react-native-passkey';
 import { isAppleAuthAvailable, USER_CANCELLED } from '../../services/socialAuth.service';
 import { useAuthStore } from '../../store/auth';
 import { colors } from '../../theme/colors';
@@ -43,10 +44,11 @@ export default function LoginScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [showForgotPasswordSheet, setShowForgotPasswordSheet] = useState(false);
   const [forgotPasswordSuccess, setForgotPasswordSuccess] = useState(false);
-  const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | 'passkey' | null>(null);
   const login = useAuthStore((s) => s.login);
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
   const loginWithApple = useAuthStore((s) => s.loginWithApple);
+  const loginWithPasskey = useAuthStore((s) => s.loginWithPasskey);
   const forgotPassword = useAuthStore((s) => s.forgotPassword);
 
   const {
@@ -100,6 +102,11 @@ export default function LoginScreen({ navigation }: Props) {
   };
 
   const isCancelError = (e: unknown): boolean => {
+    // react-native-passkey errors are plain objects: { error: string, message: string }
+    if (e && typeof e === 'object' && 'error' in e) {
+      const passkeyCode = (e as { error: string }).error;
+      if (passkeyCode === 'UserCancelled' || passkeyCode === 'NotSupported') return true;
+    }
     const msg = e instanceof Error ? e.message : String(e);
     const msgLower = msg.toLowerCase();
     const code = (e as { code?: number | string })?.code;
@@ -134,6 +141,19 @@ export default function LoginScreen({ navigation }: Props) {
     } catch (e) {
       if (!isCancelError(e)) {
         Alert.alert('Sign-in Failed', getErrorDetail(e));
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handlePasskeySignIn = async () => {
+    setSocialLoading('passkey');
+    try {
+      await loginWithPasskey();
+    } catch (e) {
+      if (!isCancelError(e)) {
+        Alert.alert('Passkey Sign-in Failed', getErrorDetail(e));
       }
     } finally {
       setSocialLoading(null);
@@ -224,15 +244,19 @@ export default function LoginScreen({ navigation }: Props) {
           Sign In
         </Button>
 
-        <View className="mt-6">
-          <Button
-            variant="outline"
-            onPress={() => navigation.navigate('Otp', { email: getValues('email') })}
-            icon={<Shield size={16} color={colors.primary} />}
-          >
-            Sign in with Passkey
-          </Button>
-        </View>
+        {Passkey.isSupported() && (
+          <View className="mt-6">
+            <Button
+              variant="outline"
+              onPress={handlePasskeySignIn}
+              loading={socialLoading === 'passkey'}
+              disabled={!!socialLoading}
+              icon={<Shield size={16} color={colors.primary} />}
+            >
+              Sign in with Passkey
+            </Button>
+          </View>
+        )}
 
         {/* Divider */}
         <View className="flex-row items-center my-6">

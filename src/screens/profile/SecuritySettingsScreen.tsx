@@ -32,6 +32,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Passkey } from 'react-native-passkey';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { KeyboardSheet, Text, TextInput } from '../../components/ui';
@@ -40,6 +41,7 @@ import {
   useBiometricCredentialsQuery,
   useChangePasswordMutation,
   useDeleteBiometricMutation,
+  useRegisterPasskeyMutation,
   useRevokeAllSessionsMutation,
   useRevokeSessionMutation,
   useSessionsQuery,
@@ -218,6 +220,7 @@ export default function SecuritySettingsScreen() {
   const updateSettings = useUpdateUserSettingsMutation();
   const changePassword = useChangePasswordMutation();
   const deleteBiometric = useDeleteBiometricMutation();
+  const registerPasskey = useRegisterPasskeyMutation();
 
   // ── Derived state from queries ──────────────────────────────────────────────
   const sessions = sessionsQuery.data;
@@ -424,19 +427,29 @@ export default function SecuritySettingsScreen() {
         },
       ]);
     } else {
-      Alert.alert('Set Up Biometric Login', 'Set up Face ID or fingerprint to sign in quickly.', [
+      if (!Passkey.isSupported()) {
+        Alert.alert('Not Supported', 'Passkeys are not supported on this device or OS version.');
+        return;
+      }
+      Alert.alert('Set Up Biometric Login', 'Register Face ID or fingerprint for quick sign-in.', [
         { text: 'Not now', style: 'cancel' },
         {
           text: 'Set Up',
           onPress: () =>
-            Alert.alert(
-              'Coming soon',
-              'Biometric registration will be available in the next update.'
-            ),
+            registerPasskey.mutate(undefined, {
+              onSuccess: () =>
+                Alert.alert('Success', 'Biometric login has been enabled on this device.'),
+              onError: (err: any) => {
+                // Silently ignore user-cancelled flow; surface all other errors.
+                if (err?.error !== 'UserCancelled') {
+                  Alert.alert('Registration failed', err?.message ?? 'Please try again.');
+                }
+              },
+            }),
         },
       ]);
     }
-  }, [biometricEnabled, biometrics, deleteBiometric]);
+  }, [biometricEnabled, biometrics, deleteBiometric, registerPasskey]);
 
   const handleDeleteAccount = useCallback(async () => {
     if (!deletePw) {
@@ -688,8 +701,11 @@ export default function SecuritySettingsScreen() {
             onPress={handleBiometricToggle}
             isLast
             right={
-              deleteBiometric.isPending ? (
-                <ActivityIndicator size="small" color={colors.destructive} />
+              deleteBiometric.isPending || registerPasskey.isPending ? (
+                <ActivityIndicator
+                  size="small"
+                  color={deleteBiometric.isPending ? colors.destructive : colors.primary}
+                />
               ) : biometricEnabled ? (
                 <CheckCircle2 size={18} color={colors.success} />
               ) : (

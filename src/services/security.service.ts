@@ -1,3 +1,10 @@
+import type {
+  PasskeyCreateRequest,
+  PasskeyCreateResult,
+  PasskeyGetRequest,
+  PasskeyGetResult,
+} from 'react-native-passkey';
+
 import api from './api';
 
 // ─── Session ──────────────────────────────────────────────────────────────────
@@ -47,7 +54,7 @@ export type ChangePasswordPayload = {
 
 export type Generate2FAResponse = {
   secret: string;
-  qrCodeUrl: string;
+  qrCode: string;
 };
 
 export type BiometricCredential = {
@@ -55,6 +62,14 @@ export type BiometricCredential = {
   deviceName: string;
   createdAt: string;
 };
+
+export type PasskeyLoginResult = {
+  token: string;
+  refreshToken?: string;
+};
+
+// Re-export passkey request/result types so callers only need one import path.
+export type { PasskeyCreateRequest, PasskeyCreateResult, PasskeyGetRequest, PasskeyGetResult };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -104,11 +119,11 @@ export const securityService = {
     return unwrap<Generate2FAResponse>(res);
   },
 
-  async enable2FA(twoFactorCode: string): Promise<void> {
-    await api.post('/auth/2fa/turn-on', { twoFactorCode });
+  async enable2FA(code: string): Promise<void> {
+    await api.post('/auth/2fa/turn-on', { code });
   },
 
-  // Biometrics
+  // Biometrics — credential management
   async getBiometricCredentials(): Promise<BiometricCredential[]> {
     const res = await api.get('/auth/biometric/credentials');
     const data = unwrap<any>(res);
@@ -117,5 +132,34 @@ export const securityService = {
 
   async deleteBiometricCredential(credentialId: string): Promise<void> {
     await api.post('/auth/biometric/delete', { credentialId });
+  },
+
+  // Passkey registration ceremony (requires active JWT)
+  async getPasskeyRegistrationOptions(): Promise<PasskeyCreateRequest> {
+    const res = await api.post('/auth/biometric/register/options');
+    return unwrap<PasskeyCreateRequest>(res);
+  },
+
+  async verifyPasskeyRegistration(
+    credential: PasskeyCreateResult,
+    deviceName?: string
+  ): Promise<void> {
+    await api.post('/auth/biometric/register/verify', { credential, deviceName });
+  },
+
+  // Passkey authentication ceremony (discoverable credentials — no email required)
+  async getPasskeyLoginOptions(): Promise<PasskeyGetRequest> {
+    const res = await api.post('/auth/biometric/passkey/options');
+    return unwrap<PasskeyGetRequest>(res);
+  },
+
+  async verifyPasskeyLogin(credential: PasskeyGetResult): Promise<PasskeyLoginResult> {
+    const res = await api.post('/auth/biometric/passkey/verify', credential);
+    const data = unwrap<any>(res);
+    // Normalise field names — backend may return token/refresh_token or token/refreshToken.
+    return {
+      token: data.token,
+      refreshToken: data.refreshToken ?? data.refresh_token,
+    };
   },
 };
