@@ -96,12 +96,21 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'reports', label: 'Reports' },
 ];
 
-// ─── Helper: score color ──────────────────────────────────────────────────────
+// ─── Helper: extract numeric score from number or object ──────────────────────
 
-function getScoreColor(score: number): string {
-  if (score >= 80) return '#10b981';
-  if (score >= 60) return '#0ea5e9';
-  if (score >= 40) return '#f59e0b';
+function extractScore(score: any): number | null {
+  if (score == null) return null;
+  if (typeof score === 'number') return score;
+  if (typeof score === 'object' && score.current != null) return score.current;
+  return null;
+}
+
+function getScoreColor(score: any): string {
+  const val = extractScore(score);
+  if (val == null) return '#94a3b8';
+  if (val >= 80) return '#10b981';
+  if (val >= 60) return '#0ea5e9';
+  if (val >= 40) return '#f59e0b';
   return '#f43f5e';
 }
 
@@ -485,7 +494,7 @@ function HistoryTab() {
 
 function WeeklyReportDetail({ report, onClose }: { report: WeeklyReport; onClose: () => void }) {
   const scoreColor =
-    report.health_score != null ? getScoreColor(report.health_score) : colors.primary;
+    extractScore(report.health_score) != null ? getScoreColor(report.health_score) : colors.primary;
 
   return (
     <ScrollView
@@ -508,7 +517,7 @@ function WeeklyReportDetail({ report, onClose }: { report: WeeklyReport; onClose
       </TouchableOpacity>
 
       {/* Health Score */}
-      {report.health_score != null && (
+      {extractScore(report.health_score) != null && (
         <View className="mx-5 mb-4 bg-card border border-border rounded-2xl p-5 items-center">
           <Text className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">
             Health Score
@@ -518,7 +527,7 @@ function WeeklyReportDetail({ report, onClose }: { report: WeeklyReport; onClose
             style={{ borderColor: scoreColor }}
           >
             <Text className="text-2xl font-bold" style={{ color: scoreColor }}>
-              {report.health_score}
+              {extractScore(report.health_score)}
             </Text>
           </View>
         </View>
@@ -726,7 +735,9 @@ function ReportsTab() {
       }
       renderItem={({ item }: { item: WeeklyReport }) => {
         const scoreColor =
-          item.health_score != null ? getScoreColor(item.health_score) : colors.mutedForeground;
+          extractScore(item.health_score) != null
+            ? getScoreColor(item.health_score)
+            : colors.mutedForeground;
         const safeFormatDate = (d: any) => {
           if (!d) return '';
           const parsed = new Date(d);
@@ -745,14 +756,14 @@ function ReportsTab() {
           >
             <View className="flex-row items-center justify-between mb-2">
               <Text className="text-xs font-medium text-muted-foreground">{dateRange}</Text>
-              {item.health_score != null && (
+              {extractScore(item.health_score) != null && (
                 <View
                   className="rounded-full px-3 py-1 flex-row items-center gap-1.5"
                   style={{ backgroundColor: `${scoreColor}1A` }}
                 >
                   <View className="w-2 h-2 rounded-full" style={{ backgroundColor: scoreColor }} />
                   <Text className="text-xs font-bold" style={{ color: scoreColor }}>
-                    {item.health_score}
+                    {extractScore(item.health_score)}
                   </Text>
                 </View>
               )}
