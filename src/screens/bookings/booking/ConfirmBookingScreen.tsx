@@ -1,36 +1,36 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, ScrollView, Alert, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { WebView } from 'react-native-webview';
 import {
+  AlertTriangle,
   Calendar,
-  Clock,
-  Wallet,
-  CreditCard,
   CheckCircle,
+  ChevronRight,
+  ClipboardCheck,
+  Clock,
+  CreditCard,
   Globe,
-  Video,
   Phone,
   Stethoscope,
-  AlertTriangle,
-  ClipboardCheck,
+  Video,
+  Wallet,
   X,
-  ChevronRight,
 } from 'lucide-react-native';
-import { Header, Avatar, Button, Text, TextInput } from '../../../components/ui';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { ActivityIndicator, Alert, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
+import { Avatar, Button, Header, Text, TextInput } from '../../../components/ui';
+import { useCurrency } from '../../../hooks/useCurrency';
+import type { BookingsStackParamList } from '../../../navigation/stacks/BookingsStack';
 import { appointmentsService } from '../../../services/appointments.service';
 import { useAppointmentsStore } from '../../../store/appointments';
 import { useWalletStore } from '../../../store/wallet';
 import { colors } from '../../../theme/colors';
-import { formatDate } from '../../../utils/formatters';
-import { useCurrency } from '../../../hooks/useCurrency';
 import { MEETING_CHANNEL_LABELS } from '../../../utils/constants';
+import { formatDate } from '../../../utils/formatters';
 import { bookingConfirmSchema, type BookingConfirmFormData } from '../../../utils/validation';
-import type { BookingsStackParamList } from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 
@@ -133,6 +133,7 @@ export default function ConfirmBookingScreen() {
     },
   });
 
+  const { top, bottom } = useSafeAreaInsets();
   const personalNotes = watch('notes') || '';
   const paymentMethod = watch('paymentMethod');
   const agreedToTerms = watch('agreedToTerms');
@@ -770,7 +771,14 @@ export default function ConfirmBookingScreen() {
 
       {/* Paystack WebView Modal */}
       <Modal visible={!!paystackUrl} animationType="slide" onRequestClose={handleClosePaystack}>
-        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: colors.background,
+            paddingTop: top,
+            paddingBottom: bottom,
+          }}
+        >
           <View
             style={{
               flexDirection: 'row',
@@ -830,7 +838,7 @@ export default function ConfirmBookingScreen() {
               )}
             />
           )}
-        </SafeAreaView>
+        </View>
       </Modal>
     </SafeAreaView>
   );
