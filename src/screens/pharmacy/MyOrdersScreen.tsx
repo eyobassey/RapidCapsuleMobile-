@@ -1,5 +1,4 @@
 import { useNavigation } from '@react-navigation/native';
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { FlashList } from '@shopify/flash-list';
 import { CheckCircle, ClipboardList, Package, TrendingUp } from 'lucide-react-native';
@@ -10,39 +9,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import OrderCard from '../../components/pharmacy/OrderCard';
 import { EmptyState, Header, TabBar, Text } from '../../components/ui';
 import { useMyOrdersQuery } from '../../hooks/queries';
-import type { MainTabParamList } from '../../navigation/MainTabs';
 import type { PharmacyStackParamList } from '../../navigation/stacks/PharmacyStack';
 import { colors } from '../../theme/colors';
 import type { PharmacyOrder } from '../../types/pharmacy.types';
-
-function hasRouteNames(value: unknown): value is { routeNames: string[] } {
-  if (!value || typeof value !== 'object') return false;
-  const routeNames = (value as Record<string, unknown>).routeNames;
-  return Array.isArray(routeNames) && routeNames.every((r) => typeof r === 'string');
-}
-
-function findMainTabsNavigation(
-  navigation: NativeStackNavigationProp<PharmacyStackParamList, 'MyOrders'>
-): BottomTabNavigationProp<MainTabParamList> | undefined {
-  let parent = navigation.getParent?.() as unknown;
-
-  while (parent && typeof parent === 'object') {
-    const maybeGetState = (parent as Record<string, unknown>).getState;
-    const maybeGetParent = (parent as Record<string, unknown>).getParent;
-
-    if (typeof maybeGetState !== 'function') return undefined;
-    const state = (maybeGetState as () => unknown)();
-
-    if (hasRouteNames(state) && state.routeNames.includes('Profile')) {
-      return parent as unknown as BottomTabNavigationProp<MainTabParamList>;
-    }
-
-    if (typeof maybeGetParent !== 'function') return undefined;
-    parent = (maybeGetParent as () => unknown)();
-  }
-
-  return undefined;
-}
 
 const TABS = [
   { label: 'All', value: 'all' },
@@ -69,14 +38,6 @@ export default function MyOrdersScreen() {
   const onRefresh = useCallback(() => refetch(), [refetch]);
 
   const handleBack = useCallback(() => {
-    // MyOrders lives under the Pharmacy stack, but UX expects back to Profile.
-    // Switch to the Profile tab and land on its home screen explicitly.
-    const tabs = findMainTabsNavigation(navigation);
-    if (tabs?.navigate) {
-      tabs.navigate('Profile', { screen: 'ProfileHome' } as never);
-      return;
-    }
-
     navigation.goBack();
   }, [navigation]);
 
