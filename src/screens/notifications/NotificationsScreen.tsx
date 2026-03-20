@@ -113,6 +113,9 @@ const NOTIFICATION_ROUTES: Array<{
 
   // Recovery → Home tab
   { prefix: 'recovery_', tab: 'Home', screen: 'RecoveryDashboard' },
+
+  // Health Insights → Home tab
+  { prefix: 'health_insight_', tab: 'Home', screen: 'HealthInsights' },
 ];
 
 function getRouteForNotification(type?: string): { tab: string; screen: string } | null {

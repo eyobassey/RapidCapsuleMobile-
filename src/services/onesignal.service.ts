@@ -66,6 +66,15 @@ function handleNotificationClick(event: NotificationClickEvent) {
       }
       break;
 
+    case 'health_insight_new':
+    case 'health_insight_urgent':
+    case 'health_insight':
+      navigateFromOutside('Main', {
+        screen: 'Home',
+        params: { screen: 'HealthInsights' },
+      });
+      break;
+
     default:
       // Fall back to notifications screen
       navigateFromOutside('Main', {
