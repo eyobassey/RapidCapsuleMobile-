@@ -1,3 +1,9 @@
+## [1.9.2](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.9.1...v1.9.2) (2026-03-20)
+
+### Bug Fixes
+
+- parse health_score object in Dr Eka mobile and add notification routing ([0ce6f8e](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0ce6f8e9659016a82d27222d2462d0ffaf1ece77))
+
 ## [1.9.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.9.0...v1.9.1) (2026-03-20)
 
 ### Bug Fixes
