@@ -5,6 +5,7 @@ import {
   ChevronRight,
   Eye,
   Heart,
+  Info,
   Lightbulb,
   MapPin,
   Newspaper,
@@ -159,6 +160,26 @@ function DigestItemCard({ item }: { item: DigestItem }) {
           <ChevronRight size={14} color={colors.white} />
         </TouchableOpacity>
       )}
+    </View>
+  );
+}
+
+// ─── Disclaimer ──────────────────────────────────────────────────────────────
+
+function DrEkaDisclaimer() {
+  return (
+    <View className="mx-5 mt-4 mb-6 rounded-2xl p-4 border border-border bg-muted/50">
+      <View className="flex-row items-center gap-2 mb-2">
+        <Info size={14} color={colors.mutedForeground} />
+        <Text className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+          Medical Disclaimer
+        </Text>
+      </View>
+      <Text className="text-[10px] text-muted-foreground leading-relaxed">
+        Dr. Eka is an AI health assistant and does not replace professional medical advice,
+        diagnosis, or treatment. Always consult a qualified healthcare professional for medical
+        decisions. In case of emergency, contact your local emergency services immediately.
+      </Text>
     </View>
   );
 }
@@ -367,6 +388,7 @@ function TodayTab() {
         <DigestItemCard key={`${item.type}-${idx}`} item={item} />
       ))}
       {digest?.health_joke ? <HealthJokeCard joke={digest.health_joke} /> : null}
+      <DrEkaDisclaimer />
     </ScrollView>
   );
 }
@@ -410,6 +432,7 @@ function HistoryTab() {
       keyExtractor={(item: DailyDigest) => item._id}
       contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
+      ListFooterComponent={digests.length > 0 ? <DrEkaDisclaimer /> : null}
       refreshControl={
         <RefreshControl
           refreshing={false}
@@ -650,6 +673,8 @@ function WeeklyReportDetail({ report, onClose }: { report: WeeklyReport; onClose
           </Text>
         </View>
       )}
+
+      <DrEkaDisclaimer />
     </ScrollView>
   );
 }
@@ -725,6 +750,7 @@ function ReportsTab() {
       keyExtractor={(item: WeeklyReport) => item._id}
       contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
+      ListFooterComponent={reports.length > 0 ? <DrEkaDisclaimer /> : null}
       refreshControl={
         <RefreshControl
           refreshing={false}
