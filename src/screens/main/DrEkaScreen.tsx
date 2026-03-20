@@ -656,8 +656,8 @@ function ReportsTab() {
 
   const reports = useMemo(() => {
     const list = data?.reports || [];
-    // Ensure latest report is included if not in the list
-    if (latestReport && !list.find((r: WeeklyReport) => r._id === latestReport._id)) {
+    // Ensure latest report is included if not in the list (only if it has an _id)
+    if (latestReport?._id && !list.find((r: WeeklyReport) => r._id === latestReport._id)) {
       return [latestReport, ...list];
     }
     return list;
@@ -727,10 +727,15 @@ function ReportsTab() {
       renderItem={({ item }: { item: WeeklyReport }) => {
         const scoreColor =
           item.health_score != null ? getScoreColor(item.health_score) : colors.mutedForeground;
+        const safeFormatDate = (d: any) => {
+          if (!d) return '';
+          const parsed = new Date(d);
+          return isNaN(parsed.getTime()) ? '' : formatDate(d);
+        };
         const dateRange =
           item.week_start && item.week_end
-            ? `${formatDate(item.week_start)} - ${formatDate(item.week_end)}`
-            : formatDate(item.created_at);
+            ? `${safeFormatDate(item.week_start)} - ${safeFormatDate(item.week_end)}`
+            : safeFormatDate(item.created_at) || 'Recent';
 
         return (
           <TouchableOpacity
