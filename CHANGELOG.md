@@ -1,3 +1,9 @@
+## [1.8.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.8.0...v1.8.1) (2026-03-20)
+
+### Bug Fixes
+
+- **vitals:** aggregate cumulative vitals per day in detail screen ([da644c7](https://github.com/eyobassey/RapidCapsuleMobile-/commit/da644c7510d4c422572cac5ab8e81006fe9b0014))
+
 # [1.8.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.7.0...v1.8.0) (2026-03-19)
 
 ### Features
