@@ -11,9 +11,9 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
 import { Linking, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppointmentCard from '../../components/appointments/AppointmentCard';
-import { EmptyState, Header, Skeleton, TabBar, Text } from '../../components/ui';
+import { EmptyState, Header, Skeleton, TabBar } from '../../components/ui';
 import { useAppointmentsQuery } from '../../hooks/queries';
 import { useRefreshOnFocus } from '../../hooks/useRefresh';
 import type { BookingsStackParamList } from '../../navigation/stacks/BookingsStack';
@@ -73,6 +73,7 @@ const emptyConfig: Record<string, { icon: React.ReactNode; title: string; subtit
 
 export default function AppointmentsListScreen() {
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<'upcoming' | 'past' | 'missed' | 'cancelled'>('upcoming');
 
   const {
@@ -163,15 +164,14 @@ export default function AppointmentsListScreen() {
         activeOpacity={0.8}
         style={{
           position: 'absolute',
-          bottom: 24,
-          right: 24,
+          bottom: insets.bottom + 72,
+          right: insets.right + 16,
           backgroundColor: colors.primary,
-          borderRadius: 16,
-          paddingHorizontal: 20,
-          paddingVertical: 16,
+          borderRadius: 999,
+          padding: 16,
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 8,
+          justifyContent: 'center',
           shadowColor: colors.primary,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
@@ -180,7 +180,6 @@ export default function AppointmentsListScreen() {
         }}
       >
         <CalendarPlus size={20} color={colors.white} />
-        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 14 }}>Book</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
