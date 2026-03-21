@@ -116,6 +116,9 @@ const NOTIFICATION_ROUTES: Array<{
 
   // Health Insights → Home tab
   { prefix: 'health_insight_', tab: 'Home', screen: 'HealthInsights' },
+
+  // Dr. Eka → Home tab
+  { prefix: 'dr_eka_', tab: 'Home', screen: 'DrEka' },
 ];
 
 function getRouteForNotification(type?: string): { tab: string; screen: string } | null {

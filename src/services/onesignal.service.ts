@@ -75,6 +75,14 @@ function handleNotificationClick(event: NotificationClickEvent) {
       });
       break;
 
+    case 'dr_eka_daily_digest':
+    case 'dr_eka_weekly_report':
+      navigateFromOutside('Main', {
+        screen: 'Home',
+        params: { screen: 'DrEka' },
+      });
+      break;
+
     default:
       // Fall back to notifications screen
       navigateFromOutside('Main', {

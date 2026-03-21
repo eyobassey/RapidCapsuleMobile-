@@ -112,3 +112,13 @@ export {
   useDismissTipMutation,
   useMarkActedMutation,
 } from './useHealthTipsQuery';
+
+export {
+  drEkaKeys,
+  useTodaysDigestQuery,
+  useDigestHistoryQuery,
+  useGenerateDigestMutation,
+  useLatestWeeklyReportQuery,
+  useWeeklyReportsQuery,
+  useGenerateWeeklyReportMutation,
+} from './useDrEkaQuery';

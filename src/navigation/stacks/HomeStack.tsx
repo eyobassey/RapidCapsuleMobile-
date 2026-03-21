@@ -40,6 +40,8 @@ import RiskHistoryScreen from '../../screens/recovery/RiskHistoryScreen';
 import ExerciseHistoryScreen from '../../screens/recovery/ExerciseHistoryScreen';
 // Health Insights
 import HealthInsightsScreen from '../../screens/main/HealthInsightsScreen';
+// Dr. Eka
+import DrEkaScreen from '../../screens/main/DrEkaScreen';
 
 export type HomeStackParamList = {
   HomeScreen: undefined;
@@ -82,6 +84,8 @@ export type HomeStackParamList = {
   ExerciseHistory: undefined;
   // Health Insights
   HealthInsights: undefined;
+  // Dr. Eka
+  DrEka: undefined;
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
@@ -133,6 +137,8 @@ export default function HomeStack() {
       <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryScreen} />
       {/* Health Insights */}
       <Stack.Screen name="HealthInsights" component={HealthInsightsScreen} />
+      {/* Dr. Eka */}
+      <Stack.Screen name="DrEka" component={DrEkaScreen} />
     </Stack.Navigator>
   );
 }
