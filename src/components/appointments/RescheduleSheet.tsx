@@ -85,7 +85,12 @@ export default function RescheduleSheet({ visible, onClose, appointment }: Resch
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  const specialistId: string = appointment?.specialist_id?._id || appointment?.specialist_id || '';
+  const specialistId: string =
+    appointment?.specialist_id?._id ||
+    appointment?.specialist_id ||
+    appointment?.specialist?._id ||
+    appointment?.specialist?.id ||
+    '';
 
   const { data: availabilityRaw, isFetching: timesLoading } = useAvailableTimesQuery(
     specialistId,

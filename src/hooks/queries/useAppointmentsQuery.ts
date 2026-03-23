@@ -1,5 +1,5 @@
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {appointmentsService} from '../../services/appointments.service';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { appointmentsService } from '../../services/appointments.service';
 
 // ── Query key factory ──────────────────────────────────────
 export const appointmentKeys = {
@@ -26,13 +26,13 @@ const STATUS_MAP: Record<string, string> = {
 // ── Queries ────────────────────────────────────────────────
 
 export function useAppointmentsQuery(
-  filter: 'upcoming' | 'past' | 'missed' | 'cancelled' = 'upcoming',
+  filter: 'upcoming' | 'past' | 'missed' | 'cancelled' = 'upcoming'
 ) {
   const status = STATUS_MAP[filter] || filter;
   return useQuery({
     queryKey: appointmentKeys.list(status),
     queryFn: async () => {
-      const data = await appointmentsService.list({status});
+      const data = await appointmentsService.list({ status });
       const list = Array.isArray(data) ? data : data?.data || data?.result || [];
       return Array.isArray(list) ? list : [];
     },
@@ -56,8 +56,8 @@ export function useAvailableTimesQuery(specialistId: string, date: string) {
     queryKey: appointmentKeys.availableTimes(specialistId, date),
     queryFn: () =>
       appointmentsService.getAvailableTimes({
-        specialist: specialistId,
-        preferredDates: [{date}],
+        specialistId,
+        preferredDates: [{ date }],
       }),
     enabled: !!specialistId && !!date,
   });
@@ -82,7 +82,7 @@ export function useBookAppointmentMutation() {
   return useMutation({
     mutationFn: (payload: any) => appointmentsService.book(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: appointmentKeys.lists()});
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
     },
   });
 }
@@ -92,7 +92,7 @@ export function useRescheduleAppointmentMutation() {
   return useMutation({
     mutationFn: (payload: any) => appointmentsService.reschedule(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: appointmentKeys.all});
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
     },
   });
 }
@@ -102,7 +102,7 @@ export function useCancelAppointmentMutation() {
   return useMutation({
     mutationFn: (id: string) => appointmentsService.cancel(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: appointmentKeys.lists()});
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
     },
   });
 }
