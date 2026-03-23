@@ -153,8 +153,11 @@ export const securityService = {
     return unwrap<PasskeyGetRequest>(res);
   },
 
-  async verifyPasskeyLogin(credential: PasskeyGetResult): Promise<PasskeyLoginResult> {
-    const res = await api.post('/auth/biometric/passkey/verify', credential);
+  async verifyPasskeyLogin(
+    email: string,
+    credential: PasskeyGetResult
+  ): Promise<PasskeyLoginResult> {
+    const res = await api.post('/auth/biometric/passkey/verify', { email, credential });
     const data = unwrap<any>(res);
     // Normalise field names — backend may return token/refresh_token or token/refreshToken.
     return {

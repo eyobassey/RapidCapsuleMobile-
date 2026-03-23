@@ -81,7 +81,7 @@ interface AuthState {
   loginWithGoogle: () => Promise<void>;
   signupWithGoogle: () => Promise<void>;
   loginWithApple: () => Promise<void>;
-  loginWithPasskey: () => Promise<void>;
+  loginWithPasskey: (email: string) => Promise<void>;
   verify2FA: (code: string, method: string, email: string) => Promise<void>;
   resendOTP: (email: string, method?: string) => Promise<void>;
   signup: (data: any) => Promise<void>;
@@ -177,10 +177,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useCurrencyStore.getState().initCurrency();
   },
 
-  loginWithPasskey: async () => {
+  loginWithPasskey: async (email: string) => {
     const options = await securityService.getPasskeyLoginOptions();
     const credential = await Passkey.get(options);
-    const result = await securityService.verifyPasskeyLogin(credential);
+    const result = await securityService.verifyPasskeyLogin(email, credential);
     await get().setToken(result.token);
     if (result.refreshToken) {
       await storage.setRefreshToken(result.refreshToken);

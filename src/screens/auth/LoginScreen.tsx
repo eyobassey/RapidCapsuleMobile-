@@ -148,9 +148,17 @@ export default function LoginScreen({ navigation }: Props) {
   };
 
   const handlePasskeySignIn = async () => {
+    const email = getValues('email').trim();
+    if (!email) {
+      Alert.alert(
+        'Email required',
+        'Enter your email address above before signing in with a passkey.'
+      );
+      return;
+    }
     setSocialLoading('passkey');
     try {
-      await loginWithPasskey();
+      await loginWithPasskey(email);
     } catch (e) {
       if (!isCancelError(e)) {
         Alert.alert('Passkey Sign-in Failed', getErrorDetail(e));
