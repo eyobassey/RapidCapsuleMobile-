@@ -1,3 +1,29 @@
+# [1.11.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.10.0...v1.11.0) (2026-03-23)
+
+### Bug Fixes
+
+- **api:** update error message retrieval in parseApiError function ([180144d](https://github.com/eyobassey/RapidCapsuleMobile-/commit/180144dd469e921b9e7b35d7d985c1fdaf8b36eb))
+- **appointments:** enhance specialist ID retrieval in RescheduleSheet ([5f49f68](https://github.com/eyobassey/RapidCapsuleMobile-/commit/5f49f6845b28ecd2dbc5d4883893b7eb89d8edc1))
+- update platform filtering for health apps in DeviceIntegrationScreen ([da349d5](https://github.com/eyobassey/RapidCapsuleMobile-/commit/da349d57815f96802b4032663a462a9344dffe51))
+
+### Features
+
+- add associated domains for web credentials ([abf66e5](https://github.com/eyobassey/RapidCapsuleMobile-/commit/abf66e5ff87ddfe829406afd6182a6a1ab53f3c2))
+- add custom hooks for data refreshing on focus and mount ([fe1591c](https://github.com/eyobassey/RapidCapsuleMobile-/commit/fe1591c9720d36cdd9d973496c295a2726b124ff))
+- add HealthInsights tab to navigation ([60b2aec](https://github.com/eyobassey/RapidCapsuleMobile-/commit/60b2aec95c1059428e1dbd438b3a6ea74c0e0bb5))
+- add mock for react-native-passkey in Jest setup ([5c6e04a](https://github.com/eyobassey/RapidCapsuleMobile-/commit/5c6e04a428a689a155272744f2a523a029efe7e5))
+- add new tabs to HIDE_TAB_SCREENS in navigation ([037290c](https://github.com/eyobassey/RapidCapsuleMobile-/commit/037290c9d512949fe9129f6ac848a06b76d3ebce))
+- add react-native-passkey dependency ([54ac580](https://github.com/eyobassey/RapidCapsuleMobile-/commit/54ac5804885ab82058ee9a3185031d28d741da02))
+- **appointments:** add RescheduleSheet component for appointment rescheduling ([d35ffb9](https://github.com/eyobassey/RapidCapsuleMobile-/commit/d35ffb9f2c9d8e8d0b1ec3835178c336e9558d54))
+- **auth:** update passkey login to require email input ([c22e13f](https://github.com/eyobassey/RapidCapsuleMobile-/commit/c22e13f743a5f6dfdb30ab061f4c754d63c9c905))
+- implement HealthConnect permission handling in MainActivity ([6045f25](https://github.com/eyobassey/RapidCapsuleMobile-/commit/6045f259964b148f95112f15df77f208b61ee582))
+- implement passkey authentication and registration features ([6baeac9](https://github.com/eyobassey/RapidCapsuleMobile-/commit/6baeac9bb05b60f65cc1d80f5ee2b38fe8a47d9a))
+- **meetings:** integrate Zoom SDK for appointment meetings ([3b1492b](https://github.com/eyobassey/RapidCapsuleMobile-/commit/3b1492bf3bd8c950cc2d5443f36e2374494612ed))
+- **navigation:** add 'DrEka' tab to HIDE_TAB_SCREENS ([3a5df4f](https://github.com/eyobassey/RapidCapsuleMobile-/commit/3a5df4fdc100d35490ddc8217d593d0c0b04c8e6))
+- **navigation:** add 'Notifications' tab to HIDE_TAB_SCREENS ([9e20a42](https://github.com/eyobassey/RapidCapsuleMobile-/commit/9e20a422466a7c0c622e8b30e5109df19c4f5d05))
+- **notifications:** enhance NotificationsScreen with skeleton loader and refactor notification item layout ([896ff77](https://github.com/eyobassey/RapidCapsuleMobile-/commit/896ff770fefb3a335296171733aacac184e28eeb))
+- **receipt:** implement ReceiptSheet component for appointment receipts ([0cc83a3](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0cc83a349b3a8eec0a732385270555aa0f2bcfe4))
+
 # [1.10.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.9.2...v1.10.0) (2026-03-20)
 
 ### Features
