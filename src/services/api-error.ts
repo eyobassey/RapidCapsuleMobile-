@@ -1,9 +1,5 @@
 export class ApiError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number,
-    public data?: any,
-  ) {
+  constructor(message: string, public statusCode: number, public data?: any) {
     super(message);
     this.name = 'ApiError';
   }
@@ -34,8 +30,8 @@ export class NetworkError extends Error {
 
 export function parseApiError(error: any): ApiError | NetworkError {
   if (error?.response) {
-    const {status, data} = error.response;
-    const message = data?.message || data?.error || 'Something went wrong';
+    const { status, data } = error.response;
+    const message = data?.message || data?.errorMessage || data?.error || 'Something went wrong';
     return new ApiError(message, status, data);
   }
   if (error?.request) {

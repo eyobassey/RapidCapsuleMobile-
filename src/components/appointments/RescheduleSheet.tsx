@@ -144,7 +144,7 @@ export default function RescheduleSheet({ visible, onClose, appointment }: Resch
     }
     reschedule.mutate(
       {
-        appointment_id: appointment?._id || appointment?.id,
+        appointmentId: appointment?._id || appointment?.id,
         date: selectedDate,
         time: selectedTime,
       },
