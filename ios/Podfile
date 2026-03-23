@@ -48,6 +48,17 @@ target 'RapidCapsules' do
       end
     end
 
+  
+      # Remove arm64 exclusion for simulators (needed for Apple Silicon Macs)
+      installer.pods_project.build_configurations.each do |config|
+        config.build_settings.delete('EXCLUDED_ARCHS[sdk=iphonesimulator*]')
+      end
+      installer.pods_project.targets.each do |target|
+        target.build_configurations.each do |config|
+          config.build_settings.delete('EXCLUDED_ARCHS[sdk=iphonesimulator*]')
+        end
+      end
+  
     # Suppress deprecation warnings-as-errors for older pods (iOS SDK 26 compat)
     problematic_pods = ['RNAppleHealthKit', 'HtmlToPdf']
     installer.pods_project.targets.each do |target|
