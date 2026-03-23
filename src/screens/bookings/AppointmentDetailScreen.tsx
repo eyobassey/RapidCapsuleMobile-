@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { View, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -18,6 +18,7 @@ import {
   XCircle,
 } from 'lucide-react-native';
 import { Header, Avatar, StatusBadge, Button, Card, Skeleton, Text } from '../../components/ui';
+import RescheduleSheet from '../../components/appointments/RescheduleSheet';
 import { useAppointmentsStore } from '../../store/appointments';
 import { meetingService } from '../../services/meeting.service';
 import { colors } from '../../theme/colors';
@@ -62,6 +63,7 @@ export default function AppointmentDetailScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { id } = route.params;
+  const [showReschedule, setShowReschedule] = useState(false);
 
   const {
     currentAppointment: appointment,
@@ -360,10 +362,7 @@ export default function AppointmentDetailScreen() {
                 >
                   Join Meeting
                 </Button>
-                <Button
-                  variant="outline"
-                  onPress={() => Alert.alert('Reschedule', 'Reschedule feature coming soon.')}
-                >
+                <Button variant="outline" onPress={() => setShowReschedule(true)}>
                   Reschedule
                 </Button>
                 <Button variant="ghost" onPress={handleCancel}>
@@ -394,6 +393,13 @@ export default function AppointmentDetailScreen() {
             )}
           </View>
         </ScrollView>
+      )}
+      {appointment && (
+        <RescheduleSheet
+          visible={showReschedule}
+          onClose={() => setShowReschedule(false)}
+          appointment={appointment}
+        />
       )}
     </SafeAreaView>
   );
