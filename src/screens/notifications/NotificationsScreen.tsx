@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import {
   AlertTriangle,
   Bell,
+  CheckCheck,
   CalendarCheck,
   CalendarPlus,
   CalendarX,
@@ -23,7 +24,7 @@ import React, { useCallback, useMemo } from 'react';
 import { RefreshControl, SectionList, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { EmptyState, Header } from '../../components/ui';
+import { EmptyState, Header, Skeleton } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
 import {
   useMarkAllReadMutation,
@@ -36,8 +37,6 @@ import { colors } from '../../theme/colors';
 import { formatRelativeDate, timeAgo } from '../../utils/formatters';
 
 // ---- Icon mapping ----
-// Maps notification type prefixes to lucide icon components.
-// Uses a lookup rather than dynamically importing to keep bundle predictable.
 const ICON_MAP: Record<string, { icon: React.ElementType; color: string }> = {
   appointment_booked: { icon: CalendarPlus, color: colors.primary },
   appointment_confirmed: { icon: CalendarCheck, color: colors.success },
@@ -83,50 +82,25 @@ const ICON_MAP: Record<string, { icon: React.ElementType; color: string }> = {
 const DEFAULT_ICON = { icon: Bell, color: colors.primary };
 
 // ---- Navigation routing ----
-// Maps notification type prefixes to a tab + screen for cross-tab navigation.
-// Uses the longest matching prefix so e.g. "pharmacy_order_shipped" matches "pharmacy_order".
-const NOTIFICATION_ROUTES: Array<{
-  prefix: string;
-  tab: string;
-  screen: string;
-}> = [
-  // Appointments → Bookings tab
+const NOTIFICATION_ROUTES: Array<{ prefix: string; tab: string; screen: string }> = [
   { prefix: 'appointment_', tab: 'Bookings', screen: 'AppointmentsList' },
-
-  // Prescriptions → Profile tab
   { prefix: 'prescription_', tab: 'Profile', screen: 'PrescriptionsList' },
-
-  // Pharmacy orders → Pharmacy tab
   { prefix: 'pharmacy_', tab: 'Pharmacy', screen: 'MyOrders' },
-
-  // Payments & wallet → Profile tab (Wallet screen)
   { prefix: 'payment_', tab: 'Profile', screen: 'Wallet' },
   { prefix: 'wallet_', tab: 'Profile', screen: 'Wallet' },
   { prefix: 'refund_', tab: 'Profile', screen: 'Wallet' },
-
-  // Health checkup → Home tab
   { prefix: 'health_checkup_', tab: 'Home', screen: 'HealthCheckupHistory' },
   { prefix: 'health_score_', tab: 'Home', screen: 'Vitals' },
-
-  // Vitals → Home tab
   { prefix: 'vitals_', tab: 'Home', screen: 'Vitals' },
-
-  // Recovery → Home tab
   { prefix: 'recovery_', tab: 'Home', screen: 'RecoveryDashboard' },
-
-  // Health Insights → Home tab
   { prefix: 'health_insight_', tab: 'Home', screen: 'HealthInsights' },
-
-  // Dr. Eka → Home tab
   { prefix: 'dr_eka_', tab: 'Home', screen: 'DrEka' },
 ];
 
 function getRouteForNotification(type?: string): { tab: string; screen: string } | null {
   if (!type) return null;
   for (const route of NOTIFICATION_ROUTES) {
-    if (type.startsWith(route.prefix)) {
-      return { tab: route.tab, screen: route.screen };
-    }
+    if (type.startsWith(route.prefix)) return { tab: route.tab, screen: route.screen };
   }
   return null;
 }
@@ -144,16 +118,11 @@ interface NotificationSection {
 
 function groupByDate(notifications: any[]): NotificationSection[] {
   const groups: Record<string, any[]> = {};
-
   for (const n of notifications) {
     const label = formatRelativeDate(n.created_at || n.createdAt || new Date());
-    if (!groups[label]) {
-      groups[label] = [];
-    }
+    if (!groups[label]) groups[label] = [];
     groups[label].push(n);
   }
-
-  // Sort sections: Today first, Yesterday second, then by original order
   const order = ['Today', 'Yesterday'];
   return Object.entries(groups)
     .sort(([a], [b]) => {
@@ -165,6 +134,35 @@ function groupByDate(notifications: any[]): NotificationSection[] {
       return 0;
     })
     .map(([title, data]) => ({ title, data }));
+}
+
+// ---- Skeleton loader ----
+function NotificationSkeleton() {
+  return (
+    <View style={{ paddingHorizontal: 20, gap: 10, paddingTop: 8 }}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <View
+          key={i}
+          style={{
+            flexDirection: 'row',
+            gap: 12,
+            backgroundColor: colors.card,
+            borderRadius: 16,
+            padding: 14,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
+        >
+          <Skeleton width={40} height={40} borderRadius={20} />
+          <View style={{ flex: 1, gap: 8 }}>
+            <Skeleton width="70%" height={13} />
+            <Skeleton width="90%" height={11} />
+            <Skeleton width="30%" height={10} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
 }
 
 // ---- Notification Row ----
@@ -188,61 +186,114 @@ function NotificationItem({
       accessibilityRole="button"
       accessibilityLabel={`${isUnread ? 'Unread: ' : ''}${notification.title}`}
       onPress={() => onPress(notification._id)}
-      className={`mx-5 mb-2 rounded-2xl border border-border p-4 flex-row items-start gap-3 ${
-        isUnread ? 'bg-card' : 'bg-card/60'
-      }`}
+      style={{
+        marginHorizontal: 20,
+        marginBottom: 8,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: isUnread ? `${colors.primary}30` : colors.border,
+        backgroundColor: colors.card,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        overflow: 'hidden',
+      }}
     >
-      {/* Icon */}
+      {/* Unread accent bar */}
+      {isUnread && (
+        <View
+          style={{
+            width: 3,
+            alignSelf: 'stretch',
+            backgroundColor: colors.primary,
+            borderTopLeftRadius: 16,
+            borderBottomLeftRadius: 16,
+          }}
+        />
+      )}
+
       <View
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginTop: 2,
-          backgroundColor: `${iconColor}1A`,
-        }}
+        style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-start', padding: 14, gap: 12 }}
       >
-        <IconComponent size={18} color={iconColor} />
-      </View>
-
-      {/* Content */}
-      <View className="flex-1">
-        <View className="flex-row items-start justify-between gap-2">
-          <Text
-            className={`text-sm flex-1 ${
-              isUnread ? 'font-semibold text-foreground' : 'font-medium text-foreground/80'
-            }`}
-            numberOfLines={2}
-          >
-            {notification.title}
-          </Text>
-
-          {/* Unread indicator */}
-          {isUnread && <View className="w-2.5 h-2.5 rounded-full bg-primary mt-1.5 shrink-0" />}
+        {/* Icon */}
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: `${iconColor}18`,
+            flexShrink: 0,
+          }}
+        >
+          <IconComponent size={18} color={iconColor} />
         </View>
 
-        {notification.message || notification.body ? (
-          <Text className="text-xs text-muted-foreground mt-1 leading-relaxed" numberOfLines={2}>
-            {notification.message || notification.body}
-          </Text>
-        ) : null}
+        {/* Content */}
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 13,
+                lineHeight: 18,
+                color: isUnread ? colors.foreground : `${colors.foreground}99`,
+                fontWeight: isUnread ? '600' : '500',
+              }}
+              numberOfLines={2}
+            >
+              {notification.title}
+            </Text>
+            {isUnread && (
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: colors.primary,
+                  marginTop: 4,
+                  flexShrink: 0,
+                }}
+              />
+            )}
+          </View>
 
-        <View className="flex-row items-center justify-between mt-2">
-          <Text className="text-[10px] text-muted-foreground">
-            {timeAgo(notification.created_at || notification.createdAt || new Date())}
-          </Text>
+          {notification.message || notification.body ? (
+            <Text
+              style={{
+                fontSize: 12,
+                color: colors.mutedForeground,
+                marginTop: 3,
+                lineHeight: 17,
+              }}
+              numberOfLines={2}
+            >
+              {notification.message || notification.body}
+            </Text>
+          ) : null}
 
-          <TouchableOpacity
-            onPress={() => onRemove(notification._id)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            activeOpacity={0.6}
-            accessibilityRole="button"
-            accessibilityLabel="Remove notification"
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 8,
+            }}
           >
-            <Trash2 size={14} color={colors.mutedForeground} />
-          </TouchableOpacity>
+            <Text style={{ fontSize: 11, color: `${colors.mutedForeground}99` }}>
+              {timeAgo(notification.created_at || notification.createdAt || new Date())}
+            </Text>
+
+            <TouchableOpacity
+              onPress={() => onRemove(notification._id)}
+              hitSlop={{ top: 8, bottom: 8, left: 12, right: 4 }}
+              activeOpacity={0.6}
+              accessibilityRole="button"
+              accessibilityLabel="Remove notification"
+            >
+              <Trash2 size={13} color={`${colors.mutedForeground}80`} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -250,12 +301,41 @@ function NotificationItem({
 }
 
 // ---- Section Header ----
-function SectionHeader({ title }: { title: string }) {
+function SectionHeader({ title, count }: { title: string; count: number }) {
   return (
-    <View className="px-6 pt-5 pb-2">
-      <Text className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 8,
+        gap: 8,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: '700',
+          color: colors.mutedForeground,
+          textTransform: 'uppercase',
+          letterSpacing: 1,
+        }}
+      >
         {title}
       </Text>
+      <View
+        style={{
+          backgroundColor: colors.muted,
+          borderRadius: 10,
+          paddingHorizontal: 7,
+          paddingVertical: 2,
+        }}
+      >
+        <Text style={{ fontSize: 10, fontWeight: '600', color: colors.mutedForeground }}>
+          {count}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -264,15 +344,10 @@ function SectionHeader({ title }: { title: string }) {
 export default function NotificationsScreen() {
   const navigation = useNavigation<any>();
 
-  // React Query hooks
   const { data: notifications = [], isLoading, refetch } = useNotificationsQuery();
-
   const { data: unreadCount = 0 } = useUnreadCountQuery();
-
   const markReadMutation = useMarkReadMutation();
   const markAllReadMutation = useMarkAllReadMutation();
-
-  // Keep store's removeNotification for optimistic local removal
   const { removeNotification } = useNotificationsStore();
 
   const sections = useMemo(() => groupByDate(notifications), [notifications]);
@@ -281,18 +356,10 @@ export default function NotificationsScreen() {
     (id: string) => {
       const notif = notifications.find((n: any) => n._id === id);
       if (!notif) return;
-
-      // Mark as read
-      if (!notif.is_read) {
-        markReadMutation.mutate(id);
-      }
-
-      // Navigate based on notification type
+      if (!notif.is_read) markReadMutation.mutate(id);
       const notifType = notif.type || notif.notification_type;
       const route = getRouteForNotification(notifType);
-      if (route) {
-        navigation.navigate(route.tab, { screen: route.screen });
-      }
+      if (route) navigation.navigate(route.tab, { screen: route.screen });
     },
     [notifications, markReadMutation, navigation]
   );
@@ -309,7 +376,7 @@ export default function NotificationsScreen() {
   }, [markAllReadMutation]);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       <Header
         title="Notifications"
         onBack={() => navigation.goBack()}
@@ -317,45 +384,51 @@ export default function NotificationsScreen() {
           unreadCount > 0 ? (
             <TouchableOpacity
               onPress={handleMarkAllRead}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Mark all notifications as read"
             >
-              <Text className="text-xs font-semibold text-primary">Read All</Text>
+              <CheckCheck size={22} color={colors.primary} />
             </TouchableOpacity>
           ) : undefined
         }
       />
 
-      <SectionList
-        sections={sections}
-        keyExtractor={(item: any) => item._id || item.id || String(Math.random())}
-        renderItem={({ item }) => (
-          <NotificationItem notification={item} onPress={handlePress} onRemove={handleRemove} />
-        )}
-        renderSectionHeader={({ section }) => <SectionHeader title={section.title} />}
-        contentContainerStyle={notifications.length === 0 ? { flex: 1 } : { paddingBottom: 40 }}
-        ListEmptyComponent={
-          isLoading ? null : (
+      {isLoading ? (
+        <NotificationSkeleton />
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={(item: any) => item._id || item.id || String(Math.random())}
+          renderItem={({ item }) => (
+            <NotificationItem notification={item} onPress={handlePress} onRemove={handleRemove} />
+          )}
+          renderSectionHeader={({ section }) => (
+            <SectionHeader title={section.title} count={section.data.length} />
+          )}
+          contentContainerStyle={
+            notifications.length === 0 ? { flex: 1 } : { paddingBottom: 40, paddingTop: 4 }
+          }
+          ListEmptyComponent={
             <EmptyState
               icon={<Bell size={40} color={colors.mutedForeground} />}
               title="No notifications yet"
               subtitle="We'll notify you when something important happens with your appointments, prescriptions, and health updates."
             />
-          )
-        }
-        refreshControl={
-          <RefreshControl
-            refreshing={false}
-            onRefresh={refetch}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
-        }
-        stickySectionHeadersEnabled={false}
-        showsVerticalScrollIndicator={false}
-      />
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={false}
+              onRefresh={refetch}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
+          stickySectionHeadersEnabled={false}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 }
