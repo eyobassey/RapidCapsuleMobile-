@@ -12,7 +12,7 @@ export function useRefreshOnFocus<T>(refetch: () => Promise<T>, enabled = true) 
       }
 
       refetch();
-    }, [refetch])
+    }, [refetch, enabled])
   );
 }
 

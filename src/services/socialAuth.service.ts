@@ -30,7 +30,7 @@ export function isAppleAuthAvailable(): boolean {
 /**
  * Sign in with Google and exchange token with backend
  */
-export async function signInWithGoogle(): Promise<string> {
+export async function signInWithGoogle(): Promise<{ token: string; refresh_token: string | null }> {
   if (Platform.OS === 'android' && !ENV.GOOGLE_WEB_CLIENT_ID) {
     throw new Error(
       'Google Sign-In requires GOOGLE_WEB_CLIENT_ID in env. Add your Web client ID from Google Cloud Console.'
@@ -67,18 +67,22 @@ export async function signInWithGoogle(): Promise<string> {
     token: idToken,
     user_type: 'Patient',
   });
-  const token = apiRes.data?.data?.token || apiRes.data?.result || apiRes.data?.token;
+  const responseData = apiRes.data?.data || apiRes.data?.result;
+  // Backend may return { token, refresh_token } object or a plain string
+  if (responseData && typeof responseData === 'object' && responseData.token) {
+    return responseData;
+  }
+  const token = responseData || apiRes.data?.token;
   if (!token || typeof token !== 'string') {
     throw new Error('Backend did not return auth token');
   }
-
-  return token;
+  return { token, refresh_token: null };
 }
 
 /**
  * Sign up with Google - payload { token, user_type: "Patient" }
  */
-export async function signUpWithGoogle(): Promise<string> {
+export async function signUpWithGoogle(): Promise<{ token: string; refresh_token: string | null }> {
   if (Platform.OS === 'android' && !ENV.GOOGLE_WEB_CLIENT_ID) {
     throw new Error(
       'Google Sign-In requires GOOGLE_WEB_CLIENT_ID in env. Add your Web client ID from Google Cloud Console.'
@@ -115,12 +119,15 @@ export async function signUpWithGoogle(): Promise<string> {
     token: idToken,
     user_type: 'Patient',
   });
-  const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
+  const responseData = apiRes.data?.data || apiRes.data?.result;
+  if (responseData && typeof responseData === 'object' && responseData.token) {
+    return responseData;
+  }
+  const token = responseData || apiRes.data?.token;
   if (!token || typeof token !== 'string') {
     throw new Error('Backend did not return auth token');
   }
-
-  return token;
+  return { token, refresh_token: null };
 }
 
 /** Backend Apple auth payload format */
@@ -164,7 +171,7 @@ function buildAppleAuthPayload(params: {
 /**
  * Sign in with Apple and exchange token with backend
  */
-export async function signInWithApple(): Promise<string> {
+export async function signInWithApple(): Promise<{ token: string; refresh_token: string | null }> {
   const STATE = 'Patient';
 
   if (Platform.OS === 'ios') {
@@ -198,12 +205,15 @@ export async function signInWithApple(): Promise<string> {
     });
 
     const apiRes = await api.post('/auth/apple', payload);
-    const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
+    const responseData = apiRes.data?.data || apiRes.data?.result;
+    if (responseData && typeof responseData === 'object' && responseData.token) {
+      return responseData;
+    }
+    const token = responseData || apiRes.data?.token;
     if (!token || typeof token !== 'string') {
       throw new Error('Backend did not return auth token');
     }
-
-    return token;
+    return { token, refresh_token: null };
   }
 
   if (Platform.OS === 'android' && appleAuthAndroid?.isSupported) {
@@ -243,12 +253,15 @@ export async function signInWithApple(): Promise<string> {
     });
 
     const apiRes = await api.post('/auth/apple', payload);
-    const token = apiRes.data?.data || apiRes.data?.result || apiRes.data?.token;
+    const responseData = apiRes.data?.data || apiRes.data?.result;
+    if (responseData && typeof responseData === 'object' && responseData.token) {
+      return responseData;
+    }
+    const token = responseData || apiRes.data?.token;
     if (!token || typeof token !== 'string') {
       throw new Error('Backend did not return auth token');
     }
-
-    return token;
+    return { token, refresh_token: null };
   }
 
   throw new Error('Apple Sign-In is not available on this device');

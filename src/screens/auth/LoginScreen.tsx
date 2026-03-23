@@ -29,11 +29,14 @@ import {
 
 function getErrorDetail(err: unknown): string {
   if (err && typeof err === 'object' && 'response' in err) {
-    const res = (err as { response?: { data?: unknown } }).response;
-    if (res?.data != null) return JSON.stringify(res.data, null, 2);
+    const res = (err as { response?: { data?: { errorMessage?: string; message?: string } } })
+      .response;
+    // Only show user-safe error messages, never raw response data
+    const msg = res?.data?.errorMessage || res?.data?.message;
+    if (msg && typeof msg === 'string') return msg;
   }
   if (err instanceof Error) return err.message;
-  return String(err ?? 'Unknown error');
+  return 'Something went wrong. Please try again.';
 }
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;

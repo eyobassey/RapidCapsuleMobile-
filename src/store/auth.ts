@@ -157,22 +157,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   loginWithGoogle: async () => {
-    const token = await signInWithGoogle();
-    await get().setToken(token);
+    const result = await signInWithGoogle();
+    await get().setToken(result.token);
+    if (result.refresh_token) {
+      await storage.setRefreshToken(result.refresh_token);
+    }
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
   },
 
   signupWithGoogle: async () => {
-    const token = await signUpWithGoogle();
-    await get().setToken(token);
+    const result = await signUpWithGoogle();
+    await get().setToken(result.token);
+    if (result.refresh_token) {
+      await storage.setRefreshToken(result.refresh_token);
+    }
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
   },
 
   loginWithApple: async () => {
-    const token = await signInWithApple();
-    await get().setToken(token);
+    const result = await signInWithApple();
+    await get().setToken(result.token);
+    if (result.refresh_token) {
+      await storage.setRefreshToken(result.refresh_token);
+    }
     await get().fetchUser();
     useCurrencyStore.getState().initCurrency();
   },

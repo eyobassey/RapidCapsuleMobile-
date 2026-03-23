@@ -103,8 +103,12 @@ export const meetingService = {
             await Linking.openURL(deepLink);
           } catch {
             // Zoom app not installed — fall back to web URL.
-            const webUrl = buildZoomWebUrl(numericId, resolvedPwd);
-            await Linking.openURL(webUrl);
+            try {
+              const webUrl = buildZoomWebUrl(numericId, resolvedPwd);
+              await Linking.openURL(webUrl);
+            } catch (webErr) {
+              console.warn('Failed to open Zoom web URL:', webErr);
+            }
           }
           return;
         }

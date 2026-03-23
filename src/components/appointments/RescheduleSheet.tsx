@@ -93,13 +93,18 @@ export default function RescheduleSheet({ visible, onClose, appointment }: Resch
     '';
 
   const { data: availabilityRaw, isFetching: timesLoading } = useAvailableTimesQuery(
-    specialistId,
-    selectedDate ?? ''
+    specialistId || 'none',
+    selectedDate ?? '',
+    { enabled: !!specialistId && !!selectedDate }
   );
 
   const availableSlots = useMemo<string[]>(() => {
     if (!availabilityRaw || !selectedDate) return [];
-    return (availabilityRaw as any)[selectedDate]?.available ?? [];
+    const slots =
+      typeof availabilityRaw === 'object' && !Array.isArray(availabilityRaw)
+        ? (availabilityRaw as Record<string, any>)[selectedDate]?.available
+        : null;
+    return Array.isArray(slots) ? slots : [];
   }, [availabilityRaw, selectedDate]);
 
   const reschedule = useRescheduleAppointmentMutation();

@@ -11,7 +11,7 @@ on:
 jobs:
   deploy:
     name: Deploy iOS via Fastlane
-    runs-on: macos-26
+    runs-on: macos-15
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -32,10 +32,8 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: false
 
-      - name: Install and update Ruby dependencies
-        run: |
-          bundle install
-          bundle update fastlane
+      - name: Install Ruby dependencies
+        run: bundle install
 
       - name: Install CocoaPods
         run: bundle exec pod install --project-directory=ios

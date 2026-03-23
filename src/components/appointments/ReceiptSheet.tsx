@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { generatePDF } from 'react-native-html-to-pdf';
+import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import { colors } from '../../theme/colors';
 import { buildReceiptHtml } from '../../utils/appointmentReceiptHtml';
 import { Text } from '../ui';
@@ -76,7 +76,7 @@ function Divider({ dashed }: { dashed?: boolean }) {
 export default function ReceiptSheet({ visible, onClose, data }: ReceiptSheetProps) {
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const receiptNumber = `RC-${data.appointmentId.slice(-8).toUpperCase()}`;
+  const receiptNumber = `RC-${(data.appointmentId || 'UNKNOWN').slice(-8).toUpperCase()}`;
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -91,7 +91,7 @@ export default function ReceiptSheet({ visible, onClose, data }: ReceiptSheetPro
         receiptNumber,
       });
 
-      const result = await generatePDF({
+      const result = await RNHTMLtoPDF.convert({
         html,
         fileName: `receipt_${data.appointmentId}`,
         directory: Platform.OS === 'android' ? 'Downloads' : 'Documents',
@@ -102,8 +102,11 @@ export default function ReceiptSheet({ visible, onClose, data }: ReceiptSheetPro
       await Share.share(
         Platform.OS === 'ios'
           ? { url: `file://${result.filePath}` }
-          : { title: `Receipt ${receiptNumber}`, message: `file://${result.filePath}` }
+          : { title: `Receipt ${receiptNumber}`, message: `Receipt ${receiptNumber}` },
+        Platform.OS === 'android' ? { dialogTitle: 'Share Receipt' } : undefined
       );
+      // Note: On Android, file sharing via Share.share is limited.
+      // For full file sharing support, consider react-native-share.
     } catch (err: any) {
       if (err?.message !== 'The user did not share') {
         Alert.alert('Download Failed', 'Could not generate the receipt PDF. Please try again.');
