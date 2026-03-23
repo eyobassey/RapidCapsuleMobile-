@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { View, ScrollView, Alert } from 'react-native';
+import { View, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,9 +16,12 @@ import {
   FileText,
   StickyNote,
   XCircle,
+  Receipt,
+  ChevronRight,
 } from 'lucide-react-native';
 import { Header, Avatar, StatusBadge, Button, Card, Skeleton, Text } from '../../components/ui';
 import RescheduleSheet from '../../components/appointments/RescheduleSheet';
+import ReceiptSheet from '../../components/appointments/ReceiptSheet';
 import { useAppointmentsStore } from '../../store/appointments';
 import { meetingService } from '../../services/meeting.service';
 import { colors } from '../../theme/colors';
@@ -64,6 +67,7 @@ export default function AppointmentDetailScreen() {
   const route = useRoute<Route>();
   const { id } = route.params;
   const [showReschedule, setShowReschedule] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const {
     currentAppointment: appointment,
@@ -104,6 +108,8 @@ export default function AppointmentDetailScreen() {
     appointment?.zoom_link;
   const meetingId = appointment?.meeting_id || appointment?.zoom_meeting_id;
   const meetingPassword = appointment?.meeting_password || appointment?.zoom_meeting_password;
+
+  const appointmentType = appointment?.appointment_type || appointment?.type || 'Consultation';
 
   const handleJoinMeeting = useCallback(() => {
     if (!appointment) return;
@@ -249,6 +255,28 @@ export default function AppointmentDetailScreen() {
             </View>
           </View>
 
+          {/* Payment card */}
+          {!isCancelled && (
+            <View className="bg-card border border-border rounded-2xl px-4 mb-4">
+              <View className="flex-row items-center justify-between py-3">
+                <Text className="text-muted-foreground text-xs">Consultation Fee</Text>
+                <Text className="text-foreground text-sm font-semibold">{format(fee)}</Text>
+              </View>
+              <View className="border-t border-border" />
+              <TouchableOpacity
+                onPress={() => setShowReceipt(true)}
+                activeOpacity={0.7}
+                className="flex-row items-center justify-between py-3"
+              >
+                <View className="flex-row items-center gap-2">
+                  <Receipt size={15} color={colors.primary} />
+                  <Text className="text-primary text-sm font-semibold">View Receipt</Text>
+                </View>
+                <ChevronRight size={16} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Section 3: Meeting Details */}
           {isUpcoming && (meetingUrl || meetingId) && (
             <View className="bg-card border border-border rounded-2xl p-4 mb-4">
@@ -351,7 +379,7 @@ export default function AppointmentDetailScreen() {
             </View>
           )}
 
-          {/* Section 4: Actions */}
+          {/* Section 5: Actions */}
           <View className="gap-3 mt-2">
             {isUpcoming && (
               <>
@@ -394,11 +422,35 @@ export default function AppointmentDetailScreen() {
           </View>
         </ScrollView>
       )}
+
       {appointment && (
         <RescheduleSheet
           visible={showReschedule}
           onClose={() => setShowReschedule(false)}
           appointment={appointment}
+        />
+      )}
+
+      {appointment && (
+        <ReceiptSheet
+          visible={showReceipt}
+          onClose={() => setShowReceipt(false)}
+          data={{
+            appointmentId: appointment.id || appointment._id || id,
+            specialistName,
+            specialty,
+            date: formatDate(
+              appointment.start_time ||
+                appointment.date ||
+                appointment.appointment_date ||
+                appointment.createdAt
+            ),
+            time: formatTime(
+              appointment.start_time || appointment.time || appointment.appointment_time || '00:00'
+            ),
+            appointmentType,
+            consultationFee: format(fee),
+          }}
         />
       )}
     </SafeAreaView>
