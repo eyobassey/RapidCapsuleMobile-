@@ -92,6 +92,7 @@ const HIDE_TAB_SCREENS = new Set([
   'DrugCategory',
   'MyUploads',
   'MyOrders',
+  'Notifications',
 ]);
 
 function getTabBarStyle(route: any) {
