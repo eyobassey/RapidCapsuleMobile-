@@ -93,9 +93,8 @@ export default function RescheduleSheet({ visible, onClose, appointment }: Resch
     '';
 
   const { data: availabilityRaw, isFetching: timesLoading } = useAvailableTimesQuery(
-    specialistId || 'none',
-    selectedDate ?? '',
-    { enabled: !!specialistId && !!selectedDate }
+    specialistId || '',
+    selectedDate ?? ''
   );
 
   const availableSlots = useMemo<string[]>(() => {

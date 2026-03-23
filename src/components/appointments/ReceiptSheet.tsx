@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import RNHTMLtoPDF from 'react-native-html-to-pdf';
+import { generatePDF } from 'react-native-html-to-pdf';
 import { colors } from '../../theme/colors';
 import { buildReceiptHtml } from '../../utils/appointmentReceiptHtml';
 import { Text } from '../ui';
@@ -91,7 +91,7 @@ export default function ReceiptSheet({ visible, onClose, data }: ReceiptSheetPro
         receiptNumber,
       });
 
-      const result = await RNHTMLtoPDF.convert({
+      const result = await generatePDF({
         html,
         fileName: `receipt_${data.appointmentId}`,
         directory: Platform.OS === 'android' ? 'Downloads' : 'Documents',
