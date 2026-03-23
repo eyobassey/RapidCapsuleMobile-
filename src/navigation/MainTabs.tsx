@@ -93,6 +93,7 @@ const HIDE_TAB_SCREENS = new Set([
   'MyUploads',
   'MyOrders',
   'Notifications',
+  'DrEka',
 ]);
 
 function getTabBarStyle(route: any) {
