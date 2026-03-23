@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.11.0...v1.11.1) (2026-03-23)
+
+### Bug Fixes
+
+- address all critical and warning issues from v1.11.0 code review ([468c439](https://github.com/eyobassey/RapidCapsuleMobile-/commit/468c439629476709667b44fd3e476a4507c875ca))
+- revert generatePDF import and remove extra arg from useAvailableTimesQuery ([19a2d73](https://github.com/eyobassey/RapidCapsuleMobile-/commit/19a2d7366a09da55d2cdf0b05e1d3c1fa400dfea))
+
 # [1.11.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.10.0...v1.11.0) (2026-03-23)
 
 ### Bug Fixes
