@@ -1,3 +1,9 @@
+## [1.11.2](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.11.1...v1.11.2) (2026-03-23)
+
+### Bug Fixes
+
+- **ios:** remove arm64 simulator exclusion for Apple Silicon Macs ([d0a280a](https://github.com/eyobassey/RapidCapsuleMobile-/commit/d0a280a55fe43fa6b14ee76a44d08bf2c8d15b48))
+
 ## [1.11.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.11.0...v1.11.1) (2026-03-23)
 
 ### Bug Fixes
