@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { View, ScrollView, Alert, Linking } from 'react-native';
+import { View, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react-native';
 import { Header, Avatar, StatusBadge, Button, Card, Skeleton, Text } from '../../components/ui';
 import { useAppointmentsStore } from '../../store/appointments';
+import { meetingService } from '../../services/meeting.service';
 import { colors } from '../../theme/colors';
 import { formatDate, formatTime } from '../../utils/formatters';
 import { useCurrency } from '../../hooks/useCurrency';
@@ -103,17 +104,16 @@ export default function AppointmentDetailScreen() {
   const meetingPassword = appointment?.meeting_password || appointment?.zoom_meeting_password;
 
   const handleJoinMeeting = useCallback(() => {
-    const link =
-      appointment?.zoom_meeting_url || appointment?.meeting_link || appointment?.zoom_link;
-    if (link) {
-      Linking.openURL(link);
-    } else {
-      Alert.alert(
-        'No Meeting Link',
-        'The meeting link is not available yet. Please check back later.'
-      );
-    }
-  }, [appointment]);
+    if (!appointment) return;
+    meetingService.join({
+      channel: appointment.meeting_channel || 'zoom',
+      joinUrl: meetingService.resolveJoinUrl(appointment),
+      meetingId: appointment.meeting_id || appointment.zoom_meeting_id,
+      password: appointment.meeting_password || appointment.zoom_meeting_password,
+      displayName: specialistName,
+      address: appointment.address || appointment.location,
+    });
+  }, [appointment, specialistName]);
 
   const handleCancel = useCallback(() => {
     Alert.alert(

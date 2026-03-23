@@ -10,12 +10,13 @@ import {
   Plus,
 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
-import { Linking, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppointmentCard from '../../components/appointments/AppointmentCard';
 import { EmptyState, Header, Skeleton, TabBar } from '../../components/ui';
 import { useAppointmentsQuery } from '../../hooks/queries';
 import { useRefreshOnFocus } from '../../hooks/useRefresh';
+import { meetingService } from '../../services/meeting.service';
 import type { BookingsStackParamList } from '../../navigation/stacks/BookingsStack';
 import { colors } from '../../theme/colors';
 
@@ -94,10 +95,13 @@ export default function AppointmentsListScreen() {
   }, [navigation]);
 
   const handleJoin = useCallback((appointment: any) => {
-    const link = appointment.meeting_link || appointment.zoom_link;
-    if (link) {
-      Linking.openURL(link);
-    }
+    meetingService.join({
+      channel: appointment.meeting_channel || 'zoom',
+      joinUrl: meetingService.resolveJoinUrl(appointment),
+      meetingId: appointment.meeting_id || appointment.zoom_meeting_id,
+      password: appointment.meeting_password || appointment.zoom_meeting_password,
+      address: appointment.address || appointment.location,
+    });
   }, []);
 
   const empty = emptyConfig[filter] || emptyConfig.upcoming;

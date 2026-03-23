@@ -91,5 +91,12 @@
 		<string>OpenRunde-Bold.otf</string>
 		<string>OpenRunde-Medium.otf</string>
 	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>zoommtg</string>
+		<string>zoomus</string>
+		<string>whatsapp</string>
+		<string>msteams</string>
+	</array>
 </dict>
 </plist>
