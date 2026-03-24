@@ -82,3 +82,4 @@ yarn-error.log
 *.postman_collection.json
 # User guide for Claude Code AI (do not commit)
 CLAUDE.md
+.claude/
