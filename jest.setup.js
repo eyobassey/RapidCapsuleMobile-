@@ -1,6 +1,6 @@
 // Mock react-native-reanimated
 jest.mock('react-native-reanimated', () => {
-  const React = require('react');
+  require('react');
   const { View } = require('react-native');
   return {
     __esModule: true,
