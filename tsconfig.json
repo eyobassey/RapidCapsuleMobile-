@@ -3,7 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "skipLibCheck": true,
-    "noUncheckedIndexedAccess": false,
+    "noUncheckedIndexedAccess": true,
     "types": ["jest", "nativewind/types"],
     "baseUrl": ".",
     "paths": {
