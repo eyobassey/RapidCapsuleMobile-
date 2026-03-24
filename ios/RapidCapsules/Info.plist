@@ -47,14 +47,18 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCalendarsUsageDescription</key>
+	<string>RapidCapsule adds appointment reminders to your calendar so you never miss a consultation.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>RapidCapsule needs camera access to photograph prescriptions for verification.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>RapidCapsule may access your contacts to help you quickly add emergency contacts to your health profile.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>RapidCapsule needs access to your health data to sync vitals like heart rate, steps, sleep, and blood pressure with your medical profile.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>RapidCapsule may write health data from your consultations back to Apple Health.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string/>
+	<string>RapidCapsule uses your location to show nearby pharmacies and healthcare providers.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>RapidCapsule needs microphone access to send voice messages.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
