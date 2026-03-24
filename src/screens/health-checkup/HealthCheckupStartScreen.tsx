@@ -29,7 +29,7 @@ export default function HealthCheckupStartScreen() {
   const { history, fetchHistory, reset } = useHealthCheckupStore();
 
   useEffect(() => {
-    fetchHistory({ limit: 5 });
+    void fetchHistory({ limit: 5 });
   }, [fetchHistory]);
 
   const handleStart = useCallback(() => {

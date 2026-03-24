@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { Heart, Check, ChevronRight } from 'lucide-react-native';
+import { Heart, Check } from 'lucide-react-native';
 import { Header, Button, Text } from '../../components/ui';
 import { colors } from '../../theme/colors';
 import { recoveryService } from '../../services/recovery.service';

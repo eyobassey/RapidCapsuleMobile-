@@ -71,7 +71,18 @@ export default function ProfileScreen() {
   const currencyCode = useCurrencyStore((s) => s.currencyCode);
   const setCurrency = useCurrencyStore((s) => s.setCurrency);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
-  const currentCurrency = SUPPORTED_CURRENCIES[currencyCode] ?? SUPPORTED_CURRENCIES.USD;
+  const currentCurrency = useMemo(
+    () =>
+      SUPPORTED_CURRENCIES[currencyCode] ??
+      SUPPORTED_CURRENCIES.USD ?? {
+        flag: '🇺🇸',
+        name: 'US Dollar',
+        code: 'USD',
+        symbol: '$',
+        locale: 'en-US',
+      },
+    [currencyCode]
+  );
   const appVersionLabel = getAppVersionLabel();
 
   const { format } = useCurrency();
@@ -300,7 +311,7 @@ export default function ProfileScreen() {
           <View key={section.title} className="mt-6">
             <Text style={styles.sectionHeader}>{section.title}</Text>
             <View className="mx-4 mt-2 bg-card border border-border/40 rounded-[20px] overflow-hidden">
-              {section.items.map((item, idx) => (
+              {section.items.map((item, _idx) => (
                 <TouchableOpacity
                   key={item.title}
                   activeOpacity={0.6}

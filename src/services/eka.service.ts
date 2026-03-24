@@ -1,6 +1,6 @@
 import api from './api';
-import {storage} from '../utils/storage';
-import type {SSEChunk, EkaConversation} from '../types/eka.types';
+import { storage } from '../utils/storage';
+import type { SSEChunk, EkaConversation } from '../types/eka.types';
 import ENV from '../config/env';
 
 const API_BASE = ENV.API_BASE_URL;
@@ -23,17 +23,17 @@ export const ekaService = {
   },
 
   async renameConversation(id: string, title: string): Promise<void> {
-    await api.patch(`/eka/conversations/${id}`, {title});
+    await api.patch(`/eka/conversations/${id}`, { title });
   },
 
   // ─── File Upload (axios multipart) ───────────────
-  async uploadPrescription(formData: FormData): Promise<{uploadId: string; filename: string}> {
+  async uploadPrescription(formData: FormData): Promise<{ uploadId: string; filename: string }> {
     const res = await api.post('/eka/upload-prescription', formData, {
-      headers: {'Content-Type': 'multipart/form-data'},
+      headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 60000,
     });
     const data = unwrap(res);
-    return {uploadId: data.uploadId, filename: data.filename};
+    return { uploadId: data.uploadId, filename: data.filename };
   },
 
   // ─── SSE Streaming Chat (XMLHttpRequest) ─────────
@@ -46,8 +46,8 @@ export const ekaService = {
       language?: string;
       tags?: string[];
     },
-    onChunk: (chunk: SSEChunk) => void,
-  ): {abort: () => void} {
+    onChunk: (chunk: SSEChunk) => void
+  ): { abort: () => void } {
     const xhr = new XMLHttpRequest();
     let lastIndex = 0;
     let sseBuffer = '';
@@ -131,7 +131,7 @@ export const ekaService = {
 
         xhr.timeout = 120000; // 2 min timeout for long AI responses
         xhr.send(JSON.stringify(body));
-      } catch (err: any) {
+      } catch {
         if (!aborted) {
           onChunk({
             type: 'error',

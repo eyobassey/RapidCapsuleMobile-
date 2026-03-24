@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, ActivityIndicator, RefreshControl } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -8,7 +8,7 @@ import { Header, Text } from '../../components/ui';
 import { colors } from '../../theme/colors';
 import { useRecoveryStore } from '../../store/recovery';
 import { recoveryService } from '../../services/recovery.service';
-import type { ExerciseRecord, ExerciseStats } from '../../types/recovery.types';
+import type { ExerciseRecord } from '../../types/recovery.types';
 
 const CATEGORY_ICONS: Record<string, { icon: any; color: string }> = {
   breathing: { icon: Wind, color: '#06b6d4' },
@@ -44,12 +44,12 @@ export default function ExerciseHistoryScreen() {
         .then(setExercises)
         .catch(() => {}),
     ]);
-  }, []);
+  }, [fetchExerciseStats]);
 
   useFocusEffect(
     useCallback(() => {
       loadAll().then(() => setLoading(false));
-    }, [])
+    }, [loadAll])
   );
 
   const onRefresh = async () => {
@@ -86,7 +86,11 @@ export default function ExerciseHistoryScreen() {
               <View
                 style={{
                   backgroundColor: (
-                    WELLNESS_CONFIG[exerciseStats.wellness_level] || WELLNESS_CONFIG.moderate
+                    WELLNESS_CONFIG[exerciseStats.wellness_level] ??
+                    WELLNESS_CONFIG.moderate ?? {
+                      color: colors.secondary,
+                      bg: `${colors.secondary}20`,
+                    }
                   ).bg,
                   borderRadius: 8,
                   paddingHorizontal: 10,
@@ -99,7 +103,11 @@ export default function ExerciseHistoryScreen() {
                     fontSize: 11,
                     fontWeight: '700',
                     color: (
-                      WELLNESS_CONFIG[exerciseStats.wellness_level] || WELLNESS_CONFIG.moderate
+                      WELLNESS_CONFIG[exerciseStats.wellness_level] ??
+                      WELLNESS_CONFIG.moderate ?? {
+                        color: colors.secondary,
+                        bg: `${colors.secondary}20`,
+                      }
                     ).color,
                     textTransform: 'capitalize',
                   }}

@@ -66,7 +66,7 @@ export function useUpdatePreferenceMutation() {
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: notificationPreferencesKeys.all });
+      void queryClient.invalidateQueries({ queryKey: notificationPreferencesKeys.all });
     },
   });
 }

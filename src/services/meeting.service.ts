@@ -32,7 +32,7 @@ export interface MeetingDetails {
  */
 function extractZoomMeetingId(url: string): string | null {
   const match = url.match(/zoom\.us\/j\/(\d+)/);
-  return match ? match[1] : null;
+  return match ? match[1] ?? null : null;
 }
 
 /**
@@ -41,7 +41,7 @@ function extractZoomMeetingId(url: string): string | null {
  */
 function extractZoomPassword(url: string): string | null {
   const match = url.match(/[?&]pwd=([^&]+)/);
-  return match ? match[1] : null;
+  return match ? match[1] ?? null : null;
 }
 
 /**

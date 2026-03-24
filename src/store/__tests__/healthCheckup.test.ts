@@ -12,8 +12,8 @@ jest.mock('../../services/healthCheckup.service', () => ({
   },
 }));
 
-import {useHealthCheckupStore} from '../healthCheckup';
-import {healthCheckupService} from '../../services/healthCheckup.service';
+import { useHealthCheckupStore } from '../healthCheckup';
+import { healthCheckupService } from '../../services/healthCheckup.service';
 
 const svc = healthCheckupService as jest.Mocked<typeof healthCheckupService>;
 
@@ -82,7 +82,7 @@ describe('useHealthCheckupStore', () => {
     });
 
     it('falls back to result.id if _id is absent', async () => {
-      svc.beginCheckup.mockResolvedValue({id: 'chk-2'});
+      svc.beginCheckup.mockResolvedValue({ id: 'chk-2' });
 
       await useHealthCheckupStore.getState().beginCheckup({
         health_check_for: 'self',
@@ -100,7 +100,7 @@ describe('useHealthCheckupStore', () => {
         useHealthCheckupStore.getState().beginCheckup({
           health_check_for: 'self',
           checkup_owner_id: 'user-1',
-        }),
+        })
       ).rejects.toThrow('Network error');
 
       const s = useHealthCheckupStore.getState();
@@ -111,15 +111,11 @@ describe('useHealthCheckupStore', () => {
 
   describe('addEvidence', () => {
     it('appends evidence items to existing array', () => {
-      useHealthCheckupStore.getState().addEvidence([
-        {id: 's_1', choice_id: 'present'},
-      ]);
-      useHealthCheckupStore.getState().addEvidence([
-        {id: 's_2', choice_id: 'absent'},
-      ]);
+      useHealthCheckupStore.getState().addEvidence([{ id: 's_1', choice_id: 'present' }]);
+      useHealthCheckupStore.getState().addEvidence([{ id: 's_2', choice_id: 'absent' }]);
 
       expect(useHealthCheckupStore.getState().evidence).toHaveLength(2);
-      expect(useHealthCheckupStore.getState().evidence[1].id).toBe('s_2');
+      expect(useHealthCheckupStore.getState().evidence[1]!.id).toBe('s_2');
     });
   });
 
@@ -137,13 +133,13 @@ describe('useHealthCheckupStore', () => {
       useHealthCheckupStore.setState({
         sex: 'male',
         age: 30,
-        evidence: [{id: 's_1', choice_id: 'present'}],
+        evidence: [{ id: 's_1', choice_id: 'present' }],
         interviewToken: 'tok-1',
       });
 
       svc.diagnosis.mockResolvedValue({
         interview_token: 'tok-2',
-        question: {type: 'single', text: 'Do you have fever?'},
+        question: { type: 'single', text: 'Do you have fever?' },
         conditions: [],
         should_stop: false,
       });
@@ -151,17 +147,17 @@ describe('useHealthCheckupStore', () => {
       await useHealthCheckupStore.getState().submitDiagnosis();
 
       const s = useHealthCheckupStore.getState();
-      expect(s.currentQuestion).toEqual({type: 'single', text: 'Do you have fever?'});
+      expect(s.currentQuestion).toEqual({ type: 'single', text: 'Do you have fever?' });
       expect(s.interviewToken).toBe('tok-2');
       expect(s.shouldStop).toBe(false);
       expect(s.isLoading).toBe(false);
     });
 
     it('updates conditions and triage when diagnosis completes', async () => {
-      useHealthCheckupStore.setState({sex: 'female', age: 25, evidence: []});
+      useHealthCheckupStore.setState({ sex: 'female', age: 25, evidence: [] });
 
       svc.diagnosis.mockResolvedValue({
-        conditions: [{id: 'c_1', name: 'Common cold', probability: 0.85}],
+        conditions: [{ id: 'c_1', name: 'Common cold', probability: 0.85 }],
         triage_level: 'consultation',
         has_emergency_evidence: false,
         should_stop: true,
@@ -180,9 +176,9 @@ describe('useHealthCheckupStore', () => {
     it('sets error on failure and rethrows', async () => {
       svc.diagnosis.mockRejectedValue(new Error('Diagnosis failed'));
 
-      await expect(
-        useHealthCheckupStore.getState().submitDiagnosis(),
-      ).rejects.toThrow('Diagnosis failed');
+      await expect(useHealthCheckupStore.getState().submitDiagnosis()).rejects.toThrow(
+        'Diagnosis failed'
+      );
 
       expect(useHealthCheckupStore.getState().error).toBe('Diagnosis failed');
     });
@@ -191,18 +187,18 @@ describe('useHealthCheckupStore', () => {
   describe('fetchHistory', () => {
     it('loads checkup history', async () => {
       svc.getHistory.mockResolvedValue([
-        {_id: 'h1', created_at: '2025-01-01'},
-        {_id: 'h2', created_at: '2025-01-02'},
+        { _id: 'h1', created_at: '2025-01-01' },
+        { _id: 'h2', created_at: '2025-01-02' },
       ]);
 
-      await useHealthCheckupStore.getState().fetchHistory({page: 1, limit: 10});
+      await useHealthCheckupStore.getState().fetchHistory({ page: 1, limit: 10 });
 
       expect(useHealthCheckupStore.getState().history).toHaveLength(2);
-      expect(svc.getHistory).toHaveBeenCalledWith({page: 1, limit: 10});
+      expect(svc.getHistory).toHaveBeenCalledWith({ page: 1, limit: 10 });
     });
 
     it('handles nested data response', async () => {
-      svc.getHistory.mockResolvedValue({data: [{_id: 'h1'}]});
+      svc.getHistory.mockResolvedValue({ data: [{ _id: 'h1' }] });
 
       await useHealthCheckupStore.getState().fetchHistory();
 
@@ -222,7 +218,7 @@ describe('useHealthCheckupStore', () => {
     it('loads checkup detail and sets claude summary if present', async () => {
       svc.getById.mockResolvedValue({
         _id: 'd1',
-        claude_summary: {content: {overview: 'Test summary'}},
+        claude_summary: { content: { overview: 'Test summary' } },
       });
 
       await useHealthCheckupStore.getState().fetchDetail('d1');
@@ -235,30 +231,32 @@ describe('useHealthCheckupStore', () => {
 
   describe('fetchRiskFactors', () => {
     it('loads risk factors as array', async () => {
-      svc.getRiskFactors.mockResolvedValue([{id: 'rf_1', name: 'Smoking'}]);
+      svc.getRiskFactors.mockResolvedValue([{ id: 'rf_1', name: 'Smoking' }]);
 
       await useHealthCheckupStore.getState().fetchRiskFactors(30);
 
-      expect(useHealthCheckupStore.getState().riskFactors).toEqual([{id: 'rf_1', name: 'Smoking'}]);
+      expect(useHealthCheckupStore.getState().riskFactors).toEqual([
+        { id: 'rf_1', name: 'Smoking' },
+      ]);
     });
 
     it('extracts from nested object', async () => {
-      svc.getRiskFactors.mockResolvedValue({risk_factors: [{id: 'rf_2'}]});
+      svc.getRiskFactors.mockResolvedValue({ risk_factors: [{ id: 'rf_2' }] });
 
       await useHealthCheckupStore.getState().fetchRiskFactors(25);
 
-      expect(useHealthCheckupStore.getState().riskFactors).toEqual([{id: 'rf_2'}]);
+      expect(useHealthCheckupStore.getState().riskFactors).toEqual([{ id: 'rf_2' }]);
     });
   });
 
   describe('searchSymptoms', () => {
     it('returns search results array', async () => {
-      svc.searchSymptoms.mockResolvedValue([{id: 's_100', label: 'Headache'}]);
+      svc.searchSymptoms.mockResolvedValue([{ id: 's_100', label: 'Headache' }]);
 
-      useHealthCheckupStore.setState({age: 30, sex: 'male'});
+      useHealthCheckupStore.setState({ age: 30, sex: 'male' });
       const results = await useHealthCheckupStore.getState().searchSymptoms('headache');
 
-      expect(results).toEqual([{id: 's_100', label: 'Headache'}]);
+      expect(results).toEqual([{ id: 's_100', label: 'Headache' }]);
     });
 
     it('returns empty array on failure', async () => {
@@ -273,7 +271,7 @@ describe('useHealthCheckupStore', () => {
   describe('generateClaudeSummary', () => {
     it('sets claude summary on success', async () => {
       svc.generateClaudeSummary.mockResolvedValue({
-        claude_summary: {content: {overview: 'Generated'}, generated_at: '2025-01-01'},
+        claude_summary: { content: { overview: 'Generated' }, generated_at: '2025-01-01' },
       });
 
       await useHealthCheckupStore.getState().generateClaudeSummary('chk-1');
@@ -297,9 +295,9 @@ describe('useHealthCheckupStore', () => {
     it('sets error and rethrows on failure', async () => {
       svc.generateClaudeSummary.mockRejectedValue(new Error('Server error'));
 
-      await expect(
-        useHealthCheckupStore.getState().generateClaudeSummary('chk-1'),
-      ).rejects.toThrow('Server error');
+      await expect(useHealthCheckupStore.getState().generateClaudeSummary('chk-1')).rejects.toThrow(
+        'Server error'
+      );
 
       expect(useHealthCheckupStore.getState().summaryLoading).toBe(false);
     });
@@ -309,8 +307,8 @@ describe('useHealthCheckupStore', () => {
     it('resets all state to initial values', () => {
       useHealthCheckupStore.setState({
         checkupId: 'chk-1',
-        evidence: [{id: 's_1', choice_id: 'present'}],
-        history: [{_id: 'h1'}],
+        evidence: [{ id: 's_1', choice_id: 'present' }],
+        history: [{ _id: 'h1' }],
         isLoading: true,
         error: 'some error',
       });

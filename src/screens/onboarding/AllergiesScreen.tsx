@@ -97,7 +97,7 @@ export default function AllergiesScreen({ navigation }: Props) {
   ) => {
     setAllergies((prev) => {
       const items = [...prev[category]];
-      items[index] = { ...items[index], [field]: value };
+      items[index] = { name: '', reaction: '', severity: '', ...items[index], [field]: value };
       return { ...prev, [category]: items };
     });
   };

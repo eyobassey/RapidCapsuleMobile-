@@ -9,7 +9,7 @@ import { useOnboardingStore } from '../../store/onboarding';
 import { usersService } from '../../services/users.service';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { OnboardingStackParamList } from '../../navigation/OnboardingStack';
-import { Input, Text, TextInput } from '../../components/ui';
+import { Text, TextInput } from '../../components/ui';
 
 type Props = NativeStackScreenProps<OnboardingStackParamList, 'MedicalHistory'>;
 

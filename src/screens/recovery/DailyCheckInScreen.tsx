@@ -96,7 +96,6 @@ function SliderRow({
 export default function DailyCheckInScreen() {
   const navigation = useNavigation<any>();
   const fetchDashboard = useRecoveryStore((s) => s.fetchDashboard);
-  const loggedToday = useRecoveryStore((s) => s.dashboard?.daily_log_summary?.logged_today);
 
   const [isEditing, setIsEditing] = useState(false);
   const [prefilling, setPrefilling] = useState(true);

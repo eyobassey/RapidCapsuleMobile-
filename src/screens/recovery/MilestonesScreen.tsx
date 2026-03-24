@@ -19,7 +19,7 @@ export default function MilestonesScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchMilestones().finally(() => setLoading(false));
-    }, [])
+    }, [fetchMilestones])
   );
 
   const handleCelebrate = async (id: string) => {

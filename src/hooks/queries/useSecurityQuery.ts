@@ -87,7 +87,7 @@ export function useRevokeSessionMutation() {
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: securityKeys.sessions() });
+      void queryClient.invalidateQueries({ queryKey: securityKeys.sessions() });
     },
   });
 }
@@ -120,7 +120,7 @@ export function useRevokeAllSessionsMutation() {
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: securityKeys.sessions() });
+      void queryClient.invalidateQueries({ queryKey: securityKeys.sessions() });
     },
   });
 }
@@ -155,7 +155,7 @@ export function useUpdateUserSettingsMutation() {
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: securityKeys.userSettings() });
+      void queryClient.invalidateQueries({ queryKey: securityKeys.userSettings() });
     },
   });
 }
@@ -175,7 +175,7 @@ export function useDeleteBiometricMutation() {
     mutationFn: (credentialId: string) => securityService.deleteBiometricCredential(credentialId),
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: securityKeys.biometrics() });
+      void queryClient.invalidateQueries({ queryKey: securityKeys.biometrics() });
     },
   });
 }
@@ -200,7 +200,7 @@ export function useRegisterPasskeyMutation() {
     },
 
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: securityKeys.biometrics() });
+      void queryClient.invalidateQueries({ queryKey: securityKeys.biometrics() });
     },
   });
 }

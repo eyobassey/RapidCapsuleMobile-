@@ -84,7 +84,7 @@ export default function EditProfileScreen() {
   );
   // Strip ISO date format for DOB
   const rawDob = user?.profile?.date_of_birth || '';
-  const [dateOfBirth, setDateOfBirth] = useState(rawDob ? rawDob.split('T')[0] : '');
+  const [dateOfBirth, setDateOfBirth] = useState(rawDob ? rawDob.split('T')[0] ?? '' : '');
   const [gender, setGender] = useState<string>(user?.profile?.gender || '');
   const [maritalStatus, setMaritalStatus] = useState((user?.profile as any)?.marital_status || '');
   const [occupation, setOccupation] = useState((user?.profile as any)?.occupation || '');

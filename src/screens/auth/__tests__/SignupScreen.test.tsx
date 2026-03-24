@@ -18,7 +18,7 @@ type NavParams = AuthStackParamList;
 
 const Stack = createNativeStackNavigator<NavParams>();
 
-function renderWithNav(initialRoute: keyof NavParams = 'Signup') {
+function renderWithNav(_initialRoute: keyof NavParams = 'Signup') {
   return render(
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>

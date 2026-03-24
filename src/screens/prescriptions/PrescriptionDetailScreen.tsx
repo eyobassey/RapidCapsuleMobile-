@@ -300,7 +300,8 @@ export default function PrescriptionDetailScreen() {
       ? specialist.profile?.profile_photo || specialist.profile?.profile_image
       : null;
 
-  const bannerConfig = STATUS_BANNER_CONFIG[rx.status] || STATUS_BANNER_CONFIG.draft;
+  const bannerConfig = STATUS_BANNER_CONFIG[rx.status] ??
+    STATUS_BANNER_CONFIG.draft ?? { bg: colors.muted, icon: Clock, label: 'Draft' };
   const BannerIcon = bannerConfig.icon;
 
   const isPending = rx.status === 'pending_acceptance';

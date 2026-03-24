@@ -20,6 +20,7 @@ export default function GroupSessionsScreen() {
 
   useEffect(() => {
     loadSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
   const loadSessions = async () => {

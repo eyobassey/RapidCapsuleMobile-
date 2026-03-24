@@ -1,6 +1,6 @@
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {recoveryService} from '../../services/recovery.service';
-import type {SobrietyLog} from '../../types/recovery.types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { recoveryService } from '../../services/recovery.service';
+import type { SobrietyLog } from '../../types/recovery.types';
 
 // ── Query key factory ──────────────────────────────────────
 export const recoveryKeys = {
@@ -12,8 +12,7 @@ export const recoveryKeys = {
   screeningHistory: () => [...recoveryKeys.all, 'screeningHistory'] as const,
   activePlan: () => [...recoveryKeys.all, 'activePlan'] as const,
   exerciseStats: () => [...recoveryKeys.all, 'exerciseStats'] as const,
-  riskHistory: (period?: string) =>
-    [...recoveryKeys.all, 'riskHistory', period] as const,
+  riskHistory: (period?: string) => [...recoveryKeys.all, 'riskHistory', period] as const,
   chartData: (metric: string, days: number) =>
     [...recoveryKeys.all, 'chart', metric, days] as const,
 };
@@ -84,9 +83,9 @@ export function useCheckInMutation() {
   return useMutation({
     mutationFn: (data: Partial<SobrietyLog>) => recoveryService.logDaily(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: recoveryKeys.dashboard()});
-      queryClient.invalidateQueries({queryKey: recoveryKeys.stats()});
-      queryClient.invalidateQueries({queryKey: recoveryKeys.milestones()});
+      void queryClient.invalidateQueries({ queryKey: recoveryKeys.dashboard() });
+      void queryClient.invalidateQueries({ queryKey: recoveryKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: recoveryKeys.milestones() });
     },
   });
 }
@@ -96,7 +95,7 @@ export function useCelebrateMilestoneMutation() {
   return useMutation({
     mutationFn: (id: string) => recoveryService.celebrateMilestone(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: recoveryKeys.milestones()});
+      void queryClient.invalidateQueries({ queryKey: recoveryKeys.milestones() });
     },
   });
 }

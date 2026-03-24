@@ -1,13 +1,12 @@
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
-import {vitalsService} from '../../services/vitals.service';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { vitalsService } from '../../services/vitals.service';
 
 // ── Query key factory ──────────────────────────────────────
 export const vitalKeys = {
   all: ['vitals'] as const,
   list: () => [...vitalKeys.all, 'list'] as const,
   recent: () => [...vitalKeys.all, 'recent'] as const,
-  chart: (type: string, period: string) =>
-    [...vitalKeys.all, 'chart', type, period] as const,
+  chart: (type: string, period: string) => [...vitalKeys.all, 'chart', type, period] as const,
 };
 
 // ── Queries ────────────────────────────────────────────────
@@ -35,8 +34,7 @@ export function useRecentVitalsQuery() {
 export function useVitalChartQuery(type: string, period: string) {
   return useQuery({
     queryKey: vitalKeys.chart(type, period),
-    queryFn: () =>
-      vitalsService.getChartData({vitalToSelect: type, duration: period}),
+    queryFn: () => vitalsService.getChartData({ vitalToSelect: type, duration: period }),
     enabled: !!type && !!period,
   });
 }
@@ -48,7 +46,7 @@ export function useLogVitalMutation() {
   return useMutation({
     mutationFn: (data: any) => vitalsService.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: vitalKeys.all});
+      void queryClient.invalidateQueries({ queryKey: vitalKeys.all });
     },
   });
 }

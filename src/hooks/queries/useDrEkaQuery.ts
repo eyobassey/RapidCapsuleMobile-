@@ -53,7 +53,7 @@ export function useGenerateDigestMutation() {
   return useMutation({
     mutationFn: () => drEkaService.generateDigest(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: drEkaKeys.all });
+      void queryClient.invalidateQueries({ queryKey: drEkaKeys.all });
     },
   });
 }
@@ -63,7 +63,7 @@ export function useGenerateWeeklyReportMutation() {
   return useMutation({
     mutationFn: () => drEkaService.generateWeeklyReport(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: drEkaKeys.all });
+      void queryClient.invalidateQueries({ queryKey: drEkaKeys.all });
     },
   });
 }

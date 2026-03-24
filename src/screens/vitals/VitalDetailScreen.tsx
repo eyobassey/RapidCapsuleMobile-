@@ -199,7 +199,7 @@ function SimpleLineChart({
               fill={colors.mutedForeground}
               textAnchor="start"
             >
-              {formatDate(data[0].date).split(',')[0]}
+              {formatDate(data[0]!.date).split(',')[0]}
             </SvgText>
             {data.length > 2 && (
               <SvgText
@@ -209,7 +209,7 @@ function SimpleLineChart({
                 fill={colors.mutedForeground}
                 textAnchor="middle"
               >
-                {formatDate(data[Math.floor(data.length / 2)].date).split(',')[0]}
+                {formatDate(data[Math.floor(data.length / 2)]!.date).split(',')[0]}
               </SvgText>
             )}
             <SvgText
@@ -219,7 +219,7 @@ function SimpleLineChart({
               fill={colors.mutedForeground}
               textAnchor="end"
             >
-              {formatDate(data[data.length - 1].date).split(',')[0]}
+              {formatDate(data[data.length - 1]!.date).split(',')[0]}
             </SvgText>
           </>
         )}
@@ -227,6 +227,15 @@ function SimpleLineChart({
     </View>
   );
 }
+
+// Cumulative vitals (steps, calories, etc.) should be summed per day
+const CUMULATIVE_VITALS = new Set([
+  'steps',
+  'calories_burned',
+  'active_minutes',
+  'distance',
+  'sleep',
+]);
 
 export default function VitalDetailScreen() {
   const navigation = useNavigation<any>();
@@ -259,15 +268,6 @@ export default function VitalDetailScreen() {
     await Promise.allSettled([refetchVitals(), refetchChart()]);
   }, [refetchVitals, refetchChart]);
 
-  // Cumulative vitals (steps, calories, etc.) should be summed per day
-  const CUMULATIVE_VITALS = new Set([
-    'steps',
-    'calories_burned',
-    'active_minutes',
-    'distance',
-    'sleep',
-  ]);
-
   // Extract history entries for this vital from the merged vitals object
   const history = useMemo(() => {
     const entries: { value: string; unit: string; date: string; status: VitalStatus }[] = [];
@@ -278,7 +278,7 @@ export default function VitalDetailScreen() {
       const dailyMap = new Map<string, { sum: number; unit: string; latestDate: string }>();
       for (const r of readings) {
         const dateObj = new Date(r.updatedAt || r.created_at);
-        const dayKey = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+        const dayKey = dateObj.toISOString().split('T')[0] ?? ''; // YYYY-MM-DD
         const val = parseFloat(String(r.value) || '0');
         const existing = dailyMap.get(dayKey);
         if (existing) {
@@ -310,7 +310,7 @@ export default function VitalDetailScreen() {
     } else if (Array.isArray(readings)) {
       for (const r of readings) {
         const numVal = parseFloat(
-          vitalType === 'blood_pressure' ? String(r.value).split('/')[0] : String(r.value)
+          vitalType === 'blood_pressure' ? String(r.value).split('/')[0] ?? '' : String(r.value)
         );
         entries.push({
           value: String(r.value),
@@ -322,7 +322,7 @@ export default function VitalDetailScreen() {
     } else if (readings && readings.value != null) {
       const numVal = parseFloat(
         vitalType === 'blood_pressure'
-          ? String(readings.value).split('/')[0]
+          ? String(readings.value).split('/')[0] ?? ''
           : String(readings.value)
       );
       entries.push({
@@ -362,7 +362,9 @@ export default function VitalDetailScreen() {
             const reading = d.data[0];
             const rawValue = String(reading.value || '');
             const numValue =
-              parseFloat(vitalType === 'blood_pressure' ? rawValue.split('/')[0] : rawValue) || 0;
+              parseFloat(
+                vitalType === 'blood_pressure' ? rawValue.split('/')[0] ?? '' : rawValue
+              ) || 0;
             return { value: numValue, date: d.date };
           });
       } else {
@@ -371,7 +373,7 @@ export default function VitalDetailScreen() {
           value:
             parseFloat(
               vitalType === 'blood_pressure'
-                ? String(d.value || '').split('/')[0]
+                ? String(d.value || '').split('/')[0] ?? ''
                 : String(d.value || '')
             ) || 0,
           date: d.date || d.createdAt || d.updatedAt,
@@ -383,7 +385,7 @@ export default function VitalDetailScreen() {
         value:
           parseFloat(
             vitalType === 'blood_pressure'
-              ? String(d.value || '').split('/')[0]
+              ? String(d.value || '').split('/')[0] ?? ''
               : String(d.value || '')
           ) || 0,
         date: d.date || d.createdAt || d.updatedAt,
@@ -394,7 +396,8 @@ export default function VitalDetailScreen() {
         .slice()
         .reverse()
         .map((h) => ({
-          value: parseFloat(vitalType === 'blood_pressure' ? h.value.split('/')[0] : h.value) || 0,
+          value:
+            parseFloat(vitalType === 'blood_pressure' ? h.value.split('/')[0] ?? '' : h.value) || 0,
           date: h.date,
         }));
     }

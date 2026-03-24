@@ -237,7 +237,7 @@ export default function BottomTabBar({ state, descriptors, navigation }: BottomT
 
   // Check if the focused tab wants to hide the tab bar
   const focusedRoute = state.routes[state.index];
-  const focusedOptions = descriptors[focusedRoute.key]?.options;
+  const focusedOptions = focusedRoute ? descriptors[focusedRoute.key]?.options : undefined;
   if ((focusedOptions?.tabBarStyle as any)?.display === 'none') {
     return null;
   }

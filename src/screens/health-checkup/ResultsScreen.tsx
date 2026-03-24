@@ -101,8 +101,8 @@ export default function ResultsScreen() {
   // Auto-fetch summary if checkup has one, and check credits
   useEffect(() => {
     if (checkupId) {
-      fetchClaudeSummary(checkupId);
-      fetchSummaryStatus();
+      void fetchClaudeSummary(checkupId);
+      void fetchSummaryStatus();
     }
   }, [checkupId, fetchClaudeSummary, fetchSummaryStatus]);
 
@@ -117,7 +117,13 @@ export default function ResultsScreen() {
 
   // If emergency evidence is detected, always show Emergency regardless of triage_level
   const effectiveTriageLevel = hasEmergency ? 'emergency' : triageLevel || 'self_care';
-  const triage = TRIAGE_CONFIG[effectiveTriageLevel] || TRIAGE_CONFIG.self_care;
+  const triage = TRIAGE_CONFIG[effectiveTriageLevel] ??
+    TRIAGE_CONFIG.self_care ?? {
+      label: 'Self-Care',
+      color: colors.success,
+      icon: null,
+      description: '',
+    };
   const TriageIcon = triage.icon;
 
   const handleDownloadReport = async () => {

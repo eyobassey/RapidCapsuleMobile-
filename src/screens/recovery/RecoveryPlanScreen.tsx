@@ -8,7 +8,6 @@ import {
   ChevronRight,
   CheckCircle2,
   Circle,
-  Clock,
   FileText,
 } from 'lucide-react-native';
 import { Header, Text } from '../../components/ui';
@@ -41,7 +40,7 @@ export default function RecoveryPlanScreen() {
           setPastPlans(Array.isArray(plans) ? plans.filter((p) => p.status !== 'active') : []);
         })
         .catch(() => {});
-    }, [])
+    }, [fetchActivePlan])
   );
 
   const onRefresh = async () => {
@@ -151,7 +150,8 @@ export default function RecoveryPlanScreen() {
             {/* Stages */}
             {activePlan.stages?.map((stage, idx) => {
               const isExpanded = expandedStage === stage._id;
-              const statusCfg = STATUS_CONFIG[stage.status] || STATUS_CONFIG.pending;
+              const statusCfg = STATUS_CONFIG[stage.status] ??
+                STATUS_CONFIG.pending ?? { color: colors.mutedForeground, label: 'Pending' };
               const completedGoals =
                 stage.goals?.filter((g) => g.status === 'completed').length || 0;
               const totalGoals = stage.goals?.length || 0;

@@ -2,15 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import {
-  Shield,
-  Phone,
-  ChevronDown,
-  ChevronRight,
-  AlertTriangle,
-  Info,
-  Heart,
-} from 'lucide-react-native';
+import { Shield, Phone, ChevronDown, ChevronRight, Info } from 'lucide-react-native';
 import { Header, Text } from '../../components/ui';
 import { colors } from '../../theme/colors';
 import { recoveryService } from '../../services/recovery.service';

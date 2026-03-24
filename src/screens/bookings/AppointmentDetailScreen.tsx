@@ -19,7 +19,7 @@ import {
   Receipt,
   ChevronRight,
 } from 'lucide-react-native';
-import { Header, Avatar, StatusBadge, Button, Card, Skeleton, Text } from '../../components/ui';
+import { Header, Avatar, StatusBadge, Button, Skeleton, Text } from '../../components/ui';
 import RescheduleSheet from '../../components/appointments/RescheduleSheet';
 import ReceiptSheet from '../../components/appointments/ReceiptSheet';
 import { useAppointmentsStore } from '../../store/appointments';
@@ -77,8 +77,8 @@ export default function AppointmentDetailScreen() {
   } = useAppointmentsStore();
 
   useEffect(() => {
-    fetchAppointmentById(id);
-  }, [id]);
+    void fetchAppointmentById(id);
+  }, [id, fetchAppointmentById]);
 
   const specialist = appointment?.specialist_id || appointment?.specialist || {};
   const profile = specialist.profile || {};
@@ -113,7 +113,7 @@ export default function AppointmentDetailScreen() {
 
   const handleJoinMeeting = useCallback(() => {
     if (!appointment) return;
-    meetingService.join({
+    void meetingService.join({
       channel: appointment.meeting_channel || 'zoom',
       joinUrl: meetingService.resolveJoinUrl(appointment),
       meetingId: appointment.meeting_id || appointment.zoom_meeting_id,

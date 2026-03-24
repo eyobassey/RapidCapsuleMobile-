@@ -1,6 +1,6 @@
-import {generatePDF} from 'react-native-html-to-pdf';
+import { generatePDF } from 'react-native-html-to-pdf';
 import Share from 'react-native-share';
-import {Platform, Alert} from 'react-native';
+import { Platform, Alert } from 'react-native';
 
 // ── Data interface ──
 
@@ -34,7 +34,7 @@ export interface HealthCheckupPDFData {
 
 // ── Triage config ──
 
-const TRIAGE_CONFIG: Record<string, {label: string; color: string; description: string}> = {
+const TRIAGE_CONFIG: Record<string, { label: string; color: string; description: string }> = {
   emergency_ambulance: {
     label: 'Emergency',
     color: '#f43f5e',
@@ -58,22 +58,28 @@ const TRIAGE_CONFIG: Record<string, {label: string; color: string; description: 
   self_care: {
     label: 'Self-Care',
     color: '#10b981',
-    description: 'Symptoms appear manageable with self-care. Monitor and consult a doctor if they worsen.',
+    description:
+      'Symptoms appear manageable with self-care. Monitor and consult a doctor if they worsen.',
   },
 };
 
-const URGENCY_CONFIG: Record<string, {label: string; color: string}> = {
-  emergency: {label: 'Emergency', color: '#f43f5e'},
-  urgent: {label: 'Urgent', color: '#f43f5e'},
-  soon: {label: 'See Soon', color: '#f97316'},
-  routine: {label: 'Routine', color: '#10b981'},
+const URGENCY_CONFIG: Record<string, { label: string; color: string }> = {
+  emergency: { label: 'Emergency', color: '#f43f5e' },
+  urgent: { label: 'Urgent', color: '#f43f5e' },
+  soon: { label: 'See Soon', color: '#f97316' },
+  routine: { label: 'Routine', color: '#10b981' },
 };
 
 // ── HTML builder ──
 
 function buildHealthCheckupHTML(data: HealthCheckupPDFData): string {
-  const effectiveTriage = data.hasEmergency ? 'emergency' : (data.triageLevel || 'self_care');
-  const triage = TRIAGE_CONFIG[effectiveTriage] || TRIAGE_CONFIG.self_care;
+  const effectiveTriage = data.hasEmergency ? 'emergency' : data.triageLevel || 'self_care';
+  const triage = TRIAGE_CONFIG[effectiveTriage] ??
+    TRIAGE_CONFIG.self_care ?? {
+      label: 'Self-Care',
+      color: '#10b981',
+      description: 'Monitor symptoms and consult a doctor if they worsen.',
+    };
 
   const dateObj = new Date(data.date);
   const formattedDate = dateObj.toLocaleDateString('en-US', {
@@ -87,17 +93,24 @@ function buildHealthCheckupHTML(data: HealthCheckupPDFData): string {
     minute: '2-digit',
   });
 
-  const conditionsHTML = data.conditions.map((c, i) => {
-    const pct = Math.round(c.probability * 100);
-    const barColor = pct >= 70 ? '#f43f5e' : pct >= 40 ? '#f97316' : '#0ea5e9';
-    return `
+  const conditionsHTML = data.conditions
+    .map((c, i) => {
+      const pct = Math.round(c.probability * 100);
+      const barColor = pct >= 70 ? '#f43f5e' : pct >= 40 ? '#f97316' : '#0ea5e9';
+      return `
       <div style="display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #e5e7eb; gap: 12px;">
         <div style="width: 28px; height: 28px; border-radius: 14px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
           <span style="font-size: 12px; font-weight: 700; color: #64748b;">${i + 1}</span>
         </div>
         <div style="flex: 1;">
-          <div style="font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 4px;">${c.common_name || c.name}</div>
-          ${c.category ? `<div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">${c.category}</div>` : ''}
+          <div style="font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 4px;">${
+            c.common_name || c.name
+          }</div>
+          ${
+            c.category
+              ? `<div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">${c.category}</div>`
+              : ''
+          }
           <div style="display: flex; align-items: center; gap: 8px;">
             <div style="flex: 1; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden;">
               <div style="width: ${pct}%; height: 100%; background: ${barColor}; border-radius: 3px;"></div>
@@ -106,7 +119,8 @@ function buildHealthCheckupHTML(data: HealthCheckupPDFData): string {
           </div>
         </div>
       </div>`;
-  }).join('');
+    })
+    .join('');
 
   const summaryHTML = data.claudeSummary ? buildSummaryHTML(data.claudeSummary) : '';
 
@@ -353,30 +367,48 @@ function buildHealthCheckupHTML(data: HealthCheckupPDFData): string {
 
   <!-- Patient Info -->
   <div class="patient-info">
-    <div class="info-item">Patient: <span class="info-value">${escapeHTML(data.patientName)}</span></div>
-    ${data.age ? `<div class="info-item">Age: <span class="info-value">${data.age} years</span></div>` : ''}
-    ${data.sex ? `<div class="info-item">Sex: <span class="info-value">${capitalize(data.sex)}</span></div>` : ''}
+    <div class="info-item">Patient: <span class="info-value">${escapeHTML(
+      data.patientName
+    )}</span></div>
+    ${
+      data.age
+        ? `<div class="info-item">Age: <span class="info-value">${data.age} years</span></div>`
+        : ''
+    }
+    ${
+      data.sex
+        ? `<div class="info-item">Sex: <span class="info-value">${capitalize(
+            data.sex
+          )}</span></div>`
+        : ''
+    }
     <div class="info-item">Date: <span class="info-value">${formattedDate}, ${formattedTime}</span></div>
   </div>
 
   <!-- Triage Assessment -->
   <div class="section-title">Triage Assessment</div>
-  <div class="triage-card" style="background: ${triage.color}12; border: 1px solid ${triage.color}40;">
+  <div class="triage-card" style="background: ${triage.color}12; border: 1px solid ${
+    triage.color
+  }40;">
     <div class="triage-label" style="color: ${triage.color};">${triage.label}</div>
     <div class="triage-desc" style="color: ${triage.color};">${triage.description}</div>
   </div>
 
   <!-- Conditions -->
   <div class="section-title">Possible Conditions (${data.conditions.length})</div>
-  ${data.conditions.length > 0 ? `
+  ${
+    data.conditions.length > 0
+      ? `
     <div class="conditions-list">
       ${conditionsHTML}
     </div>
-  ` : `
+  `
+      : `
     <div style="text-align: center; color: #94a3b8; padding: 20px; font-size: 13px;">
       No specific conditions identified. If symptoms persist, please consult a doctor.
     </div>
-  `}
+  `
+  }
 
   <!-- AI Summary -->
   ${summaryHTML}
@@ -403,17 +435,20 @@ function buildHealthCheckupHTML(data: HealthCheckupPDFData): string {
 
 function buildSummaryHTML(summary: NonNullable<HealthCheckupPDFData['claudeSummary']>): string {
   const findingsHTML = (summary.key_findings || [])
-    .map(f => `<div class="bullet-item">${escapeHTML(f)}</div>`)
+    .map((f) => `<div class="bullet-item">${escapeHTML(f)}</div>`)
     .join('');
 
   const conditionsHTML = (summary.possible_conditions_explained || [])
-    .map(item => {
-      const u = URGENCY_CONFIG[item.urgency] || URGENCY_CONFIG.routine;
+    .map((item) => {
+      const u = URGENCY_CONFIG[item.urgency] ??
+        URGENCY_CONFIG.routine ?? { label: 'Routine', color: '#10b981' };
       return `
         <div class="condition-card">
           <div>
             <span class="condition-name">${escapeHTML(item.condition)}</span>
-            <span class="urgency-badge" style="background: ${u.color}15; color: ${u.color};">${u.label}</span>
+            <span class="urgency-badge" style="background: ${u.color}15; color: ${u.color};">${
+        u.label
+      }</span>
           </div>
           <div class="condition-explanation">${escapeHTML(item.explanation)}</div>
         </div>`;
@@ -421,11 +456,11 @@ function buildSummaryHTML(summary: NonNullable<HealthCheckupPDFData['claudeSumma
     .join('');
 
   const recsHTML = (summary.recommendations || [])
-    .map(r => `<div class="bullet-item">${escapeHTML(r)}</div>`)
+    .map((r) => `<div class="bullet-item">${escapeHTML(r)}</div>`)
     .join('');
 
   const tipsHTML = (summary.lifestyle_tips || [])
-    .map(t => `<div class="bullet-item">${escapeHTML(t)}</div>`)
+    .map((t) => `<div class="bullet-item">${escapeHTML(t)}</div>`)
     .join('');
 
   return `
@@ -440,32 +475,52 @@ function buildSummaryHTML(summary: NonNullable<HealthCheckupPDFData['claudeSumma
 
     <div class="summary-overview">${escapeHTML(summary.overview)}</div>
 
-    ${findingsHTML ? `
+    ${
+      findingsHTML
+        ? `
       <div class="sub-title">Key Findings</div>
       ${findingsHTML}
-    ` : ''}
+    `
+        : ''
+    }
 
-    ${conditionsHTML ? `
+    ${
+      conditionsHTML
+        ? `
       <div class="sub-title">Conditions Explained</div>
       ${conditionsHTML}
-    ` : ''}
+    `
+        : ''
+    }
 
-    ${recsHTML ? `
+    ${
+      recsHTML
+        ? `
       <div class="sub-title">Recommendations</div>
       ${recsHTML}
-    ` : ''}
+    `
+        : ''
+    }
 
-    ${summary.when_to_seek_care ? `
+    ${
+      summary.when_to_seek_care
+        ? `
       <div class="care-box">
         <div class="care-title">When to Seek Care</div>
         <div class="care-text">${escapeHTML(summary.when_to_seek_care)}</div>
       </div>
-    ` : ''}
+    `
+        : ''
+    }
 
-    ${tipsHTML ? `
+    ${
+      tipsHTML
+        ? `
       <div class="sub-title" style="margin-top: 14px;">Lifestyle Tips</div>
       ${tipsHTML}
-    ` : ''}
+    `
+        : ''
+    }
   </div>`;
 }
 

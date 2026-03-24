@@ -72,7 +72,7 @@ export function useMarkReadMutation() {
   return useMutation({
     mutationFn: (id: string) => notificationsService.markAsRead(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });
 }
@@ -82,7 +82,7 @@ export function useMarkAllReadMutation() {
   return useMutation({
     mutationFn: () => notificationsService.markAllRead(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
     },
   });
 }
@@ -146,7 +146,7 @@ export function useUpdateNotificationPreferencesMutation() {
         queryClient.setQueryData(notificationKeys.preferences(), context.previous);
       }
       // Re-sync with server state after a failed mutation
-      queryClient.invalidateQueries({ queryKey: notificationKeys.preferences() });
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.preferences() });
     },
   });
 }

@@ -10,7 +10,6 @@ import {
   BrainCircuit,
   ChevronRight,
   CalendarCheck,
-  BarChart3,
   History,
   Target,
   Users,
@@ -20,9 +19,7 @@ import {
   Dumbbell,
   TrendingUp,
   MessageCircle,
-  Award,
   Heart,
-  Sparkles,
 } from 'lucide-react-native';
 
 import { Header, Text } from '../../components/ui';
@@ -50,7 +47,7 @@ export default function RecoveryDashboardScreen() {
     useCallback(() => {
       fetchActivePlan();
       fetchRecentConversations();
-    }, [])
+    }, [fetchActivePlan, fetchRecentConversations])
   );
 
   const onRefresh = async () => {

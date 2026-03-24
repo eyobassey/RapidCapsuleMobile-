@@ -146,11 +146,11 @@ export default function ConfirmBookingScreen() {
   const [paymentReference, setPaymentReference] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchBalance();
-    fetchRecentCheckups();
-  }, []);
+    void fetchBalance();
+    void fetchRecentCheckups();
+  }, [fetchBalance, fetchRecentCheckups]);
 
-  const specialist = bookingData.specialist || {};
+  const specialist = useMemo(() => bookingData.specialist || {}, [bookingData.specialist]);
   const profile = specialist.profile || {};
   const specialistName = profile.first_name
     ? `Dr. ${profile.first_name} ${profile.last_name || ''}`
@@ -205,6 +205,30 @@ export default function ConfirmBookingScreen() {
     setShowCheckupPicker(false);
   };
 
+  const showBookingSuccess = useCallback(
+    (result?: any) => {
+      let message =
+        'Your appointment has been successfully booked. You will receive a confirmation shortly.';
+      if (result?.join_url || result?.zoom_meeting_url) {
+        message +=
+          '\n\nYour meeting link has been created and will be available in your appointment details.';
+      }
+      Alert.alert('Booking Confirmed!', message, [
+        {
+          text: 'View Appointments',
+          onPress: () => {
+            clearBookingData();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'AppointmentsList' }],
+            });
+          },
+        },
+      ]);
+    },
+    [clearBookingData, navigation]
+  );
+
   const onSubmit = useCallback(
     async (data: BookingConfirmFormData) => {
       if (insufficientBalance) {
@@ -253,38 +277,13 @@ export default function ConfirmBookingScreen() {
       selectedCheckupId,
       insufficientBalance,
       bookAppointment,
-      clearBookingData,
-      navigation,
       channel,
       timezone,
       balance,
       format,
       specialty,
+      showBookingSuccess,
     ]
-  );
-
-  const showBookingSuccess = useCallback(
-    (result?: any) => {
-      let message =
-        'Your appointment has been successfully booked. You will receive a confirmation shortly.';
-      if (result?.join_url || result?.zoom_meeting_url) {
-        message +=
-          '\n\nYour meeting link has been created and will be available in your appointment details.';
-      }
-      Alert.alert('Booking Confirmed!', message, [
-        {
-          text: 'View Appointments',
-          onPress: () => {
-            clearBookingData();
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'AppointmentsList' }],
-            });
-          },
-        },
-      ]);
-    },
-    [clearBookingData, navigation]
   );
 
   const handlePaystackNavigation = useCallback(

@@ -1,6 +1,6 @@
-import {create} from 'zustand';
-import {createMMKV} from 'react-native-mmkv';
-import {pharmacyService} from '../services/pharmacy.service';
+import { create } from 'zustand';
+import { createMMKV } from 'react-native-mmkv';
+import { pharmacyService } from '../services/pharmacy.service';
 import type {
   Drug,
   DrugCategory,
@@ -9,7 +9,7 @@ import type {
   DeliveryAddress,
   DrugSearchParams,
 } from '../types/pharmacy.types';
-import {getDrugPrice, getDrugImage} from '../types/pharmacy.types';
+import { getDrugPrice, getDrugImage } from '../types/pharmacy.types';
 
 // ── MMKV Cart Persistence ──
 
@@ -19,7 +19,7 @@ const RECENT_SEARCHES_KEY = 'pharmacyRecentSearches';
 let mmkv: ReturnType<typeof createMMKV>;
 function getStore() {
   if (!mmkv) {
-    mmkv = createMMKV({id: 'rc-storage'});
+    mmkv = createMMKV({ id: 'rc-storage' });
   }
   return mmkv;
 }
@@ -86,7 +86,10 @@ interface PharmacyState {
   fetchCategories: () => Promise<void>;
   fetchFeaturedDrugs: () => Promise<void>;
   searchDrugs: (params: DrugSearchParams) => Promise<void>;
-  fetchDrugsByCategory: (categoryId: string, params?: {page?: number; limit?: number}) => Promise<void>;
+  fetchDrugsByCategory: (
+    categoryId: string,
+    params?: { page?: number; limit?: number }
+  ) => Promise<void>;
   fetchDrugById: (id: string) => Promise<void>;
   fetchSimilarDrugs: (id: string) => Promise<void>;
   clearSearch: () => void;
@@ -98,7 +101,7 @@ interface PharmacyState {
   clearCart: () => void;
 
   // ── Order Actions ──
-  fetchMyOrders: (params?: {status?: string; page?: number; limit?: number}) => Promise<void>;
+  fetchMyOrders: (params?: { status?: string; page?: number; limit?: number }) => Promise<void>;
   fetchOrderById: (id: string) => Promise<void>;
   cancelOrder: (id: string, reason: string) => Promise<void>;
   rateOrder: (id: string, rating: number, review?: string) => Promise<void>;
@@ -144,42 +147,50 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
   // ── Catalog Actions ──
 
   fetchCategories: async () => {
-    set({catalogLoading: true});
+    set({ catalogLoading: true });
     try {
       const data = await pharmacyService.getCategories();
-      set({categories: Array.isArray(data) ? data : [], catalogLoading: false});
+      set({ categories: Array.isArray(data) ? data : [], catalogLoading: false });
     } catch {
-      set({catalogLoading: false});
+      set({ catalogLoading: false });
     }
   },
 
   fetchFeaturedDrugs: async () => {
-    set({catalogLoading: true});
+    set({ catalogLoading: true });
     try {
       const data = await pharmacyService.getFeaturedDrugs();
-      set({featuredDrugs: Array.isArray(data) ? data : [], catalogLoading: false});
+      set({ featuredDrugs: Array.isArray(data) ? data : [], catalogLoading: false });
     } catch {
-      set({catalogLoading: false});
+      set({ catalogLoading: false });
     }
   },
 
   searchDrugs: async (params: DrugSearchParams) => {
-    set({catalogLoading: true});
+    set({ catalogLoading: true });
     try {
       const data = await pharmacyService.searchDrugs(params);
       // API may return { drugs: [...], total } or just an array
       if (data && data.drugs) {
-        set({searchResults: data.drugs, searchTotal: data.total || data.drugs.length, catalogLoading: false});
+        set({
+          searchResults: data.drugs,
+          searchTotal: data.total || data.drugs.length,
+          catalogLoading: false,
+        });
       } else {
-        set({searchResults: Array.isArray(data) ? data : [], searchTotal: 0, catalogLoading: false});
+        set({
+          searchResults: Array.isArray(data) ? data : [],
+          searchTotal: 0,
+          catalogLoading: false,
+        });
       }
     } catch {
-      set({catalogLoading: false});
+      set({ catalogLoading: false });
     }
   },
 
   fetchDrugsByCategory: async (categoryId, params) => {
-    set({catalogLoading: true});
+    set({ catalogLoading: true });
     try {
       // Use search endpoint with category filter (the /category/{id} endpoint returns empty)
       const data = await pharmacyService.searchDrugs({
@@ -188,49 +199,59 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
         limit: params?.limit || 20,
       });
       if (data && data.drugs) {
-        set({categoryDrugs: data.drugs, categoryDrugsTotal: data.total || data.drugs.length, catalogLoading: false});
+        set({
+          categoryDrugs: data.drugs,
+          categoryDrugsTotal: data.total || data.drugs.length,
+          catalogLoading: false,
+        });
       } else {
-        set({categoryDrugs: Array.isArray(data) ? data : [], categoryDrugsTotal: 0, catalogLoading: false});
+        set({
+          categoryDrugs: Array.isArray(data) ? data : [],
+          categoryDrugsTotal: 0,
+          catalogLoading: false,
+        });
       }
     } catch {
-      set({catalogLoading: false});
+      set({ catalogLoading: false });
     }
   },
 
   fetchDrugById: async (id) => {
-    set({catalogLoading: true, currentDrug: null});
+    set({ catalogLoading: true, currentDrug: null });
     try {
       const data = await pharmacyService.getDrugById(id);
-      set({currentDrug: data, catalogLoading: false});
+      set({ currentDrug: data, catalogLoading: false });
     } catch {
-      set({catalogLoading: false});
+      set({ catalogLoading: false });
     }
   },
 
   fetchSimilarDrugs: async (id) => {
     try {
       const data = await pharmacyService.getSimilarDrugs(id);
-      set({similarDrugs: Array.isArray(data) ? data : []});
+      set({ similarDrugs: Array.isArray(data) ? data : [] });
     } catch {
       // silent
     }
   },
 
-  clearSearch: () => set({searchResults: [], searchTotal: 0}),
+  clearSearch: () => set({ searchResults: [], searchTotal: 0 }),
 
   // ── Cart Actions ──
 
   addToCart: (drug: Drug) => {
     const items = [...get().cartItems];
-    const idx = items.findIndex(i => i.drugId === drug._id);
+    const idx = items.findIndex((i) => i.drugId === drug._id);
     const maxQty = drug.max_quantity_per_order || 10;
 
     if (idx >= 0) {
-      if (items[idx].quantity < maxQty) {
-        items[idx] = {...items[idx], quantity: items[idx].quantity + 1};
+      // idx is guaranteed valid by findIndex returning >= 0
+      if (items[idx]!.quantity < maxQty) {
+        items[idx] = { ...items[idx]!, quantity: items[idx]!.quantity + 1 };
       }
     } else {
-      const dosageForm = typeof drug.dosage_form === 'object' ? drug.dosage_form?.name : drug.dosage_form;
+      const dosageForm =
+        typeof drug.dosage_form === 'object' ? drug.dosage_form?.name : drug.dosage_form;
       items.push({
         drugId: drug._id,
         name: drug.name,
@@ -247,55 +268,59 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
     }
 
     saveCart(items);
-    set({cartItems: items, cartCount: items.length});
+    set({ cartItems: items, cartCount: items.length });
   },
 
   removeFromCart: (drugId: string) => {
-    const items = get().cartItems.filter(i => i.drugId !== drugId);
+    const items = get().cartItems.filter((i) => i.drugId !== drugId);
     saveCart(items);
-    set({cartItems: items, cartCount: items.length});
+    set({ cartItems: items, cartCount: items.length });
   },
 
   updateQuantity: (drugId: string, quantity: number) => {
-    const items = get().cartItems.map(i => {
+    const items = get().cartItems.map((i) => {
       if (i.drugId === drugId) {
         const q = Math.max(1, Math.min(quantity, i.maxQuantityPerOrder));
-        return {...i, quantity: q};
+        return { ...i, quantity: q };
       }
       return i;
     });
     saveCart(items);
-    set({cartItems: items});
+    set({ cartItems: items });
   },
 
   clearCart: () => {
     saveCart([]);
-    set({cartItems: [], cartCount: 0});
+    set({ cartItems: [], cartCount: 0 });
   },
 
   // ── Order Actions ──
 
   fetchMyOrders: async (params) => {
-    set({ordersLoading: true});
+    set({ ordersLoading: true });
     try {
       const data = await pharmacyService.getMyOrders(params);
       if (data && data.orders) {
-        set({myOrders: data.orders, ordersTotal: data.total || data.orders.length, ordersLoading: false});
+        set({
+          myOrders: data.orders,
+          ordersTotal: data.total || data.orders.length,
+          ordersLoading: false,
+        });
       } else {
-        set({myOrders: Array.isArray(data) ? data : [], ordersTotal: 0, ordersLoading: false});
+        set({ myOrders: Array.isArray(data) ? data : [], ordersTotal: 0, ordersLoading: false });
       }
     } catch {
-      set({ordersLoading: false});
+      set({ ordersLoading: false });
     }
   },
 
   fetchOrderById: async (id) => {
-    set({ordersLoading: true, currentOrder: null});
+    set({ ordersLoading: true, currentOrder: null });
     try {
       const data = await pharmacyService.getOrderById(id);
-      set({currentOrder: data, ordersLoading: false});
+      set({ currentOrder: data, ordersLoading: false });
     } catch {
-      set({ordersLoading: false});
+      set({ ordersLoading: false });
     }
   },
 
@@ -303,13 +328,13 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
     await pharmacyService.cancelOrder(id, reason);
     // Re-fetch order to get updated status
     const data = await pharmacyService.getOrderById(id);
-    set({currentOrder: data});
+    set({ currentOrder: data });
   },
 
   rateOrder: async (id, rating, review) => {
-    await pharmacyService.rateOrder(id, {rating, review});
+    await pharmacyService.rateOrder(id, { rating, review });
     const data = await pharmacyService.getOrderById(id);
-    set({currentOrder: data});
+    set({ currentOrder: data });
   },
 
   createOtcOrder: async (payload) => {
@@ -318,26 +343,26 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
   },
 
   trackOrder: async (orderNumber) => {
-    set({ordersLoading: true, trackingOrder: null});
+    set({ ordersLoading: true, trackingOrder: null });
     try {
       const data = await pharmacyService.trackOrder(orderNumber);
-      set({trackingOrder: data, ordersLoading: false});
+      set({ trackingOrder: data, ordersLoading: false });
     } catch {
-      set({ordersLoading: false});
+      set({ ordersLoading: false });
     }
   },
 
   // ── Address Actions ──
 
   fetchAddresses: async () => {
-    set({addressesLoading: true});
+    set({ addressesLoading: true });
     try {
       const data = await pharmacyService.getMyAddresses();
       // API returns { addresses: [...] } or a flat array
       const list = Array.isArray(data) ? data : data?.addresses || [];
-      set({addresses: Array.isArray(list) ? list : [], addressesLoading: false});
+      set({ addresses: Array.isArray(list) ? list : [], addressesLoading: false });
     } catch {
-      set({addressesLoading: false});
+      set({ addressesLoading: false });
     }
   },
 
@@ -345,14 +370,14 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
     await pharmacyService.addAddress(payload);
     const data = await pharmacyService.getMyAddresses();
     const list = Array.isArray(data) ? data : data?.addresses || [];
-    set({addresses: Array.isArray(list) ? list : []});
+    set({ addresses: Array.isArray(list) ? list : [] });
   },
 
   setDefaultAddress: async (id) => {
     await pharmacyService.setDefaultAddress(id);
     const data = await pharmacyService.getMyAddresses();
     const list = Array.isArray(data) ? data : data?.addresses || [];
-    set({addresses: Array.isArray(list) ? list : []});
+    set({ addresses: Array.isArray(list) ? list : [] });
   },
 
   // ── Search History ──
@@ -360,13 +385,13 @@ export const usePharmacyStore = create<PharmacyState>((set, get) => ({
   addRecentSearch: (query: string) => {
     const trimmed = query.trim();
     if (!trimmed) return;
-    const searches = [trimmed, ...get().recentSearches.filter(s => s !== trimmed)].slice(0, 10);
+    const searches = [trimmed, ...get().recentSearches.filter((s) => s !== trimmed)].slice(0, 10);
     saveRecentSearches(searches);
-    set({recentSearches: searches});
+    set({ recentSearches: searches });
   },
 
   clearRecentSearches: () => {
     saveRecentSearches([]);
-    set({recentSearches: []});
+    set({ recentSearches: [] });
   },
 }));

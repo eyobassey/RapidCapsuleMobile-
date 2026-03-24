@@ -13,10 +13,9 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react-native';
-import { Header, Button, EmptyState, Text } from '../../../components/ui';
+import { Header, Button, Text } from '../../../components/ui';
 import { useAvailableTimesQuery } from '../../../hooks/queries';
 import { useAppointmentsStore } from '../../../store/appointments';
-import { useAuthStore } from '../../../store/auth';
 import { colors } from '../../../theme/colors';
 import type { BookingsStackParamList } from '../../../navigation/stacks/BookingsStack';
 
@@ -112,7 +111,7 @@ function buildCalendarGrid(
   // Current month days
   for (let day = 1; day <= daysInMonth; day++) {
     const d = new Date(year, month, day);
-    const dayName = DAY_INDEX_TO_NAME[d.getDay()];
+    const dayName = DAY_INDEX_TO_NAME[d.getDay()] ?? '';
     const isPast = d < today;
     const isToday = d.getTime() === today.getTime();
     days.push({
@@ -157,8 +156,6 @@ export default function SelectScheduleScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { specialistId } = route.params;
-  const user = useAuthStore((s) => s.user);
-
   // Keep store for setBookingData and bookingData (client state)
   const { setBookingData, bookingData } = useAppointmentsStore();
 

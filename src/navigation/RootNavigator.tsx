@@ -24,7 +24,7 @@ export default function RootNavigator() {
   useEffect(() => {
     let cancelled = false;
 
-    (async () => {
+    void (async () => {
       await bootstrapForApp(() => cancelled);
     })();
 

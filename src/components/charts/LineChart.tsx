@@ -72,10 +72,12 @@ export default function LineChart({
   });
 
   // Gradient fill area
+  const lastPoint = points[points.length - 1]!;
+  const firstPoint = points[0]!;
   const areaD =
     pathD +
-    ` L ${points[points.length - 1].x} ${paddingY + chartHeight}` +
-    ` L ${points[0].x} ${paddingY + chartHeight} Z`;
+    ` L ${lastPoint.x} ${paddingY + chartHeight}` +
+    ` L ${firstPoint.x} ${paddingY + chartHeight} Z`;
 
   return (
     <View
@@ -174,7 +176,7 @@ export default function LineChart({
               fill={colors.mutedForeground}
               textAnchor="start"
             >
-              {formatLabel(data[0].date)}
+              {formatLabel(data[0]!.date)}
             </SvgText>
             {data.length > 2 && (
               <SvgText
@@ -184,7 +186,7 @@ export default function LineChart({
                 fill={colors.mutedForeground}
                 textAnchor="middle"
               >
-                {formatLabel(data[Math.floor(data.length / 2)].date)}
+                {formatLabel(data[Math.floor(data.length / 2)]!.date)}
               </SvgText>
             )}
             <SvgText
@@ -194,7 +196,7 @@ export default function LineChart({
               fill={colors.mutedForeground}
               textAnchor="end"
             >
-              {formatLabel(data[data.length - 1].date)}
+              {formatLabel(data[data.length - 1]!.date)}
             </SvgText>
           </>
         )}

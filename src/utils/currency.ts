@@ -9,10 +9,10 @@ export interface CurrencyConfig {
 }
 
 export const SUPPORTED_CURRENCIES: Record<string, CurrencyConfig> = {
-  USD: {code: 'USD', symbol: '$', locale: 'en-US', name: 'US Dollar', flag: '🇺🇸'},
-  GBP: {code: 'GBP', symbol: '£', locale: 'en-GB', name: 'British Pound', flag: '🇬🇧'},
-  EUR: {code: 'EUR', symbol: '€', locale: 'de-DE', name: 'Euro', flag: '🇪🇺'},
-  NGN: {code: 'NGN', symbol: '₦', locale: 'en-NG', name: 'Nigerian Naira', flag: '🇳🇬'},
+  USD: { code: 'USD', symbol: '$', locale: 'en-US', name: 'US Dollar', flag: '🇺🇸' },
+  GBP: { code: 'GBP', symbol: '£', locale: 'en-GB', name: 'British Pound', flag: '🇬🇧' },
+  EUR: { code: 'EUR', symbol: '€', locale: 'de-DE', name: 'Euro', flag: '🇪🇺' },
+  NGN: { code: 'NGN', symbol: '₦', locale: 'en-NG', name: 'Nigerian Naira', flag: '🇳🇬' },
 };
 
 export const CURRENCY_LIST = Object.values(SUPPORTED_CURRENCIES);
@@ -33,7 +33,7 @@ export const NGN_EXCHANGE_RATES: Record<string, number> = {
 // ── Conversion ──
 
 export function convertFromNGN(ngnAmount: number, targetCurrency: string): number {
-  const rate = NGN_EXCHANGE_RATES[targetCurrency] ?? NGN_EXCHANGE_RATES.USD;
+  const rate = NGN_EXCHANGE_RATES[targetCurrency] ?? NGN_EXCHANGE_RATES.USD ?? 1 / 1550;
   return Math.round((ngnAmount || 0) * rate * 100) / 100;
 }
 
@@ -59,12 +59,7 @@ export function formatCurrencyAmount(amount: number, currencyCode: string): stri
 export function getItemPrice(
   item: any,
   currencyCode: string,
-  field: string = 'selling_price',
+  field: string = 'selling_price'
 ): number {
-  return (
-    item?.prices?.[currencyCode]?.[field] ??
-    item?.[field] ??
-    item?.price ??
-    0
-  );
+  return item?.prices?.[currencyCode]?.[field] ?? item?.[field] ?? item?.price ?? 0;
 }

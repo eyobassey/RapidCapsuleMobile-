@@ -17,7 +17,7 @@ import {
   useReanimatedKeyboardAnimation,
 } from 'react-native-keyboard-controller';
 import AnimatedRN, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BodyAvatar from '../../components/health-checkup/BodyAvatar';
 import { Button, Header } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
@@ -31,7 +31,6 @@ const SHEET_HEIGHT = SCREEN_HEIGHT * 0.48;
 
 export default function SymptomSearchScreen() {
   const navigation = useNavigation<any>();
-  const insets = useSafeAreaInsets();
   const { addEvidence, submitDiagnosis, isLoading, searchSymptoms, sex } = useHealthCheckupStore();
 
   const [tab, setTab] = useState<Tab>('search');

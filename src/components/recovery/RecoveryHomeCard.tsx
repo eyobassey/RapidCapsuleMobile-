@@ -15,9 +15,9 @@ export default function RecoveryHomeCard() {
   const fetchDashboard = useRecoveryStore((s) => s.fetchDashboard);
 
   useEffect(() => {
-    fetchProfile().then(() => {
+    void fetchProfile().then(() => {
       if (useRecoveryStore.getState().isEnrolled) {
-        fetchDashboard();
+        void fetchDashboard();
       }
     });
   }, [fetchProfile, fetchDashboard]);

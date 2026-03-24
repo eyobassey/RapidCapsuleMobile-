@@ -82,7 +82,7 @@ export function useBookAppointmentMutation() {
   return useMutation({
     mutationFn: (payload: any) => appointmentsService.book(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
     },
   });
 }
@@ -92,7 +92,7 @@ export function useRescheduleAppointmentMutation() {
   return useMutation({
     mutationFn: (payload: any) => appointmentsService.reschedule(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
     },
   });
 }
@@ -102,7 +102,7 @@ export function useCancelAppointmentMutation() {
   return useMutation({
     mutationFn: (id: string) => appointmentsService.cancel(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
     },
   });
 }

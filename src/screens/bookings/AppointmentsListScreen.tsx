@@ -95,7 +95,7 @@ export default function AppointmentsListScreen() {
   }, [navigation]);
 
   const handleJoin = useCallback((appointment: any) => {
-    meetingService.join({
+    void meetingService.join({
       channel: appointment.meeting_channel || 'zoom',
       joinUrl: meetingService.resolveJoinUrl(appointment),
       meetingId: appointment.meeting_id || appointment.zoom_meeting_id,
@@ -104,7 +104,8 @@ export default function AppointmentsListScreen() {
     });
   }, []);
 
-  const empty = emptyConfig[filter] || emptyConfig.upcoming;
+  const empty = emptyConfig[filter] ??
+    emptyConfig.upcoming ?? { icon: null, title: 'No appointments', subtitle: '' };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import { Platform, ScrollView } from 'react-native';
 import {
   KeyboardAvoidingView,
   useReanimatedKeyboardAnimation,

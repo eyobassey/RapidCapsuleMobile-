@@ -15,13 +15,6 @@ function getScoreColor(score: number): string {
   return '#f43f5e';
 }
 
-function getScoreLabel(score: number): string {
-  if (score >= 80) return 'Excellent';
-  if (score >= 60) return 'Good';
-  if (score >= 40) return 'Fair';
-  return 'Needs Attention';
-}
-
 // Returns a color for each tick based on its position (0-1)
 function getTickColor(position: number): string {
   if (position < 0.3) return '#f43f5e';

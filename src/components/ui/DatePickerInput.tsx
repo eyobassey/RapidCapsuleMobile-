@@ -16,7 +16,7 @@ function parseDate(str: string): Date {
   if (!str || !/^\d{4}-\d{2}-\d{2}$/.test(str)) {
     return new Date();
   }
-  const [y, m, d] = str.split('-').map(Number);
+  const [y = 0, m = 0, d = 0] = str.split('-').map(Number);
   const date = new Date(y, m - 1, d);
   return isNaN(date.getTime()) ? new Date() : date;
 }

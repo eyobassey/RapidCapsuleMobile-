@@ -36,7 +36,7 @@ export function useGenerateTipsMutation() {
   return useMutation({
     mutationFn: () => healthTipsService.generate(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: healthTipKeys.all });
+      void queryClient.invalidateQueries({ queryKey: healthTipKeys.all });
     },
   });
 }
@@ -46,7 +46,7 @@ export function useDismissTipMutation() {
   return useMutation({
     mutationFn: (id: string) => healthTipsService.dismiss(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: healthTipKeys.all });
+      void queryClient.invalidateQueries({ queryKey: healthTipKeys.all });
     },
   });
 }
@@ -56,7 +56,7 @@ export function useMarkActedMutation() {
   return useMutation({
     mutationFn: (id: string) => healthTipsService.markActed(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: healthTipKeys.all });
+      void queryClient.invalidateQueries({ queryKey: healthTipKeys.all });
     },
   });
 }

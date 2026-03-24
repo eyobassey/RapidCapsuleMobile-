@@ -1,5 +1,4 @@
-import axios from 'axios';
-import { ApiError, NetworkError } from '../api-error';
+import { ApiError } from '../api-error';
 
 // Mock storage before importing api
 jest.mock('../../utils/storage', () => ({

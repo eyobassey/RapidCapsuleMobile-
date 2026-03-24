@@ -21,7 +21,7 @@ jest.mock('../../services/pharmacy.service', () => ({
 jest.mock('react-native-mmkv', () => {
   const stores = new Map<string, Map<string, string>>();
   return {
-    createMMKV: jest.fn(({id}: {id: string}) => {
+    createMMKV: jest.fn(({ id }: { id: string }) => {
       if (!stores.has(id)) {
         stores.set(id, new Map());
       }
@@ -37,8 +37,8 @@ jest.mock('react-native-mmkv', () => {
   };
 });
 
-import {usePharmacyStore} from '../pharmacy';
-import {pharmacyService} from '../../services/pharmacy.service';
+import { usePharmacyStore } from '../pharmacy';
+import { pharmacyService } from '../../services/pharmacy.service';
 
 const svc = pharmacyService as jest.Mocked<typeof pharmacyService>;
 
@@ -86,8 +86,8 @@ describe('usePharmacyStore', () => {
   describe('fetchCategories', () => {
     it('loads drug categories', async () => {
       svc.getCategories.mockResolvedValue([
-        {_id: 'c1', name: 'Pain Relief'},
-        {_id: 'c2', name: 'Antibiotics'},
+        { _id: 'c1', name: 'Pain Relief' },
+        { _id: 'c2', name: 'Antibiotics' },
       ]);
 
       await usePharmacyStore.getState().fetchCategories();
@@ -119,11 +119,11 @@ describe('usePharmacyStore', () => {
   describe('searchDrugs', () => {
     it('handles response with drugs and total', async () => {
       svc.searchDrugs.mockResolvedValue({
-        drugs: [makeDrug(), makeDrug({_id: 'drug-2'})],
+        drugs: [makeDrug(), makeDrug({ _id: 'drug-2' })],
         total: 50,
       });
 
-      await usePharmacyStore.getState().searchDrugs({query: 'paracetamol'});
+      await usePharmacyStore.getState().searchDrugs({ query: 'paracetamol' });
 
       expect(usePharmacyStore.getState().searchResults).toHaveLength(2);
       expect(usePharmacyStore.getState().searchTotal).toBe(50);
@@ -132,7 +132,7 @@ describe('usePharmacyStore', () => {
     it('handles flat array response', async () => {
       svc.searchDrugs.mockResolvedValue([makeDrug()]);
 
-      await usePharmacyStore.getState().searchDrugs({query: 'ibuprofen'});
+      await usePharmacyStore.getState().searchDrugs({ query: 'ibuprofen' });
 
       expect(usePharmacyStore.getState().searchResults).toHaveLength(1);
     });
@@ -140,7 +140,7 @@ describe('usePharmacyStore', () => {
 
   describe('fetchDrugById', () => {
     it('sets currentDrug', async () => {
-      const drug = makeDrug({_id: 'drug-5', name: 'Amoxicillin'});
+      const drug = makeDrug({ _id: 'drug-5', name: 'Amoxicillin' });
       svc.getDrugById.mockResolvedValue(drug);
 
       await usePharmacyStore.getState().fetchDrugById('drug-5');
@@ -151,7 +151,7 @@ describe('usePharmacyStore', () => {
 
   describe('clearSearch', () => {
     it('clears search results and total', () => {
-      usePharmacyStore.setState({searchResults: [makeDrug()], searchTotal: 10});
+      usePharmacyStore.setState({ searchResults: [makeDrug()], searchTotal: 10 });
 
       usePharmacyStore.getState().clearSearch();
 
@@ -170,8 +170,8 @@ describe('usePharmacyStore', () => {
 
       const cart = usePharmacyStore.getState().cartItems;
       expect(cart).toHaveLength(1);
-      expect(cart[0].drugId).toBe('drug-1');
-      expect(cart[0].quantity).toBe(1);
+      expect(cart[0]!.drugId).toBe('drug-1');
+      expect(cart[0]!.quantity).toBe(1);
       expect(usePharmacyStore.getState().cartCount).toBe(1);
     });
 
@@ -182,29 +182,29 @@ describe('usePharmacyStore', () => {
 
       const cart = usePharmacyStore.getState().cartItems;
       expect(cart).toHaveLength(1);
-      expect(cart[0].quantity).toBe(2);
+      expect(cart[0]!.quantity).toBe(2);
     });
 
     it('does not exceed max_quantity_per_order', () => {
-      const drug = makeDrug({max_quantity_per_order: 2});
+      const drug = makeDrug({ max_quantity_per_order: 2 });
       usePharmacyStore.getState().addToCart(drug as any);
       usePharmacyStore.getState().addToCart(drug as any);
       usePharmacyStore.getState().addToCart(drug as any); // should not increment
 
-      expect(usePharmacyStore.getState().cartItems[0].quantity).toBe(2);
+      expect(usePharmacyStore.getState().cartItems[0]!.quantity).toBe(2);
     });
   });
 
   describe('removeFromCart', () => {
     it('removes item by drugId', () => {
-      usePharmacyStore.getState().addToCart(makeDrug({_id: 'a'}) as any);
-      usePharmacyStore.getState().addToCart(makeDrug({_id: 'b', name: 'Drug B'}) as any);
+      usePharmacyStore.getState().addToCart(makeDrug({ _id: 'a' }) as any);
+      usePharmacyStore.getState().addToCart(makeDrug({ _id: 'b', name: 'Drug B' }) as any);
 
       usePharmacyStore.getState().removeFromCart('a');
 
       const cart = usePharmacyStore.getState().cartItems;
       expect(cart).toHaveLength(1);
-      expect(cart[0].drugId).toBe('b');
+      expect(cart[0]!.drugId).toBe('b');
       expect(usePharmacyStore.getState().cartCount).toBe(1);
     });
   });
@@ -215,7 +215,7 @@ describe('usePharmacyStore', () => {
 
       usePharmacyStore.getState().updateQuantity('drug-1', 5);
 
-      expect(usePharmacyStore.getState().cartItems[0].quantity).toBe(5);
+      expect(usePharmacyStore.getState().cartItems[0]!.quantity).toBe(5);
     });
 
     it('clamps quantity to minimum 1', () => {
@@ -223,22 +223,22 @@ describe('usePharmacyStore', () => {
 
       usePharmacyStore.getState().updateQuantity('drug-1', 0);
 
-      expect(usePharmacyStore.getState().cartItems[0].quantity).toBe(1);
+      expect(usePharmacyStore.getState().cartItems[0]!.quantity).toBe(1);
     });
 
     it('clamps quantity to maxQuantityPerOrder', () => {
-      usePharmacyStore.getState().addToCart(makeDrug({max_quantity_per_order: 3}) as any);
+      usePharmacyStore.getState().addToCart(makeDrug({ max_quantity_per_order: 3 }) as any);
 
       usePharmacyStore.getState().updateQuantity('drug-1', 99);
 
-      expect(usePharmacyStore.getState().cartItems[0].quantity).toBe(3);
+      expect(usePharmacyStore.getState().cartItems[0]!.quantity).toBe(3);
     });
   });
 
   describe('clearCart', () => {
     it('removes all items from cart', () => {
-      usePharmacyStore.getState().addToCart(makeDrug({_id: 'a'}) as any);
-      usePharmacyStore.getState().addToCart(makeDrug({_id: 'b', name: 'B'}) as any);
+      usePharmacyStore.getState().addToCart(makeDrug({ _id: 'a' }) as any);
+      usePharmacyStore.getState().addToCart(makeDrug({ _id: 'b', name: 'B' }) as any);
 
       usePharmacyStore.getState().clearCart();
 
@@ -252,7 +252,7 @@ describe('usePharmacyStore', () => {
   describe('fetchMyOrders', () => {
     it('loads orders with nested response', async () => {
       svc.getMyOrders.mockResolvedValue({
-        orders: [{_id: 'ord-1', status: 'PENDING'}],
+        orders: [{ _id: 'ord-1', status: 'PENDING' }],
         total: 1,
       });
 
@@ -263,7 +263,7 @@ describe('usePharmacyStore', () => {
     });
 
     it('handles flat array response', async () => {
-      svc.getMyOrders.mockResolvedValue([{_id: 'ord-1'}]);
+      svc.getMyOrders.mockResolvedValue([{ _id: 'ord-1' }]);
 
       await usePharmacyStore.getState().fetchMyOrders();
 
@@ -273,12 +273,12 @@ describe('usePharmacyStore', () => {
 
   describe('createOtcOrder', () => {
     it('creates order and returns data', async () => {
-      const order = {_id: 'ord-new', order_number: 'ORD-001'};
+      const order = { _id: 'ord-new', order_number: 'ORD-001' };
       svc.createOtcOrder.mockResolvedValue(order);
 
       const result = await usePharmacyStore.getState().createOtcOrder({
         pharmacy: 'pharm-1',
-        items: [{drug: 'drug-1', quantity: 2}],
+        items: [{ drug: 'drug-1', quantity: 2 }],
       });
 
       expect(result).toEqual(order);
@@ -288,7 +288,7 @@ describe('usePharmacyStore', () => {
   describe('cancelOrder', () => {
     it('cancels and re-fetches order', async () => {
       svc.cancelOrder.mockResolvedValue(undefined);
-      svc.getOrderById.mockResolvedValue({_id: 'ord-1', status: 'CANCELLED'});
+      svc.getOrderById.mockResolvedValue({ _id: 'ord-1', status: 'CANCELLED' });
 
       await usePharmacyStore.getState().cancelOrder('ord-1', 'Changed mind');
 
@@ -349,7 +349,7 @@ describe('usePharmacyStore', () => {
   describe('fetchAddresses', () => {
     it('loads addresses', async () => {
       svc.getMyAddresses.mockResolvedValue([
-        {_id: 'addr-1', label: 'Home', street: '123 Main St'},
+        { _id: 'addr-1', label: 'Home', street: '123 Main St' },
       ]);
 
       await usePharmacyStore.getState().fetchAddresses();
@@ -359,7 +359,7 @@ describe('usePharmacyStore', () => {
     });
 
     it('handles nested addresses response', async () => {
-      svc.getMyAddresses.mockResolvedValue({addresses: [{_id: 'addr-1'}]});
+      svc.getMyAddresses.mockResolvedValue({ addresses: [{ _id: 'addr-1' }] });
 
       await usePharmacyStore.getState().fetchAddresses();
 

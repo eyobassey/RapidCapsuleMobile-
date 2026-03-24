@@ -33,6 +33,7 @@ export default function CompanionChatScreen() {
     if (!initialSessionId) {
       startSession();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startSession = async () => {

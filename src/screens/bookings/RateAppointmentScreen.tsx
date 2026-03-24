@@ -48,9 +48,9 @@ export default function RateAppointmentScreen() {
 
   useEffect(() => {
     if (!appointment || (appointment._id !== id && appointment.id !== id)) {
-      fetchAppointmentById(id);
+      void fetchAppointmentById(id);
     }
-  }, [id]);
+  }, [id, appointment, fetchAppointmentById]);
 
   const specialist = appointment?.specialist_id || appointment?.specialist || {};
   const profile = specialist.profile || {};

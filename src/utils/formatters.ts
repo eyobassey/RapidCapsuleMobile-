@@ -27,7 +27,7 @@ export function formatTime(time: string): string {
     }
   }
   // Handle HH:MM strings
-  const [hours, minutes] = time.split(':').map(Number);
+  const [hours = NaN, minutes = NaN] = time.split(':').map(Number);
   if (isNaN(hours) || isNaN(minutes)) return time;
   const period = hours >= 12 ? 'PM' : 'AM';
   const h = hours % 12 || 12;
@@ -56,7 +56,7 @@ export function formatRelativeDate(date: string | Date): string {
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfTarget = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDays = Math.floor(
-    (startOfToday.getTime() - startOfTarget.getTime()) / (1000 * 60 * 60 * 24),
+    (startOfToday.getTime() - startOfTarget.getTime()) / (1000 * 60 * 60 * 24)
   );
 
   if (diffDays === 0) return 'Today';

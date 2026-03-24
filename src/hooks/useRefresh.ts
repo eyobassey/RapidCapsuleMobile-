@@ -11,7 +11,7 @@ export function useRefreshOnFocus<T>(refetch: () => Promise<T>, enabled = true) 
         return;
       }
 
-      refetch();
+      void refetch();
     }, [refetch, enabled])
   );
 }
@@ -22,7 +22,7 @@ export function useRefreshOnMount<T>(refetch: () => Promise<T>) {
   useEffect(() => {
     if (firstTimeRef.current) {
       firstTimeRef.current = false;
-      refetch();
+      void refetch();
     }
   }, [refetch]);
 }

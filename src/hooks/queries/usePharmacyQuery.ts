@@ -166,7 +166,7 @@ export function useAddAddressMutation() {
   return useMutation({
     mutationFn: (payload: any) => pharmacyService.addAddress(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: pharmacyKeys.addresses() });
+      void queryClient.invalidateQueries({ queryKey: pharmacyKeys.addresses() });
     },
   });
 }
@@ -176,7 +176,7 @@ export function useSetDefaultAddressMutation() {
   return useMutation({
     mutationFn: (id: string) => pharmacyService.setDefaultAddress(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: pharmacyKeys.addresses() });
+      void queryClient.invalidateQueries({ queryKey: pharmacyKeys.addresses() });
     },
   });
 }
@@ -187,8 +187,8 @@ export function useCancelOrderMutation() {
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       pharmacyService.cancelOrder(id, reason),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: pharmacyKeys.orders() });
-      queryClient.invalidateQueries({ queryKey: pharmacyKeys.order(id) });
+      void queryClient.invalidateQueries({ queryKey: pharmacyKeys.orders() });
+      void queryClient.invalidateQueries({ queryKey: pharmacyKeys.order(id) });
     },
   });
 }
@@ -199,8 +199,8 @@ export function useRateOrderMutation() {
     mutationFn: ({ id, rating, review }: { id: string; rating: number; review?: string }) =>
       pharmacyService.rateOrder(id, { rating, review }),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: pharmacyKeys.order(id) });
-      queryClient.invalidateQueries({ queryKey: pharmacyKeys.orders() });
+      void queryClient.invalidateQueries({ queryKey: pharmacyKeys.order(id) });
+      void queryClient.invalidateQueries({ queryKey: pharmacyKeys.orders() });
     },
   });
 }

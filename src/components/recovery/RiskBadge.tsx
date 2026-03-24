@@ -23,7 +23,8 @@ interface Props {
 }
 
 export default function RiskBadge({ level, size = 'sm' }: Props) {
-  const config = RISK_CONFIG[level?.toLowerCase()] || RISK_CONFIG.low;
+  const config = RISK_CONFIG[level?.toLowerCase()] ??
+    RISK_CONFIG.low ?? { bg: `${colors.success}20`, color: colors.success, label: 'Low Risk' };
 
   return (
     <View

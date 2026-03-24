@@ -795,7 +795,7 @@ function getToolPhrase(
 
   // Fall back to rotating default phrases
   const idx = indexRef.current % entry.default.length;
-  return entry.default[idx];
+  return entry.default[idx] ?? 'Working on it…';
 }
 
 // ─── Action Link Navigation ─────────────────────────
@@ -874,8 +874,8 @@ export default function EkaChatScreen() {
   // Init
   useFocusEffect(
     useCallback(() => {
-      initLanguage();
-      fetchConversations();
+      void initLanguage();
+      void fetchConversations();
     }, [initLanguage, fetchConversations])
   );
 
@@ -930,7 +930,7 @@ export default function EkaChatScreen() {
         dot3.setValue(0);
       };
     }
-  }, [loadingTool, dot1, dot2, dot3]);
+  }, [loadingTool, dot1, dot2, dot3, messages]);
 
   // Pulsing animation (kept for backward compat, unused visually now)
   useEffect(() => {
@@ -987,7 +987,7 @@ export default function EkaChatScreen() {
       return;
     }
     if (action.action === 'upload_prescription') {
-      handleUpload();
+      void handleUpload();
       return;
     }
     if (action.message) {
@@ -1060,7 +1060,7 @@ export default function EkaChatScreen() {
 
   const navigateAction = (routeKey: string) => {
     // Handle parameterized route keys like book_appointment:CHECKUP_ID
-    const [baseKey, param] = routeKey.split(':');
+    const [baseKey = '', param] = routeKey.split(':');
 
     // 1. Check if it's a navigation route
     const route = ACTION_ROUTES[baseKey] || ACTION_ROUTES[routeKey];
@@ -1988,7 +1988,7 @@ function MessageBubble({
       tension: 60,
       friction: 10,
     }).start();
-  }, []);
+  }, [entryAnim]);
 
   // Controls crossfade between loading shimmer (0) and streamed text (1)
   // Transitions from 0→1 as soon as content starts arriving
@@ -2252,8 +2252,8 @@ function FormattedText({
       }
 
       if (earliest === 'link' && linkMatch) {
-        const linkText = linkMatch[1];
-        const routeKey = linkMatch[2];
+        const linkText = linkMatch[1] ?? '';
+        const routeKey = linkMatch[2] ?? '';
 
         // Check for drug: prefix
         if (routeKey.startsWith('drug:')) {
@@ -2852,7 +2852,12 @@ const TRIAGE_CONFIG: Record<string, { label: string; desc: string; color: string
 
 function CheckupReportCard({ data }: { data: any }) {
   const triage = data?.triage_level || data?.triage?.level || 'self_care';
-  const triageCfg = TRIAGE_CONFIG[triage] || TRIAGE_CONFIG.consultation;
+  const triageCfg = TRIAGE_CONFIG[triage] ??
+    TRIAGE_CONFIG.consultation ?? {
+      label: 'Consultation Recommended',
+      desc: 'Schedule a visit with a specialist',
+      color: '#eab308',
+    };
   const conditions = data?.conditions?.slice(0, 5) || [];
   const checkupId = data?.checkup_id;
 
@@ -5726,10 +5731,10 @@ function groupByDate(convos: EkaConversation[]) {
   for (const c of sorted) {
     const d = new Date(c.updated_at || c.created_at);
     const ds = d.toDateString();
-    if (ds === today) groups[0].items.push(c);
-    else if (ds === yesterday) groups[1].items.push(c);
-    else if (d >= weekAgo) groups[2].items.push(c);
-    else groups[3].items.push(c);
+    if (ds === today) groups[0]!.items.push(c);
+    else if (ds === yesterday) groups[1]!.items.push(c);
+    else if (d >= weekAgo) groups[2]!.items.push(c);
+    else groups[3]!.items.push(c);
   }
 
   return groups.filter((g) => g.items.length > 0);

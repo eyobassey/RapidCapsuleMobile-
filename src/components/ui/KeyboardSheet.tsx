@@ -24,7 +24,7 @@ import {
   KeyboardAvoidingView,
   useReanimatedKeyboardAnimation,
 } from 'react-native-keyboard-controller';
-import Animated, { useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
 import { colors } from '../../theme/colors';
 
 interface KeyboardSheetProps {

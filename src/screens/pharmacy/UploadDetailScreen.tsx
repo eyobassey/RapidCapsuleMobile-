@@ -26,7 +26,6 @@ import {
   XCircle,
   Clock,
   Camera,
-  ImageIcon,
   ShoppingCart,
 } from 'lucide-react-native';
 
@@ -34,7 +33,7 @@ import { usePrescriptionUploadStore } from '../../store/prescriptionUpload';
 import { Header, StatusBadge, Button, Skeleton, Text, TextInput } from '../../components/ui';
 import { colors } from '../../theme/colors';
 import { formatDate } from '../../utils/formatters';
-import { VERIFICATION_STATUS_LABELS, isTerminalStatus } from '../../types/prescriptionUpload.types';
+import { VERIFICATION_STATUS_LABELS } from '../../types/prescriptionUpload.types';
 import type { PharmacyStackParamList } from '../../navigation/stacks/PharmacyStack';
 
 export default function UploadDetailScreen() {

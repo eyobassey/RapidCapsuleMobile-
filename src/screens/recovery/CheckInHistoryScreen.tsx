@@ -26,6 +26,7 @@ export default function CheckInHistoryScreen() {
 
   useEffect(() => {
     loadChart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chartMetric]);
 
   const loadLogs = async () => {

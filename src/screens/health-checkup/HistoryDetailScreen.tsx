@@ -104,9 +104,9 @@ export default function HistoryDetailScreen() {
 
   useEffect(() => {
     if (checkupId) {
-      fetchDetail(checkupId);
-      fetchClaudeSummary(checkupId);
-      fetchSummaryStatus();
+      void fetchDetail(checkupId);
+      void fetchClaudeSummary(checkupId);
+      void fetchSummaryStatus();
     }
   }, [checkupId, fetchDetail, fetchClaudeSummary, fetchSummaryStatus]);
 
@@ -178,7 +178,13 @@ export default function HistoryDetailScreen() {
 
   // If emergency evidence is detected, always show Emergency
   const effectiveTriageLevel = hasEmergency ? 'emergency' : rawTriageLevel;
-  const triage = TRIAGE_CONFIG[effectiveTriageLevel] || TRIAGE_CONFIG.self_care;
+  const triage = TRIAGE_CONFIG[effectiveTriageLevel] ??
+    TRIAGE_CONFIG.self_care ?? {
+      label: 'Self-Care',
+      color: colors.success,
+      icon: null,
+      description: '',
+    };
   const TriageIcon = triage.icon;
 
   return (

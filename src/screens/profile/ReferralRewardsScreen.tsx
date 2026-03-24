@@ -712,7 +712,10 @@ export default function ReferralRewardsScreen() {
               milestones.map((milestone, i) => {
                 const isAchieved = milestonesAchieved.includes(milestone.badge_name);
                 const isLast = i === milestones.length - 1;
-                const accentColor = MILESTONE_COLORS[i % MILESTONE_COLORS.length];
+                const accentColor =
+                  MILESTONE_COLORS[i % MILESTONE_COLORS.length] ??
+                  MILESTONE_COLORS[0] ??
+                  colors.primary;
 
                 return (
                   <View

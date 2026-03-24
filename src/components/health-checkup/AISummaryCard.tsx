@@ -283,7 +283,10 @@ export default function AISummaryCard({
                 </Text>
               </View>
               {content.possible_conditions_explained.map((item, i) => {
-                const urgency = URGENCY_CONFIG[item.urgency] || URGENCY_CONFIG.routine;
+                const urgency = URGENCY_CONFIG[item.urgency] ?? {
+                  color: colors.success,
+                  label: 'Routine',
+                };
                 return (
                   <View
                     key={i}

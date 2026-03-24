@@ -50,7 +50,8 @@ export default function ScreeningFlowScreen() {
   };
 
   const selectAnswer = (value: number) => {
-    setAnswers((prev) => ({ ...prev, [question.id]: value }));
+    // question is always defined when selectAnswer is callable (question is rendered in JSX)
+    setAnswers((prev) => ({ ...prev, [question!.id]: value }));
   };
 
   const handleSubmit = async () => {

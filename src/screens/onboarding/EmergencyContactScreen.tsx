@@ -35,7 +35,7 @@ export default function EmergencyContactScreen({ navigation }: Props) {
       await fetchUser();
       // After saving emergency contacts, the auth store's needsOnboarding will flip
       // and RootNavigator will auto-route to Main
-    } catch (err: any) {
+    } catch {
       // TODO: show error toast
     } finally {
       setLoading(false);

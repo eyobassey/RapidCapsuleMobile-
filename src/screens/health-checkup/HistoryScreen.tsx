@@ -23,7 +23,7 @@ export default function HistoryScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchHistory({ limit: 50 });
+    void fetchHistory({ limit: 50 });
   }, [fetchHistory]);
 
   const onRefresh = useCallback(async () => {

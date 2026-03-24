@@ -21,7 +21,7 @@ import {
   X,
   Clock,
 } from 'lucide-react-native';
-import { Header, Button, Skeleton, Text } from '../../../components/ui';
+import { Header, Skeleton, Text } from '../../../components/ui';
 import { useAppointmentsStore } from '../../../store/appointments';
 import { colors } from '../../../theme/colors';
 import type { BookingsStackParamList } from '../../../navigation/stacks/BookingsStack';
@@ -48,7 +48,7 @@ function getIconForCategory(name: string): React.ComponentType<any> {
   const lower = name?.toLowerCase() || '';
   for (const key in iconMap) {
     if (lower.includes(key)) {
-      return iconMap[key];
+      return iconMap[key] ?? Stethoscope;
     }
   }
   return Stethoscope;
@@ -113,9 +113,10 @@ export default function SelectSpecialtyScreen() {
     if (healthCheckupId) {
       setBookingData({ health_checkup_id: healthCheckupId, healthCheckupSummary });
     }
-    fetchCategories();
+    void fetchCategories();
     // Fetch recent checkups to decide whether to show suggestion
-    fetchRecentCheckups();
+    void fetchRecentCheckups();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only run on mount
   }, []);
 
   // Show suggestion only if no linked checkup and no recent checkups

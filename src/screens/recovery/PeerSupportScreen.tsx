@@ -21,7 +21,7 @@ export default function PeerSupportScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchPeerAssignment();
-    }, [])
+    }, [fetchPeerAssignment])
   );
 
   const onRefresh = async () => {

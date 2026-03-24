@@ -47,7 +47,7 @@ describe('OtpScreen', () => {
     const cells = getAllByDisplayValue('');
     const code = '123456';
     code.split('').forEach((digit, idx) => {
-      fireEvent.changeText(cells[idx], digit);
+      fireEvent.changeText(cells[idx]!, digit);
     });
 
     const button = getByText('Verify Code');

@@ -1,5 +1,5 @@
-import {useCallback, useMemo} from 'react';
-import {useCurrencyStore} from '../store/currency';
+import { useCallback, useMemo } from 'react';
+import { useCurrencyStore } from '../store/currency';
 import {
   SUPPORTED_CURRENCIES,
   formatCurrencyAmount,
@@ -13,23 +13,31 @@ import {
  * selected currency automatically.
  */
 export function useCurrency() {
-  const currencyCode = useCurrencyStore(s => s.currencyCode);
+  const currencyCode = useCurrencyStore((s) => s.currencyCode);
 
   const config: CurrencyConfig = useMemo(
-    () => SUPPORTED_CURRENCIES[currencyCode] ?? SUPPORTED_CURRENCIES.USD,
-    [currencyCode],
+    () =>
+      SUPPORTED_CURRENCIES[currencyCode] ??
+      SUPPORTED_CURRENCIES.USD ?? {
+        code: 'USD',
+        symbol: '$',
+        locale: 'en-US',
+        name: 'US Dollar',
+        flag: '🇺🇸',
+      },
+    [currencyCode]
   );
 
   /** Format an NGN amount in the user's selected currency */
   const format = useCallback(
     (ngnAmount: number) => formatCurrencyAmount(ngnAmount, currencyCode),
-    [currencyCode],
+    [currencyCode]
   );
 
   /** Resolve price from a multi-currency item.prices map (falls back to item.price) */
   const resolvePrice = useCallback(
     (item: any, field?: string) => getItemPrice(item, currencyCode, field),
-    [currencyCode],
+    [currencyCode]
   );
 
   return {

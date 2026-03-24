@@ -145,7 +145,7 @@ export default function ChatScreen() {
   // Mark read on new messages
   useEffect(() => {
     if (messages.length > 0) {
-      const lastMsg = messages[0];
+      const lastMsg = messages[0]!;
       const senderId =
         typeof lastMsg.sender === 'string' ? lastMsg.sender : (lastMsg.sender as UserSnippet)?._id;
       if (senderId !== myUserId) {

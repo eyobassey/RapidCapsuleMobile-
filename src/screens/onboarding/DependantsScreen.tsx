@@ -76,7 +76,7 @@ export default function DependantsScreen({ navigation }: Props) {
 
   const updateDependant = (index: number, field: keyof typeof defaultDependant, value: string) => {
     const updated = [...dependants];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...defaultDependant, ...updated[index], [field]: value };
     setValue('dependants', updated);
   };
 

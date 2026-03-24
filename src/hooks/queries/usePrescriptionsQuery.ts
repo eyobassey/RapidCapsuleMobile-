@@ -1,5 +1,5 @@
-import {useQuery, useQueryClient, useMutation} from '@tanstack/react-query';
-import {prescriptionsService} from '../../services/prescriptions.service';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { prescriptionsService } from '../../services/prescriptions.service';
 
 // ── Query key factory ──────────────────────────────────────
 export const prescriptionKeys = {
@@ -35,7 +35,7 @@ export function useAcceptPrescriptionMutation() {
   return useMutation({
     mutationFn: (id: string) => prescriptionsService.accept(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: prescriptionKeys.all});
+      void queryClient.invalidateQueries({ queryKey: prescriptionKeys.all });
     },
   });
 }
@@ -45,7 +45,7 @@ export function useDeclinePrescriptionMutation() {
   return useMutation({
     mutationFn: (id: string) => prescriptionsService.decline(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: prescriptionKeys.all});
+      void queryClient.invalidateQueries({ queryKey: prescriptionKeys.all });
     },
   });
 }

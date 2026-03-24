@@ -28,7 +28,7 @@ export default function InterviewScreen() {
   const { currentQuestion, shouldStop, conditions, isLoading, addEvidence, submitDiagnosis } =
     useHealthCheckupStore();
 
-  const [selectedSingle, setSelectedSingle] = useState<string | null>(null);
+  const [, setSelectedSingle] = useState<string | null>(null);
   const [selectedMultiple, setSelectedMultiple] = useState<Set<string>>(new Set());
   const [questionCount, setQuestionCount] = useState(1);
 

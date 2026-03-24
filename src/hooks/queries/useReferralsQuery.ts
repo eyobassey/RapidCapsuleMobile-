@@ -63,8 +63,8 @@ export function useTrackShareMutation() {
   return useMutation({
     mutationFn: (platform: SharePlatform) => referralsService.trackShare(platform),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: referralKeys.me() });
-      queryClient.invalidateQueries({ queryKey: referralKeys.stats() });
+      void queryClient.invalidateQueries({ queryKey: referralKeys.me() });
+      void queryClient.invalidateQueries({ queryKey: referralKeys.stats() });
     },
   });
 }

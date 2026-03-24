@@ -138,7 +138,7 @@ export default function VitalsScreen() {
         totalTracked++;
         const numValue = parseFloat(
           config.key === 'blood_pressure'
-            ? String(reading.value).split('/')[0]
+            ? String(reading.value).split('/')[0] ?? ''
             : String(reading.value)
         );
         if (!isNaN(numValue)) {
@@ -247,7 +247,7 @@ export default function VitalsScreen() {
           if (reading?.value != null) {
             const numVal = parseFloat(
               config.key === 'blood_pressure'
-                ? String(reading.value).split('/')[0]
+                ? String(reading.value).split('/')[0] ?? ''
                 : String(reading.value)
             );
             if (!isNaN(numVal)) {
