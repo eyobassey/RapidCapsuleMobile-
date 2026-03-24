@@ -83,3 +83,6 @@ yarn-error.log
 # User guide for Claude Code AI (do not commit)
 CLAUDE.md
 .claude/
+# Local secrets — never commit
+.env
+src/config/secrets.ts
