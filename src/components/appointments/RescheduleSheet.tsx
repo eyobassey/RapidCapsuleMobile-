@@ -63,7 +63,7 @@ function isToday(year: number, month: number, day: number): boolean {
 }
 
 function formatSlot(time: string): string {
-  const [h, m] = time.split(':').map(Number);
+  const [h = 0, m = 0] = time.split(':').map(Number);
   const period = h >= 12 ? 'PM' : 'AM';
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${period}`;
 }
