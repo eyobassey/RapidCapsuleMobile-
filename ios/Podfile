@@ -49,15 +49,28 @@ target 'RapidCapsules' do
     end
 
   
-      # Remove arm64 exclusion for simulators (needed for Apple Silicon Macs)
-      installer.pods_project.build_configurations.each do |config|
+      # Remove arm64 exclusion for simulators (needed for Apple Silicon Macs).
+    # Must be patched in both build_settings AND the generated xcconfig files,
+    # because CocoaPods writes EXCLUDED_ARCHS into the xcconfig after the
+    # build_settings pass (xcconfig wins if the key is absent from settings).
+    installer.pods_project.build_configurations.each do |config|
+      config.build_settings.delete('EXCLUDED_ARCHS[sdk=iphonesimulator*]')
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = ''
+    end
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
         config.build_settings.delete('EXCLUDED_ARCHS[sdk=iphonesimulator*]')
+        config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = ''
       end
-      installer.pods_project.targets.each do |target|
-        target.build_configurations.each do |config|
-          config.build_settings.delete('EXCLUDED_ARCHS[sdk=iphonesimulator*]')
-        end
+    end
+    # Patch the generated xcconfig files directly
+    Dir.glob(File.join(installer.sandbox.root, 'Target Support Files', '**', '*.xcconfig')).each do |xcconfig_path|
+      content = File.read(xcconfig_path)
+      if content.include?('EXCLUDED_ARCHS[sdk=iphonesimulator*]')
+        patched = content.gsub(/EXCLUDED_ARCHS\[sdk=iphonesimulator\*\]\s*=.*$/, 'EXCLUDED_ARCHS[sdk=iphonesimulator*] = ')
+        File.write(xcconfig_path, patched)
       end
+    end
   
     # Suppress deprecation warnings-as-errors for older pods (iOS SDK 26 compat)
     problematic_pods = ['RNAppleHealthKit', 'HtmlToPdf']
