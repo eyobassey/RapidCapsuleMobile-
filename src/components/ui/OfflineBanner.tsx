@@ -27,7 +27,8 @@ export default function OfflineBanner() {
       translateY.value = withTiming(-80, { duration: 220 });
       opacity.value = withTiming(0, { duration: 200 });
     }
-  }, [isConnected, translateY, opacity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- translateY and opacity are Reanimated shared values (stable refs, never change identity)
+  }, [isConnected]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
