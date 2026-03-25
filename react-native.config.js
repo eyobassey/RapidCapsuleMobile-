@@ -10,4 +10,10 @@ module.exports = {
     android: {},
   },
   assets: ['./assets/fonts'],
+  dependencies: {
+    // iOS-only package — no Android implementation
+    'react-native-tracking-transparency': {
+      platforms: { android: null },
+    },
+  },
 };
