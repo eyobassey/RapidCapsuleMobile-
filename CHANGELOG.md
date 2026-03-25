@@ -1,3 +1,33 @@
+# [1.12.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.11.2...v1.12.0) (2026-03-25)
+
+### Bug Fixes
+
+- handle default values in formatSlot function for better time formatting ([79e251e](https://github.com/eyobassey/RapidCapsuleMobile-/commit/79e251ebe71a3b2ac9896f54e2b29c67f4af7cda))
+- update user settings mutation to properly merge defaults ([d2e82ee](https://github.com/eyobassey/RapidCapsuleMobile-/commit/d2e82ee7b79c595335428ec6651b173c6cf0f937))
+
+### Features
+
+- add .env.example for environment variable setup ([18f1984](https://github.com/eyobassey/RapidCapsuleMobile-/commit/18f1984ff39fe131bf3714dcbf55abb319692cec))
+- add Face ID usage description and enable tracking permissions ([d3770c9](https://github.com/eyobassey/RapidCapsuleMobile-/commit/d3770c9e78ec1bdc3b17b30373f0646e9596fdfe))
+- add mock for react-native-config in Jest setup ([8efadd4](https://github.com/eyobassey/RapidCapsuleMobile-/commit/8efadd4e23d9c5922083213127503474f5fce445))
+- add mock for react-native-tracking-transparency in Jest setup ([ed490cf](https://github.com/eyobassey/RapidCapsuleMobile-/commit/ed490cf7cc50b2ccc00df9b18b8f901427ef2445))
+- add navigation to appointment details from HomeScreen ([e434dbb](https://github.com/eyobassey/RapidCapsuleMobile-/commit/e434dbb0c26771de0afa4cdffcaa27830abcf735))
+- add new dependencies for configuration and tracking ([1e0c220](https://github.com/eyobassey/RapidCapsuleMobile-/commit/1e0c2207154c3bb21cdac145b78692a2836fb0a4))
+- add production environment configuration to Babel setup ([9748839](https://github.com/eyobassey/RapidCapsuleMobile-/commit/97488391808ff2039b447ce6799ffa46283a72ef))
+- add user tracking usage description to Info.plist ([2d4e75b](https://github.com/eyobassey/RapidCapsuleMobile-/commit/2d4e75b2a5a4a1afe783a009f0451c37d17dc0d6))
+- enhance DeviceIntegrationScreen with direct provider connection feedback ([40944be](https://github.com/eyobassey/RapidCapsuleMobile-/commit/40944be813f4211c19f01ba54a69b6e0626260a1))
+- enhance DeviceIntegrationScreen with new health provider support and error handling ([84a52e0](https://github.com/eyobassey/RapidCapsuleMobile-/commit/84a52e0564aa909957b3ba552c81cc7f78ae392a))
+- enhance HomeScreen navigation and accessibility ([1f406dd](https://github.com/eyobassey/RapidCapsuleMobile-/commit/1f406ddbb4dad6afe95e5637800737099986cb77))
+- enhance HomeScreen with touchable navigation for key sections ([6af8c78](https://github.com/eyobassey/RapidCapsuleMobile-/commit/6af8c78fd1cdc6c18cc6e54da940b4a2c463abe7))
+- enhance OfflineBanner with animations and improved styles ([0c0d393](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0c0d3937a23a11417a9216290c62ec00479da747))
+- enhance ProfileScreen UI and accessibility ([e314e43](https://github.com/eyobassey/RapidCapsuleMobile-/commit/e314e43e7ec6cce2f6d9e35c3b393d14fd17b1c5))
+- enhance ProfileScreen with improved navigation and accessibility ([88c8a79](https://github.com/eyobassey/RapidCapsuleMobile-/commit/88c8a794d838d3d4ddb6fae4215826f82d283c4f))
+- enhance RecoveryHomeCard and HomeScreen UI ([756efba](https://github.com/eyobassey/RapidCapsuleMobile-/commit/756efbaa49545fa2cee263e9eb39d58a139ff2d2))
+- implement useTrackingTransparency hook for iOS tracking consent ([4cfe2b4](https://github.com/eyobassey/RapidCapsuleMobile-/commit/4cfe2b4a93f016ea8f3571475bd1253ff5d52359))
+- refine ProfileScreen layout and styles ([48b02b6](https://github.com/eyobassey/RapidCapsuleMobile-/commit/48b02b6f33dddc7ba2c5f7b7db39ea3690efdfa8))
+- update Info.plist with usage descriptions for calendar, contacts, and location ([5cb541f](https://github.com/eyobassey/RapidCapsuleMobile-/commit/5cb541fc65bb781e28b79a044e6c5b1198f63440))
+- update mock for react-native-config to include ES module support ([6fc5e0e](https://github.com/eyobassey/RapidCapsuleMobile-/commit/6fc5e0ec930a55a79b9b44a103bfe1f31d5baa19))
+
 ## [1.11.2](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.11.1...v1.11.2) (2026-03-23)
 
 ### Bug Fixes
