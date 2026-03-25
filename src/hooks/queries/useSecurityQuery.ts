@@ -142,7 +142,10 @@ export function useUpdateUserSettingsMutation() {
 
       queryClient.setQueryData(securityKeys.userSettings(), (old: any) => ({
         ...(old ?? {}),
-        ...patch,
+        defaults: {
+          ...(old?.defaults ?? {}),
+          ...patch,
+        },
       }));
 
       return { previous };
