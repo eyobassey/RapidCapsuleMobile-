@@ -300,6 +300,12 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
         // OAuth flow fallback — open in WebView (some providers still allow it)
         setOauthProvider(appId);
         setOauthUrl(result.authUrl);
+      } else {
+        // Backend connected the provider directly (no OAuth redirect needed).
+        // Refresh UI and confirm to the user.
+        await loadIntegrations();
+        const meta = PROVIDER_META[appId];
+        Alert.alert('Connected', `${meta?.name ?? appId} connected successfully.`);
       }
     } catch (err: any) {
       const msg = parseApiError(err).message;
