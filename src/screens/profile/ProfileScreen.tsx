@@ -14,6 +14,7 @@ import {
   Info,
   LogOut,
   Pill,
+  Settings,
   Shield,
   ShieldCheck,
   Wallet,
@@ -92,7 +93,7 @@ export default function ProfileScreen() {
 
   const firstName = user?.profile?.first_name || 'User';
   const lastName = user?.profile?.last_name || '';
-  const email = user?.email || '';
+  const email = user?.email || user?.profile?.contact?.email || '';
   const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
   const memberSince = (user as any)?.created_at ? formatDate((user as any).created_at) : '';
 
@@ -237,17 +238,20 @@ export default function ProfileScreen() {
             colors={[`${colors.primary}10`, 'transparent']}
             style={styles.headerGradient}
           />
-          <View style={styles.headerContent}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate('EditProfile')}
-              style={styles.avatarWrapper}
-            >
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('EditProfile')}
+            accessibilityRole="button"
+            accessibilityLabel="Edit profile"
+            accessibilityHint="Double tap to edit your profile information"
+            style={styles.headerContent}
+          >
+            <View style={styles.avatarWrapper}>
               <Avatar uri={profileImage} firstName={firstName} lastName={lastName} size="lg" />
               <View style={styles.editBadge}>
                 <Edit3 size={10} color={colors.white} strokeWidth={2.5} />
               </View>
-            </TouchableOpacity>
+            </View>
 
             <View style={styles.headerInfo}>
               <Text style={styles.userName} numberOfLines={1}>
@@ -263,10 +267,20 @@ export default function ProfileScreen() {
                 </View>
               ) : null}
             </View>
-          </View>
+
+            <View style={styles.cogwheelButton}>
+              <Settings size={18} color={colors.mutedForeground} strokeWidth={1.8} />
+            </View>
+          </TouchableOpacity>
 
           <View style={styles.metricsContainer}>
-            <View style={styles.metricCard}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.getParent()?.navigate('Home', { screen: 'HealthInsights' })}
+              accessibilityRole="button"
+              accessibilityLabel={`Health score ${healthScore}, tap to view insights`}
+              style={styles.metricCard}
+            >
               <View
                 style={[styles.metricIconContainer, { backgroundColor: `${colors.primary}15` }]}
               >
@@ -278,9 +292,15 @@ export default function ProfileScreen() {
               ) : (
                 <Text style={styles.metricValue}>{healthScore}</Text>
               )}
-            </View>
+            </TouchableOpacity>
 
-            <View style={styles.metricCard}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('Wallet')}
+              accessibilityRole="button"
+              accessibilityLabel={`Wallet balance ${format(walletBalance)}, tap to view wallet`}
+              style={styles.metricCard}
+            >
               <View
                 style={[styles.metricIconContainer, { backgroundColor: `${colors.success}15` }]}
               >
@@ -290,9 +310,15 @@ export default function ProfileScreen() {
               <Text style={styles.metricValue}>
                 {walletQuery.isLoading ? '...' : format(walletBalance)}
               </Text>
-            </View>
+            </TouchableOpacity>
 
-            <View style={styles.metricCard}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.getParent()?.navigate('Bookings')}
+              accessibilityRole="button"
+              accessibilityLabel={`${upcomingCount} upcoming appointments, tap to view`}
+              style={styles.metricCard}
+            >
               <View style={[styles.metricIconContainer, { backgroundColor: `${colors.accent}15` }]}>
                 <Calendar size={16} color={colors.accent} strokeWidth={2.5} />
               </View>
@@ -302,7 +328,7 @@ export default function ProfileScreen() {
               ) : (
                 <Text style={styles.metricValue}>{upcomingCount}</Text>
               )}
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -466,29 +492,46 @@ const styles = StyleSheet.create({
   headerInfo: {
     flex: 1,
   },
+  cogwheelButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: `${colors.mutedForeground}10`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   userName: {
     fontSize: 22,
     fontWeight: '700',
     color: colors.foreground,
     letterSpacing: -0.4,
+    lineHeight: 24,
   },
   userEmail: {
-    fontSize: 13,
-    color: colors.mutedForeground,
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.55)',
     fontWeight: '400',
-    marginTop: 0,
+    marginTop: 1,
+    lineHeight: 15,
   },
   verifiedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    backgroundColor: `${colors.success}15`,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: `${colors.success}25`,
   },
   verifiedText: {
     fontSize: 10,
     fontWeight: '600',
     color: colors.success,
     marginLeft: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   metricsContainer: {
     flexDirection: 'row',
