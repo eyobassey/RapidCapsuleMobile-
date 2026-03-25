@@ -7,7 +7,7 @@ import {
 } from '@kingstinct/react-native-healthkit';
 import type { ObjectTypeIdentifier } from '@kingstinct/react-native-healthkit';
 
-import { healthIntegrationsService } from './healthIntegrations.service';
+import { vitalsService } from './vitals.service';
 
 const READ_PERMISSIONS: ObjectTypeIdentifier[] = [
   'HKQuantityTypeIdentifierHeartRate',
@@ -29,6 +29,31 @@ const SYNC_WINDOW_DAYS = 7;
 
 // 5-second tolerance for pairing systolic/diastolic samples from the same measurement
 const BP_PAIR_TOLERANCE_MS = 5000;
+
+// Maps HealthKit dataType keys → Vitals API field names
+// Vital entity shape per field: { value: String, unit: String, updatedAt: Date }
+const HEALTHKIT_TO_VITALS_FIELD: Record<string, string> = {
+  heart_rate: 'pulse_rate',
+  oxygen_saturation: 'spo2',
+  body_temperature: 'body_temp',
+  weight: 'body_weight',
+  blood_glucose: 'blood_sugar_level',
+  // These already match the Vitals API field names:
+  steps: 'steps',
+  sleep: 'sleep',
+  blood_pressure: 'blood_pressure',
+  respiratory_rate: 'respiratory_rate',
+  calories_burned: 'calories_burned',
+  body_fat: 'body_fat',
+  distance: 'distance',
+};
+
+type HealthSample = {
+  dataType: string;
+  value: number | string;
+  unit: string;
+  recordedAt: string;
+};
 
 export const appleHealthService = {
   /**
@@ -61,12 +86,7 @@ export const appleHealthService = {
 
     const filter = { date: { startDate, endDate } };
 
-    const healthData: Array<{
-      dataType: string;
-      value: number | string;
-      unit: string;
-      recordedAt: string;
-    }> = [];
+    const healthData: HealthSample[] = [];
     const errors: string[] = [];
 
     // Heart Rate
@@ -313,17 +333,40 @@ export const appleHealthService = {
       errors.push(`Distance: ${e.message}`);
     }
 
-    if (healthData.length > 0) {
-      try {
-        await healthIntegrationsService.pushAppleHealthData({
-          provider: 'apple_health',
-          data: healthData,
-        });
-      } catch (e: any) {
-        errors.push(`Push to backend: ${e.message}`);
+    if (healthData.length === 0) {
+      return { synced: 0, errors };
+    }
+
+    // For each dataType, keep only the most recent sample — the Vitals API stores
+    // one current value per field (not a time series).
+    const latestByType = new Map<string, HealthSample>();
+    for (const sample of healthData) {
+      const existing = latestByType.get(sample.dataType);
+      if (!existing || sample.recordedAt > existing.recordedAt) {
+        latestByType.set(sample.dataType, sample);
       }
     }
 
-    return { synced: healthData.length, errors };
+    // Build the POST /vitals payload:
+    // { [vitalsApiField]: { value: String, unit: String, updatedAt: Date } }
+    const vitalsPayload: Record<string, { value: string; unit: string; updatedAt: string }> = {};
+    for (const [dataType, sample] of latestByType.entries()) {
+      const apiField = HEALTHKIT_TO_VITALS_FIELD[dataType];
+      if (apiField) {
+        vitalsPayload[apiField] = {
+          value: String(sample.value),
+          unit: sample.unit,
+          updatedAt: sample.recordedAt,
+        };
+      }
+    }
+
+    try {
+      await vitalsService.create(vitalsPayload);
+    } catch (e: any) {
+      errors.push(`Save to vitals: ${e.message}`);
+    }
+
+    return { synced: latestByType.size, errors };
   },
 };

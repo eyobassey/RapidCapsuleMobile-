@@ -16,12 +16,17 @@ export const healthIntegrationsService = {
     return res.data.data || res.data.result;
   },
 
-  async connect(payload: {provider: string; dataTypes?: string[]; autoSync?: boolean}) {
+  async connect(payload: {
+    provider: string;
+    dataTypes?: string[];
+    autoSync?: boolean;
+    syncDirection?: 'push' | 'pull' | 'bidirectional';
+  }) {
     const res = await api.post('/health-integrations/connect', payload);
     return res.data.data || res.data.result;
   },
 
-  async handleCallback(provider: string, payload: {code?: string; data?: any}) {
+  async handleCallback(provider: string, payload: { code?: string; data?: any }) {
     const res = await api.post(`/health-integrations/callback/${provider}`, payload);
     return res.data.data || res.data.result;
   },
@@ -31,7 +36,7 @@ export const healthIntegrationsService = {
     return res.data.data || res.data.result;
   },
 
-  async sync(provider: string, params?: {startDate?: string; endDate?: string}) {
+  async sync(provider: string, params?: { startDate?: string; endDate?: string }) {
     const res = await api.post(`/health-integrations/sync/${provider}`, params || {});
     return res.data.data || res.data.result;
   },
@@ -41,7 +46,10 @@ export const healthIntegrationsService = {
     return res.data.data || res.data.result;
   },
 
-  async updateSettings(provider: string, settings: {autoSync?: boolean; syncDirection?: string; dataTypes?: string[]}) {
+  async updateSettings(
+    provider: string,
+    settings: { autoSync?: boolean; syncDirection?: string; dataTypes?: string[] }
+  ) {
     const res = await api.patch(`/health-integrations/${provider}/settings`, settings);
     return res.data.data || res.data.result;
   },
@@ -51,8 +59,13 @@ export const healthIntegrationsService = {
     return res.data.data || res.data.result || [];
   },
 
-  async getData(params?: {provider?: string; dataType?: string; startDate?: string; endDate?: string}) {
-    const res = await api.get('/health-integrations/data', {params});
+  async getData(params?: {
+    provider?: string;
+    dataType?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const res = await api.get('/health-integrations/data', { params });
     return res.data.data || res.data.result || [];
   },
 };

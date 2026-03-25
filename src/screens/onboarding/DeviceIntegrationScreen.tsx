@@ -21,6 +21,7 @@ import {
 import { WebView } from 'react-native-webview';
 import SectionScreenLayout from '../../components/onboarding/SectionScreenLayout';
 import { Text } from '../../components/ui';
+import { parseApiError } from '../../services/api-error';
 import { appleHealthService } from '../../services/appleHealth.service';
 import { healthIntegrationsService } from '../../services/healthIntegrations.service';
 import { usersService } from '../../services/users.service';
@@ -28,40 +29,69 @@ import { useAuthStore } from '../../store/auth';
 import { useOnboardingStore } from '../../store/onboarding';
 import { colors } from '../../theme/colors';
 
-const HEALTH_APPS = [
+// Display-only metadata keyed by provider ID.
+// The API (GET /health-integrations/providers) is the source of truth for which
+// providers are actually supported — this map only controls how each one looks.
+const PROVIDER_META: Record<
+  string,
   {
-    id: 'google_fit',
+    name: string;
+    icon: any;
+    color: string;
+    description: string;
+    platform: 'ios' | 'android' | 'all';
+  }
+> = {
+  google_fit: {
     name: 'Google Fit',
     icon: Activity,
     color: '#4285F4',
     description: 'Steps, heart rate, activity, sleep',
     platform: 'android',
   },
-  {
-    id: 'apple_health',
+  apple_health: {
     name: 'Apple Health',
     icon: Heart,
     color: '#FF2D55',
     description: 'Vitals, activity, sleep via HealthKit',
     platform: 'ios',
   },
-  {
-    id: 'fitbit',
-    name: 'Fitbit',
+  garmin: {
+    name: 'Garmin',
     icon: Activity,
     color: '#00B0B9',
     description: 'Steps, heart rate, sleep, weight',
     platform: 'all',
   },
-  {
-    id: 'samsung_health',
+  samsung_health: {
     name: 'Samsung Health',
     icon: Smartphone,
     color: '#1428A0',
     description: 'Steps, heart rate, sleep, stress',
     platform: 'android',
   },
-];
+  polar: {
+    name: 'Polar',
+    icon: Activity,
+    color: '#D9232D',
+    description: 'Heart rate, training, recovery',
+    platform: 'all',
+  },
+  suunto: {
+    name: 'Suunto',
+    icon: Activity,
+    color: '#00A0E3',
+    description: 'Heart rate, activity, outdoor sports',
+    platform: 'all',
+  },
+  whoop: {
+    name: 'WHOOP',
+    icon: Activity,
+    color: '#00FF87',
+    description: 'Recovery, strain, sleep tracking',
+    platform: 'all',
+  },
+};
 
 type IntegrationStatus = 'connected' | 'pending' | 'error' | 'disconnected';
 
@@ -77,6 +107,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
   const fetchUser = useAuthStore((s) => s.fetchUser);
   const clearDraft = useOnboardingStore((s) => s.clearDraft);
 
+  const [providers, setProviders] = useState<string[]>([]);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [loadingIntegrations, setLoadingIntegrations] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
@@ -110,13 +141,28 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
     }
   }, [user]);
 
-  // Load integrations from backend
+  // Load supported providers + active integrations from backend
   const loadIntegrations = useCallback(async () => {
     try {
-      const data = await healthIntegrationsService.getIntegrations();
-      setIntegrations(Array.isArray(data) ? data : []);
+      const [providerData, integrationData] = await Promise.allSettled([
+        healthIntegrationsService.getProviders(),
+        healthIntegrationsService.getIntegrations(),
+      ]);
+
+      if (providerData.status === 'fulfilled' && Array.isArray(providerData.value)) {
+        // Backend may return objects or plain strings — normalise to IDs
+        setProviders(
+          providerData.value
+            .map((p: any) => (typeof p === 'string' ? p : p.id ?? p.provider ?? p.name))
+            .filter(Boolean)
+        );
+      }
+
+      if (integrationData.status === 'fulfilled') {
+        setIntegrations(Array.isArray(integrationData.value) ? integrationData.value : []);
+      }
     } catch {
-      // Silently fail — page still usable
+      // Silently fail — page still usable with empty state
     } finally {
       setLoadingIntegrations(false);
     }
@@ -206,10 +252,34 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
       const result = await healthIntegrationsService.connect({
         provider: appId,
         autoSync: true,
+        // Apple Health is on-device only — the app pushes data to the backend,
+        // the server can never pull from HealthKit directly.
+        syncDirection: appId === 'apple_health' ? 'push' : 'bidirectional',
+        // Declare every metric we actually collect from HealthKit so the backend
+        // knows what data types this integration will provide.
+        dataTypes:
+          appId === 'apple_health'
+            ? [
+                'pulse_rate',
+                'spo2',
+                'body_temp',
+                'body_weight',
+                'blood_pressure',
+                'blood_sugar_level',
+                'steps',
+                'sleep',
+                'respiratory_rate',
+                'calories_burned',
+                'body_fat',
+                'distance',
+              ]
+            : undefined,
       });
 
-      if (result.requiresNativeApp && appId === 'apple_health') {
-        // Apple Health — use native HealthKit SDK
+      if (appId === 'apple_health') {
+        // Apple Health is always on-device — always run a native sync after connect,
+        // regardless of what the backend returns (avoids silent failure if
+        // result?.requiresNativeApp is absent or undefined).
         Alert.alert(
           'Apple Health Connected',
           'HealthKit permissions granted. Syncing your health data now...'
@@ -219,9 +289,9 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
           Alert.alert('Sync Complete', `${syncResult.synced} health readings synced.`);
         }
         await loadIntegrations();
-      } else if (result.requiresNativeApp) {
+      } else if (result?.requiresNativeApp) {
         Alert.alert('Not Available', 'This provider requires native SDK support.');
-      } else if (result.authUrl) {
+      } else if (result?.authUrl) {
         if (appId === 'google_fit') {
           const handled = await openOAuthInSystemBrowser(appId, result.authUrl);
           if (handled.handled) return;
@@ -232,12 +302,11 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
         setOauthUrl(result.authUrl);
       }
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to connect.';
+      const msg = parseApiError(err).message;
       if (msg.includes('already connected')) {
         Alert.alert('Already Connected', `${appId} is already connected.`);
         await loadIntegrations();
       } else {
-        console.log(err);
         Alert.alert('Connection Error', msg);
       }
     } finally {
@@ -247,7 +316,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
 
   // Disconnect
   const handleDisconnect = (appId: string) => {
-    const app = HEALTH_APPS.find((a) => a.id === appId);
+    const app = { id: appId, ...PROVIDER_META[appId] };
     Alert.alert(
       `Disconnect ${app?.name}?`,
       'This will stop syncing health data from this provider. Your existing data will be preserved.',
@@ -262,7 +331,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
               await healthIntegrationsService.disconnect(appId);
               await loadIntegrations();
             } catch (err: any) {
-              Alert.alert('Error', err?.response?.data?.message || 'Failed to disconnect.');
+              Alert.alert('Error', parseApiError(err).message);
             } finally {
               setConnecting(null);
             }
@@ -292,7 +361,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
       }
       await loadIntegrations();
     } catch (err: any) {
-      Alert.alert('Sync Error', err?.response?.data?.message || 'Failed to sync health data.');
+      Alert.alert('Sync Error', parseApiError(err).message);
     } finally {
       setSyncing(null);
     }
@@ -358,7 +427,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
       await fetchUser();
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.message || 'Failed to save.');
+      Alert.alert('Error', parseApiError(err).message);
     } finally {
       setSaving(false);
     }
@@ -401,10 +470,26 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
             Loading integrations...
           </Text>
         </View>
+      ) : providers.length === 0 ? (
+        <View style={{ alignItems: 'center', paddingVertical: 20, marginBottom: 24 }}>
+          <Text style={{ fontSize: 13, color: colors.mutedForeground, textAlign: 'center' }}>
+            No health providers available. Check your connection and try again.
+          </Text>
+        </View>
       ) : (
         <View style={{ gap: 10, marginBottom: 24 }}>
-          {HEALTH_APPS.filter((app) => app.platform === 'all' || app.platform === Platform.OS).map(
-            (app) => {
+          {providers
+            .map((id) => ({ id, meta: PROVIDER_META[id] }))
+            .filter(({ id, meta }) => {
+              if (!meta) return false;
+              const platformSupported = meta.platform === 'all' || meta.platform === Platform.OS;
+              const isConnected = getIntegrationStatus(id) === 'connected';
+              // Show if platform is supported, OR if already connected (so user can disconnect)
+              return platformSupported || isConnected;
+            })
+            .map(({ id, meta }) => {
+              const app = { id, ...meta! };
+              const platformSupported = app.platform === 'all' || app.platform === Platform.OS;
               const status = getIntegrationStatus(app.id);
               const isConnected = status === 'connected';
               const isConnecting = connecting === app.id;
@@ -412,8 +497,21 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
               const lastSync = getLastSync(app.id);
               const Icon = app.icon;
               const isAppleHealth = app.id === 'apple_health';
-              const isToggleDisabled =
-                (isAppleHealth && Platform.OS !== 'ios') || (isAppleHealth && !healthKitSupported);
+              const healthKitDisabled =
+                isAppleHealth && (!healthKitSupported || Platform.OS !== 'ios');
+              // Toggle disabled for HealthKit-unavailable devices, or unsupported platforms
+              const isToggleDisabled = healthKitDisabled || !platformSupported;
+
+              // Platform mismatch message shown below the description
+              const platformMessage = !platformSupported
+                ? isConnected
+                  ? `Connected on another platform. You can disconnect it here, but syncing isn't available on ${
+                      Platform.OS === 'ios' ? 'iOS' : 'Android'
+                    }.`
+                  : `Not available on ${Platform.OS === 'ios' ? 'iOS' : 'Android'}.`
+                : healthKitDisabled
+                ? 'Requires a physical iPhone (HealthKit not available on simulator).'
+                : null;
 
               return (
                 <View
@@ -424,7 +522,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
                     borderColor: isConnected ? app.color : colors.border,
                     borderRadius: 16,
                     padding: 16,
-                    opacity: isToggleDisabled ? 0.6 : 1,
+                    opacity: isToggleDisabled && !isConnected ? 0.6 : 1,
                   }}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -450,17 +548,37 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
                       <Text style={{ fontSize: 11, color: colors.mutedForeground, marginTop: 2 }}>
                         {app.description}
                       </Text>
-                      {isToggleDisabled && (
+                      {platformMessage && (
                         <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 4 }}>
-                          {Platform.OS !== 'ios'
-                            ? 'Available on iOS only.'
-                            : 'Requires a physical iPhone (HealthKit not available on simulator).'}
+                          {platformMessage}
                         </Text>
                       )}
                     </View>
 
                     {isConnecting ? (
                       <ActivityIndicator size="small" color={app.color} />
+                    ) : !platformSupported && isConnected ? (
+                      // Unsupported platform but connected — disconnect button only, no toggle
+                      <TouchableOpacity
+                        onPress={() => handleDisconnect(app.id)}
+                        activeOpacity={0.7}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Disconnect ${app.name}`}
+                        style={{
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 10,
+                          backgroundColor: `${colors.destructive}15`,
+                          borderWidth: 1,
+                          borderColor: `${colors.destructive}30`,
+                        }}
+                      >
+                        <Text
+                          style={{ fontSize: 12, fontWeight: '600', color: colors.destructive }}
+                        >
+                          Disconnect
+                        </Text>
+                      </TouchableOpacity>
                     ) : (
                       <Switch
                         value={isConnected}
@@ -476,8 +594,8 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
                     )}
                   </View>
 
-                  {/* Connected actions */}
-                  {isConnected && (
+                  {/* Connected actions — only shown when platform is supported */}
+                  {isConnected && platformSupported && (
                     <View
                       style={{
                         flexDirection: 'row',
@@ -523,8 +641,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
                   )}
                 </View>
               );
-            }
-          )}
+            })}
         </View>
       )}
 
@@ -624,7 +741,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
             }}
           >
             <Text style={{ fontSize: 16, fontWeight: '700', color: colors.foreground }}>
-              Connect {HEALTH_APPS.find((a) => a.id === oauthProvider)?.name}
+              Connect {oauthProvider ? PROVIDER_META[oauthProvider]?.name ?? oauthProvider : ''}
             </Text>
             <TouchableOpacity
               onPress={() => {
