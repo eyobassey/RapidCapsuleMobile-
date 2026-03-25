@@ -1,8 +1,13 @@
 // Environment configuration
 // Values reference ecosystem.config.js (RC-Backend / RC-Frontend env)
+//
+// PAYSTACK_PUBLIC_KEY: set in .env (gitignored). Copy .env.example → .env
+// and fill in keys from team 1Password.
+import Config from 'react-native-config';
+
 const ENV = {
   API_BASE_URL: 'https://api.rapidcapsule.com/api',
-  PAYSTACK_PUBLIC_KEY: 'pk_test_bebdcdfe6568286e9dbbde99182fb3adb543be83',
+  PAYSTACK_PUBLIC_KEY: Config.PAYSTACK_PUBLIC_KEY ?? '',
   SOCKET_URL: 'https://api.rapidcapsule.com',
   REQUEST_TIMEOUT: 30000,
 
@@ -15,6 +20,6 @@ const ENV = {
   // Apple Sign-In (APPLE_CLIENT_ID, APPLE_CALLBACK from ecosystem)
   APPLE_CLIENT_ID: 'com.rapidcapsules.login',
   APPLE_REDIRECT_URI: 'https://rapidcapsule.com/api/auth/apple/redirect',
-} as const;
+};
 
 export default ENV;
