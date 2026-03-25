@@ -279,18 +279,19 @@ export default function ProfileScreen() {
               onPress={() => navigation.getParent()?.navigate('Home', { screen: 'HealthInsights' })}
               accessibilityRole="button"
               accessibilityLabel={`Health score ${healthScore}, tap to view insights`}
-              style={styles.metricCard}
+              style={[
+                styles.metricCard,
+                { borderColor: `${colors.primary}25`, backgroundColor: `${colors.primary}08` },
+              ]}
             >
-              <View
-                style={[styles.metricIconContainer, { backgroundColor: `${colors.primary}15` }]}
-              >
-                <HeartPulse size={16} color={colors.primary} strokeWidth={2.5} />
+              <View style={styles.metricCardTop}>
+                <Text style={styles.metricLabel}>Health</Text>
+                <HeartPulse size={14} color={colors.primary} strokeWidth={2} />
               </View>
-              <Text style={styles.metricLabel}>Health</Text>
               {healthQuery.isLoading ? (
-                <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 2 }} />
+                <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Text style={styles.metricValue}>{healthScore}</Text>
+                <Text style={[styles.metricValue, { color: colors.primary }]}>{healthScore}</Text>
               )}
             </TouchableOpacity>
 
@@ -299,15 +300,16 @@ export default function ProfileScreen() {
               onPress={() => navigation.navigate('Wallet')}
               accessibilityRole="button"
               accessibilityLabel={`Wallet balance ${format(walletBalance)}, tap to view wallet`}
-              style={styles.metricCard}
+              style={[
+                styles.metricCard,
+                { borderColor: `${colors.success}25`, backgroundColor: `${colors.success}08` },
+              ]}
             >
-              <View
-                style={[styles.metricIconContainer, { backgroundColor: `${colors.success}15` }]}
-              >
-                <Wallet size={16} color={colors.success} strokeWidth={2.5} />
+              <View style={styles.metricCardTop}>
+                <Text style={styles.metricLabel}>Wallet</Text>
+                <Wallet size={14} color={colors.success} strokeWidth={2} />
               </View>
-              <Text style={styles.metricLabel}>Credits</Text>
-              <Text style={styles.metricValue}>
+              <Text style={[styles.metricValue, { color: colors.success }]} numberOfLines={1}>
                 {walletQuery.isLoading ? '...' : format(walletBalance)}
               </Text>
             </TouchableOpacity>
@@ -317,16 +319,19 @@ export default function ProfileScreen() {
               onPress={() => navigation.getParent()?.navigate('Bookings')}
               accessibilityRole="button"
               accessibilityLabel={`${upcomingCount} upcoming appointments, tap to view`}
-              style={styles.metricCard}
+              style={[
+                styles.metricCard,
+                { borderColor: `${colors.accent}25`, backgroundColor: `${colors.accent}08` },
+              ]}
             >
-              <View style={[styles.metricIconContainer, { backgroundColor: `${colors.accent}15` }]}>
-                <Calendar size={16} color={colors.accent} strokeWidth={2.5} />
+              <View style={styles.metricCardTop}>
+                <Text style={styles.metricLabel}>Upcoming</Text>
+                <Calendar size={14} color={colors.accent} strokeWidth={2} />
               </View>
-              <Text style={styles.metricLabel}>Upcoming</Text>
               {appointmentsQuery.isLoading ? (
-                <ActivityIndicator size="small" color={colors.accent} style={{ marginTop: 2 }} />
+                <ActivityIndicator size="small" color={colors.accent} />
               ) : (
-                <Text style={styles.metricValue}>{upcomingCount}</Text>
+                <Text style={[styles.metricValue, { color: colors.accent }]}>{upcomingCount}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -541,33 +546,26 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
-    backgroundColor: colors.card,
     borderRadius: 20,
-    padding: 12,
+    padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    alignItems: 'center',
   },
-  metricIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  metricCardTop: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
   metricLabel: {
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '500',
     color: colors.mutedForeground,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.1,
   },
   metricValue: {
-    fontSize: 15,
+    fontSize: 20,
     fontWeight: '700',
-    color: colors.foreground,
-    marginTop: 2,
+    letterSpacing: -0.5,
   },
   sectionHeader: {
     fontSize: 11,
