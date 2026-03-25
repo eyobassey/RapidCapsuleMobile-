@@ -26,6 +26,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -240,34 +241,30 @@ export default function HomeScreen() {
   // ---------- quick actions config ----------
   const quickActions = [
     {
-      icon: <Stethoscope size={22} color="#0ea5e9" />,
+      icon: <Stethoscope size={24} color="#0ea5e9" />,
       title: 'Health Checkup',
       subtitle: 'AI diagnosis',
-      bg: 'bg-sky-500/10',
       accentColor: '#0ea5e9',
       onPress: () => navigation.navigate('HealthCheckupStart'),
     },
     {
-      icon: <Calendar size={22} color="#818cf8" />,
+      icon: <Calendar size={24} color="#818cf8" />,
       title: 'Book Appt',
       subtitle: 'See a specialist',
-      bg: 'bg-indigo-500/10',
       accentColor: '#818cf8',
       onPress: () => navigation.getParent()?.navigate('Bookings'),
     },
     {
-      icon: <Pill size={22} color="#10b981" />,
+      icon: <Pill size={24} color="#10b981" />,
       title: 'Pharmacy',
       subtitle: 'Order medicines',
-      bg: 'bg-emerald-500/10',
       accentColor: '#10b981',
       onPress: () => navigation.getParent()?.navigate('Pharmacy'),
     },
     {
-      icon: <HeartPulse size={22} color="#f43f5e" />,
+      icon: <HeartPulse size={24} color="#f43f5e" />,
       title: 'Vitals',
       subtitle: 'Track health',
-      bg: 'bg-rose-500/10',
       accentColor: '#f43f5e',
       onPress: () => navigation.navigate('Vitals'),
     },
@@ -422,7 +419,7 @@ export default function HomeScreen() {
 
           <View className="flex-row items-center gap-3 relative z-10">
             <View
-              className="w-11 h-11 rounded-xl items-center justify-center"
+              className="w-11 h-11 rounded-2xl items-center justify-center"
               style={{ backgroundColor: colors.primary }}
             >
               <Text className="text-lg">🩺</Text>
@@ -489,17 +486,22 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={`${upcomingAppointments.length} upcoming appointments`}
             accessibilityHint="Double tap to view your appointments"
-            className="flex-1 bg-card border border-border rounded-2xl p-3 items-center"
+            style={[
+              styles.statCard,
+              { borderColor: 'rgba(129,140,248,0.18)', backgroundColor: 'rgba(129,140,248,0.06)' },
+            ]}
           >
-            <View className="w-8 h-8 rounded-full bg-indigo-500/10 items-center justify-center mb-1.5">
-              <CalendarDays size={16} color="#818cf8" />
+            <View style={styles.statCardTop}>
+              <Text style={styles.statLabel}>Upcoming</Text>
+              <CalendarDays size={14} color="#818cf8" strokeWidth={2} />
             </View>
-            <Text className="text-xl font-bold text-foreground">
-              {aptsLoading ? '--' : upcomingAppointments.length}
-            </Text>
-            <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
-              Upcoming
-            </Text>
+            {aptsLoading ? (
+              <ActivityIndicator size="small" color="#818cf8" />
+            ) : (
+              <Text style={[styles.statValue, { color: '#818cf8' }]}>
+                {upcomingAppointments.length}
+              </Text>
+            )}
           </TouchableOpacity>
 
           {/* Active Prescriptions */}
@@ -509,17 +511,20 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={`${activeRxCount} active prescriptions`}
             accessibilityHint="Double tap to view your prescriptions"
-            className="flex-1 bg-card border border-border rounded-2xl p-3 items-center"
+            style={[
+              styles.statCard,
+              { borderColor: 'rgba(16,185,129,0.18)', backgroundColor: 'rgba(16,185,129,0.06)' },
+            ]}
           >
-            <View className="w-8 h-8 rounded-full bg-emerald-500/10 items-center justify-center mb-1.5">
-              <Pill size={16} color="#10b981" />
+            <View style={styles.statCardTop}>
+              <Text style={styles.statLabel}>Active Rx</Text>
+              <Pill size={14} color="#10b981" strokeWidth={2} />
             </View>
-            <Text className="text-xl font-bold text-foreground">
-              {rxLoading ? '--' : activeRxCount}
-            </Text>
-            <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
-              Active Rx
-            </Text>
+            {rxLoading ? (
+              <ActivityIndicator size="small" color="#10b981" />
+            ) : (
+              <Text style={[styles.statValue, { color: '#10b981' }]}>{activeRxCount}</Text>
+            )}
           </TouchableOpacity>
 
           {/* Wallet Balance */}
@@ -533,16 +538,17 @@ export default function HomeScreen() {
             accessibilityRole="button"
             accessibilityLabel={`Wallet balance ${format(balance)}`}
             accessibilityHint="Double tap to view your wallet"
-            className="flex-1 bg-card border border-border rounded-2xl p-3 items-center"
+            style={[
+              styles.statCard,
+              { borderColor: 'rgba(14,165,233,0.18)', backgroundColor: 'rgba(14,165,233,0.06)' },
+            ]}
           >
-            <View className="w-8 h-8 rounded-full bg-sky-500/10 items-center justify-center mb-1.5">
-              <Wallet size={16} color="#0ea5e9" />
+            <View style={styles.statCardTop}>
+              <Text style={styles.statLabel}>Wallet</Text>
+              <Wallet size={14} color="#0ea5e9" strokeWidth={2} />
             </View>
-            <Text className="text-lg font-bold text-foreground" numberOfLines={1}>
+            <Text style={[styles.statValue, { color: '#0ea5e9', fontSize: 16 }]} numberOfLines={1}>
               {format(balance)}
-            </Text>
-            <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
-              Wallet
             </Text>
           </TouchableOpacity>
         </View>
@@ -555,46 +561,20 @@ export default function HomeScreen() {
               .getParent()
               ?.navigate('Profile', { screen: 'Wallet', params: { initialTab: 'credits' } })
           }
-          style={{
-            marginHorizontal: 20,
-            marginTop: 12,
-            backgroundColor: colors.card,
-            borderWidth: 1,
-            borderColor: `${colors.accent}30`,
-            borderRadius: 16,
-            padding: 14,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 12,
-          }}
+          style={styles.creditsCard}
         >
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: `${colors.accent}15`,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
+          <View style={styles.creditsIcon}>
             <Sparkles size={18} color={colors.accent} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
-              AI Health Credits
-            </Text>
-            <Text style={{ fontSize: 10, color: colors.mutedForeground, marginTop: 1 }}>
-              Generate detailed health reports
-            </Text>
+            <Text style={styles.creditsTitle}>AI Health Credits</Text>
+            <Text style={styles.creditsSubtitle}>Generate detailed health reports</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.foreground }}>
+            <Text style={styles.creditsValue}>
               {creditsLoading ? '--' : hasUnlimited ? '\u221E' : totalAvailable}
             </Text>
-            <Text style={{ fontSize: 10, color: colors.mutedForeground }}>
-              {hasUnlimited ? 'Unlimited' : 'credits'}
-            </Text>
+            <Text style={styles.creditsUnit}>{hasUnlimited ? 'Unlimited' : 'credits'}</Text>
           </View>
           <ChevronRight size={16} color={colors.mutedForeground} />
         </TouchableOpacity>
@@ -610,16 +590,30 @@ export default function HomeScreen() {
                 onPress={action.onPress}
                 accessibilityRole="button"
                 accessibilityLabel={`${action.title}, ${action.subtitle}`}
-                className="bg-card border border-border rounded-2xl p-4"
-                style={{ width: '48%', flexGrow: 1 }}
+                style={[
+                  styles.actionCard,
+                  {
+                    width: '48%',
+                    flexGrow: 1,
+                    borderColor: `${action.accentColor}22`,
+                    borderTopColor: `${action.accentColor}60`,
+                  },
+                ]}
               >
                 <View
-                  className={`w-10 h-10 rounded-full items-center justify-center ${action.bg} mb-2.5`}
+                  style={[
+                    styles.actionIcon,
+                    {
+                      backgroundColor: `${action.accentColor}12`,
+                      borderWidth: 1,
+                      borderColor: `${action.accentColor}28`,
+                    },
+                  ]}
                 >
                   {action.icon}
                 </View>
-                <Text className="text-sm font-semibold text-foreground">{action.title}</Text>
-                <Text className="text-[10px] text-muted-foreground mt-0.5">{action.subtitle}</Text>
+                <Text style={styles.actionTitle}>{action.title}</Text>
+                <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -827,8 +821,17 @@ export default function HomeScreen() {
                     style={{ width: 220 }}
                   >
                     <View className="flex-row items-center gap-2 mb-2">
-                      <View className="w-7 h-7 rounded-full bg-muted items-center justify-center">
-                        <IconComp size={14} color={colors.mutedForeground} />
+                      <View
+                        style={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: 9,
+                          backgroundColor: `${priorityColor}15`,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <IconComp size={14} color={priorityColor} />
                       </View>
                       <View className="flex-1" />
                       <View
@@ -874,3 +877,100 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  // ── Quick Stats Row ────────────────────────────────────────────────────────
+  statCard: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 14,
+    borderWidth: 1,
+  },
+  statCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: colors.mutedForeground,
+    letterSpacing: 0.1,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  // ── AI Credits Card ────────────────────────────────────────────────────────
+  creditsCard: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: `${colors.accent}25`,
+    borderRadius: 20,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  creditsIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: `${colors.accent}12`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  creditsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.foreground,
+    letterSpacing: -0.2,
+  },
+  creditsSubtitle: {
+    fontSize: 11,
+    color: colors.mutedForeground,
+    marginTop: 2,
+  },
+  creditsValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.foreground,
+    letterSpacing: -0.5,
+  },
+  creditsUnit: {
+    fontSize: 10,
+    color: colors.mutedForeground,
+    marginTop: 1,
+  },
+  // ── Quick Actions Grid ─────────────────────────────────────────────────────
+  actionCard: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderTopWidth: 2,
+    borderRadius: 20,
+    padding: 16,
+  },
+  actionIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  actionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.foreground,
+    letterSpacing: -0.2,
+  },
+  actionSubtitle: {
+    fontSize: 11,
+    color: colors.mutedForeground,
+    marginTop: 2,
+  },
+});
