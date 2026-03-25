@@ -337,36 +337,48 @@ export const appleHealthService = {
       return { synced: 0, errors };
     }
 
-    // For each dataType, keep only the most recent sample — the Vitals API stores
-    // one current value per field (not a time series).
-    const latestByType = new Map<string, HealthSample>();
+    // Group all samples by data type, then sync ALL readings (not just latest).
+    // The Vitals API stores arrays (time series), so each reading gets $push'd.
+    // Batch by sending one API call per data type with the most recent reading,
+    // then follow up with remaining readings in chunks.
+    const byType = new Map<string, HealthSample[]>();
     for (const sample of healthData) {
-      const existing = latestByType.get(sample.dataType);
-      if (!existing || sample.recordedAt > existing.recordedAt) {
-        latestByType.set(sample.dataType, sample);
-      }
+      const arr = byType.get(sample.dataType) || [];
+      arr.push(sample);
+      byType.set(sample.dataType, arr);
     }
 
-    // Build the POST /vitals payload:
-    // { [vitalsApiField]: { value: String, unit: String, updatedAt: Date } }
-    const vitalsPayload: Record<string, { value: string; unit: string; updatedAt: string }> = {};
-    for (const [dataType, sample] of latestByType.entries()) {
+    let totalSynced = 0;
+
+    // Send readings in batches — one call per reading to avoid payload limits
+    // but limit to the most recent 50 per type to avoid overwhelming the API
+    const MAX_PER_TYPE = 50;
+    for (const [dataType, samples] of byType.entries()) {
       const apiField = HEALTHKIT_TO_VITALS_FIELD[dataType];
-      if (apiField) {
-        vitalsPayload[apiField] = {
-          value: String(sample.value),
-          unit: sample.unit,
-          updatedAt: sample.recordedAt,
-        };
+      if (!apiField) continue;
+
+      // Sort newest first, take up to MAX_PER_TYPE
+      const sorted = samples
+        .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))
+        .slice(0, MAX_PER_TYPE);
+
+      for (const sample of sorted) {
+        try {
+          await vitalsService.create({
+            [apiField]: {
+              value: String(sample.value),
+              unit: sample.unit,
+              updatedAt: sample.recordedAt,
+            },
+          });
+          totalSynced++;
+        } catch (e: any) {
+          errors.push(`Save ${dataType}: ${e.message}`);
+          break; // Stop syncing this type on error
+        }
       }
     }
 
-    try {
-      await vitalsService.create(vitalsPayload);
-    } catch (e: any) {
-      errors.push(`Save to vitals: ${e.message}`);
-    }
-
-    return { synced: latestByType.size, errors };
+    return { synced: totalSynced, errors };
   },
 };

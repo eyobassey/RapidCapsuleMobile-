@@ -288,6 +288,18 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
         if (syncResult.synced > 0) {
           Alert.alert('Sync Complete', `${syncResult.synced} health readings synced.`);
         }
+        // Ensure the integration shows as connected in the UI
+        // (backend may take a moment to reflect the status)
+        setIntegrations((prev: any[]) => {
+          const existing = prev.find((i: any) => i.provider === appId);
+          if (existing) {
+            return prev.map((i: any) => (i.provider === appId ? { ...i, status: 'connected' } : i));
+          }
+          return [
+            ...prev,
+            { provider: appId, status: 'connected', lastSyncAt: new Date().toISOString() },
+          ];
+        });
         await loadIntegrations();
       } else if (result?.requiresNativeApp) {
         Alert.alert('Not Available', 'This provider requires native SDK support.');
