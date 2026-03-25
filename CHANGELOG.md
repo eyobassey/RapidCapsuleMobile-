@@ -1,3 +1,9 @@
+## [1.12.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.12.0...v1.12.1) (2026-03-25)
+
+### Bug Fixes
+
+- sync all Apple Health readings and fix toggle state ([84c8762](https://github.com/eyobassey/RapidCapsuleMobile-/commit/84c87628b57d16dc053536be129fb771df78e164))
+
 # [1.12.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.11.2...v1.12.0) (2026-03-25)
 
 ### Bug Fixes
