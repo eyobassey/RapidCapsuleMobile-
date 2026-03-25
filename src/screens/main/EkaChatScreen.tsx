@@ -43,13 +43,14 @@ import {
   Platform,
   TextInput as RNTextInput,
   ScrollView,
+  StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import LinearGradient from 'react-native-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Polyline, Circle as SvgCircle, Text as SvgText } from 'react-native-svg';
 import WebView from 'react-native-webview';
 import { Text } from '../../components/ui/Text';
@@ -840,6 +841,7 @@ export default function EkaChatScreen() {
   const navigation = useNavigation<any>();
   const scrollRef = useRef<ScrollView>(null);
   const inputRef = useRef<RNTextInput>(null);
+  const { bottom } = useSafeAreaInsets();
 
   // Store
   const messages = useEkaStore((s) => s.messages);
@@ -1127,16 +1129,7 @@ export default function EkaChatScreen() {
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Go to home"
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                backgroundColor: colors.background,
-                borderWidth: 1,
-                borderColor: colors.border,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              style={ekaStyles.headerBtn}
             >
               <Home size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
@@ -1145,16 +1138,7 @@ export default function EkaChatScreen() {
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Open conversation history"
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                backgroundColor: colors.background,
-                borderWidth: 1,
-                borderColor: colors.border,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+              style={ekaStyles.headerBtn}
             >
               <PanelLeft size={18} color={colors.mutedForeground} />
             </TouchableOpacity>
@@ -1171,21 +1155,7 @@ export default function EkaChatScreen() {
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 9 }}>
-              <View
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 10,
-                  backgroundColor: colors.primary,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  shadowColor: colors.primary,
-                  shadowOffset: { width: 0, height: 3 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 6,
-                  elevation: 4,
-                }}
-              >
+              <View style={ekaStyles.ekaIconContainer}>
                 <BrainCircuit size={17} color={colors.white} />
               </View>
               <View>
@@ -1507,7 +1477,9 @@ export default function EkaChatScreen() {
 
       {/* ─── Sidebar Overlay ────────────────────── */}
       {sidebarOpen && (
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }}>
+        <View
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: bottom, zIndex: 100 }}
+        >
           <Animated.View
             style={{
               position: 'absolute',
@@ -1888,17 +1860,8 @@ function WelcomeScreen({ onAction }: { onAction: (a: (typeof QUICK_ACTIONS)[numb
         Your AI health companion. Ask me anything — symptoms, prescriptions, recovery, and more.
       </Text>
 
-      {/* Quick action grid — 3 across for breathing room */}
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: 10,
-          marginTop: 28,
-          paddingHorizontal: 4,
-        }}
-      >
+      {/* Quick action chips — wrapping pill row, one chip per action */}
+      <View style={ekaStyles.qaChipRow}>
         {QUICK_ACTIONS.map((action, i) => {
           const Icon = action.icon;
           return (
@@ -1908,42 +1871,16 @@ function WelcomeScreen({ onAction }: { onAction: (a: (typeof QUICK_ACTIONS)[numb
               onPress={() => onAction(action)}
               accessibilityRole="button"
               accessibilityLabel={action.label}
-              style={{
-                width: (SCREEN_WIDTH - 68) / 3,
-                alignItems: 'center',
-                paddingVertical: 14,
-                paddingHorizontal: 6,
-                backgroundColor: colors.card,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 16,
-                gap: 8,
-              }}
+              style={[
+                ekaStyles.qaChip,
+                {
+                  backgroundColor: `${action.color}0E`,
+                  borderColor: `${action.color}35`,
+                },
+              ]}
             >
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 12,
-                  backgroundColor: `${action.color}18`,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Icon size={20} color={action.color} />
-              </View>
-              <Text
-                numberOfLines={2}
-                style={{
-                  fontSize: 11,
-                  fontWeight: '600',
-                  color: colors.foreground,
-                  textAlign: 'center',
-                  lineHeight: 15,
-                }}
-              >
-                {action.label}
-              </Text>
+              <Icon size={13} color={action.color} strokeWidth={2.5} />
+              <Text style={[ekaStyles.qaChipLabel, { color: action.color }]}>{action.label}</Text>
             </TouchableOpacity>
           );
         })}
@@ -5754,3 +5691,58 @@ function formatRelativeDate(dateStr: string): string {
   if (diffDays < 7) return `${diffDays}d ago`;
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
+
+// ─── Shared Styles ──────────────────────────────────
+const ekaStyles = StyleSheet.create({
+  // Header icon buttons
+  headerBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Header Eka brain icon container
+  ekaIconContainer: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: `${colors.primary}40`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  // WelcomeScreen quick action chip row
+  qaChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 24,
+    paddingHorizontal: 16,
+  },
+  // WelcomeScreen quick action chip
+  qaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 13,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  // WelcomeScreen quick action chip label
+  qaChipLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+});
