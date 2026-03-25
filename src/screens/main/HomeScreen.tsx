@@ -361,7 +361,13 @@ export default function HomeScreen() {
               </View>
             </View>
           ) : score != null ? (
-            <View className="flex-row items-center gap-4">
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('HealthInsights')}
+              accessibilityRole="button"
+              accessibilityLabel={`Health score ${score}, tap to view insights`}
+              className="flex-row items-center gap-4"
+            >
               <HealthGauge score={score} size={130} />
               <View className="flex-1 gap-1.5">
                 <View className="flex-row items-center gap-2">
@@ -380,7 +386,8 @@ export default function HomeScreen() {
                   It is based on your vitals, checkups and activity data.
                 </Text>
               </View>
-            </View>
+              <ChevronRight size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
           ) : (
             <TouchableOpacity
               activeOpacity={0.7}
@@ -521,7 +528,7 @@ export default function HomeScreen() {
             onPress={() =>
               navigation
                 .getParent()
-                ?.navigate('Profile', { screen: 'Wallet', params: { initialTab: 'balance' } })
+                ?.navigate('Profile', { screen: 'Wallet', params: { initialTab: 'wallet' } })
             }
             accessibilityRole="button"
             accessibilityLabel={`Wallet balance ${format(balance)}`}
