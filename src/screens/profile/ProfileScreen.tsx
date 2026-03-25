@@ -339,7 +339,7 @@ export default function ProfileScreen() {
 
         {/* Menu Sections */}
         {sections.map((section) => (
-          <View key={section.title} className="mt-6">
+          <View key={section.title} className="mt-7">
             <Text style={styles.sectionHeader}>{section.title}</Text>
             <View className="mx-4 mt-2 bg-card border border-border/40 rounded-[20px] overflow-hidden">
               {section.items.map((item, _idx) => (
@@ -349,10 +349,7 @@ export default function ProfileScreen() {
                   onPress={item.onPress}
                   style={[styles.menuItem, !item.isLast && styles.menuItemBorder]}
                 >
-                  <View
-                    style={{ backgroundColor: item.iconBg }}
-                    className="w-10 h-10 rounded-[12px] items-center justify-center mr-4"
-                  >
+                  <View style={[styles.menuIconContainer, { backgroundColor: item.iconBg }]}>
                     {item.icon}
                   </View>
 
@@ -365,24 +362,18 @@ export default function ProfileScreen() {
                     ) : null}
                   </View>
 
-                  <ChevronRight size={16} color={colors.mutedForeground} opacity={0.4} />
+                  <ChevronRight size={15} color={colors.mutedForeground} opacity={0.5} />
                 </TouchableOpacity>
               ))}
             </View>
           </View>
         ))}
 
-        {/* Action List Section (Logout) */}
-        <View className="mx-4 mt-8">
+        {/* Sign Out */}
+        <View className="mx-4 mt-10">
           <TouchableOpacity activeOpacity={0.7} onPress={handleLogout} style={styles.logoutItem}>
-            <View className="w-10 h-10 rounded-[12px] bg-destructive/10 items-center justify-center mr-4">
-              <LogOut size={20} color={colors.destructive} />
-            </View>
-            <View className="flex-1">
-              <Text style={styles.logoutText}>Sign Out</Text>
-              <Text style={styles.logoutSubtitle}>Sign out of your account</Text>
-            </View>
-            <ChevronRight size={16} color={colors.destructive} opacity={0.4} />
+            <LogOut size={17} color={colors.destructive} strokeWidth={2} />
+            <Text style={styles.logoutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
 
@@ -568,55 +559,59 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   sectionHeader: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '600',
     color: colors.mutedForeground,
-    textTransform: 'uppercase',
-    letterSpacing: 1.1,
-    paddingLeft: 24,
-    opacity: 0.5,
+    letterSpacing: 0.3,
+    paddingLeft: 20,
+  },
+  menuIconContainer: {
+    width: 42,
+    height: 42,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
   menuItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(255,255,255,0.07)',
   },
   menuItemTitle: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
     color: colors.foreground,
-    letterSpacing: -0.1,
+    letterSpacing: -0.2,
   },
   menuItemSubtitle: {
     fontSize: 12,
     color: colors.mutedForeground,
     marginTop: 2,
     fontWeight: '400',
+    lineHeight: 16,
   },
   logoutItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: colors.card,
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 15,
+    backgroundColor: 'rgba(244, 63, 94, 0.08)',
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(244, 63, 94, 0.1)',
+    borderColor: 'rgba(244, 63, 94, 0.15)',
   },
   logoutText: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '600',
     color: colors.destructive,
-  },
-  logoutSubtitle: {
-    fontSize: 11,
-    color: colors.destructive,
-    opacity: 0.6,
-    marginTop: 1,
-    fontWeight: '500',
+    letterSpacing: -0.1,
   },
   footerText: {
     fontSize: 10,
