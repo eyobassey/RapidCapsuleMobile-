@@ -476,7 +476,14 @@ export default function HomeScreen() {
         {/* ---- Quick Stats Row ---- */}
         <View className="flex-row mx-5 mt-4 gap-3">
           {/* Upcoming Appointments */}
-          <View className="flex-1 bg-card border border-border rounded-2xl p-3 items-center">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.getParent()?.navigate('Bookings')}
+            accessibilityRole="button"
+            accessibilityLabel={`${upcomingAppointments.length} upcoming appointments`}
+            accessibilityHint="Double tap to view your appointments"
+            className="flex-1 bg-card border border-border rounded-2xl p-3 items-center"
+          >
             <View className="w-8 h-8 rounded-full bg-indigo-500/10 items-center justify-center mb-1.5">
               <CalendarDays size={16} color="#818cf8" />
             </View>
@@ -486,10 +493,17 @@ export default function HomeScreen() {
             <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
               Upcoming
             </Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Active Prescriptions */}
-          <View className="flex-1 bg-card border border-border rounded-2xl p-3 items-center">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.getParent()?.navigate('Pharmacy')}
+            accessibilityRole="button"
+            accessibilityLabel={`${activeRxCount} active prescriptions`}
+            accessibilityHint="Double tap to view your prescriptions"
+            className="flex-1 bg-card border border-border rounded-2xl p-3 items-center"
+          >
             <View className="w-8 h-8 rounded-full bg-emerald-500/10 items-center justify-center mb-1.5">
               <Pill size={16} color="#10b981" />
             </View>
@@ -499,10 +513,21 @@ export default function HomeScreen() {
             <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
               Active Rx
             </Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Wallet Balance */}
-          <View className="flex-1 bg-card border border-border rounded-2xl p-3 items-center">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() =>
+              navigation
+                .getParent()
+                ?.navigate('Profile', { screen: 'Wallet', params: { initialTab: 'balance' } })
+            }
+            accessibilityRole="button"
+            accessibilityLabel={`Wallet balance ${format(balance)}`}
+            accessibilityHint="Double tap to view your wallet"
+            className="flex-1 bg-card border border-border rounded-2xl p-3 items-center"
+          >
             <View className="w-8 h-8 rounded-full bg-sky-500/10 items-center justify-center mb-1.5">
               <Wallet size={16} color="#0ea5e9" />
             </View>
@@ -512,7 +537,7 @@ export default function HomeScreen() {
             <Text className="text-[10px] text-muted-foreground uppercase tracking-wide">
               Wallet
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* ---- AI Credits Card ---- */}
