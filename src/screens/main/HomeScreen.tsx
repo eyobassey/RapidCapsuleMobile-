@@ -635,6 +635,12 @@ export default function HomeScreen() {
               accessibilityRole="button"
               accessibilityLabel="Next appointment"
               accessibilityHint="Double tap to view appointment details"
+              onPress={() =>
+                navigation.getParent()?.navigate('Bookings', {
+                  screen: 'AppointmentDetail',
+                  params: { id: nextAppointment._id || nextAppointment.id },
+                })
+              }
               className="bg-card border border-border rounded-2xl p-4 overflow-hidden relative"
             >
               {/* Decorative accent strip */}
