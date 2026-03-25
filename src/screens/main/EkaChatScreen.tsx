@@ -1805,7 +1805,7 @@ function ConversationGroup({
 // ═══════════════════════════════════════════════════════
 function WelcomeScreen({ onAction }: { onAction: (a: (typeof QUICK_ACTIONS)[number]) => void }) {
   return (
-    <View style={{ alignItems: 'center', paddingTop: 24, paddingBottom: 20 }}>
+    <View style={{ width: '100%', alignItems: 'center', paddingTop: 24, paddingBottom: 20 }}>
       {/* Avatar with glow ring */}
       <View style={{ position: 'relative', marginBottom: 20 }}>
         <View
@@ -5726,6 +5726,7 @@ const ekaStyles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
+    alignSelf: 'stretch',
     gap: 8,
     marginTop: 24,
     paddingHorizontal: 16,
