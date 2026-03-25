@@ -10,7 +10,6 @@ import {
   FileText,
   Gift,
   HeartPulse,
-  HelpCircle,
   Info,
   LogOut,
   Pill,
@@ -185,13 +184,13 @@ export default function ProfileScreen() {
       {
         title: 'Support & Info',
         items: [
-          {
-            icon: <HelpCircle size={18} color={colors.primary} />,
-            iconBg: `${colors.primary}15`,
-            title: 'Help Center',
-            subtitle: 'FAQs & technical support',
-            onPress: () => {},
-          },
+          // {
+          //   icon: <HelpCircle size={18} color={colors.primary} />,
+          //   iconBg: `${colors.primary}15`,
+          //   title: 'Help Center',
+          //   subtitle: 'FAQs & technical support',
+          //   onPress: () => {},
+          // },
           {
             icon: <FileText size={18} color={colors.mutedForeground} />,
             iconBg: `${colors.mutedForeground}15`,
