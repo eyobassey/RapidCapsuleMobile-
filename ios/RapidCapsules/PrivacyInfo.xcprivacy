@@ -41,7 +41,18 @@
 	</array>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
+	<!-- NSPrivacyTracking must be true because the app calls
+	     requestTrackingAuthorization() via react-native-tracking-transparency.
+	     NSPrivacyTrackingDomains lists every internet domain to which the app
+	     sends data used for tracking (ATT-gated). Add or remove domains to
+	     match your actual analytics/attribution stack. -->
 	<key>NSPrivacyTracking</key>
-	<false/>
+	<true/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array>
+		<!-- OneSignal analytics & push attribution -->
+		<string>onesignal.com</string>
+		<string>api.onesignal.com</string>
+	</array>
 </dict>
 </plist>

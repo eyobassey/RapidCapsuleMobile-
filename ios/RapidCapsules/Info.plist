@@ -47,6 +47,8 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>RapidCapsule uses Face ID to securely sign you in and protect your health data.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>RapidCapsule uses limited analytics to improve app performance and personalise your experience. No personal health data is shared with advertisers.</string>
 	<key>NSCalendarsUsageDescription</key>
