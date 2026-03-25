@@ -3,6 +3,7 @@ import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '../store/auth';
+import { useTrackingTransparency } from '../hooks/useTrackingTransparency';
 import AuthStack from './AuthStack';
 import OnboardingStack from './OnboardingStack';
 import MainTabs from './MainTabs';
@@ -20,6 +21,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const { isLoading, isAuthenticated, needsOnboarding, bootstrapForApp } = useAuthStore();
+
+  // Request ATT after bootstrap so the dialog appears over the home screen
+  useTrackingTransparency();
 
   useEffect(() => {
     let cancelled = false;
