@@ -301,10 +301,13 @@ export default function SelectSpecialtyScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: only run on mount
   }, []);
 
-  // Show suggestion only if no linked checkup and no recent checkups
+  // Show "take a health checkup" prompt only when there's no data to build an AI suggestion from
   useEffect(() => {
     if (!hasLinkedCheckup && recentCheckups.length === 0 && categories.length > 0) {
       setShowSuggestion(true);
+    } else if (recentCheckups.length > 0) {
+      // Checkups loaded — AI tile will show instead; dismiss the prompt
+      setShowSuggestion(false);
     }
   }, [recentCheckups, hasLinkedCheckup, categories]);
 

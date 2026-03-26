@@ -207,6 +207,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
         error: err?.response?.data?.message || err?.message || 'Failed to cancel appointment',
         isLoading: false,
       });
+      throw err;
     }
   },
 

@@ -142,6 +142,9 @@ const CONSENT_ITEMS = [
 type ConsentId = (typeof CONSENT_ITEMS)[number]['id'];
 type ConsentItem = (typeof CONSENT_ITEMS)[number];
 
+// Stable reference — derived from a constant so it never changes
+const ALL_REQUIRED_IDS: ConsentId[] = CONSENT_ITEMS.filter((i) => i.required).map((i) => i.id);
+
 // ─── Checkbox ─────────────────────────────────────────────
 function ConsentCheckbox({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
   return (
@@ -246,8 +249,7 @@ export default function ConsentScreen() {
   const [checked, setChecked] = useState<Set<ConsentId>>(new Set());
   const [detailItem, setDetailItem] = useState<ConsentItem | null>(null);
 
-  const allRequired = CONSENT_ITEMS.filter((i) => i.required).map((i) => i.id);
-  const allChecked = allRequired.every((id) => checked.has(id));
+  const allChecked = ALL_REQUIRED_IDS.every((id) => checked.has(id));
 
   const toggleItem = useCallback((id: ConsentId) => {
     setChecked((prev) => {
@@ -265,9 +267,9 @@ export default function ConsentScreen() {
     if (allChecked) {
       setChecked(new Set());
     } else {
-      setChecked(new Set(allRequired));
+      setChecked(new Set(ALL_REQUIRED_IDS));
     }
-  }, [allChecked, allRequired]);
+  }, [allChecked]);
 
   const handleSheetAccept = useCallback(() => {
     if (detailItem) toggleItem(detailItem.id);
@@ -382,7 +384,7 @@ export default function ConsentScreen() {
       <View style={[styles.footer, { paddingBottom: bottom }]}>
         {!allChecked && (
           <Text style={styles.footerHint}>
-            Accept all {allRequired.length} required agreements to continue
+            Accept all {ALL_REQUIRED_IDS.length} required agreements to continue
           </Text>
         )}
         <Button variant="primary" onPress={handleContinue} disabled={!allChecked}>

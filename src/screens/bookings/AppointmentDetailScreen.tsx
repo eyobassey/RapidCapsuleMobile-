@@ -72,8 +72,8 @@ export default function AppointmentDetailScreen() {
   // Ticks every minute so the join button enables itself when the window opens
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
+    const timerId = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timerId);
   }, []);
 
   const {
@@ -200,8 +200,12 @@ export default function AppointmentDetailScreen() {
           text: 'Cancel Appointment',
           style: 'destructive',
           onPress: async () => {
-            await cancelAppointment(id);
-            navigation.goBack();
+            try {
+              await cancelAppointment(id);
+              navigation.goBack();
+            } catch {
+              Alert.alert('Error', 'Failed to cancel appointment. Please try again.');
+            }
           },
         },
       ]
