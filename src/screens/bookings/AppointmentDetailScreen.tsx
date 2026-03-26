@@ -16,7 +16,7 @@ import {
   Video,
   XCircle,
 } from 'lucide-react-native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ReceiptSheet from '../../components/appointments/ReceiptSheet';
@@ -68,6 +68,12 @@ export default function AppointmentDetailScreen() {
   const { id } = route.params;
   const [showReschedule, setShowReschedule] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  // Ticks every minute so the join button enables itself when the window opens
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const {
     currentAppointment: appointment,
@@ -81,13 +87,13 @@ export default function AppointmentDetailScreen() {
   }, [id, fetchAppointmentById]);
 
   const specialist = appointment?.specialist_id || appointment?.specialist || {};
-  const profile = specialist.profile || {};
-  const specialistName = profile.first_name
-    ? `Dr. ${profile.first_name} ${profile.last_name || ''}`
-    : specialist.name || 'Specialist';
+  const profile = specialist?.profile || {};
+  const specialistName = profile?.first_name
+    ? `Dr. ${profile?.first_name} ${profile?.last_name || ''}`
+    : specialist?.name || 'Specialist';
   const specialty =
     appointment?.specialist_category?.name ||
-    specialist.specialist_category?.name ||
+    specialist?.specialist_category?.name ||
     appointment?.specialty ||
     'General Practice';
   const channel = appointment?.meeting_channel || 'zoom';
@@ -95,11 +101,49 @@ export default function AppointmentDetailScreen() {
     appointment?.appointment_fee || appointment?.consultation_fee || appointment?.fee || 0;
   const status = appointment?.status || 'OPEN';
   const duration = appointment?.duration || 30;
-  const rating = specialist.average_rating || specialist.rating || 0;
+  const rating = specialist?.average_rating || specialist?.rating || 0;
 
   const isUpcoming = status === 'OPEN' || status === 'ONGOING' || status === 'RESCHEDULED';
   const isCompleted = status === 'COMPLETED';
   const isCancelled = status === 'CANCELLED';
+
+  // ── Join-window logic (timezone-safe: all comparisons in UTC ms) ──────────
+  const startMs = useMemo(() => {
+    const raw = appointment?.start_time || appointment?.appointment_date || appointment?.date;
+    if (!raw) return null;
+    const ms = new Date(raw).getTime();
+    return Number.isNaN(ms) ? null : ms;
+  }, [appointment]);
+
+  /** True when within the joinable window: 15 min before start → end of meeting */
+  const canJoinMeeting = useMemo(() => {
+    if (!isUpcoming) return false;
+    if (startMs === null) return true; // no time info → always allow
+    const windowStart = startMs - 15 * 60 * 1000;
+    const windowEnd = startMs + duration * 60 * 1000;
+    return now >= windowStart && now <= windowEnd;
+  }, [isUpcoming, startMs, duration, now]);
+
+  /** Human-readable countdown until the join window opens, or null if already open/no info */
+  const joinCountdown = useMemo<string | null>(() => {
+    if (startMs === null || canJoinMeeting) return null;
+    const msUntilWindow = startMs - 15 * 60 * 1000 - now;
+    if (msUntilWindow <= 0) return null;
+    const totalMin = Math.ceil(msUntilWindow / 60_000);
+    if (totalMin >= 60) {
+      const hrs = Math.floor(totalMin / 60);
+      const mins = totalMin % 60;
+      return mins > 0 ? `Available in ${hrs}h ${mins}m` : `Available in ${hrs}h`;
+    }
+    return `Available in ${totalMin}m`;
+  }, [startMs, canJoinMeeting, now]);
+
+  const isNonEmptyString = (v: unknown): v is string =>
+    typeof v === 'string' && v.trim().length > 0;
+  const hasAnyNotes =
+    isNonEmptyString(appointment?.patient_notes) ||
+    isNonEmptyString(appointment?.specialist_notes) ||
+    isNonEmptyString(appointment?.notes);
 
   const meetingUrl =
     appointment?.join_url ||
@@ -164,9 +208,9 @@ export default function AppointmentDetailScreen() {
           {/* Section 1: Specialist Card */}
           <View className="bg-card border border-border rounded-2xl p-6 items-center mb-4">
             <Avatar
-              uri={profile.profile_photo || profile.profile_image}
-              firstName={profile.first_name}
-              lastName={profile.last_name}
+              uri={profile?.profile_photo || profile?.profile_image}
+              firstName={profile?.first_name}
+              lastName={profile?.last_name}
               size="lg"
             />
             <Text className="text-foreground text-xl font-bold mt-3">{specialistName}</Text>
@@ -205,10 +249,10 @@ export default function AppointmentDetailScreen() {
                   <Text className="text-muted-foreground text-xs">Date</Text>
                   <Text className="text-foreground text-sm font-medium">
                     {formatDate(
-                      appointment.start_time ||
-                        appointment.date ||
-                        appointment.appointment_date ||
-                        appointment.createdAt
+                      appointment?.start_time ||
+                        appointment?.date ||
+                        appointment?.appointment_date ||
+                        appointment?.createdAt
                     )}
                   </Text>
                 </View>
@@ -222,9 +266,9 @@ export default function AppointmentDetailScreen() {
                   <Text className="text-muted-foreground text-xs">Time</Text>
                   <Text className="text-foreground text-sm font-medium">
                     {formatTime(
-                      appointment.start_time ||
-                        appointment.time ||
-                        appointment.appointment_time ||
+                      appointment?.start_time ||
+                        appointment?.time ||
+                        appointment?.appointment_time ||
                         '00:00'
                     )}
                   </Text>
@@ -330,43 +374,76 @@ export default function AppointmentDetailScreen() {
             </View>
           )}
 
-          {/* Section 4: Notes */}
-          {(appointment?.patient_notes || appointment?.specialist_notes || appointment?.notes) && (
+          {/* Section 4: Notes — always visible for non-cancelled appointments */}
+          {!isCancelled && (
             <View className="bg-card border border-border rounded-2xl p-4 mb-4">
               <View className="flex-row items-center gap-2 mb-3">
                 <StickyNote size={16} color={colors.mutedForeground} />
                 <Text className="text-foreground font-bold text-sm">Notes</Text>
               </View>
 
-              {appointment?.patient_notes && (
-                <View className="mb-3">
-                  <Text className="text-muted-foreground text-xs uppercase tracking-wider mb-1">
-                    Your Notes
+              {hasAnyNotes ? (
+                <>
+                  {isNonEmptyString(appointment?.patient_notes) && (
+                    <View className="mb-3">
+                      <Text className="text-muted-foreground text-xs uppercase tracking-wider mb-1">
+                        Your Notes
+                      </Text>
+                      <Text className="text-foreground text-sm leading-relaxed">
+                        {appointment?.patient_notes}
+                      </Text>
+                    </View>
+                  )}
+                  {isNonEmptyString(appointment?.specialist_notes) && (
+                    <View>
+                      <Text className="text-muted-foreground text-xs uppercase tracking-wider mb-1">
+                        Specialist Notes
+                      </Text>
+                      <Text className="text-foreground text-sm leading-relaxed">
+                        {appointment?.specialist_notes}
+                      </Text>
+                    </View>
+                  )}
+                  {isNonEmptyString(appointment?.notes) &&
+                    !isNonEmptyString(appointment?.patient_notes) &&
+                    !isNonEmptyString(appointment?.specialist_notes) && (
+                      <Text className="text-foreground text-sm leading-relaxed">
+                        {appointment?.notes}
+                      </Text>
+                    )}
+                </>
+              ) : (
+                <View style={{ alignItems: 'center', paddingVertical: 20, gap: 8 }}>
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 16,
+                      backgroundColor: `${colors.mutedForeground}18`,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <StickyNote size={18} color={colors.mutedForeground} strokeWidth={1.5} />
+                  </View>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
+                    No notes yet
                   </Text>
-                  <Text className="text-foreground text-sm leading-relaxed">
-                    {appointment?.patient_notes}
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: colors.mutedForeground,
+                      textAlign: 'center',
+                      lineHeight: 18,
+                      paddingHorizontal: 16,
+                    }}
+                  >
+                    {isCompleted
+                      ? 'No notes were added for this appointment.'
+                      : 'Notes from you or your specialist will appear here.'}
                   </Text>
                 </View>
               )}
-
-              {appointment?.specialist_notes && (
-                <View>
-                  <Text className="text-muted-foreground text-xs uppercase tracking-wider mb-1">
-                    Specialist Notes
-                  </Text>
-                  <Text className="text-foreground text-sm leading-relaxed">
-                    {appointment?.specialist_notes}
-                  </Text>
-                </View>
-              )}
-
-              {appointment?.notes &&
-                !appointment?.patient_notes &&
-                !appointment?.specialist_notes && (
-                  <Text className="text-foreground text-sm leading-relaxed">
-                    {appointment?.notes}
-                  </Text>
-                )}
             </View>
           )}
 
@@ -390,10 +467,19 @@ export default function AppointmentDetailScreen() {
                 <Button
                   variant="primary"
                   onPress={handleJoinMeeting}
+                  disabled={!canJoinMeeting}
                   icon={<Video size={18} color={colors.white} />}
                 >
                   Join Meeting
                 </Button>
+                {joinCountdown && (
+                  <View className="flex-row items-center justify-center gap-1.5 -mt-1">
+                    <Clock size={12} color={colors.mutedForeground} />
+                    <Text className="text-muted-foreground text-xs text-center">
+                      {joinCountdown} · Button activates 15 min before start
+                    </Text>
+                  </View>
+                )}
                 <Button variant="outline" onPress={() => setShowReschedule(true)}>
                   Reschedule
                 </Button>
