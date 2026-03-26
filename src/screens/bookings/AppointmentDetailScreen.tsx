@@ -40,6 +40,7 @@ const channelIcons: Record<string, React.ReactNode> = {
   whatsapp: <MessageSquare size={18} color={colors.success} />,
   phone: <Phone size={18} color={colors.secondary} />,
   in_person: <MapPin size={18} color={colors.accent} />,
+  chat: <MessageSquare size={18} color={colors.primary} />,
 };
 
 function DetailSkeleton() {
@@ -106,6 +107,7 @@ export default function AppointmentDetailScreen() {
   const isUpcoming = status === 'OPEN' || status === 'ONGOING' || status === 'RESCHEDULED';
   const isCompleted = status === 'COMPLETED';
   const isCancelled = status === 'CANCELLED';
+  const isChat = channel === 'chat';
 
   // ── Join-window logic (timezone-safe: all comparisons in UTC ms) ──────────
   const startMs = useMemo(() => {
@@ -137,6 +139,27 @@ export default function AppointmentDetailScreen() {
     }
     return `Available in ${totalMin}m`;
   }, [startMs, canJoinMeeting, now]);
+
+  /** True when the appointment start time has been reached (chat channel) */
+  const canStartChat = useMemo(() => {
+    if (!isUpcoming) return false;
+    if (startMs === null) return true;
+    return now >= startMs;
+  }, [isUpcoming, startMs, now]);
+
+  /** Countdown until the chat appointment starts */
+  const chatCountdown = useMemo<string | null>(() => {
+    if (startMs === null || canStartChat) return null;
+    const msUntilStart = startMs - now;
+    if (msUntilStart <= 0) return null;
+    const totalMin = Math.ceil(msUntilStart / 60_000);
+    if (totalMin >= 60) {
+      const hrs = Math.floor(totalMin / 60);
+      const mins = totalMin % 60;
+      return mins > 0 ? `Available in ${hrs}h ${mins}m` : `Available in ${hrs}h`;
+    }
+    return `Available in ${totalMin}m`;
+  }, [startMs, canStartChat, now]);
 
   const isNonEmptyString = (v: unknown): v is string =>
     typeof v === 'string' && v.trim().length > 0;
@@ -184,6 +207,15 @@ export default function AppointmentDetailScreen() {
       ]
     );
   }, [id, cancelAppointment, navigation]);
+
+  const handleStartChat = useCallback(() => {
+    const convId = appointment?.conversation_id || appointment?.chat_conversation_id;
+    if (convId) {
+      (navigation as any).navigate('Home', { screen: 'Chat', params: { conversationId: convId } });
+    } else {
+      (navigation as any).navigate('Home', { screen: 'ConversationsList' });
+    }
+  }, [appointment, navigation]);
 
   const handleRate = useCallback(() => {
     navigation.navigate('RateAppointment', { id });
@@ -322,7 +354,7 @@ export default function AppointmentDetailScreen() {
           )}
 
           {/* Section 3: Meeting Details */}
-          {isUpcoming && (meetingUrl || meetingId) && (
+          {isUpcoming && !isChat && (meetingUrl || meetingId) && (
             <View className="bg-card border border-border rounded-2xl p-4 mb-4">
               <View className="flex-row items-center gap-2 mb-3">
                 <Video size={16} color={colors.primary} />
@@ -462,7 +494,34 @@ export default function AppointmentDetailScreen() {
 
           {/* Section 5: Actions */}
           <View className="gap-3 mt-2">
-            {isUpcoming && (
+            {isUpcoming && isChat && (
+              <>
+                <Button
+                  variant="primary"
+                  onPress={handleStartChat}
+                  disabled={!canStartChat}
+                  icon={<MessageSquare size={18} color={colors.white} />}
+                >
+                  Message Doctor
+                </Button>
+                {chatCountdown && (
+                  <View className="flex-row items-center justify-center gap-1.5 -mt-1">
+                    <Clock size={12} color={colors.mutedForeground} />
+                    <Text className="text-muted-foreground text-xs text-center">
+                      {chatCountdown} · Chat opens at appointment time
+                    </Text>
+                  </View>
+                )}
+                <Button variant="outline" onPress={() => setShowReschedule(true)}>
+                  Reschedule
+                </Button>
+                <Button variant="ghost" onPress={handleCancel}>
+                  <Text className="text-destructive font-bold text-base">Cancel Appointment</Text>
+                </Button>
+              </>
+            )}
+
+            {isUpcoming && !isChat && (
               <>
                 <Button
                   variant="primary"

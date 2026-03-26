@@ -286,6 +286,7 @@ export const MEETING_CHANNEL_LABELS: Record<string, string> = {
   whatsapp: 'WhatsApp',
   phone: 'Phone Call',
   in_person: 'In Person',
+  chat: 'In-App Chat',
 };
 
 export const DEFAULT_PHARMACY_ID = '693f961ebb4dc1fec542610a';
