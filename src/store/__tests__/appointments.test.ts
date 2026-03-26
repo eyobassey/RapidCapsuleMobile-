@@ -209,11 +209,27 @@ describe('useAppointmentsStore', () => {
   });
 
   describe('cancelAppointment', () => {
-    it('cancels and updates appointment status in list', async () => {
+    it('cancels and updates appointment status using _id field', async () => {
       useAppointmentsStore.setState({
         appointments: [
           { _id: 'apt-1', status: 'OPEN' },
           { _id: 'apt-2', status: 'OPEN' },
+        ],
+      });
+      svc.cancel.mockResolvedValue(undefined);
+
+      await useAppointmentsStore.getState().cancelAppointment('apt-1');
+
+      const apts = useAppointmentsStore.getState().appointments;
+      expect(apts[0].status).toBe('cancelled');
+      expect(apts[1].status).toBe('OPEN');
+    });
+
+    it('cancels and updates appointment status using id field (no _id)', async () => {
+      useAppointmentsStore.setState({
+        appointments: [
+          { id: 'apt-1', status: 'OPEN' },
+          { id: 'apt-2', status: 'OPEN' },
         ],
       });
       svc.cancel.mockResolvedValue(undefined);

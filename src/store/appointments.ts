@@ -199,7 +199,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
     try {
       await appointmentsService.cancel(id);
       const appointments = get().appointments.map((apt: any) =>
-        apt._id === id ? { ...apt, status: 'cancelled' } : apt
+        apt._id === id || apt.id === id ? { ...apt, status: 'cancelled' } : apt
       );
       set({ appointments, isLoading: false });
     } catch (err: any) {
