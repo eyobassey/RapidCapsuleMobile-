@@ -10,10 +10,10 @@ import {
   Plus,
 } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppointmentCard from '../../components/appointments/AppointmentCard';
-import { EmptyState, Header, Skeleton, TabBar } from '../../components/ui';
+import { Header, Skeleton, TabBar, Text } from '../../components/ui';
 import { useAppointmentsQuery } from '../../hooks/queries';
 import { useRefreshOnFocus } from '../../hooks/useRefresh';
 import { meetingService } from '../../services/meeting.service';
@@ -49,28 +49,236 @@ function ListSkeleton() {
   );
 }
 
-const emptyConfig: Record<string, { icon: React.ReactNode; title: string; subtitle: string }> = {
+type EmptyConfig = {
+  icon: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
+  color: string;
+  title: string;
+  subtitle: string;
+  showAction: boolean;
+};
+
+const EMPTY_CONFIG: Record<string, EmptyConfig> = {
   upcoming: {
-    icon: <CalendarCheck size={32} color={colors.mutedForeground} />,
+    icon: CalendarCheck,
+    color: colors.primary,
     title: 'No upcoming appointments',
-    subtitle: 'Book an appointment with a specialist to get started.',
+    subtitle: "Your schedule is clear. Book a session with a specialist whenever you're ready.",
+    showAction: true,
   },
   past: {
-    icon: <Clock size={32} color={colors.mutedForeground} />,
-    title: 'No past appointments',
-    subtitle: 'Your completed appointments will appear here.',
+    icon: Clock,
+    color: colors.success,
+    title: 'No completed appointments',
+    subtitle: 'Appointments you complete will show up here for your reference.',
+    showAction: false,
   },
   missed: {
-    icon: <AlertTriangle size={32} color={colors.mutedForeground} />,
+    icon: AlertTriangle,
+    color: colors.secondary,
     title: 'No missed appointments',
-    subtitle: 'Missed appointments will appear here.',
+    subtitle: "You're all caught up — no missed sessions on record.",
+    showAction: false,
   },
   cancelled: {
-    icon: <CalendarX size={32} color={colors.mutedForeground} />,
+    icon: CalendarX,
+    color: colors.destructive,
     title: 'No cancelled appointments',
-    subtitle: 'Cancelled appointments will appear here.',
+    subtitle: 'Any appointments you cancel will be recorded here.',
+    showAction: false,
   },
 };
+
+function AppointmentsEmptyState({ filter, onBook }: { filter: string; onBook: () => void }) {
+  const config = EMPTY_CONFIG[filter] ?? EMPTY_CONFIG.upcoming!;
+  const Icon = config.icon;
+
+  return (
+    <View style={emptyStyles.container}>
+      {/* Icon with double-ring treatment */}
+      <View style={[emptyStyles.iconRing, { borderColor: `${config.color}20` }]}>
+        <View style={[emptyStyles.iconCircle, { backgroundColor: `${config.color}18` }]}>
+          <Icon size={32} color={config.color} strokeWidth={1.75} />
+        </View>
+      </View>
+
+      <Text style={emptyStyles.title}>{config.title}</Text>
+      <Text style={emptyStyles.subtitle}>{config.subtitle}</Text>
+
+      {config.showAction && (
+        <TouchableOpacity
+          onPress={onBook}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Book a new appointment"
+          style={[emptyStyles.cta, { backgroundColor: config.color }]}
+        >
+          <CalendarPlus size={16} color="#fff" strokeWidth={2} />
+          <Text style={emptyStyles.ctaLabel}>Book Appointment</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+const emptyStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingTop: 48,
+    paddingBottom: 32,
+  },
+  iconRing: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  iconCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.foreground,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+  },
+  cta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  ctaLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
+});
+
+type StatTileProps = {
+  label: string;
+  count: number;
+  highlight?: boolean;
+  active?: boolean;
+  loading?: boolean;
+  onPress?: () => void;
+};
+
+function StatTile({
+  label,
+  count,
+  highlight = false,
+  active = false,
+  loading = false,
+  onPress,
+}: StatTileProps) {
+  const displayCount = count > 99 ? '99+' : String(count);
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={onPress ? 0.65 : 1}
+      accessibilityRole={onPress ? 'button' : 'text'}
+      accessibilityLabel={`${label}: ${displayCount}`}
+      style={[
+        statStyles.tile,
+        highlight && statStyles.tileHighlighted,
+        active && statStyles.tileActive,
+      ]}
+    >
+      {loading ? (
+        <Skeleton width={32} height={22} borderRadius={4} />
+      ) : (
+        <Text
+          style={[
+            statStyles.count,
+            highlight && statStyles.countHighlighted,
+            active && statStyles.countActive,
+          ]}
+        >
+          {displayCount}
+        </Text>
+      )}
+      <Text style={[statStyles.label, active && statStyles.labelActive]}>{label}</Text>
+      {/* Active tab indicator bar */}
+      {active && <View style={statStyles.activeBar} />}
+    </TouchableOpacity>
+  );
+}
+
+const statStyles = StyleSheet.create({
+  tile: {
+    flex: 1,
+    backgroundColor: colors.card,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  tileHighlighted: {
+    backgroundColor: `${colors.secondary}10`,
+    borderColor: `${colors.secondary}35`,
+  },
+  tileActive: {
+    borderColor: colors.primary,
+    backgroundColor: `${colors.primary}10`,
+  },
+  count: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.foreground,
+  },
+  countHighlighted: {
+    color: colors.secondary,
+  },
+  countActive: {
+    color: colors.primary,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.mutedForeground,
+  },
+  labelActive: {
+    color: colors.primary,
+  },
+  activeBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: colors.primary,
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
+  },
+});
 
 export default function AppointmentsListScreen() {
   const navigation = useNavigation<Nav>();
@@ -83,6 +291,17 @@ export default function AppointmentsListScreen() {
     refetch,
     isRefetching,
   } = useAppointmentsQuery(filter);
+
+  // Stats counts — React Query deduplicates the active-tab fetch via cache key
+  const { data: upcomingData = [], isLoading: loadingUpcoming } = useAppointmentsQuery('upcoming');
+  const { data: pastData = [], isLoading: loadingPast } = useAppointmentsQuery('past');
+  const { data: missedData = [], isLoading: loadingMissed } = useAppointmentsQuery('missed');
+  const { data: cancelledData = [], isLoading: loadingCancelled } =
+    useAppointmentsQuery('cancelled');
+
+  const statsLoading = loadingUpcoming || loadingPast || loadingMissed || loadingCancelled;
+  const totalCount =
+    upcomingData.length + pastData.length + missedData.length + cancelledData.length;
 
   const handleTabChange = useCallback((value: string) => {
     setFilter(value as 'upcoming' | 'past' | 'missed' | 'cancelled');
@@ -104,9 +323,6 @@ export default function AppointmentsListScreen() {
     });
   }, []);
 
-  const empty = emptyConfig[filter] ??
-    emptyConfig.upcoming ?? { icon: null, title: 'No appointments', subtitle: '' };
-
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Header
@@ -124,7 +340,33 @@ export default function AppointmentsListScreen() {
         }
       />
 
-      <View className="px-4 py-3">
+      <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 16 }}>
+        <StatTile label="Total" count={totalCount} loading={statsLoading} />
+        <StatTile
+          label="Upcoming"
+          count={upcomingData.length}
+          active={filter === 'upcoming'}
+          loading={statsLoading}
+          onPress={() => handleTabChange('upcoming')}
+        />
+        <StatTile
+          label="Completed"
+          count={pastData.length}
+          active={filter === 'past'}
+          loading={statsLoading}
+          onPress={() => handleTabChange('past')}
+        />
+        <StatTile
+          label="Missed"
+          count={missedData.length}
+          highlight={missedData.length > 0}
+          active={filter === 'missed'}
+          loading={statsLoading}
+          onPress={() => handleTabChange('missed')}
+        />
+      </View>
+
+      <View className="px-4 pb-3">
         <TabBar tabs={TABS} activeTab={filter} onChange={handleTabChange} />
       </View>
 
@@ -146,15 +388,7 @@ export default function AppointmentsListScreen() {
             paddingBottom: 100,
           }}
           estimatedItemSize={120}
-          ListEmptyComponent={
-            <EmptyState
-              icon={empty.icon}
-              title={empty.title}
-              subtitle={empty.subtitle}
-              actionLabel="Book Appointment"
-              onAction={navigateToBook}
-            />
-          }
+          ListEmptyComponent={<AppointmentsEmptyState filter={filter} onBook={navigateToBook} />}
           refreshing={isRefetching}
           onRefresh={refetch}
           showsVerticalScrollIndicator={false}
