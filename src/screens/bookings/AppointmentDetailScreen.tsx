@@ -1,34 +1,34 @@
-import React, { useEffect, useCallback, useState } from 'react';
-import { View, ScrollView, Alert, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import type { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
 import {
   Calendar,
+  ChevronRight,
   Clock,
-  Timer,
-  Video,
-  Phone,
+  FileText,
   MapPin,
   MessageSquare,
-  Star,
-  FileText,
-  StickyNote,
-  XCircle,
+  Phone,
   Receipt,
-  ChevronRight,
+  Star,
+  StickyNote,
+  Timer,
+  Video,
+  XCircle,
 } from 'lucide-react-native';
-import { Header, Avatar, StatusBadge, Button, Skeleton, Text } from '../../components/ui';
-import RescheduleSheet from '../../components/appointments/RescheduleSheet';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ReceiptSheet from '../../components/appointments/ReceiptSheet';
-import { useAppointmentsStore } from '../../store/appointments';
-import { meetingService } from '../../services/meeting.service';
-import { colors } from '../../theme/colors';
-import { formatDate, formatTime } from '../../utils/formatters';
+import RescheduleSheet from '../../components/appointments/RescheduleSheet';
+import { Avatar, Button, Header, Skeleton, StatusBadge, Text } from '../../components/ui';
 import { useCurrency } from '../../hooks/useCurrency';
-import { MEETING_CHANNEL_LABELS } from '../../utils/constants';
 import type { BookingsStackParamList } from '../../navigation/stacks/BookingsStack';
+import { meetingService } from '../../services/meeting.service';
+import { useAppointmentsStore } from '../../store/appointments';
+import { colors } from '../../theme/colors';
+import { MEETING_CHANNEL_LABELS } from '../../utils/constants';
+import { formatDate, formatTime } from '../../utils/formatters';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 type Route = RouteProp<BookingsStackParamList, 'AppointmentDetail'>;
@@ -315,7 +315,7 @@ export default function AppointmentDetailScreen() {
           )}
 
           {/* Health Checkup Link */}
-          {appointment.health_checkup_id && (
+          {appointment?.health_checkup_id && (
             <View
               className="flex-row items-center gap-3 p-3 rounded-xl mb-4 border"
               style={{ backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}30` }}
@@ -331,50 +331,54 @@ export default function AppointmentDetailScreen() {
           )}
 
           {/* Section 4: Notes */}
-          {(appointment.patient_notes || appointment.specialist_notes || appointment.notes) && (
+          {(appointment?.patient_notes || appointment?.specialist_notes || appointment?.notes) && (
             <View className="bg-card border border-border rounded-2xl p-4 mb-4">
               <View className="flex-row items-center gap-2 mb-3">
                 <StickyNote size={16} color={colors.mutedForeground} />
                 <Text className="text-foreground font-bold text-sm">Notes</Text>
               </View>
 
-              {appointment.patient_notes && (
+              {appointment?.patient_notes && (
                 <View className="mb-3">
                   <Text className="text-muted-foreground text-xs uppercase tracking-wider mb-1">
                     Your Notes
                   </Text>
                   <Text className="text-foreground text-sm leading-relaxed">
-                    {appointment.patient_notes}
+                    {appointment?.patient_notes}
                   </Text>
                 </View>
               )}
 
-              {appointment.specialist_notes && (
+              {appointment?.specialist_notes && (
                 <View>
                   <Text className="text-muted-foreground text-xs uppercase tracking-wider mb-1">
                     Specialist Notes
                   </Text>
                   <Text className="text-foreground text-sm leading-relaxed">
-                    {appointment.specialist_notes}
+                    {appointment?.specialist_notes}
                   </Text>
                 </View>
               )}
 
-              {appointment.notes && !appointment.patient_notes && !appointment.specialist_notes && (
-                <Text className="text-foreground text-sm leading-relaxed">{appointment.notes}</Text>
-              )}
+              {appointment?.notes &&
+                !appointment?.patient_notes &&
+                !appointment?.specialist_notes && (
+                  <Text className="text-foreground text-sm leading-relaxed">
+                    {appointment?.notes}
+                  </Text>
+                )}
             </View>
           )}
 
           {/* Cancellation reason */}
-          {isCancelled && appointment.cancellation_reason && (
+          {isCancelled && appointment?.cancellation_reason && (
             <View className="bg-destructive/10 border border-destructive/20 rounded-2xl p-4 mb-4">
               <View className="flex-row items-center gap-2 mb-2">
                 <XCircle size={16} color={colors.destructive} />
                 <Text className="text-destructive font-bold text-sm">Cancellation Reason</Text>
               </View>
               <Text className="text-foreground text-sm leading-relaxed">
-                {appointment.cancellation_reason}
+                {appointment?.cancellation_reason}
               </Text>
             </View>
           )}
@@ -408,7 +412,7 @@ export default function AppointmentDetailScreen() {
                 >
                   Rate Appointment
                 </Button>
-                {appointment.prescription_id && (
+                {appointment?.prescription?.prescription_id && (
                   <Button
                     variant="outline"
                     onPress={() => Alert.alert('Prescription', 'Navigate to prescription detail.')}
@@ -436,17 +440,20 @@ export default function AppointmentDetailScreen() {
           visible={showReceipt}
           onClose={() => setShowReceipt(false)}
           data={{
-            appointmentId: appointment.id || appointment._id || id,
+            appointmentId: appointment?.id || appointment?._id || id,
             specialistName,
             specialty,
             date: formatDate(
-              appointment.start_time ||
-                appointment.date ||
-                appointment.appointment_date ||
-                appointment.createdAt
+              appointment?.start_time ||
+                appointment?.date ||
+                appointment?.appointment_date ||
+                appointment?.createdAt
             ),
             time: formatTime(
-              appointment.start_time || appointment.time || appointment.appointment_time || '00:00'
+              appointment?.start_time ||
+                appointment?.time ||
+                appointment?.appointment_time ||
+                '00:00'
             ),
             appointmentType,
             consultationFee: format(fee),
