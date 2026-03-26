@@ -561,7 +561,7 @@ export default function SelectScheduleScreen() {
         </View>
 
         {/* Time slots */}
-        <View className="px-4 pt-6">
+        <View className="px-4 pt-6 pb-10">
           <Text className="text-foreground text-base font-bold mb-3">
             {hasSpecialist ? 'Available times' : 'Preferred time'}
           </Text>
