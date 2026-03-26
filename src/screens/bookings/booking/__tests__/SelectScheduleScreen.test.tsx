@@ -32,7 +32,7 @@ describe('SelectScheduleScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useAvailableTimesQuery as jest.Mock).mockReturnValue({ data: undefined, isLoading: false });
-    (useAppointmentsStore as jest.Mock).mockReturnValue(baseStore);
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue(baseStore);
   });
 
   describe('without a pre-selected specialist', () => {
@@ -62,7 +62,7 @@ describe('SelectScheduleScreen', () => {
     beforeEach(() => {
       const { useRoute } = require('@react-navigation/native');
       (useRoute as jest.Mock).mockReturnValue({ params: { specialistId: 'sp-1' } });
-      (useAppointmentsStore as jest.Mock).mockReturnValue({
+      (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({
         ...baseStore,
         bookingData: {
           specialist: {

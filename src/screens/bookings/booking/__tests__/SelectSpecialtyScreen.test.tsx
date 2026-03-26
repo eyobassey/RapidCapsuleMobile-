@@ -32,7 +32,7 @@ const baseStore = {
 describe('SelectSpecialtyScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (useAppointmentsStore as jest.Mock).mockReturnValue(baseStore);
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue(baseStore);
   });
 
   it('renders the header and step indicator', () => {
@@ -42,7 +42,7 @@ describe('SelectSpecialtyScreen', () => {
   });
 
   it('renders category tiles when categories are available', () => {
-    (useAppointmentsStore as jest.Mock).mockReturnValue({
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({
       ...baseStore,
       categories: [
         { _id: 'cat-1', name: 'Cardiology' },
@@ -55,7 +55,7 @@ describe('SelectSpecialtyScreen', () => {
   });
 
   it('shows AI Suggestion tile when recentCheckups has conditions', () => {
-    (useAppointmentsStore as jest.Mock).mockReturnValue({
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({
       ...baseStore,
       categories: [{ _id: 'cat-1', name: 'Cardiology', professional_category: 'Specialist' }],
       recentCheckups: [
@@ -74,7 +74,7 @@ describe('SelectSpecialtyScreen', () => {
   });
 
   it('hides AI Suggestion tile and shows checkup prompt when no recent checkups', async () => {
-    (useAppointmentsStore as jest.Mock).mockReturnValue({
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({
       ...baseStore,
       categories: [{ _id: 'cat-1', name: 'General Practice' }],
       recentCheckups: [],
@@ -88,7 +88,7 @@ describe('SelectSpecialtyScreen', () => {
 
   it('does not show both AI tile and checkup prompt simultaneously', async () => {
     // Regression test for the bug where showSuggestion stayed true after checkups loaded
-    (useAppointmentsStore as jest.Mock).mockReturnValue({
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({
       ...baseStore,
       categories: [{ _id: 'cat-1', name: 'Cardiology' }],
       recentCheckups: [
@@ -106,7 +106,7 @@ describe('SelectSpecialtyScreen', () => {
 
   it('stores booking data and navigates to SelectSchedule when a category is selected', () => {
     const setBookingData = jest.fn();
-    (useAppointmentsStore as jest.Mock).mockReturnValue({
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({
       ...baseStore,
       setBookingData,
       categories: [{ _id: 'cat-1', name: 'Cardiology', professional_category: 'Specialist' }],

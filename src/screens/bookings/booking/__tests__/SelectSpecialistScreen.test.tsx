@@ -53,7 +53,7 @@ jest.mock('../../../../components/appointments/SpecialistCard', () => {
 describe('SelectSpecialistScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (useAppointmentsStore as jest.Mock).mockReturnValue({ setBookingData: jest.fn() });
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({ setBookingData: jest.fn() });
     (useSpecialistsQuery as jest.Mock).mockReturnValue({ data: [], isLoading: false });
   });
 
@@ -75,7 +75,7 @@ describe('SelectSpecialistScreen', () => {
 
   it('navigates to ConfirmBooking (not SelectSchedule) when a specialist is selected', async () => {
     const setBookingData = jest.fn();
-    (useAppointmentsStore as jest.Mock).mockReturnValue({ setBookingData });
+    (useAppointmentsStore as unknown as jest.Mock).mockReturnValue({ setBookingData });
     (useSpecialistsQuery as jest.Mock).mockReturnValue({
       data: [{ _id: 'sp-1', profile: { first_name: 'John', last_name: 'Smith' } }],
       isLoading: false,

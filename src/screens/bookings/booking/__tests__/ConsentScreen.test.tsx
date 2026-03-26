@@ -65,7 +65,8 @@ describe('ConsentScreen', () => {
 
   it('opens the detail sheet when "View details" is pressed', async () => {
     const { getAllByText, getByText } = render(<ConsentScreen />);
-    fireEvent.press(getAllByText('View details')[0]);
+    const [firstViewDetails] = getAllByText('View details');
+    fireEvent.press(firstViewDetails!);
     await waitFor(() => {
       expect(getByText('I Understand & Accept')).toBeTruthy();
     });
@@ -73,7 +74,8 @@ describe('ConsentScreen', () => {
 
   it('closes the detail sheet and checks the item after accepting', async () => {
     const { getAllByText, getByText, queryByText } = render(<ConsentScreen />);
-    fireEvent.press(getAllByText('View details')[0]);
+    const [firstViewDetails] = getAllByText('View details');
+    fireEvent.press(firstViewDetails!);
     await waitFor(() => expect(getByText('I Understand & Accept')).toBeTruthy());
     fireEvent.press(getByText('I Understand & Accept'));
     await waitFor(() => {
