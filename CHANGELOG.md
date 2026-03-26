@@ -1,3 +1,21 @@
+# [1.13.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.12.1...v1.13.0) (2026-03-26)
+
+### Bug Fixes
+
+- adjust padding in SelectScheduleScreen for better layout ([6a90e47](https://github.com/eyobassey/RapidCapsuleMobile-/commit/6a90e4794b3cb4aa741c5a57222f73d364762eb9))
+- enhance error handling in appointment cancellation ([d7b9236](https://github.com/eyobassey/RapidCapsuleMobile-/commit/d7b9236451405b6432d1f0a95066dc83ada01e59))
+- handle optional chaining for appointment details in AppointmentDetailScreen ([2cd4f3a](https://github.com/eyobassey/RapidCapsuleMobile-/commit/2cd4f3aa2af1182d282f6ac418b3858faffac3af))
+- improve error handling and state management in appointment cancellation ([0349060](https://github.com/eyobassey/RapidCapsuleMobile-/commit/034906082de8d5fb4a3f2defa67f2c4e0b02b520))
+- update mock return types for appointments store in tests ([7bcfb35](https://github.com/eyobassey/RapidCapsuleMobile-/commit/7bcfb35898a079c7749e448ea563aa7bf96815d5))
+
+### Features
+
+- add consultation services and health checkup queries ([22e1e80](https://github.com/eyobassey/RapidCapsuleMobile-/commit/22e1e80b63b0a2fd14590fca2c7e33501fc7c2f8))
+- add in-app chat functionality to AppointmentDetailScreen ([d99d6fc](https://github.com/eyobassey/RapidCapsuleMobile-/commit/d99d6fc1ff10f2a2d5f725e5801509ec7025e36d))
+- enhance appointment detail and booking flow with new tests ([8c60d12](https://github.com/eyobassey/RapidCapsuleMobile-/commit/8c60d1266ba9ae02911a45b11bddae2e986e1116))
+- enhance AppointmentsListScreen with improved empty state handling and statistics display ([5c24b40](https://github.com/eyobassey/RapidCapsuleMobile-/commit/5c24b40b1ec7344953f1e7fa3202fe24c2bf5cf3))
+- implement join window logic and countdown for appointments in AppointmentDetailScreen ([4aecb95](https://github.com/eyobassey/RapidCapsuleMobile-/commit/4aecb956bf53ae9901ef791818ddec7fd7be3453))
+
 ## [1.12.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.12.0...v1.12.1) (2026-03-25)
 
 ### Bug Fixes
