@@ -42,12 +42,17 @@ export const appointmentsService = {
   },
 
   async verifyPayment(reference: string) {
-    const res = await api.post('/appointments/transactions/verify', {reference});
+    const res = await api.post('/appointments/transactions/verify', { reference });
     return res.data.data || res.data.result;
   },
 
   async getSpecialistCategories() {
     const res = await api.get('/specialist-categories');
+    return res.data.data || res.data.result;
+  },
+
+  async getConsultationServices() {
+    const res = await api.get('/consultation-services');
     return res.data.data || res.data.result;
   },
 };

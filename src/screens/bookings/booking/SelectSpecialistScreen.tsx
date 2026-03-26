@@ -183,9 +183,7 @@ export default function SelectSpecialistScreen() {
 
   const handleSelect = (specialist: any) => {
     setBookingData({ specialist, categoryName: specialistCategory });
-    navigation.navigate('SelectSchedule', {
-      specialistId: specialist._id || specialist.id,
-    });
+    navigation.navigate('ConfirmBooking');
   };
 
   return (
@@ -196,18 +194,18 @@ export default function SelectSpecialistScreen() {
       <View className="px-4 pt-4 pb-2">
         <View className="flex-row items-center gap-2">
           <View className="flex-row gap-1.5">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5, 6].map((step) => (
               <View
                 key={step}
                 className="h-1.5 rounded-full"
                 style={{
-                  width: step <= 2 ? 32 : 16,
-                  backgroundColor: step <= 2 ? colors.primary : colors.border,
+                  width: step <= 5 ? 32 : 16,
+                  backgroundColor: step <= 5 ? colors.primary : colors.border,
                 }}
               />
             ))}
           </View>
-          <Text className="text-muted-foreground text-xs ml-2">Step 2 of 4</Text>
+          <Text className="text-muted-foreground text-xs ml-2">Step 5 of 6</Text>
         </View>
       </View>
 

@@ -94,6 +94,8 @@ const HIDE_TAB_SCREENS = new Set([
   'MyOrders',
   'Notifications',
   'DrEka',
+  'SelectServiceType',
+  'ConsentScreen',
 ]);
 
 function getTabBarStyle(route: any) {

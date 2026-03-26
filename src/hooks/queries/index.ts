@@ -4,10 +4,13 @@ export {
   useSpecialistsQuery,
   useAvailableTimesQuery,
   useCategoriesQuery,
+  useConsultationServicesQuery,
   useBookAppointmentMutation,
   useRescheduleAppointmentMutation,
   useCancelAppointmentMutation,
 } from './useAppointmentsQuery';
+
+export { healthCheckupKeys, useRecentCheckupsQuery } from './useHealthCheckupQuery';
 
 export {
   vitalKeys,

@@ -13,6 +13,7 @@ export const appointmentKeys = {
   availableTimes: (specialistId: string, date: string) =>
     [...appointmentKeys.all, 'availableTimes', specialistId, date] as const,
   categories: () => [...appointmentKeys.all, 'categories'] as const,
+  consultationServices: () => [...appointmentKeys.all, 'consultationServices'] as const,
 };
 
 // ── Status mapping (mirrors the store logic) ───────────────
@@ -72,6 +73,20 @@ export function useCategoriesQuery() {
       return Array.isArray(cats) ? cats : [];
     },
     staleTime: 30 * 60 * 1000, // categories rarely change
+  });
+}
+
+export function useConsultationServicesQuery() {
+  return useQuery({
+    queryKey: appointmentKeys.consultationServices(),
+    queryFn: async () => {
+      const data = await appointmentsService.getConsultationServices();
+      const list: any[] = Array.isArray(data) ? data : [];
+      return list
+        .filter((s) => s.is_active)
+        .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    },
+    staleTime: 60 * 60 * 1000, // services rarely change
   });
 }
 

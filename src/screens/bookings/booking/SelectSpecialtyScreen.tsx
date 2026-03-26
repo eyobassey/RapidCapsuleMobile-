@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import {
+  ArrowRight,
   Stethoscope,
   Heart,
   Brain,
@@ -18,6 +19,7 @@ import {
   Syringe,
   Microscope,
   ClipboardCheck,
+  Sparkles,
   X,
   Clock,
 } from 'lucide-react-native';
@@ -65,6 +67,179 @@ const categoryColors = [
   '#f59e0b',
 ];
 
+// ─── AI specialty suggestion ──────────────────────────────
+const SPECIALTY_KEYWORDS: Array<{ keywords: string[]; match: string }> = [
+  {
+    keywords: [
+      'heart',
+      'cardiac',
+      'chest pain',
+      'palpitation',
+      'cardiovascular',
+      'hypertension',
+      'blood pressure',
+    ],
+    match: 'cardiology',
+  },
+  {
+    keywords: [
+      'brain',
+      'neuro',
+      'headache',
+      'migraine',
+      'seizure',
+      'stroke',
+      'dizziness',
+      'vertigo',
+      'tremor',
+    ],
+    match: 'neurology',
+  },
+  {
+    keywords: [
+      'skin',
+      'rash',
+      'acne',
+      'eczema',
+      'psoriasis',
+      'dermatitis',
+      'itching',
+      'hives',
+      'lesion',
+    ],
+    match: 'dermatology',
+  },
+  {
+    keywords: ['eye', 'vision', 'sight', 'retina', 'glaucoma', 'cataract', 'ophthal', 'blindness'],
+    match: 'ophthalmology',
+  },
+  { keywords: ['child', 'pediatr', 'infant', 'baby', 'toddler', 'newborn'], match: 'pediatrics' },
+  {
+    keywords: [
+      'bone',
+      'joint',
+      'ortho',
+      'fracture',
+      'spine',
+      'back pain',
+      'arthritis',
+      'knee',
+      'shoulder',
+      'hip',
+      'ligament',
+    ],
+    match: 'orthopedics',
+  },
+  {
+    keywords: [
+      'stomach',
+      'gastro',
+      'digestive',
+      'intestin',
+      'bowel',
+      'liver',
+      'colon',
+      'ulcer',
+      'acid reflux',
+      'nausea',
+      'diarrhea',
+    ],
+    match: 'gastroenterology',
+  },
+  {
+    keywords: [
+      'lung',
+      'breath',
+      'respir',
+      'asthma',
+      'cough',
+      'pneumonia',
+      'bronchitis',
+      'copd',
+      'inhaler',
+    ],
+    match: 'pulmonology',
+  },
+  {
+    keywords: [
+      'mental',
+      'anxiety',
+      'depress',
+      'psych',
+      'stress',
+      'mood',
+      'insomnia',
+      'panic',
+      'trauma',
+      'ptsd',
+    ],
+    match: 'psychiatry',
+  },
+  { keywords: ['kidney', 'urin', 'nephro', 'bladder', 'prostate', 'renal'], match: 'nephrology' },
+  {
+    keywords: ['diabetes', 'endocrin', 'thyroid', 'hormone', 'insulin', 'glucose'],
+    match: 'endocrinology',
+  },
+  {
+    keywords: ['gynecol', 'obstetric', 'pregnancy', 'menstrual', 'period', 'uterus', 'ovary'],
+    match: 'gynecology',
+  },
+  { keywords: ['ear', 'nose', 'throat', 'hearing', 'sinusitis', 'tonsil', 'ent'], match: 'ent' },
+  {
+    keywords: ['blood', 'anaemia', 'anemia', 'hemato', 'platelet', 'lymphoma', 'leukemia'],
+    match: 'hematology',
+  },
+];
+
+function suggestCategory(
+  checkup: any,
+  categories: any[]
+): { category: any; conditionName: string } | null {
+  if (!checkup || categories.length === 0) return null;
+
+  const conditions: any[] = checkup.response?.data?.conditions ?? [];
+  const top = conditions[0];
+  if (!top) return null;
+
+  const conditionName: string = top.common_name || top.name || '';
+  const lower = conditionName.toLowerCase();
+
+  // 1. Direct specialist field on the condition
+  const directSpecialist: string | undefined = top.specialist || top.recommended_specialist;
+  if (directSpecialist) {
+    const dl = directSpecialist.toLowerCase();
+    const match = categories.find(
+      (c: any) => c.name.toLowerCase().includes(dl) || dl.includes(c.name.toLowerCase())
+    );
+    if (match) return { category: match, conditionName };
+  }
+
+  // 2. Keyword mapping
+  for (const { keywords, match } of SPECIALTY_KEYWORDS) {
+    if (keywords.some((k) => lower.includes(k))) {
+      const found = categories.find((c: any) => c.name.toLowerCase().includes(match));
+      if (found) return { category: found, conditionName };
+    }
+  }
+
+  // 3. Substring match between condition name and category name
+  for (const c of categories) {
+    const cn = c.name.toLowerCase();
+    if (
+      lower.includes(cn) ||
+      cn.split(' ').some((w: string) => w.length > 4 && lower.includes(w))
+    ) {
+      return { category: c, conditionName };
+    }
+  }
+
+  // 4. Fall back to General Practice
+  const general = categories.find((c: any) => c.name.toLowerCase().includes('general'));
+  if (general) return { category: general, conditionName };
+
+  return null;
+}
+
 function LoadingSkeleton() {
   return (
     <View className="flex-row flex-wrap px-4 gap-3">
@@ -102,14 +277,21 @@ export default function SelectSpecialtyScreen() {
     fetchCategories,
     fetchRecentCheckups,
     setBookingData,
-    clearBookingData,
   } = useAppointmentsStore();
 
   const [showSuggestion, setShowSuggestion] = useState(false);
   const hasLinkedCheckup = !!healthCheckupId;
 
+  // Derive AI specialty suggestion from the linked or most recent checkup
+  const aiSuggestion = useMemo(() => {
+    if (categories.length === 0) return null;
+    const source = healthCheckupId
+      ? recentCheckups.find((c: any) => (c._id || c.id) === healthCheckupId) ?? recentCheckups[0]
+      : recentCheckups[0];
+    return source ? suggestCategory(source, categories) : null;
+  }, [healthCheckupId, recentCheckups, categories]);
+
   useEffect(() => {
-    clearBookingData();
     if (healthCheckupId) {
       setBookingData({ health_checkup_id: healthCheckupId, healthCheckupSummary });
     }
@@ -130,11 +312,9 @@ export default function SelectSpecialtyScreen() {
     setBookingData({
       categoryId: category._id || category.id,
       categoryName: category.name,
-    });
-    navigation.navigate('SelectSpecialist', {
       professionalCategory: category.professional_category || 'Specialist',
-      specialistCategory: category.name,
     });
+    navigation.navigate('SelectSchedule');
   };
 
   const handleStartCheckup = () => {
@@ -149,18 +329,18 @@ export default function SelectSpecialtyScreen() {
       <View className="px-4 pt-4 pb-2">
         <View className="flex-row items-center gap-2">
           <View className="flex-row gap-1.5">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5, 6].map((step) => (
               <View
                 key={step}
                 className="h-1.5 rounded-full"
                 style={{
-                  width: step === 1 ? 32 : 16,
-                  backgroundColor: step === 1 ? colors.primary : colors.border,
+                  width: step <= 3 ? 32 : 16,
+                  backgroundColor: step <= 3 ? colors.primary : colors.border,
                 }}
               />
             ))}
           </View>
-          <Text className="text-muted-foreground text-xs ml-2">Step 1 of 4</Text>
+          <Text className="text-muted-foreground text-xs ml-2">Step 3 of 6</Text>
         </View>
       </View>
 
@@ -258,6 +438,80 @@ export default function SelectSpecialtyScreen() {
                   Results will be included in your notes for the specialist
                 </Text>
               </View>
+            </View>
+          )}
+
+          {/* AI Suggestion tile */}
+          {aiSuggestion && (
+            <View
+              style={{
+                borderRadius: 16,
+                borderWidth: 1,
+                borderColor: `${colors.primary}30`,
+                backgroundColor: `${colors.primary}08`,
+                padding: 14,
+                marginBottom: 16,
+              }}
+            >
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: colors.primary,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Sparkles size={18} color="#fff" strokeWidth={1.75} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: '700',
+                      color: colors.foreground,
+                      marginBottom: 2,
+                    }}
+                  >
+                    AI Suggestion
+                  </Text>
+                  <Text style={{ fontSize: 12, lineHeight: 18, color: colors.mutedForeground }}>
+                    Based on your symptoms
+                    {aiSuggestion.conditionName ? ` (${aiSuggestion.conditionName})` : ''}, we
+                    recommend{' '}
+                    <Text style={{ fontWeight: '700', color: colors.foreground }}>
+                      {aiSuggestion.category.name}
+                    </Text>
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={() => handleSelect(aiSuggestion.category)}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={`Select ${aiSuggestion.category.name}`}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  backgroundColor: colors.card,
+                  borderWidth: 1,
+                  borderColor: `${colors.primary}25`,
+                  borderRadius: 10,
+                  paddingVertical: 10,
+                }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
+                  Select
+                </Text>
+                <ArrowRight size={14} color={colors.primary} strokeWidth={2.5} />
+              </TouchableOpacity>
             </View>
           )}
 

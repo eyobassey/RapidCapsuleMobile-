@@ -1,23 +1,23 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import type { RouteProp } from '@react-navigation/native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
 import {
-  Clock,
-  Video,
-  Phone,
-  Globe,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Globe,
+  Phone,
+  Video,
 } from 'lucide-react-native';
-import { Header, Button, Text } from '../../../components/ui';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, Header, Text } from '../../../components/ui';
 import { useAvailableTimesQuery } from '../../../hooks/queries';
+import type { BookingsStackParamList } from '../../../navigation/stacks/BookingsStack';
 import { useAppointmentsStore } from '../../../store/appointments';
 import { colors } from '../../../theme/colors';
-import type { BookingsStackParamList } from '../../../navigation/stacks/BookingsStack';
 
 type Nav = NativeStackNavigationProp<BookingsStackParamList>;
 type Route = RouteProp<BookingsStackParamList, 'SelectSchedule'>;
@@ -152,12 +152,33 @@ function formatDateString(d: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+// Preferred time slots shown when no specialist is selected yet
+const PREFERRED_TIMES = [
+  '08:00',
+  '09:00',
+  '10:00',
+  '11:00',
+  '12:00',
+  '13:00',
+  '14:00',
+  '15:00',
+  '16:00',
+  '17:00',
+  '18:00',
+];
+
+// All bookable days when specialist schedule is unknown
+const ALL_BOOKABLE_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 export default function SelectScheduleScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
-  const { specialistId } = route.params;
+  const { specialistId } = route.params ?? {};
+  const hasSpecialist = !!specialistId;
   // Keep store for setBookingData and bookingData (client state)
   const { setBookingData, bookingData } = useAppointmentsStore();
+
+  const { bottom } = useSafeAreaInsets();
 
   // Calendar month state
   const today = useMemo(() => new Date(), []);
@@ -167,36 +188,40 @@ export default function SelectScheduleScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedChannel, setSelectedChannel] = useState(
-    bookingData.specialist?.meeting_channels?.[0] || 'zoom'
+    bookingData.meeting_channel || bookingData.specialist?.meeting_channels?.[0] || 'zoom'
   );
   const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [showTimezones, setShowTimezones] = useState(false);
 
-  // React Query for available times
-  const { data: availableTimesRaw, isLoading } = useAvailableTimesQuery(
-    specialistId,
-    selectedDate || ''
+  // React Query for available times — only fires when a specialist is already selected
+  const { data: availableTimesRaw, isLoading: timesLoading } = useAvailableTimesQuery(
+    specialistId ?? '',
+    selectedDate ?? ''
   );
 
   const availableTimes = useMemo<string[]>(() => {
-    if (!availableTimesRaw || !selectedDate) return [];
-    return availableTimesRaw[selectedDate]?.available ?? [];
-  }, [availableTimesRaw, selectedDate]);
+    if (!selectedDate) return [];
+    if (!hasSpecialist) return PREFERRED_TIMES;
+    return availableTimesRaw?.[selectedDate]?.available ?? [];
+  }, [availableTimesRaw, selectedDate, hasSpecialist]);
 
-  // Specialist's available days of the week (e.g. ['Monday', 'Wednesday', 'Friday'])
+  // Only show spinner when we're actually waiting for a specialist's slots
+  const isLoading = hasSpecialist && timesLoading;
+
+  // Available calendar days — specialist's schedule if known, otherwise Mon–Sat
   const availableDayNames: string[] = useMemo(
-    () => bookingData.specialist?.available_days || [],
-    [bookingData.specialist?.available_days]
+    () => (hasSpecialist ? bookingData.specialist?.available_days || [] : ALL_BOOKABLE_DAYS),
+    [hasSpecialist, bookingData.specialist?.available_days]
   );
 
-  // Get available channels from specialist
+  // Available meeting channels — from specialist if known, otherwise show all
   const specialistChannels = bookingData.specialist?.meeting_channels;
   const availableChannels = useMemo(() => {
-    if (specialistChannels?.length) {
+    if (hasSpecialist && specialistChannels?.length) {
       return MEETING_CHANNELS.filter((ch) => specialistChannels.includes(ch.key));
     }
     return MEETING_CHANNELS;
-  }, [specialistChannels]);
+  }, [hasSpecialist, specialistChannels]);
 
   // Month navigation bounds (today to 6 months ahead)
   const maxDate = useMemo(() => {
@@ -260,8 +285,25 @@ export default function SelectScheduleScreen() {
       meeting_channel: selectedChannel,
       timezone,
     });
-    navigation.navigate('ConfirmBooking');
-  }, [selectedDate, selectedTime, selectedChannel, timezone, setBookingData, navigation]);
+    if (hasSpecialist) {
+      navigation.navigate('ConfirmBooking');
+    } else {
+      navigation.navigate('SelectSpecialist', {
+        professionalCategory: bookingData.professionalCategory ?? 'Specialist',
+        specialistCategory: bookingData.categoryName ?? '',
+      });
+    }
+  }, [
+    selectedDate,
+    selectedTime,
+    selectedChannel,
+    timezone,
+    hasSpecialist,
+    bookingData.professionalCategory,
+    bookingData.categoryName,
+    setBookingData,
+    navigation,
+  ]);
 
   const currentTzLabel = COMMON_TIMEZONES.find((tz) => tz.value === timezone)?.label || timezone;
 
@@ -273,18 +315,18 @@ export default function SelectScheduleScreen() {
       <View className="px-4 pt-4 pb-2">
         <View className="flex-row items-center gap-2">
           <View className="flex-row gap-1.5">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5, 6].map((step) => (
               <View
                 key={step}
                 className="h-1.5 rounded-full"
                 style={{
-                  width: step <= 3 ? 32 : 16,
-                  backgroundColor: step <= 3 ? colors.primary : colors.border,
+                  width: step <= 4 ? 32 : 16,
+                  backgroundColor: step <= 4 ? colors.primary : colors.border,
                 }}
               />
             ))}
           </View>
-          <Text className="text-muted-foreground text-xs ml-2">Step 3 of 4</Text>
+          <Text className="text-muted-foreground text-xs ml-2">Step 4 of 6</Text>
         </View>
       </View>
 
@@ -520,7 +562,9 @@ export default function SelectScheduleScreen() {
 
         {/* Time slots */}
         <View className="px-4 pt-6">
-          <Text className="text-foreground text-base font-bold mb-3">Available times</Text>
+          <Text className="text-foreground text-base font-bold mb-3">
+            {hasSpecialist ? 'Available times' : 'Preferred time'}
+          </Text>
 
           {!selectedDate ? (
             <View className="items-center justify-center py-12">
@@ -579,7 +623,10 @@ export default function SelectScheduleScreen() {
       </ScrollView>
 
       {/* Continue button */}
-      <View className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
+      <View
+        className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border"
+        style={{ paddingBottom: bottom }}
+      >
         <Button
           variant="primary"
           onPress={handleContinue}

@@ -310,7 +310,7 @@ export default function AppointmentsListScreen() {
   useRefreshOnFocus(refetch);
 
   const navigateToBook = useCallback(() => {
-    navigation.navigate('SelectSpecialty');
+    navigation.navigate('SelectServiceType');
   }, [navigation]);
 
   const handleJoin = useCallback((appointment: any) => {

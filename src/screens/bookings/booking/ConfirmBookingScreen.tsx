@@ -328,7 +328,7 @@ export default function ConfirmBookingScreen() {
       <View className="px-4 pt-4 pb-2">
         <View className="flex-row items-center gap-2">
           <View className="flex-row gap-1.5">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5, 6].map((step) => (
               <View
                 key={step}
                 className="h-1.5 rounded-full"
@@ -336,7 +336,7 @@ export default function ConfirmBookingScreen() {
               />
             ))}
           </View>
-          <Text className="text-muted-foreground text-xs ml-2">Step 4 of 4</Text>
+          <Text className="text-muted-foreground text-xs ml-2">Step 6 of 6</Text>
         </View>
       </View>
 
@@ -757,7 +757,10 @@ export default function ConfirmBookingScreen() {
       </ScrollView>
 
       {/* Confirm button */}
-      <View className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border">
+      <View
+        className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t border-border"
+        style={{ paddingBottom: bottom }}
+      >
         <Button
           variant="primary"
           onPress={handleSubmit(onSubmit)}
