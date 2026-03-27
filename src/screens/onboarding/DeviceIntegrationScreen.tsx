@@ -453,7 +453,7 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
         });
         // Fire sync in background — the progress sheet gives the user full visibility
         // and lets them dismiss it while the data is still uploading.
-        void runAppleHealthSync();
+        runAppleHealthSync();
       } else if (result?.requiresNativeApp) {
         Alert.alert('Not Available', 'This provider requires native SDK support.');
       } else if (result?.authUrl) {
