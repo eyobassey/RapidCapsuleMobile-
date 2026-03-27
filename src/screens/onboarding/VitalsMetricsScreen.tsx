@@ -81,8 +81,10 @@ export default function VitalsMetricsScreen({ navigation }: Props) {
     try {
       await usersService.updateProfile({
         profile: {
-          height: height.trim() ? { value: parseFloat(height), unit: 'cm' } : undefined,
-          weight: weight.trim() ? { value: parseFloat(weight), unit: 'kg' } : undefined,
+          basic_health_info: {
+            height: height.trim() ? { value: parseFloat(height), unit: 'cm' } : undefined,
+            weight: weight.trim() ? { value: parseFloat(weight), unit: 'kg' } : undefined,
+          },
           blood_type: bloodType || undefined,
           genotype: genotype || undefined,
         },
