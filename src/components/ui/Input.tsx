@@ -48,18 +48,23 @@ const Input = forwardRef<RNTextInput, InputProps>(function Input(
           error ? 'border-destructive' : focused ? 'border-primary' : 'border-border'
         } ${className || ''}`}
       >
-        {icon && <View className="pl-4">{icon}</View>}
+        {icon && <View className="pl-4 self-center items-center justify-center">{icon}</View>}
         <TextInput
           ref={ref}
-          className={`flex-1 text-foreground text-base px-4 h-full ${icon ? 'pl-3' : ''}`}
+          className={`flex-1 self-stretch text-foreground text-base px-4 ${icon ? 'pl-3' : ''}`}
           placeholderTextColor="#7c8ba3"
+          textAlignVertical="center"
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           accessibilityRole="text"
           accessibilityLabel={derivedAccessibilityLabel}
           {...props}
         />
-        {rightIcon && <TouchableOpacity className="pr-4">{rightIcon}</TouchableOpacity>}
+        {rightIcon && (
+          <TouchableOpacity className="pr-4 self-center items-center justify-center">
+            {rightIcon}
+          </TouchableOpacity>
+        )}
       </View>
       {error && <Text className="text-xs text-destructive mt-1 ml-1">{error}</Text>}
     </View>
