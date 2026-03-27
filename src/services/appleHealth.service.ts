@@ -30,6 +30,26 @@ const SYNC_WINDOW_DAYS = 7;
 // 5-second tolerance for pairing systolic/diastolic samples from the same measurement
 const BP_PAIR_TOLERANCE_MS = 5000;
 
+// Progress reporting constants
+// Phase 1 (HealthKit reads): 0-40%, Phase 2 (API uploads): 40-100%
+const READ_PHASE_END_PCT = 40;
+const TOTAL_READ_TYPES = 12;
+
+const UPLOAD_LABELS: Record<string, string> = {
+  heart_rate: 'heart rate',
+  steps: 'steps',
+  sleep: 'sleep data',
+  blood_pressure: 'blood pressure',
+  oxygen_saturation: 'oxygen levels',
+  body_temperature: 'body temperature',
+  weight: 'body weight',
+  respiratory_rate: 'respiratory rate',
+  calories_burned: 'calories burned',
+  body_fat: 'body fat',
+  blood_glucose: 'blood glucose',
+  distance: 'distance data',
+};
+
 // Maps HealthKit dataType keys → Vitals API field names
 // Vital entity shape per field: { value: String, unit: String, updatedAt: Date }
 const HEALTHKIT_TO_VITALS_FIELD: Record<string, string> = {
@@ -79,7 +99,9 @@ export const appleHealthService = {
     }
   },
 
-  async fetchAndSync(): Promise<{ synced: number; errors: string[] }> {
+  async fetchAndSync(
+    onProgress?: (percent: number, label: string) => void
+  ): Promise<{ synced: number; errors: string[] }> {
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - SYNC_WINDOW_DAYS);
@@ -88,6 +110,12 @@ export const appleHealthService = {
 
     const healthData: HealthSample[] = [];
     const errors: string[] = [];
+    let readStep = 0;
+
+    const reportRead = (label: string) => {
+      readStep++;
+      onProgress?.(Math.round((readStep / TOTAL_READ_TYPES) * READ_PHASE_END_PCT), label);
+    };
 
     // Heart Rate
     try {
@@ -107,6 +135,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Heart rate: ${e.message}`);
     }
+    reportRead('Reading heart rate...');
 
     // Steps
     try {
@@ -126,6 +155,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Steps: ${e.message}`);
     }
+    reportRead('Reading steps...');
 
     // Sleep — exclude "in bed" and "awake" segments; count all actual sleep stages
     try {
@@ -150,6 +180,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Sleep: ${e.message}`);
     }
+    reportRead('Reading sleep data...');
 
     // Blood Pressure — HealthKit stores BP as a correlation; query systolic and
     // diastolic as separate quantity types and pair them by startDate proximity.
@@ -180,6 +211,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Blood pressure: ${e.message}`);
     }
+    reportRead('Reading blood pressure...');
 
     // SpO2 — HealthKit stores as a fraction (0–1); multiply by 100 for percentage
     try {
@@ -199,6 +231,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`SpO2: ${e.message}`);
     }
+    reportRead('Reading oxygen levels...');
 
     // Body Temperature
     try {
@@ -218,6 +251,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Body temp: ${e.message}`);
     }
+    reportRead('Reading body temperature...');
 
     // Weight
     try {
@@ -237,6 +271,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Weight: ${e.message}`);
     }
+    reportRead('Reading body weight...');
 
     // Respiratory Rate
     try {
@@ -256,6 +291,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Respiratory rate: ${e.message}`);
     }
+    reportRead('Reading respiratory rate...');
 
     // Active Energy Burned
     try {
@@ -275,6 +311,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Calories: ${e.message}`);
     }
+    reportRead('Reading calories burned...');
 
     // Body Fat — HealthKit stores as a fraction (0–1); multiply by 100 for percentage
     try {
@@ -294,6 +331,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Body fat: ${e.message}`);
     }
+    reportRead('Reading body fat...');
 
     // Blood Glucose
     try {
@@ -313,6 +351,7 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Blood glucose: ${e.message}`);
     }
+    reportRead('Reading blood glucose...');
 
     // Distance Walking/Running
     try {
@@ -332,8 +371,10 @@ export const appleHealthService = {
     } catch (e: any) {
       errors.push(`Distance: ${e.message}`);
     }
+    reportRead('Preparing to upload...');
 
     if (healthData.length === 0) {
+      onProgress?.(100, 'No new data found');
       return { synced: 0, errors };
     }
 
@@ -349,6 +390,8 @@ export const appleHealthService = {
     }
 
     let totalSynced = 0;
+    const totalUploadTypes = byType.size;
+    let uploadedTypes = 0;
 
     // Send readings in batches — one call per reading to avoid payload limits
     // but limit to the most recent 50 per type to avoid overwhelming the API
@@ -356,6 +399,13 @@ export const appleHealthService = {
     for (const [dataType, samples] of byType.entries()) {
       const apiField = HEALTHKIT_TO_VITALS_FIELD[dataType];
       if (!apiField) continue;
+
+      const uploadLabel = UPLOAD_LABELS[dataType] ?? dataType;
+      onProgress?.(
+        READ_PHASE_END_PCT +
+          Math.round((uploadedTypes / totalUploadTypes) * (100 - READ_PHASE_END_PCT)),
+        `Uploading ${uploadLabel}...`
+      );
 
       // Sort newest first, take up to MAX_PER_TYPE
       const sorted = samples
@@ -377,8 +427,11 @@ export const appleHealthService = {
           break; // Stop syncing this type on error
         }
       }
+
+      uploadedTypes++;
     }
 
+    onProgress?.(100, 'Sync complete');
     return { synced: totalSynced, errors };
   },
 };

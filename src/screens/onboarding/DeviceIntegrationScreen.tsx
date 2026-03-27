@@ -8,10 +8,12 @@ import {
   X,
   XCircle,
 } from 'lucide-react-native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  AppState,
   Modal,
   Platform,
   Switch,
@@ -128,6 +130,75 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
   });
   const [saving, setSaving] = useState(false);
 
+  // Apple Health sync progress sheet
+  interface SyncSheetState {
+    visible: boolean;
+    percent: number;
+    label: string;
+    done: boolean;
+    synced: number;
+    failed: boolean;
+  }
+  const [syncSheet, setSyncSheet] = useState<SyncSheetState>({
+    visible: false,
+    percent: 0,
+    label: '',
+    done: false,
+    synced: 0,
+    failed: false,
+  });
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  // Tracks whether the component is still mounted — prevents state updates
+  // from in-flight sync tasks after the user has navigated away.
+  const mountedRef = useRef(true);
+  // Guards against starting a second parallel sync while one is already in flight.
+  // A plain ref (not state) so toggling it never triggers a re-render.
+  const isSyncingAppleHealthRef = useRef(false);
+  // Set to true when the user taps "Run in background" so the completion
+  // handler knows it needs to surface a notification instead of updating the sheet.
+  const syncDismissedRef = useRef(false);
+  // Holds a completed sync result that arrived while the app was backgrounded,
+  // so the AppState listener can surface it when the app returns to the foreground.
+  const pendingSyncResultRef = useRef<{ synced: number; failed: boolean } | null>(null);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Show a notification when the app comes back to the foreground after a sync
+  // that completed while the app was suspended in the background.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active' && pendingSyncResultRef.current !== null) {
+        const { synced, failed } = pendingSyncResultRef.current;
+        pendingSyncResultRef.current = null;
+        if (failed) {
+          Alert.alert('Sync Failed', 'Apple Health sync encountered an error. Please try again.');
+        } else {
+          Alert.alert(
+            'Apple Health Sync Complete',
+            synced > 0
+              ? `${synced} health reading${synced === 1 ? '' : 's'} synced to your profile.`
+              : 'No new health data found.'
+          );
+        }
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // Smoothly animate the progress bar whenever percent changes
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: syncSheet.percent,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [syncSheet.percent, progressAnim]);
+
   // Load user prefs
   useEffect(() => {
     const di = user?.device_integration;
@@ -234,6 +305,97 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
     [loadIntegrations]
   );
 
+  // Runs an Apple Health sync with real-time progress reporting.
+  // Fires-and-forgets safely — the progress sheet handles all feedback.
+  // The caller should NOT await this if they want background behaviour.
+  const onSyncProgress = useCallback((percent: number, label: string) => {
+    if (!mountedRef.current) return;
+    setSyncSheet((prev) => ({ ...prev, percent, label }));
+  }, []);
+
+  const runAppleHealthSync = useCallback(async () => {
+    if (!mountedRef.current || isSyncingAppleHealthRef.current) return;
+    isSyncingAppleHealthRef.current = true;
+    syncDismissedRef.current = false;
+    setSyncSheet({
+      visible: true,
+      percent: 0,
+      label: 'Preparing...',
+      done: false,
+      synced: 0,
+      failed: false,
+    });
+
+    try {
+      const result = await appleHealthService.fetchAndSync(onSyncProgress);
+      const syncedAt = new Date().toISOString();
+
+      if (mountedRef.current) {
+        // Update sheet to done state
+        setSyncSheet((prev) => ({
+          ...prev,
+          percent: 100,
+          label: result.synced > 0 ? 'Sync complete' : 'No new data found',
+          done: true,
+          synced: result.synced,
+          failed: false,
+        }));
+
+        // Optimistically stamp the last-sync date on the card so the user
+        // sees it update immediately without waiting for loadIntegrations().
+        if (result.synced > 0) {
+          setIntegrations((prev) =>
+            prev.map((i: any) =>
+              i.provider === 'apple_health' ? { ...i, lastSyncAt: syncedAt } : i
+            )
+          );
+        }
+      }
+
+      // Notify if the user is not watching the progress sheet
+      if (syncDismissedRef.current || !mountedRef.current) {
+        const message =
+          result.synced > 0
+            ? `${result.synced} health reading${
+                result.synced === 1 ? '' : 's'
+              } synced to your profile.`
+            : 'No new health data found.';
+
+        if (AppState.currentState === 'active') {
+          // App is in the foreground on a different screen — show an alert immediately
+          Alert.alert('Apple Health Sync Complete', message);
+        } else {
+          // App is backgrounded — queue to show when it returns to foreground
+          pendingSyncResultRef.current = { synced: result.synced, failed: false };
+        }
+      }
+    } catch {
+      if (mountedRef.current) {
+        setSyncSheet((prev) => ({
+          ...prev,
+          percent: 100,
+          label: 'Sync failed',
+          done: true,
+          failed: true,
+        }));
+      }
+
+      if (syncDismissedRef.current || !mountedRef.current) {
+        if (AppState.currentState === 'active') {
+          Alert.alert('Sync Failed', 'Apple Health sync encountered an error. Please try again.');
+        } else {
+          pendingSyncResultRef.current = { synced: 0, failed: true };
+        }
+      }
+    } finally {
+      isSyncingAppleHealthRef.current = false;
+      // Always refresh integration card to pick up backend-confirmed state
+      if (mountedRef.current) {
+        await loadIntegrations();
+      }
+    }
+  }, [onSyncProgress, loadIntegrations]);
+
   // Connect
   const handleConnect = async (appId: string) => {
     setConnecting(appId);
@@ -277,19 +439,8 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
       });
 
       if (appId === 'apple_health') {
-        // Apple Health is always on-device — always run a native sync after connect,
-        // regardless of what the backend returns (avoids silent failure if
-        // result?.requiresNativeApp is absent or undefined).
-        Alert.alert(
-          'Apple Health Connected',
-          'HealthKit permissions granted. Syncing your health data now...'
-        );
-        const syncResult = await appleHealthService.fetchAndSync();
-        if (syncResult.synced > 0) {
-          Alert.alert('Sync Complete', `${syncResult.synced} health readings synced.`);
-        }
-        // Ensure the integration shows as connected in the UI
-        // (backend may take a moment to reflect the status)
+        // Optimistically mark as connected so the UI updates immediately.
+        // The backend may take a moment to reflect the status change.
         setIntegrations((prev: any[]) => {
           const existing = prev.find((i: any) => i.provider === appId);
           if (existing) {
@@ -300,7 +451,9 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
             { provider: appId, status: 'connected', lastSyncAt: new Date().toISOString() },
           ];
         });
-        await loadIntegrations();
+        // Fire sync in background — the progress sheet gives the user full visibility
+        // and lets them dismiss it while the data is still uploading.
+        void runAppleHealthSync();
       } else if (result?.requiresNativeApp) {
         Alert.alert('Not Available', 'This provider requires native SDK support.');
       } else if (result?.authUrl) {
@@ -364,20 +517,15 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
     setSyncing(appId);
     try {
       if (appId === 'apple_health' && appleHealthService.isAvailable()) {
-        const result = await appleHealthService.fetchAndSync();
-        if (result.synced > 0) {
-          Alert.alert(
-            'Sync Complete',
-            `${result.synced} health readings synced from Apple Health.`
-          );
-        } else {
-          Alert.alert('No New Data', 'No new health data found to sync.');
-        }
+        // Progress sheet owns all feedback for Apple Health syncs.
+        // Fire without awaiting so the finally block clears the card spinner
+        // immediately — the sheet shows the real progress independently.
+        void runAppleHealthSync();
       } else {
         await healthIntegrationsService.sync(appId);
         Alert.alert('Sync Complete', 'Your health data has been synced.');
+        await loadIntegrations();
       }
-      await loadIntegrations();
     } catch (err: any) {
       Alert.alert('Sync Error', parseApiError(err).message);
     } finally {
@@ -734,6 +882,162 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
           onToggle={(v) => setNotifications((prev) => ({ ...prev, wellness_tips: v }))}
         />
       </View>
+
+      {/* Apple Health Sync Progress Sheet */}
+      <Modal
+        visible={syncSheet.visible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setSyncSheet((prev) => ({ ...prev, visible: false }))}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'flex-end',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.card,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              paddingHorizontal: 24,
+              paddingTop: 12,
+              paddingBottom: 40,
+            }}
+          >
+            {/* Drag handle */}
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: colors.border,
+                alignSelf: 'center',
+                marginBottom: 24,
+              }}
+            />
+
+            {/* Icon + title */}
+            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+              <View
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 28,
+                  backgroundColor: '#FF2D5520',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 12,
+                }}
+              >
+                <Heart size={28} color="#FF2D55" />
+              </View>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: colors.foreground }}>
+                {syncSheet.done
+                  ? syncSheet.failed
+                    ? 'Sync Failed'
+                    : 'Sync Complete'
+                  : 'Syncing Apple Health'}
+              </Text>
+            </View>
+
+            {/* Progress bar */}
+            <View
+              style={{
+                height: 8,
+                backgroundColor: colors.border,
+                borderRadius: 4,
+                overflow: 'hidden',
+                marginBottom: 10,
+              }}
+            >
+              <Animated.View
+                style={{
+                  height: '100%',
+                  borderRadius: 4,
+                  backgroundColor: syncSheet.failed ? colors.destructive : '#FF2D55',
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 100],
+                    outputRange: ['0%', '100%'],
+                  }),
+                }}
+              />
+            </View>
+
+            {/* Percent + label */}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 28,
+              }}
+            >
+              <Text style={{ fontSize: 13, color: colors.mutedForeground }}>{syncSheet.label}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.foreground }}>
+                {Math.round(syncSheet.percent)}%
+              </Text>
+            </View>
+
+            {/* Result summary (shown when done) */}
+            {syncSheet.done && !syncSheet.failed && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  marginBottom: 24,
+                }}
+              >
+                <CheckCircle size={16} color={colors.success} />
+                <Text style={{ fontSize: 14, color: colors.success, fontWeight: '500' }}>
+                  {syncSheet.synced > 0
+                    ? `${syncSheet.synced} reading${syncSheet.synced === 1 ? '' : 's'} synced`
+                    : 'No new health data found'}
+                </Text>
+              </View>
+            )}
+
+            {/* Actions */}
+            {syncSheet.done ? (
+              <TouchableOpacity
+                onPress={() => setSyncSheet((prev) => ({ ...prev, visible: false }))}
+                activeOpacity={0.8}
+                style={{
+                  backgroundColor: '#FF2D55',
+                  borderRadius: 14,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 15, fontWeight: '700', color: colors.white }}>Done</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => {
+                  syncDismissedRef.current = true;
+                  setSyncSheet((prev) => ({ ...prev, visible: false }));
+                }}
+                activeOpacity={0.8}
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 14,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 15, fontWeight: '600', color: colors.mutedForeground }}>
+                  Run in background
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* OAuth WebView Modal */}
       <Modal
