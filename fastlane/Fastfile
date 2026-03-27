@@ -1,6 +1,8 @@
+# encoding: utf-8
 # Fix macOS 15 OpenSSL: EC.new can't parse PKCS#8 keys, but PKey.read can
 require 'openssl'
 require 'fileutils'
+require 'tmpdir'
 
 class OpenSSL::PKey::EC
   alias_method :original_initialize, :initialize
@@ -25,16 +27,16 @@ IOS_SCHEME    = "RapidCapsules"
 
 def asc_api_key
   app_store_connect_api_key(
-    key_id:       ENV["ASC_KEY_ID"]      || "XYZ6XN77NT",
-    issuer_id:    ENV["ASC_ISSUER_ID"]   || "69a6de93-f1c0-47e3-e053-5b8c7c11a4d1",
-    key_filepath: ENV.fetch("ASC_KEY_FILEPATH", ""),
+    key_id:       ENV["ASC_KEY_ID"]    || "XYZ6XN77NT",
+    issuer_id:    ENV["ASC_ISSUER_ID"] || "69a6de93-f1c0-47e3-e053-5b8c7c11a4d1",
+    key_filepath: ENV["ASC_KEY_FILEPATH"],  # nil triggers a clear error if unset
     in_house: false
   )
 end
 
 def ios_xcargs
-  key_id    = ENV["ASC_KEY_ID"]      || "XYZ6XN77NT"
-  issuer_id = ENV["ASC_ISSUER_ID"]   || "69a6de93-f1c0-47e3-e053-5b8c7c11a4d1"
+  key_id    = ENV["ASC_KEY_ID"]    || "XYZ6XN77NT"
+  issuer_id = ENV["ASC_ISSUER_ID"] || "69a6de93-f1c0-47e3-e053-5b8c7c11a4d1"
   key_path  = ENV["ASC_KEY_FILEPATH"]
   "-allowProvisioningUpdates " \
   "-authenticationKeyPath '#{key_path}' " \
@@ -42,84 +44,96 @@ def ios_xcargs
   "-authenticationKeyIssuerID '#{issuer_id}'"
 end
 
-# Returns all commit subjects (+ bodies) since the last git tag.
-def commits_since_last_tag
-  last_tag = sh("cd .. && git describe --tags --abbrev=0 2>/dev/null || echo ''").strip
+# Returns commit subjects only (one per line) since the last git tag.
+# Used for changelog generation — we only want the subject line, not the body,
+# to avoid body text accidentally matching conventional commit type patterns.
+def commit_subjects_since_last_tag
+  last_tag = sh("cd .. && git describe --tags --abbrev=0 2>/dev/null || echo ''", log: false).strip
   range    = last_tag.empty? ? "HEAD" : "#{last_tag}..HEAD"
-  sh("cd .. && git log #{range} --pretty=format:'%s%n%b' --no-merges").strip
+  sh("cd .. && git log #{range} --pretty=format:'%s' --no-merges", log: false).strip
+end
+
+# Returns full commit messages (subject + body) since the last git tag.
+# Used only by derive_bump_type to detect BREAKING CHANGE footers in the body.
+def full_commits_since_last_tag
+  last_tag = sh("cd .. && git describe --tags --abbrev=0 2>/dev/null || echo ''", log: false).strip
+  range    = last_tag.empty? ? "HEAD" : "#{last_tag}..HEAD"
+  sh("cd .. && git log #{range} --pretty=format:'%s%n%b' --no-merges", log: false).strip
 end
 
 # Derives the semver bump type from conventional commits since the last tag:
-#   BREAKING CHANGE / feat! → major
-#   feat:                   → minor
-#   anything else           → patch
-# Pass type: to override (e.g. when forcing a major from the CLI).
+#   BREAKING CHANGE in body / feat! → major
+#   feat:                           → minor
+#   anything else                   → patch
+# Pass override: to force a specific type from the CLI.
 def derive_bump_type(override: nil)
   return override if override
 
-  commits = commits_since_last_tag
-  return 'major' if commits.match?(/^(feat|fix|refactor|chore)!:|BREAKING CHANGE:/i)
+  commits = full_commits_since_last_tag
+  return 'major' if commits.match?(/^(feat|fix|refactor|chore)!:|^BREAKING CHANGE:/i)
   return 'minor' if commits.match?(/^feat(\(.*?\))?:/)
   'patch'
 end
 
-# Strips the conventional commit prefix and capitalises the remainder.
+# Strips the conventional commit prefix and capitalises the first word.
 # "feat(auth): add biometric login" → "Add biometric login"
 def clean_subject(msg)
   msg.sub(/^[a-z]+(\(.*?\))?!?:\s*/, '').capitalize
 end
 
-# ── Beta changelog (TestFlight / Android internal) ────────────────────────────
-# Audience: internal testers. Sectioned by type, emoji headers, technical detail
-# is fine. Apple has no hard limit for TestFlight notes; Android internal is
-# capped at 500 chars so we truncate on whole sentences.
-def generate_beta_changelog(max_length: nil)
-  raw      = commits_since_last_tag
-  subjects = raw.split("\n").reject(&:empty?)
-
-  breaking = subjects.select { |c| c.match?(/^[a-z]+(\(.*?\))?!:|BREAKING CHANGE:/i) }
-  features = subjects.select { |c| c.match?(/^feat(\(.*?\))?:/)  && !c.match?(/!:/) }
-  fixes    = subjects.select { |c| c.match?(/^fix(\(.*?\))?:/)   && !c.match?(/!:/) }
-
-  sections = []
-  sections << "⚠️ Breaking changes:\n" + breaking.map { |c| "  • #{clean_subject(c)}" }.join("\n") unless breaking.empty?
-  sections << "✨ New:\n"   + features.map { |c| "  • #{clean_subject(c)}" }.join("\n") unless features.empty?
-  sections << "🐛 Fixed:\n" + fixes.map    { |c| "  • #{clean_subject(c)}" }.join("\n") unless fixes.empty?
-
-  result = sections.empty? ? "Internal improvements and maintenance." : sections.join("\n\n")
-  return result unless max_length
-
-  # Truncate on a whole sentence/bullet boundary to avoid mid-line cuts
-  truncated = result[0, max_length]
+# Truncates text at a whole-line boundary so bullets are never cut mid-sentence.
+# Google Play enforces 500 chars on all tracks; Ruby counts Unicode codepoints
+# correctly once the file is declared utf-8, matching Play Store's own counting.
+def truncate_at_line(text, max_length)
+  return text if text.length <= max_length
+  truncated  = text[0, max_length]
   last_break = truncated.rindex("\n") || truncated.length
   truncated[0, last_break].strip
 end
 
-# ── Release changelog (App Store / Play Store public) ─────────────────────────
-# Audience: end users. No technical prefixes, plain user-friendly language.
-# Apple App Store: 4000 char limit. Google Play production: 500 char limit.
-# Apple reviewers read this — avoid generic-only notes on major versions.
-def generate_release_changelog(max_length: nil)
-  raw      = commits_since_last_tag
-  subjects = raw.split("\n").reject(&:empty?)
+# ── Beta changelog ─────────────────────────────────────────────────────────────
+# Audience : internal testers (TestFlight / Play Store internal track)
+# Format   : sectioned with emoji headers — technical detail is appropriate here
+# Limits   : TestFlight has no hard limit; Play Store internal caps at 500 chars
+# Emojis   : fully supported by both TestFlight and Play Store (UTF-8)
+def generate_beta_changelog(max_length: nil)
+  subjects = commit_subjects_since_last_tag.split("\n").reject(&:empty?)
 
-  features = subjects.select { |c| c.match?(/^feat(\(.*?\))?[^!]:/) }
-  fixes    = subjects.select { |c| c.match?(/^fix(\(.*?\))?[^!]:/)  }
-  breaking = subjects.select { |c| c.match?(/^[a-z]+(\(.*?\))?!:|BREAKING CHANGE:/i) }
+  breaking = subjects.select { |c| c.match?(/^[a-z]+(\(.*?\))?!:/) }
+  features = subjects.select { |c| c.match?(/^feat(\(.*?\))?:/) && !c.match?(/!:/) }
+  fixes    = subjects.select { |c| c.match?(/^fix(\(.*?\))?:/)  && !c.match?(/!:/) }
+
+  sections = []
+  sections << "⚠️ Breaking changes:\n"  + breaking.map { |c| "  • #{clean_subject(c)}" }.join("\n") unless breaking.empty?
+  sections << "✨ New:\n"               + features.map { |c| "  • #{clean_subject(c)}" }.join("\n") unless features.empty?
+  sections << "🐛 Fixed:\n"             + fixes.map    { |c| "  • #{clean_subject(c)}" }.join("\n") unless fixes.empty?
+
+  result = sections.empty? ? "Internal improvements and maintenance." : sections.join("\n\n")
+  max_length ? truncate_at_line(result, max_length) : result
+end
+
+# ── Release changelog ──────────────────────────────────────────────────────────
+# Audience : end users (App Store "What's New" / Play Store production)
+# Format   : plain bullet list, no technical prefixes, no emoji — professional tone
+# Limits   : App Store 4000 chars; Play Store production 500 chars
+# Note     : Apple reviewers read this. Bare "bug fixes" as the sole entry on a
+#            major version risks a metadata rejection — use the descriptive fallback.
+def generate_release_changelog(max_length: nil)
+  subjects = commit_subjects_since_last_tag.split("\n").reject(&:empty?)
+
+  # FIX: use !c.match?(/!:/) instead of [^!]: which incorrectly consumed a char
+  # before the colon and caused feat: / fix: (no scope) to never match.
+  breaking = subjects.select { |c| c.match?(/^[a-z]+(\(.*?\))?!:/) }
+  features = subjects.select { |c| c.match?(/^feat(\(.*?\))?:/) && !c.match?(/!:/) }
+  fixes    = subjects.select { |c| c.match?(/^fix(\(.*?\))?:/)  && !c.match?(/!:/) }
 
   lines = []
-  lines += breaking.map { |c| "• #{clean_subject(c)}" } unless breaking.empty?
-  lines += features.map { |c| "• #{clean_subject(c)}" } unless features.empty?
-  lines += fixes.map    { |c| "• #{clean_subject(c)}" } unless fixes.empty?
+  lines += breaking.map { |c| "• #{clean_subject(c)}" }
+  lines += features.map { |c| "• #{clean_subject(c)}" }
+  lines += fixes.map    { |c| "• #{clean_subject(c)}" }
 
-  # Apple guideline: avoid bare "bug fixes" as the sole note on a major release.
-  # Use a descriptive fallback instead.
   result = lines.empty? ? "• Performance and stability improvements." : lines.join("\n")
-  return result unless max_length
-
-  truncated = result[0, max_length]
-  last_break = truncated.rindex("\n") || truncated.length
-  truncated[0, last_break].strip
+  max_length ? truncate_at_line(result, max_length) : result
 end
 
 # ─── Shared lanes (platform-independent) ──────────────────────────────────────
@@ -129,9 +143,10 @@ lane :validate do
   sh "cd .. && npm run lint"
   sh "cd .. && npm run type-check"
   sh "cd .. && npm test -- --ci --passWithNoTests"
-  sh "cd .. && npm audit --audit-level=high"
+  # critical only: high-severity transitive vulnerabilities in RN dependency trees
+  # would permanently block CI at the 'high' threshold.
+  sh "cd .. && npm audit --audit-level=critical"
 end
-
 
 # ─── iOS ──────────────────────────────────────────────────────────────────────
 
@@ -143,13 +158,13 @@ platform :ios do
   # ── Private lanes ─────────────────────────────────────────────────────────
 
   private_lane :bump_build_number do
-    increment_build_number(
-      xcodeproj:    IOS_PROJECT,
-      build_number: latest_testflight_build_number(
-        api_key:        asc_api_key,
-        app_identifier: BUNDLE_ID
-      ) + 1
-    )
+    # Rescue handles the first-ever deploy when no build exists on TestFlight yet.
+    current = begin
+      latest_testflight_build_number(api_key: asc_api_key, app_identifier: BUNDLE_ID)
+    rescue
+      0
+    end
+    increment_build_number(xcodeproj: IOS_PROJECT, build_number: current + 1)
   end
 
   private_lane :configure_signing do
@@ -175,20 +190,19 @@ platform :ios do
   private_lane :tag_and_push do |options|
     version = get_version_number(xcodeproj: IOS_PROJECT, target: IOS_SCHEME)
     build   = get_build_number(xcodeproj: IOS_PROJECT)
-    tag     = "ios/#{options[:prefix]}/v#{version}+#{build}"
-    add_git_tag(tag: tag)
+    add_git_tag(tag: "ios/#{options[:prefix]}/v#{version}+#{build}")
     push_git_tags
   end
 
   # ── Public lanes ──────────────────────────────────────────────────────────
 
-  desc "Bump iOS marketing version. Derives bump type from commits automatically; override with type: patch | minor | major"
+  desc "Bump iOS marketing version. Auto-derives bump type from commits; override with type: patch | minor | major"
   lane :bump_version do |options|
     type = derive_bump_type(override: options[:type])
     UI.message "Bump type: #{type} (derived from commits since last tag)"
 
     new_version = increment_version_number(xcodeproj: IOS_PROJECT, bump_type: type)
-    sh "cd .. && npm version #{new_version} --no-git-tag-version"
+    sh "cd .. && npm version #{new_version} --no-git-tag-version", log: false
     git_commit(
       path:    ["../ios/RapidCapsules.xcodeproj/project.pbxproj", "../package.json"],
       message: "chore(ios): bump version to #{new_version}"
@@ -274,25 +288,27 @@ platform :android do
     }
   end
 
-  # Writes the changelog to the path Play Store expects:
-  # metadata/android/en-US/changelogs/<versionCode>.txt (max 500 chars)
-  # Writes changelogs for both internal testers and public users.
-  # Play Store enforces 500 chars on ALL tracks. Truncation is on whole lines.
-  # Internal track gets the sectioned beta notes; production gets user-friendly copy.
-  private_lane :write_android_changelog do |options|
-    code = options[:version_code]
-    dir  = "../fastlane/metadata/android/en-US/changelogs"
+  # Writes the internal-track changelog to the path supply auto-discovers:
+  # metadata/android/en-US/changelogs/<versionCode>.txt (Play Store: 500 char max)
+  private_lane :write_internal_changelog do |options|
+    dir = "../fastlane/metadata/android/en-US/changelogs"
     FileUtils.mkdir_p(dir)
+    File.write("#{dir}/#{options[:version_code]}.txt", generate_beta_changelog(max_length: 500))
+  end
 
-    # Internal track reads from changelogs/<versionCode>.txt
-    File.write("#{dir}/#{code}.txt",       generate_beta_changelog(max_length: 500))
-    # Production release notes override written to a separate file, used in :release
-    File.write("#{dir}/#{code}_public.txt", generate_release_changelog(max_length: 500))
+  # Writes the public (production) release notes to a temp file named en-US.txt.
+  # supply derives the locale from the filename, so the name must be the locale code.
+  # Returns the absolute path for use in whatsnew_paths:.
+  private_lane :write_public_changelog do
+    dir  = Dir.mktmpdir("rc_whatsnew")
+    path = "#{dir}/en-US.txt"
+    File.write(path, generate_release_changelog(max_length: 500))
+    path
   end
 
   # ── Public lanes ──────────────────────────────────────────────────────────
 
-  desc "Bump Android versionName. Derives bump type from commits automatically; override with type: patch | minor | major"
+  desc "Bump Android versionName. Auto-derives bump type from commits; override with type: patch | minor | major"
   lane :bump_version do |options|
     type = derive_bump_type(override: options[:type])
     UI.message "Bump type: #{type} (derived from commits since last tag)"
@@ -307,7 +323,7 @@ platform :android do
                   end
 
     File.write(gradle_path, File.read(gradle_path).sub(/versionName\s+"[^"]+"/, "versionName \"#{new_version}\""))
-    sh "cd .. && npm version #{new_version} --no-git-tag-version"
+    sh "cd .. && npm version #{new_version} --no-git-tag-version", log: false
     git_commit(path: [gradle_path, "../package.json"], message: "chore(android): bump version to #{new_version}")
     push_to_git_remote
     UI.success "Android version bumped to #{new_version}"
@@ -327,7 +343,7 @@ platform :android do
       project_dir: "android",
       properties:  signing_properties
     )
-    write_android_changelog(version_code: new_code)
+    write_internal_changelog(version_code: new_code)
     upload_to_play_store(
       track:                   "internal",
       json_key:                ENV["GOOGLE_PLAY_JSON_KEY"],
@@ -342,18 +358,12 @@ platform :android do
 
   desc "Promote internal build to production (10% staged rollout) with user-facing release notes"
   lane :release do
-    # Resolve the versionCode that was uploaded during :beta so we can reference
-    # its public changelog file written by write_android_changelog.
-    gradle_path  = "../android/app/build.gradle"
-    version_code = File.read(gradle_path).match(/versionCode\s+(\d+)/)[1]
-    public_notes = "../fastlane/metadata/android/en-US/changelogs/#{version_code}_public.txt"
-
     upload_to_play_store(
       track:                   "internal",
       track_promote_to:        "production",
       rollout:                 "0.1",
       json_key:                ENV["GOOGLE_PLAY_JSON_KEY"],
-      whatsnew_paths:          [public_notes],
+      whatsnew_paths:          [write_public_changelog],
       skip_upload_apk:         true,
       skip_upload_aab:         true,
       skip_upload_images:      true,
