@@ -66,8 +66,14 @@ end
 #   feat:                           → minor
 #   anything else                   → patch
 # Pass override: to force a specific type from the CLI.
+VALID_BUMP_TYPES = %w[patch minor major].freeze
+
 def derive_bump_type(override: nil)
-  return override if override
+  if override
+    type = override.to_s  # normalise symbols (:minor) and strings ("minor")
+    UI.user_error!("Invalid type: '#{type}' — must be patch, minor, or major") unless VALID_BUMP_TYPES.include?(type)
+    return type
+  end
 
   commits = full_commits_since_last_tag
   return 'major' if commits.match?(/^(feat|fix|refactor|chore)!:|^BREAKING CHANGE:/i)
@@ -158,10 +164,14 @@ platform :ios do
   # ── Private lanes ─────────────────────────────────────────────────────────
 
   private_lane :bump_build_number do
-    # Rescue handles the first-ever deploy when no build exists on TestFlight yet.
+    # Build the API key first — auth failures propagate immediately with a clear error.
+    # Only the TestFlight lookup itself is rescued (handles first-ever deploy when no
+    # build exists yet). Using StandardError so Interrupt/SignalException still escape.
+    api_key = asc_api_key
     current = begin
-      latest_testflight_build_number(api_key: asc_api_key, app_identifier: BUNDLE_ID)
-    rescue
+      latest_testflight_build_number(api_key: api_key, app_identifier: BUNDLE_ID)
+    rescue StandardError => e
+      UI.important("No existing TestFlight build found (#{e.message}) — starting from 1")
       0
     end
     increment_build_number(xcodeproj: IOS_PROJECT, build_number: current + 1)
@@ -274,7 +284,9 @@ platform :android do
   private_lane :bump_version_code do
     gradle_path = "../android/app/build.gradle"
     contents    = File.read(gradle_path)
-    new_code    = contents.match(/versionCode\s+(\d+)/)[1].to_i + 1
+    match       = contents.match(/versionCode\s+(\d+)/)
+    UI.user_error!("Could not find versionCode in #{gradle_path}") unless match
+    new_code = match[1].to_i + 1
     File.write(gradle_path, contents.sub(/versionCode\s+\d+/, "versionCode #{new_code}"))
     new_code
   end
@@ -313,16 +325,22 @@ platform :android do
     type = derive_bump_type(override: options[:type])
     UI.message "Bump type: #{type} (derived from commits since last tag)"
 
-    gradle_path = "../android/app/build.gradle"
-    current     = File.read(gradle_path).match(/versionName\s+"([^"]+)"/)[1]
-    parts       = current.split('.').map(&:to_i)
+    gradle_path   = "../android/app/build.gradle"
+    contents      = File.read(gradle_path)
+    version_match = contents.match(/versionName\s+"([^"]+)"/)
+    UI.user_error!("Could not find versionName in #{gradle_path}") unless version_match
+    parts = version_match[1].split('.').map(&:to_i)
+    major = parts.fetch(0, 0)
+    minor = parts.fetch(1, 0)
+    patch = parts.fetch(2, 0)  # fetch with default — "1.0" only has 2 parts; parts[2] would be nil
     new_version = case type
-                  when 'major' then "#{parts[0] + 1}.0.0"
-                  when 'minor' then "#{parts[0]}.#{parts[1] + 1}.0"
-                  when 'patch' then "#{parts[0]}.#{parts[1]}.#{parts[2] + 1}"
+                  when 'major' then "#{major + 1}.0.0"
+                  when 'minor' then "#{major}.#{minor + 1}.0"
+                  when 'patch' then "#{major}.#{minor}.#{patch + 1}"
+                  else UI.user_error!("Unexpected bump type: '#{type}'")
                   end
 
-    File.write(gradle_path, File.read(gradle_path).sub(/versionName\s+"[^"]+"/, "versionName \"#{new_version}\""))
+    File.write(gradle_path, contents.sub(/versionName\s+"[^"]+"/, "versionName \"#{new_version}\""))
     sh "cd .. && npm version #{new_version} --no-git-tag-version", log: false
     git_commit(path: [gradle_path, "../package.json"], message: "chore(android): bump version to #{new_version}")
     push_to_git_remote
@@ -351,8 +369,10 @@ platform :android do
       skip_upload_images:      true,
       skip_upload_screenshots: true
     )
-    version_name = File.read("../android/app/build.gradle").match(/versionName\s+"([^"]+)"/)[1]
-    add_git_tag(tag: "android/beta/v#{version_name}+#{new_code}")
+    gradle_contents = File.read("../android/app/build.gradle")
+    name_match      = gradle_contents.match(/versionName\s+"([^"]+)"/)
+    UI.user_error!("Could not read versionName after build") unless name_match
+    add_git_tag(tag: "android/beta/v#{name_match[1]}+#{new_code}")
     push_git_tags
   end
 
