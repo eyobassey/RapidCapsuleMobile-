@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { Text } from './Text';
 import { TextInput } from './TextInput';
+import { colors } from '../../theme/colors';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -16,6 +17,8 @@ interface InputProps extends TextInputProps {
   error?: string;
   containerClassName?: string;
 }
+
+const INPUT_HEIGHT = 56; // h-14 = 3.5rem = 56px
 
 const Input = forwardRef<RNTextInput, InputProps>(function Input(
   {
@@ -35,6 +38,8 @@ const Input = forwardRef<RNTextInput, InputProps>(function Input(
 
   const derivedAccessibilityLabel = accessibilityLabel || label;
 
+  const borderColor = error ? colors.destructive : focused ? colors.primary : colors.border;
+
   return (
     <View className={containerClassName}>
       {label && (
@@ -44,14 +49,37 @@ const Input = forwardRef<RNTextInput, InputProps>(function Input(
         </Text>
       )}
       <View
-        className={`flex-row items-center h-14 rounded-2xl bg-card border ${
-          error ? 'border-destructive' : focused ? 'border-primary' : 'border-border'
-        } ${className || ''}`}
+        className={`rounded-2xl bg-card ${className || ''}`}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          height: INPUT_HEIGHT,
+          borderWidth: 1,
+          borderColor,
+        }}
       >
-        {icon && <View className="pl-4 self-center items-center justify-center">{icon}</View>}
+        {icon && (
+          <View
+            style={{
+              paddingLeft: 16,
+              height: INPUT_HEIGHT,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {icon}
+          </View>
+        )}
         <TextInput
           ref={ref}
-          className={`flex-1 self-stretch text-foreground text-base px-4 ${icon ? 'pl-3' : ''}`}
+          style={{
+            flex: 1,
+            height: INPUT_HEIGHT,
+            paddingLeft: icon ? 12 : 16,
+            paddingRight: rightIcon ? 12 : 16,
+            paddingVertical: 0,
+            color: colors.foreground,
+          }}
           placeholderTextColor="#7c8ba3"
           textAlignVertical="center"
           onFocus={() => setFocused(true)}
@@ -61,7 +89,14 @@ const Input = forwardRef<RNTextInput, InputProps>(function Input(
           {...props}
         />
         {rightIcon && (
-          <TouchableOpacity className="pr-4 self-center items-center justify-center">
+          <TouchableOpacity
+            style={{
+              paddingRight: 16,
+              height: INPUT_HEIGHT,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             {rightIcon}
           </TouchableOpacity>
         )}
