@@ -1,3 +1,17 @@
+# [1.14.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.13.0...v1.14.0) (2026-03-30)
+
+### Bug Fixes
+
+- correct invocation of runAppleHealthSync in DeviceIntegrationScreen ([9851195](https://github.com/eyobassey/RapidCapsuleMobile-/commit/9851195c885ec405cbaee041eff06a1dc58d194e))
+- enhance Input component styling and functionality ([a6b1371](https://github.com/eyobassey/RapidCapsuleMobile-/commit/a6b137181aa59f32e2b9d6e3bb70f3aa696e994a))
+- improve input component layout and alignment ([8ae5d1d](https://github.com/eyobassey/RapidCapsuleMobile-/commit/8ae5d1de5dcd0b99be82f502859ea9b301c0b3fd))
+- restructure profile update to include basic health information ([0e3e276](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0e3e276fd4d5b5c96823bccaa3f4070bd13fe96c))
+
+### Features
+
+- enhance Fastlane configuration for iOS builds ([e3ae7a0](https://github.com/eyobassey/RapidCapsuleMobile-/commit/e3ae7a018f24a08aa8df49b1b59335a44f54823a))
+- implement Apple Health sync with progress reporting ([eea9caf](https://github.com/eyobassey/RapidCapsuleMobile-/commit/eea9caff4e0f3511d579734cb93d5adac2fcc903))
+
 # [1.13.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.12.1...v1.13.0) (2026-03-26)
 
 ### Bug Fixes
