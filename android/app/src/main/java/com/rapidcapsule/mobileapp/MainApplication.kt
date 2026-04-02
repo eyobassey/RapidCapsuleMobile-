@@ -1,6 +1,7 @@
 package com.rapidcapsule.mobileapp
 
 import android.app.Application
+import android.preference.PreferenceManager
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -22,6 +23,15 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
+    if (com.facebook.react.BuildConfig.DEBUG) {
+      // Force Metro dev server to localhost so the emulator always connects
+      // correctly regardless of what IP was auto-detected last session.
+      @Suppress("DEPRECATION")
+      PreferenceManager.getDefaultSharedPreferences(this)
+        .edit()
+        .putString("debug_http_host", "localhost:8081")
+        .apply()
+    }
     loadReactNative(this)
   }
 }
