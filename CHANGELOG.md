@@ -1,3 +1,11 @@
+## [1.14.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.14.0...v1.14.1) (2026-04-03)
+
+### Bug Fixes
+
+- **android:** resolve build and Metro connectivity issues ([30f5750](https://github.com/eyobassey/RapidCapsuleMobile-/commit/30f5750686817b06fd83f1e636e90bccc8f84137))
+- **deps:** allow legacy peer deps to unblock npm ci with pinned nitro-modules ([41377b3](https://github.com/eyobassey/RapidCapsuleMobile-/commit/41377b3b01e6058170957c39e85c6c42677090b5))
+- **e2e:** pre-deny ATT and notification permissions to prevent system dialogs blocking Detox ([0942e1f](https://github.com/eyobassey/RapidCapsuleMobile-/commit/0942e1f0ab98a7cb648b362116c57965e003147b))
+
 # [1.14.0](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.13.0...v1.14.0) (2026-03-30)
 
 ### Bug Fixes
