@@ -1,3 +1,9 @@
+## [1.14.2](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.14.1...v1.14.2) (2026-04-03)
+
+### Bug Fixes
+
+- **android:** use light nav pill and correct accent to remove brownish tint ([5381307](https://github.com/eyobassey/RapidCapsuleMobile-/commit/5381307e1e897eb4e69a36a070698616fec5594e))
+
 ## [1.14.1](https://github.com/eyobassey/RapidCapsuleMobile-/compare/v1.14.0...v1.14.1) (2026-04-03)
 
 ### Bug Fixes
