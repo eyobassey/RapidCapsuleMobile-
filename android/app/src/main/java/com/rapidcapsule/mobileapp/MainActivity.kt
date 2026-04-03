@@ -1,5 +1,6 @@
 package com.rapidcapsule.mobileapp
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
 import com.facebook.react.ReactActivity
@@ -13,6 +14,9 @@ class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
     super.onCreate(savedInstanceState)
+    // Override the transparent nav bar that DefaultReactActivityDelegate enables via
+    // enableEdgeToEdge(), so the app background doesn't bleed through.
+    window.navigationBarColor = Color.parseColor("#1a2236")
     // In order to handle permission contract results, we need to set the permission delegate.
     HealthConnectPermissionDelegate.setPermissionDelegate(this)
   }
