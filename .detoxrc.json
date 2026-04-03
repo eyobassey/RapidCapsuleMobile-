@@ -1,6 +1,10 @@
 {
-  "testRunner": "jest",
-  "runnerConfig": "e2e/jest.e2e.config.js",
+  "testRunner": {
+    "args": {
+      "$0": "jest",
+      "config": "e2e/jest.e2e.config.js"
+    }
+  },
   "behavior": {
     "init": {
       "reinstallApp": true,

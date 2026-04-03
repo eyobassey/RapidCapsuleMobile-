@@ -1,6 +1,10 @@
 describe('Auth entry', () => {
   beforeAll(async () => {
-    await device.launchApp({ delete: true, newInstance: true });
+    await device.launchApp({
+      delete: true,
+      newInstance: true,
+      permissions: { userTracking: 'NO', notifications: 'NO' },
+    });
   });
 
   it('shows splash CTAs', async () => {

@@ -4,6 +4,7 @@ describe('Messaging (authenticated)', () => {
       delete: true,
       newInstance: true,
       url: 'rapidcapsule://home?e2eSkipAuth=1',
+      permissions: { userTracking: 'NO', notifications: 'NO' },
     });
   });
 

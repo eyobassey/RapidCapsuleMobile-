@@ -1,6 +1,10 @@
 describe('Auth and onboarding gating', () => {
   beforeAll(async () => {
-    await device.launchApp({ delete: true, newInstance: true });
+    await device.launchApp({
+      delete: true,
+      newInstance: true,
+      permissions: { userTracking: 'NO', notifications: 'NO' },
+    });
   });
 
   it('shows auth entry and can navigate to login screen', async () => {

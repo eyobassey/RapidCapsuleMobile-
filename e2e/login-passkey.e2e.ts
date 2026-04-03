@@ -1,6 +1,10 @@
 describe('Login passkey / OTP entry', () => {
   beforeAll(async () => {
-    await device.launchApp({ delete: true, newInstance: true });
+    await device.launchApp({
+      delete: true,
+      newInstance: true,
+      permissions: { userTracking: 'NO', notifications: 'NO' },
+    });
   });
 
   it('navigates to login then OTP screen via passkey button', async () => {
