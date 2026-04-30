@@ -1,5 +1,18 @@
 # RapidCapsules Mobile
 
+<p align="center">
+  <strong>Mobile Application for Rapid Capsule — AI-Powered Telemedicine Platform</strong>
+</p>
+
+<p align="center">
+  <a href="https://rapidcapsule.com">Live Platform</a> •
+  <a href="https://rapidcapsule.com/rc-architecture">Architecture Documentation</a> •
+  <a href="https://api.rapidcapsule.com">API Documentation</a> •
+  <a href="https://github.com/eyobassey/rapidcapsule">Main Repository</a>
+</p>
+
+---
+
 A telemedicine and healthcare platform built with React Native 0.83 + Expo SDK 55 (bare workflow). Connects patients with doctors via real-time consultations, AI health companion (Dr. Eka), medication tracking, pharmacy ordering, and health vitals sync — with iOS 26 Liquid Glass UI support.
 
 ---
@@ -243,12 +256,35 @@ Semantic Release runs on `main` — Conventional Commits (`feat:`, `fix:`, `chor
 
 ## Related
 
-- [RapidCapsules API](https://github.com/eyobassey/rapidcapsule) — backend service
+- **Main Repository**: [rapidcapsule](https://github.com/eyobassey/rapidcapsule) — backend, web frontend, and admin portal
+- **Live Platform**: [rapidcapsule.com](https://rapidcapsule.com)
+- **API Documentation**: [api.rapidcapsule.com](https://api.rapidcapsule.com)
+- **Architecture Docs**: [rapidcapsule.com/rc-architecture](https://rapidcapsule.com/rc-architecture)
+
+### Documentation Links
+
+- [React Native Documentation](https://reactnative.dev/)
+- [Expo Documentation](https://docs.expo.dev/)
 - [Expo SDK 55 release notes](https://expo.dev/changelog/2025/sdk-55)
 - [expo-glass-effect docs](https://docs.expo.dev/versions/latest/sdk/glass-effect/)
+- [pnpm Documentation](https://pnpm.io/)
+- [TanStack Query Documentation](https://tanstack.com/query/latest)
+- [NativeWind Documentation](https://www.nativewind.dev/)
 
 ---
 
 ## Author
 
-Built by the RapidCapsules engineering team.
+**Aarav Mishra**
+_Software Engineer (Mobile)_
+
+- Email: aarav@rapidcapsule.com
+- GitHub: [@aarav-rapidcapsule](https://github.com/aarav-rapidcapsule)
+
+---
+
+## License
+
+This project is proprietary software. All rights reserved.
+
+© 2024–2026 Rapid Capsule
