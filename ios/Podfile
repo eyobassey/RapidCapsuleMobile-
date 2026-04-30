@@ -1,3 +1,5 @@
+require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
+
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
@@ -17,6 +19,7 @@ end
 project 'RapidCapsules.xcodeproj'
 
 target 'RapidCapsules' do
+  use_expo_modules!
   config = use_native_modules!
 
   use_react_native!(
@@ -33,22 +36,8 @@ target 'RapidCapsules' do
       # :ccache_enabled => true
     )
 
-    # Fix: RNReanimated inherits HERMES_ENABLE_DEBUGGER=1 but not HERMES_V1_ENABLED,
-    # causing it to include removed Hermes inspector headers on RN 0.84+ (Hermes V1).
-    if ENV['RCT_HERMES_V1_ENABLED'] != '0'
-      installer.pods_project.targets.each do |target|
-        if target.name == 'RNReanimated'
-          target.build_configurations.each do |config|
-            defs = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
-            unless defs.include?('HERMES_V1_ENABLED=1')
-              defs << 'HERMES_V1_ENABLED=1'
-            end
-          end
-        end
-      end
-    end
 
-  
+
       # Remove arm64 exclusion for simulators (needed for Apple Silicon Macs).
     # Must be patched in both build_settings AND the generated xcconfig files,
     # because CocoaPods writes EXCLUDED_ARCHS into the xcconfig after the

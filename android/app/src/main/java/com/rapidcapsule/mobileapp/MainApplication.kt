@@ -7,6 +7,8 @@ import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
 import com.facebook.react.ReactNativeApplicationEntryPoint.loadReactNative
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
+import expo.modules.ApplicationLifecycleDispatcher
+import expo.modules.ReactNativeHostHandlerProvider
 
 class MainApplication : Application(), ReactApplication {
 
@@ -23,6 +25,7 @@ class MainApplication : Application(), ReactApplication {
 
   override fun onCreate() {
     super.onCreate()
+    ApplicationLifecycleDispatcher.onApplicationCreate(this)
     if (com.facebook.react.BuildConfig.DEBUG) {
       // Force Metro dev server to localhost so the emulator always connects
       // correctly regardless of what IP was auto-detected last session.
