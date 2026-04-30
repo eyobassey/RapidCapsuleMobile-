@@ -18,8 +18,18 @@
 			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
-				<string>C617.1</string>
+				<string>0A2A.1</string>
 				<string>3B52.1</string>
+				<string>C617.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
+				<string>85F4.1</string>
 			</array>
 		</dict>
 		<dict>
@@ -30,27 +40,13 @@
 				<string>35F9.1</string>
 			</array>
 		</dict>
-		<dict>
-			<key>NSPrivacyAccessedAPIType</key>
-			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
-			<key>NSPrivacyAccessedAPITypeReasons</key>
-			<array>
-				<string>85F4.1</string>
-			</array>
-		</dict>
 	</array>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array/>
-	<!-- NSPrivacyTracking must be true because the app calls
-	     requestTrackingAuthorization() via react-native-tracking-transparency.
-	     NSPrivacyTrackingDomains lists every internet domain to which the app
-	     sends data used for tracking (ATT-gated). Add or remove domains to
-	     match your actual analytics/attribution stack. -->
 	<key>NSPrivacyTracking</key>
 	<true/>
 	<key>NSPrivacyTrackingDomains</key>
 	<array>
-		<!-- OneSignal analytics & push attribution -->
 		<string>onesignal.com</string>
 		<string>api.onesignal.com</string>
 	</array>

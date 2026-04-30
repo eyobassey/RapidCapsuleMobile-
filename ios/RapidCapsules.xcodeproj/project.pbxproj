@@ -15,11 +15,13 @@
 		4C3D405B212F46D1B42E1019 /* OpenRunde-Medium.otf in Resources */ = {isa = PBXBuildFile; fileRef = 60B11BB9DB834DB7AF307A34 /* OpenRunde-Medium.otf */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		8DB35FAE910C08D2DC80EF40 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 065858654D0FC4F5A41365D6 /* ExpoModulesProvider.swift */; };
 		B30B79DB86DC4689AA97860A /* OpenRunde-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = DD0737BE4AF84ED793E08C4E /* OpenRunde-Bold.otf */; };
 		F15F3A77396F4C7D967758C5 /* OpenRunde-Semibold.otf in Resources */ = {isa = PBXBuildFile; fileRef = AB696C3952414B72B47C5414 /* OpenRunde-Semibold.otf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		065858654D0FC4F5A41365D6 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-RapidCapsules/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* RapidCapsules.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RapidCapsules.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = RapidCapsules/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = RapidCapsules/Info.plist; sourceTree = "<group>"; };
@@ -82,6 +84,22 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		4139AC94761EDDE47C35A308 /* ExpoModulesProviders */ = {
+			isa = PBXGroup;
+			children = (
+				67227B0DCAC35E86AA3E70EF /* RapidCapsules */,
+			);
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		67227B0DCAC35E86AA3E70EF /* RapidCapsules */ = {
+			isa = PBXGroup;
+			children = (
+				065858654D0FC4F5A41365D6 /* ExpoModulesProvider.swift */,
+			);
+			name = RapidCapsules;
+			sourceTree = "<group>";
+		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -98,6 +116,7 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				BBD78D7AC51CEA395F1C20DB /* Pods */,
 				08222A0E11324E3E8DA48208 /* Resources */,
+				4139AC94761EDDE47C35A308 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -129,6 +148,7 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "RapidCapsules" */;
 			buildPhases = (
 				C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */,
+				3ACB2CEA2430ABCA379DC102 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
@@ -228,6 +248,30 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-RapidCapsules/Pods-RapidCapsules-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		3ACB2CEA2430ABCA379DC102 /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/RapidCapsules/RapidCapsules.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-RapidCapsules/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-RapidCapsules/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-RapidCapsules/expo-configure-project.sh\"\n";
+		};
 		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -275,6 +319,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				8DB35FAE910C08D2DC80EF40 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -305,6 +350,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.rapidcapsule.mobileapp;
 				PRODUCT_NAME = RapidCapsules;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -338,6 +384,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.rapidcapsule.mobileapp;
 				PRODUCT_NAME = RapidCapsules;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -408,10 +455,7 @@
 				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
-				);
+				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DFOLLY_NO_CONFIG",
@@ -419,7 +463,6 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
@@ -482,10 +525,7 @@
 					"\"$(inherited)\"",
 				);
 				MTL_ENABLE_DEBUG_INFO = NO;
-				OTHER_CFLAGS = (
-					"$(inherited)",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
-				);
+				OTHER_CFLAGS = "$(inherited)";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-DFOLLY_NO_CONFIG",
@@ -493,7 +533,6 @@
 					"-DFOLLY_USE_LIBCPP=1",
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
-					"-DRCT_REMOVE_LEGACY_ARCH=1",
 				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
