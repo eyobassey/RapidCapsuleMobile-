@@ -41,7 +41,7 @@
     "@zoom/meetingsdk-react-native": "^6.7.2",
     "axios": "^1.13.6",
     "expo": "~55.0.18",
-    "expo-modules-core": "~2.5.0",
+    "expo-modules-core": "~55.0.23",
     "lucide-react-native": "^0.576.0",
     "nativewind": "^4.2.2",
     "react": "19.2.3",
