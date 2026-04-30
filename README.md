@@ -275,11 +275,7 @@ Semantic Release runs on `main` — Conventional Commits (`feat:`, `fix:`, `chor
 
 ## Author
 
-**Aarav Mishra**
-_Software Engineer (Mobile)_
-
-- Email: aarav@rapidcapsule.com
-- GitHub: [@aarav-rapidcapsule](https://github.com/aarav-rapidcapsule)
+Built by the [RapidCapsule](https://rapidcapsule.com) engineering team.
 
 ---
 
