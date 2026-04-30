@@ -41,6 +41,7 @@
     "@zoom/meetingsdk-react-native": "^6.7.2",
     "axios": "^1.13.6",
     "expo": "~55.0.18",
+    "expo-glass-effect": "~55.0.10",
     "expo-modules-core": "~55.0.23",
     "lucide-react-native": "^0.576.0",
     "nativewind": "^4.2.2",
@@ -115,6 +116,16 @@
     "typescript": "^5.8.3"
   },
   "engines": {
-    "node": ">= 22.11.0"
+    "node": ">= 22.11.0",
+    "pnpm": ">= 10.0.0"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "detox",
+      "dtrace-provider",
+      "react-native-inappbrowser-reborn",
+      "yarn"
+    ]
   }
 }

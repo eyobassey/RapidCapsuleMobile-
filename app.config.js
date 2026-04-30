@@ -36,7 +36,4 @@ module.exports = {
     ],
   },
 
-  plugins: [
-    'expo-modules-core',
-  ],
 };
