@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import {
   FileImage,
   User,
@@ -170,27 +170,25 @@ export default function UploadDetailScreen() {
   };
 
   const pickClarificationImage = () => {
+    const pickCamera = async () => {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (perm.status !== 'granted') return;
+      const res = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+      });
+      if (!res.canceled && res.assets[0]?.uri) setClarificationImage(res.assets[0].uri);
+    };
+    const pickGallery = async () => {
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+      });
+      if (!res.canceled && res.assets[0]?.uri) setClarificationImage(res.assets[0].uri);
+    };
     Alert.alert('Add Image', 'Choose a source', [
-      {
-        text: 'Camera',
-        onPress: () =>
-          launchCamera(
-            { mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000 },
-            (res) => {
-              if (res.assets?.[0]?.uri) setClarificationImage(res.assets[0].uri);
-            }
-          ),
-      },
-      {
-        text: 'Gallery',
-        onPress: () =>
-          launchImageLibrary(
-            { mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000 },
-            (res) => {
-              if (res.assets?.[0]?.uri) setClarificationImage(res.assets[0].uri);
-            }
-          ),
-      },
+      { text: 'Camera', onPress: () => void pickCamera() },
+      { text: 'Gallery', onPress: () => void pickGallery() },
       { text: 'Cancel', style: 'cancel' },
     ]);
   };

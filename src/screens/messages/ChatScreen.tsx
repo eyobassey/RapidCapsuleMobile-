@@ -13,7 +13,7 @@ import {
 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Platform, TouchableOpacity, View } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -224,18 +224,18 @@ export default function ChatScreen() {
   const handlePickImage = async () => {
     setShowAttachMenu(false);
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
-        selectionLimit: 1,
+        allowsMultipleSelection: false,
       });
-      if (result.assets?.[0]) {
+      if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
         const formData = new FormData();
         formData.append('type', 'image');
         formData.append('file', {
           uri: asset.uri,
-          type: asset.type || 'image/jpeg',
+          type: asset.mimeType || 'image/jpeg',
           name: asset.fileName || 'photo.jpg',
         } as any);
 
@@ -260,17 +260,17 @@ export default function ChatScreen() {
   const handlePickVideo = async () => {
     setShowAttachMenu(false);
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'video',
-        selectionLimit: 1,
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        allowsMultipleSelection: false,
       });
-      if (result.assets?.[0]) {
+      if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
         const formData = new FormData();
         formData.append('type', 'video');
         formData.append('file', {
           uri: asset.uri,
-          type: asset.type || 'video/mp4',
+          type: asset.mimeType || 'video/mp4',
           name: asset.fileName || `video_${Date.now()}.mp4`,
         } as any);
 
@@ -590,29 +590,29 @@ export default function ChatScreen() {
               accessibilityLabel="Take a photo"
               onPress={() => {
                 setShowAttachMenu(false);
-                launchImageLibrary({ mediaType: 'photo', selectionLimit: 1 })
-                  .then((r) => {
-                    // Camera option uses same flow
-                    if (r.assets?.[0]) {
-                      const asset = r.assets[0];
-                      const fd = new FormData();
-                      fd.append('type', 'image');
-                      fd.append('file', {
-                        uri: asset.uri,
-                        type: asset.type || 'image/jpeg',
-                        name: asset.fileName || 'photo.jpg',
-                      } as any);
-                      setSending(true);
-                      messagingService
-                        .sendAttachment(conversationId, fd)
-                        .then((sent) => {
-                          if (sent?._id && initialConv) addIncomingMessage(sent, initialConv);
-                        })
-                        .catch(() => Alert.alert('Error', 'Failed to send photo.'))
-                        .finally(() => setSending(false));
-                    }
-                  })
-                  .catch(() => {});
+                void ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  allowsMultipleSelection: false,
+                }).then((r) => {
+                  if (!r.canceled && r.assets[0]) {
+                    const asset = r.assets[0];
+                    const fd = new FormData();
+                    fd.append('type', 'image');
+                    fd.append('file', {
+                      uri: asset.uri,
+                      type: asset.mimeType || 'image/jpeg',
+                      name: asset.fileName || 'photo.jpg',
+                    } as any);
+                    setSending(true);
+                    messagingService
+                      .sendAttachment(conversationId, fd)
+                      .then((sent) => {
+                        if (sent?._id && initialConv) addIncomingMessage(sent, initialConv);
+                      })
+                      .catch(() => Alert.alert('Error', 'Failed to send photo.'))
+                      .finally(() => setSending(false));
+                  }
+                });
               }}
               style={{ alignItems: 'center', gap: 4 }}
             >

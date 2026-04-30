@@ -271,28 +271,15 @@ export default function DeviceIntegrationScreen({ navigation }: any) {
       const redirectUrl = 'rapidcapsule://health-integrations/callback';
 
       try {
-        // Lazy require to avoid Jest parsing ESM from node_modules.
+        const WebBrowser = require('expo-web-browser');
 
-        const InAppBrowser = require('react-native-inappbrowser-reborn').default;
-
-        const available = await InAppBrowser.isAvailable();
-        if (!available) {
-          return { handled: false as const };
-        }
-
-        const result = await InAppBrowser.openAuth(authUrl, redirectUrl, {
-          // Production-friendly defaults
-          showTitle: true,
-          enableUrlBarHiding: true,
-          enableDefaultShare: false,
-          ephemeralWebSession: false,
-        } as any);
+        const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUrl);
 
         // Even if the browser is closed/cancelled, the user may have completed auth.
         // We always refresh integration status after returning to the app.
         await loadIntegrations();
 
-        if ((result as any)?.type === 'success') {
+        if (result?.type === 'success') {
           Alert.alert('Connected', `${appId} connected successfully.`);
         }
 

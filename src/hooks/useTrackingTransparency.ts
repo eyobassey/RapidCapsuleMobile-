@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
-import { requestTrackingPermission, getTrackingStatus } from 'react-native-tracking-transparency';
+import {
+  requestTrackingPermissionsAsync,
+  getTrackingPermissionsAsync,
+} from 'expo-tracking-transparency';
 
 /**
  * Requests App Tracking Transparency permission on iOS 14+.
@@ -18,10 +21,10 @@ export function useTrackingTransparency() {
     if (Platform.OS !== 'ios') return;
 
     void (async () => {
-      const status = await getTrackingStatus();
-      // 'not-determined' means the dialog hasn't been shown yet
-      if (status === 'not-determined') {
-        await requestTrackingPermission();
+      const { status } = await getTrackingPermissionsAsync();
+      // 'undetermined' means the dialog hasn't been shown yet
+      if (status === 'undetermined') {
+        await requestTrackingPermissionsAsync();
       }
     })();
   }, []);

@@ -5,9 +5,13 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css)$': '<rootDir>/__mocks__/styleMock.js',
-    '^react-native-linear-gradient$': '<rootDir>/__mocks__/react-native-linear-gradient.js',
+    '^expo-glass-effect$': '<rootDir>/__mocks__/expo-glass-effect.js',
+    '^expo-linear-gradient$': '<rootDir>/__mocks__/expo-linear-gradient.js',
+    '^expo-tracking-transparency$': '<rootDir>/__mocks__/expo-tracking-transparency.js',
+    '^expo-image-picker$': '<rootDir>/__mocks__/expo-image-picker.js',
+    '^expo-web-browser$': '<rootDir>/__mocks__/expo-web-browser.js',
+    '^expo-sharing$': '<rootDir>/__mocks__/expo-sharing.js',
     '^react-native-config$': '<rootDir>/__mocks__/react-native-config.js',
-    '^react-native-tracking-transparency$': '<rootDir>/__mocks__/react-native-tracking-transparency.js',
   },
   transformIgnorePatterns: [
     // pnpm stores real files at node_modules/.pnpm/<pkg@ver>/node_modules/<pkg>/

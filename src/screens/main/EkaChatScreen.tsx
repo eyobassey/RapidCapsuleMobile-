@@ -47,9 +47,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
-import LinearGradient from 'react-native-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Polyline, Circle as SvgCircle, Text as SvgText } from 'react-native-svg';
 import WebView from 'react-native-webview';
@@ -999,18 +999,18 @@ export default function EkaChatScreen() {
 
   const handleUpload = async () => {
     try {
-      const result = await launchImageLibrary({
-        mediaType: 'mixed',
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
         quality: 0.8,
-        selectionLimit: 1,
+        allowsMultipleSelection: false,
       });
-      if (result.didCancel || !result.assets?.[0]) return;
+      if (result.canceled || !result.assets?.[0]) return;
 
       const asset = result.assets[0];
       const formData = new FormData();
       formData.append('prescription', {
         uri: asset.uri,
-        type: asset.type || 'image/jpeg',
+        type: asset.mimeType || 'image/jpeg',
         name: asset.fileName || 'prescription.jpg',
       } as any);
 

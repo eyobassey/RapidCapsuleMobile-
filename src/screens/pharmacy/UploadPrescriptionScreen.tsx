@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import {
   KeyboardAvoidingView,
   useReanimatedKeyboardAnimation,
@@ -95,26 +95,26 @@ export default function UploadPrescriptionScreen() {
   });
 
   // ── Image Picker ──
-  const pickFromCamera = () => {
-    launchCamera(
-      { mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000 },
-      (response) => {
-        if (response.assets?.[0]?.uri) {
-          setImageUri(response.assets[0].uri);
-        }
-      }
-    );
+  const pickFromCamera = async () => {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (perm.status !== 'granted') return;
+    const response = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!response.canceled && response.assets[0]?.uri) {
+      setImageUri(response.assets[0].uri);
+    }
   };
 
-  const pickFromGallery = () => {
-    launchImageLibrary(
-      { mediaType: 'photo', quality: 0.8, maxWidth: 2000, maxHeight: 2000 },
-      (response) => {
-        if (response.assets?.[0]?.uri) {
-          setImageUri(response.assets[0].uri);
-        }
-      }
-    );
+  const pickFromGallery = async () => {
+    const response = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!response.canceled && response.assets[0]?.uri) {
+      setImageUri(response.assets[0].uri);
+    }
   };
 
   // ── Upload ──

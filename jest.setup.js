@@ -144,10 +144,13 @@ jest.mock('react-native-device-info', () => ({
   getBuildNumber: jest.fn(() => '0'),
 }));
 
-// Mock react-native-image-picker (native + ESM)
-jest.mock('react-native-image-picker', () => ({
-  launchImageLibrary: jest.fn((_options, cb) => cb && cb({ didCancel: true })),
-  launchCamera: jest.fn((_options, cb) => cb && cb({ didCancel: true })),
+// Mock expo-image-picker (native)
+jest.mock('expo-image-picker', () => ({
+  MediaTypeOptions: { Images: 'Images', Videos: 'Videos', All: 'All' },
+  requestCameraPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  requestMediaLibraryPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
+  launchCameraAsync: jest.fn(() => Promise.resolve({ canceled: true, assets: [] })),
+  launchImageLibraryAsync: jest.fn(() => Promise.resolve({ canceled: true, assets: [] })),
 }));
 
 // Mock react-native-html-to-pdf (native + ESM)
@@ -155,9 +158,10 @@ jest.mock('react-native-html-to-pdf', () => ({
   generatePDF: jest.fn(() => Promise.resolve({ filePath: '/tmp/mock.pdf' })),
 }));
 
-// Mock react-native-share (native)
-jest.mock('react-native-share', () => ({
-  open: jest.fn(() => Promise.resolve({ success: true })),
+// Mock expo-sharing (native)
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  shareAsync: jest.fn(() => Promise.resolve()),
 }));
 
 // Mock @kingstinct/react-native-healthkit (native + Nitro Modules, iOS-only)

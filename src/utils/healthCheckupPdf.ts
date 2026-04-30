@@ -1,5 +1,5 @@
 import { generatePDF } from 'react-native-html-to-pdf';
-import Share from 'react-native-share';
+import * as Sharing from 'expo-sharing';
 import { Platform, Alert } from 'react-native';
 
 // ── Data interface ──
@@ -554,21 +554,14 @@ export async function generateHealthCheckupPDF(data: HealthCheckupPDFData): Prom
       throw new Error('PDF generation failed');
     }
 
-    await Share.open({
-      url: Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`,
-      type: 'application/pdf',
-      title: 'Health Checkup Report',
-      subject: 'RapidCapsule Health Checkup Report',
-    });
-  } catch (error: any) {
-    // User dismissed share sheet — not an error
-    if (
-      error?.message?.includes?.('User did not share') ||
-      error?.message?.includes?.('cancelled') ||
-      error?.message?.includes?.('dismiss')
-    ) {
-      return;
+    const fileUrl = Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`;
+    if (await Sharing.isAvailableAsync()) {
+      await Sharing.shareAsync(fileUrl, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'Health Checkup Report',
+      });
     }
+  } catch {
     Alert.alert('PDF Error', 'Could not generate the report. Please try again.');
   }
 }

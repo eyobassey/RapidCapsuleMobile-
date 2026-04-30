@@ -23,7 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 import {
   KeyboardAvoidingView,
   useReanimatedKeyboardAnimation,
@@ -106,45 +106,34 @@ export default function EditProfileScreen() {
   const profileImage = user?.profile?.profile_photo || user?.profile?.profile_image;
 
   const handlePressPhoto = () => {
+    const pickCamera = async () => {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (perm.status !== 'granted') return;
+      const res = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+        base64: true,
+      });
+      if (!res.canceled && res.assets[0]) await handleImagePickerResponse(res.assets[0]);
+    };
+    const pickGallery = async () => {
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.7,
+        base64: true,
+      });
+      if (!res.canceled && res.assets[0]) await handleImagePickerResponse(res.assets[0]);
+    };
     Alert.alert('Change Profile Photo', 'Choose an option', [
-      {
-        text: 'Take Photo',
-        onPress: () =>
-          launchCamera(
-            {
-              mediaType: 'photo',
-              quality: 0.7,
-              includeBase64: true,
-              maxWidth: 800,
-              maxHeight: 800,
-            },
-            (res) => handleImagePickerResponse(res)
-          ),
-      },
-      {
-        text: 'Choose from Gallery',
-        onPress: () =>
-          launchImageLibrary(
-            {
-              mediaType: 'photo',
-              quality: 0.7,
-              includeBase64: true,
-              maxWidth: 800,
-              maxHeight: 800,
-            },
-            (res) => handleImagePickerResponse(res)
-          ),
-      },
+      { text: 'Take Photo', onPress: () => void pickCamera() },
+      { text: 'Choose from Gallery', onPress: () => void pickGallery() },
       { text: 'Cancel', style: 'cancel' },
     ]);
   };
 
-  const handleImagePickerResponse = async (response: any) => {
-    if (response.didCancel || !response.assets?.[0]) return;
-
-    const asset = response.assets[0];
+  const handleImagePickerResponse = async (asset: ImagePicker.ImagePickerAsset) => {
     const base64 = asset.base64;
-    const contentType = asset.type || 'image/jpeg';
+    const contentType = asset.mimeType || 'image/jpeg';
 
     if (!base64) {
       Alert.alert('Error', 'Could not get image data.');
