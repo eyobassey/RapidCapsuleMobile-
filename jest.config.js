@@ -16,6 +16,7 @@ module.exports = {
     '^expo-print$': '<rootDir>/__mocks__/expo-print.js',
     '^expo-network$': '<rootDir>/__mocks__/expo-network.js',
     '^expo-audio$': '<rootDir>/__mocks__/expo-audio.js',
+    '^expo-updates$': '<rootDir>/__mocks__/expo-updates.js',
   },
   transformIgnorePatterns: [
     // pnpm stores real files at node_modules/.pnpm/<pkg@ver>/node_modules/<pkg>/

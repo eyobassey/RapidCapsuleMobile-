@@ -1,0 +1,39 @@
+name: OTA Update
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  update:
+    name: Publish EAS Update
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish OTA update
+        run: |
+          BRANCH="${GITHUB_REF##*/}"
+          npx eas-cli update \
+            --branch "$BRANCH" \
+            --message "${{ github.event.head_commit.message }}" \
+            --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          PAYSTACK_PUBLIC_KEY: ${{ secrets.PAYSTACK_PUBLIC_KEY }}
