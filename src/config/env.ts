@@ -1,13 +1,14 @@
 // Environment configuration
-// Values reference ecosystem.config.js (RC-Backend / RC-Frontend env)
-//
-// PAYSTACK_PUBLIC_KEY: set in .env (gitignored). Copy .env.example → .env
-// and fill in keys from team 1Password.
-import Config from 'react-native-config';
+// Env vars are exposed via app.config.js `extra` field and read through expo-constants.
+// For local dev: copy .env.example → .env and fill in keys from team 1Password.
+// For CI/EAS builds: set vars in eas.json build profile env or GitHub Actions secrets.
+import Constants from 'expo-constants';
+
+const extra = (Constants.expoConfig?.extra ?? {}) as Record<string, string>;
 
 const ENV = {
   API_BASE_URL: 'https://api.rapidcapsule.com/api',
-  PAYSTACK_PUBLIC_KEY: Config.PAYSTACK_PUBLIC_KEY ?? '',
+  PAYSTACK_PUBLIC_KEY: extra.paystackPublicKey ?? '',
   SOCKET_URL: 'https://api.rapidcapsule.com',
   REQUEST_TIMEOUT: 30000,
 

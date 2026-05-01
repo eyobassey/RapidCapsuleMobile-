@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 /** @type {import('expo/config').ExpoConfig} */
 module.exports = {
   name: 'RapidCapsules',
@@ -20,6 +22,13 @@ module.exports = {
     },
   },
 
+  extra: {
+    paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY ?? '',
+    eas: {
+      projectId: '', // populated by `eas init`
+    },
+  },
+
   android: {
     package: 'com.rapidcapsule.mobileapp',
     adaptiveIcon: {
@@ -35,5 +44,4 @@ module.exports = {
       'android.permission.ACCESS_WIFI_STATE',
     ],
   },
-
 };

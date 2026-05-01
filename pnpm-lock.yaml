@@ -101,9 +101,6 @@ importers:
       react-native:
         specifier: 0.83.9
         version: 0.83.9(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.9(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3)
-      react-native-config:
-        specifier: ^1.6.1
-        version: 1.6.1(react-native@0.83.9(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.9(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
       react-native-gesture-handler:
         specifier: ^2.30.0
         version: 2.31.1(react-native@0.83.9(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.9(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3)
@@ -240,6 +237,9 @@ importers:
       detox:
         specifier: ^20.47.0
         version: 20.51.0(@jest/environment@29.7.0)(@jest/types@29.6.3)(expect@29.7.0)(jest-environment-node@29.7.0)(jest@29.7.0(@types/node@25.6.0))
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       eslint:
         specifier: ^8.19.0
         version: 8.57.1
@@ -2820,6 +2820,10 @@ packages:
     resolution: {integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==}
     engines: {node: '>=8'}
 
+  dotenv@17.4.2:
+    resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
+    engines: {node: '>=12'}
+
   dtrace-provider@0.8.8:
     resolution: {integrity: sha512-b7Z7cNtHPhH9EJhNNbbeqTcXB8LGFFZhq1PGgEvpeHlzd36bhbdTWoE/Ba/YguqpBSlAPKnARWhVlhunCMwfxg==}
     engines: {node: '>=0.10'}
@@ -5328,16 +5332,6 @@ packages:
 
   react-is@19.2.5:
     resolution: {integrity: sha512-Dn0t8IQhCmeIT3wu+Apm1/YVsJXsGWi6k4sPdnBIdqMVtHtv0IGi6dcpNpNkNac0zB2uUAqNX3MHzN8c+z2rwQ==}
-
-  react-native-config@1.6.1:
-    resolution: {integrity: sha512-HvKtxr6/Tq3iMdFx5REYZsjCtPi0RxQOMCs15+DqrUPTNFtWHuEuh+zw7fJp+dmuO79YMfdtlsPWIGTHtaXwjg==}
-    peerDependencies:
-      react: '*'
-      react-native: '*'
-      react-native-windows: '>=0.61'
-    peerDependenciesMeta:
-      react-native-windows:
-        optional: true
 
   react-native-css-interop@0.2.3:
     resolution: {integrity: sha512-wc+JI7iUfdFBqnE18HhMTtD0q9vkhuMczToA87UdHGWwMyxdT5sCcNy+i4KInPCE855IY0Ic8kLQqecAIBWz7w==}
@@ -10032,6 +10026,8 @@ snapshots:
     dependencies:
       is-obj: 2.0.0
 
+  dotenv@17.4.2: {}
+
   dtrace-provider@0.8.8:
     dependencies:
       nan: 2.26.2
@@ -12813,11 +12809,6 @@ snapshots:
   react-is@18.3.1: {}
 
   react-is@19.2.5: {}
-
-  react-native-config@1.6.1(react-native@0.83.9(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.9(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3))(react@19.2.3):
-    dependencies:
-      react: 19.2.3
-      react-native: 0.83.9(@babel/core@7.29.0)(@react-native-community/cli@20.1.3(typescript@5.9.3))(@react-native/metro-config@0.83.9(@babel/core@7.29.0))(@types/react@19.2.14)(react@19.2.3)
 
   react-native-css-interop@0.2.3(6bb58da0ceacbb42e57c06c2d5a5f8cc):
     dependencies:

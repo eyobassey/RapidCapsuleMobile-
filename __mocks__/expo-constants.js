@@ -1,5 +1,10 @@
 const Constants = {
-  expoConfig: { version: '0.0.0' },
+  expoConfig: {
+    version: '0.0.0',
+    extra: {
+      paystackPublicKey: 'pk_test_mock',
+    },
+  },
   nativeAppVersion: '0.0.0',
   nativeBuildVersion: '0',
 };

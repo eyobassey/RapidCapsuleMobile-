@@ -130,14 +130,6 @@ jest.mock('react-native-webview', () => ({
   WebView: () => null,
 }));
 
-// Mock expo-constants (replaces react-native-device-info for version info)
-jest.mock('expo-constants', () => ({
-  default: {
-    expoConfig: { version: '0.0.0' },
-    nativeAppVersion: '0.0.0',
-    nativeBuildVersion: '0',
-  },
-}));
 
 // Mock expo-image-picker (native)
 jest.mock('expo-image-picker', () => ({
