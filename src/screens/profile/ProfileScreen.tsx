@@ -31,7 +31,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import DeviceInfo from 'react-native-device-info';
+import Constants from 'expo-constants';
 import { Avatar, KeyboardSheet } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
 import { useAppointmentsQuery } from '../../hooks/queries/useAppointmentsQuery';
@@ -45,8 +45,8 @@ import { CURRENCY_LIST, SUPPORTED_CURRENCIES } from '../../utils/currency';
 import { formatDate } from '../../utils/formatters';
 
 function getAppVersionLabel(): string {
-  const version = DeviceInfo.getVersion();
-  const build = DeviceInfo.getBuildNumber();
+  const version = Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '0.0.0';
+  const build = Constants.nativeBuildVersion ?? '';
   return build ? `${version} (${build})` : version;
 }
 
@@ -377,7 +377,9 @@ export default function ProfileScreen() {
         </View>
 
         <View className="items-center mt-8 mb-4">
-          <Text style={styles.footerText}>RapidCapsule v{DeviceInfo.getVersion()}</Text>
+          <Text style={styles.footerText}>
+            RapidCapsule v{Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '0.0.0'}
+          </Text>
         </View>
       </ScrollView>
 

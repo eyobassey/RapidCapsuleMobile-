@@ -1,5 +1,5 @@
 import { createMMKV } from 'react-native-mmkv';
-import * as Keychain from 'react-native-keychain';
+import * as SecureStore from 'expo-secure-store';
 
 let mmkv: ReturnType<typeof createMMKV>;
 function getStore() {
@@ -15,17 +15,18 @@ const KEYS = {
   EKA_LANGUAGE: 'eka_language',
 } as const;
 
-const KEYCHAIN_SERVICE = 'com.rapidcapsule.auth';
-const KEYCHAIN_REFRESH_SERVICE = 'com.rapidcapsule.refresh';
+const SECURE_KEY_TOKEN = 'rc.auth.token';
+const SECURE_KEY_REFRESH = 'rc.auth.refresh_token';
+
+const SECURE_OPTS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+};
 
 export const storage = {
-  // Secure token storage via Keychain/Keystore
+  // Secure token storage via Keychain (iOS) / Keystore (Android)
   async getToken(): Promise<string | null> {
     try {
-      const credentials = await Keychain.getGenericPassword({
-        service: KEYCHAIN_SERVICE,
-      });
-      return credentials ? credentials.password : null;
+      return await SecureStore.getItemAsync(SECURE_KEY_TOKEN, SECURE_OPTS);
     } catch {
       return null;
     }
@@ -33,24 +34,18 @@ export const storage = {
 
   async setToken(token: string): Promise<void> {
     if (token) {
-      await Keychain.setGenericPassword('token', token, {
-        service: KEYCHAIN_SERVICE,
-        accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-      });
+      await SecureStore.setItemAsync(SECURE_KEY_TOKEN, token, SECURE_OPTS);
     }
   },
 
   async removeToken(): Promise<void> {
-    await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
+    await SecureStore.deleteItemAsync(SECURE_KEY_TOKEN, SECURE_OPTS);
   },
 
-  // Refresh token — also stored in Keychain (secure)
+  // Refresh token — also stored securely
   async getRefreshToken(): Promise<string | null> {
     try {
-      const credentials = await Keychain.getGenericPassword({
-        service: KEYCHAIN_REFRESH_SERVICE,
-      });
-      return credentials ? credentials.password : null;
+      return await SecureStore.getItemAsync(SECURE_KEY_REFRESH, SECURE_OPTS);
     } catch {
       return null;
     }
@@ -58,15 +53,12 @@ export const storage = {
 
   async setRefreshToken(token: string): Promise<void> {
     if (token) {
-      await Keychain.setGenericPassword('refresh_token', token, {
-        service: KEYCHAIN_REFRESH_SERVICE,
-        accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-      });
+      await SecureStore.setItemAsync(SECURE_KEY_REFRESH, token, SECURE_OPTS);
     }
   },
 
   async removeRefreshToken(): Promise<void> {
-    await Keychain.resetGenericPassword({ service: KEYCHAIN_REFRESH_SERVICE });
+    await SecureStore.deleteItemAsync(SECURE_KEY_REFRESH, SECURE_OPTS);
   },
 
   // Non-sensitive data stays in MMKV
@@ -95,8 +87,8 @@ export const storage = {
   },
 
   async clear(): Promise<void> {
-    await Keychain.resetGenericPassword({ service: KEYCHAIN_SERVICE });
-    await Keychain.resetGenericPassword({ service: KEYCHAIN_REFRESH_SERVICE });
+    await SecureStore.deleteItemAsync(SECURE_KEY_TOKEN, SECURE_OPTS);
+    await SecureStore.deleteItemAsync(SECURE_KEY_REFRESH, SECURE_OPTS);
     getStore().remove(KEYS.USER);
     getStore().remove(KEYS.REMEMBER_ME);
   },

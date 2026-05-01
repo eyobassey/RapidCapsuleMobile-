@@ -27,7 +27,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { EmptyState, Header, Skeleton } from '../../components/ui';
+import { GlassCard, EmptyState, Header, Skeleton } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
 import {
   useDigestHistoryQuery,
@@ -123,7 +123,7 @@ function DigestItemCard({ item }: { item: DigestItem }) {
   const typeLabel = TYPE_LABELS[item.type] || item.type;
 
   return (
-    <View className="mx-5 mb-3 bg-card border border-border rounded-2xl p-4">
+    <GlassCard className="mx-5 mb-3" padding="p-4">
       {/* Priority + Type row */}
       <View className="flex-row items-center justify-between mb-2.5">
         <View className="flex-row items-center gap-2">
@@ -160,7 +160,7 @@ function DigestItemCard({ item }: { item: DigestItem }) {
           <ChevronRight size={14} color={colors.white} />
         </TouchableOpacity>
       )}
-    </View>
+    </GlassCard>
   );
 }
 
@@ -232,7 +232,7 @@ function DigestSkeleton() {
 
 function DrEkaGreetingCard({ summary }: { summary?: string }) {
   return (
-    <View className="mx-5 mt-2 mb-4 bg-card border border-primary/20 rounded-3xl p-5 overflow-hidden relative">
+    <GlassCard className="mx-5 mt-2 mb-4 relative" padding="p-5">
       {/* Decorative orbs */}
       <View className="absolute -top-8 -right-8 w-32 h-32 bg-primary/8 rounded-full" />
       <View className="absolute -bottom-6 -left-6 w-24 h-24 bg-primary/5 rounded-full" />
@@ -261,7 +261,7 @@ function DrEkaGreetingCard({ summary }: { summary?: string }) {
           <Text className="text-xs text-muted-foreground leading-relaxed">{summary}</Text>
         </View>
       ) : null}
-    </View>
+    </GlassCard>
   );
 }
 

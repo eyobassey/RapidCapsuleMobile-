@@ -11,9 +11,9 @@ import {
   Smartphone,
 } from 'lucide-react-native';
 import React from 'react';
-import { Linking, ScrollView, TouchableOpacity, View } from 'react-native';
+import { Linking, Platform, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import DeviceInfo from 'react-native-device-info';
+import Constants from 'expo-constants';
 
 import { Text } from '../../components/ui/Text';
 import { colors } from '../../theme/colors';
@@ -101,11 +101,11 @@ function ListRow({
 export default function AboutScreen() {
   const navigation = useNavigation<any>();
 
-  const version = DeviceInfo.getVersion();
-  const build = DeviceInfo.getBuildNumber();
+  const version = Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '0.0.0';
+  const build = Constants.nativeBuildVersion ?? '';
   const versionLabel = build ? `${version} (${build})` : version;
-  const systemName = DeviceInfo.getSystemName();
-  const systemVersion = DeviceInfo.getSystemVersion();
+  const systemName = Platform.OS === 'ios' ? 'iOS' : 'Android';
+  const systemVersion = String(Platform.Version);
 
   const openWebView = (title: string, url: string) => {
     navigation.navigate('WebView', { title, url });

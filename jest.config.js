@@ -5,6 +5,8 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css)$': '<rootDir>/__mocks__/styleMock.js',
+    '^expo-constants$': '<rootDir>/__mocks__/expo-constants.js',
+    '^expo-secure-store$': '<rootDir>/__mocks__/expo-secure-store.js',
     '^expo-glass-effect$': '<rootDir>/__mocks__/expo-glass-effect.js',
     '^expo-linear-gradient$': '<rootDir>/__mocks__/expo-linear-gradient.js',
     '^expo-tracking-transparency$': '<rootDir>/__mocks__/expo-tracking-transparency.js',

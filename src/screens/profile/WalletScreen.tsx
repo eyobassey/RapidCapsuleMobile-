@@ -36,7 +36,7 @@ import { WebView } from 'react-native-webview';
 import { Text } from '../../components/ui/Text';
 import { TextInput } from '../../components/ui/TextInput';
 
-import { Button, Header, Skeleton, TabBar } from '../../components/ui';
+import { GlassCard, Button, Header, Skeleton, TabBar } from '../../components/ui';
 import { useTransactionsQuery, useWalletBalanceQuery } from '../../hooks/queries';
 import { useCurrency } from '../../hooks/useCurrency';
 import { creditsService } from '../../services/credits.service';
@@ -346,7 +346,7 @@ export default function WalletScreen() {
         <View style={activeTab !== 'wallet' ? { display: 'none' } : undefined}>
           <>
             {/* Balance Card */}
-            <View className="mx-5 mt-4 bg-primary/10 border border-primary/20 rounded-3xl p-6 overflow-hidden relative">
+            <GlassCard className="mx-5 mt-4 relative" padding="p-6">
               <View className="absolute -top-8 -right-8 w-32 h-32 bg-primary/10 rounded-full" />
               <View className="absolute -bottom-4 -left-4 w-20 h-20 bg-primary/5 rounded-full" />
               <View className="relative z-10">
@@ -365,7 +365,7 @@ export default function WalletScreen() {
                   Fund Wallet
                 </Button>
               </View>
-            </View>
+            </GlassCard>
 
             {/* Quick Stats */}
             <View className="flex-row mx-5 mt-4 gap-3">

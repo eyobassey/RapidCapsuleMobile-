@@ -49,7 +49,7 @@ import {
 } from '../../hooks/queries';
 
 import RecoveryHomeCard from '../../components/recovery/RecoveryHomeCard';
-import { HealthGauge, Skeleton } from '../../components/ui';
+import { GlassCard, HealthGauge, Skeleton } from '../../components/ui';
 import { Text } from '../../components/ui/Text';
 import { useCurrency } from '../../hooks/useCurrency';
 import { colors } from '../../theme/colors';
@@ -338,8 +338,9 @@ export default function HomeScreen() {
         }
       >
         {/* ---- Health Score Card ---- */}
-        <View
-          className="mx-5 mt-2 bg-card border border-border rounded-3xl p-5 overflow-hidden relative"
+        <GlassCard
+          className="mx-5 mt-2 relative"
+          padding="p-5"
           accessibilityLabel={
             score != null
               ? `Health score ${score}, ${healthStatus || ''}`
@@ -403,79 +404,83 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
           )}
-        </View>
+        </GlassCard>
 
         {/* ---- Dr. Eka Card ---- */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate('DrEka')}
-          accessibilityRole="button"
-          accessibilityLabel="Dr. Eka's daily digest"
-          accessibilityHint="Double tap to view full digest"
-          className="mx-5 mt-4 bg-card border border-primary/20 rounded-2xl p-4 overflow-hidden relative"
-        >
-          {/* Decorative orb */}
-          <View className="absolute -top-4 -right-4 w-20 h-20 bg-primary/8 rounded-full" />
+        <GlassCard className="mx-5 mt-4" padding="p-0">
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('DrEka')}
+            accessibilityRole="button"
+            accessibilityLabel="Dr. Eka's daily digest"
+            accessibilityHint="Double tap to view full digest"
+            className="p-4 overflow-hidden relative"
+          >
+            {/* Decorative orb */}
+            <View className="absolute -top-4 -right-4 w-20 h-20 bg-primary/8 rounded-full" />
 
-          <View className="flex-row items-center gap-3 relative z-10">
-            <View
-              className="w-11 h-11 rounded-2xl items-center justify-center"
-              style={{ backgroundColor: colors.primary }}
-            >
-              <Text className="text-lg">🩺</Text>
-            </View>
+            <View className="flex-row items-center gap-3 relative z-10">
+              <View
+                className="w-11 h-11 rounded-2xl items-center justify-center"
+                style={{ backgroundColor: colors.primary }}
+              >
+                <Text className="text-lg">🩺</Text>
+              </View>
 
-            <View className="flex-1">
-              {digestLoading ? (
-                <>
-                  <Skeleton width={100} height={12} />
-                  <View className="mt-1.5">
-                    <Skeleton width={180} height={10} />
-                  </View>
-                </>
-              ) : todaysDigest?.summary ? (
-                <>
-                  <Text className="text-xs font-bold text-foreground mb-0.5">Dr. Eka says...</Text>
-                  <Text
-                    className="text-[10px] text-muted-foreground leading-relaxed"
-                    numberOfLines={2}
-                  >
-                    {todaysDigest.summary}
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Text className="text-xs font-bold text-foreground mb-0.5">Dr. Eka</Text>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      generateDigestMutation.mutate();
-                    }}
-                    disabled={generateDigestMutation.isPending}
-                    className="flex-row items-center gap-1"
-                  >
-                    {generateDigestMutation.isPending ? (
-                      <ActivityIndicator size={10} color={colors.primary} />
-                    ) : null}
-                    <Text className="text-[10px] font-semibold text-primary">
-                      {generateDigestMutation.isPending
-                        ? 'Generating...'
-                        : "Generate today's digest"}
+              <View className="flex-1">
+                {digestLoading ? (
+                  <>
+                    <Skeleton width={100} height={12} />
+                    <View className="mt-1.5">
+                      <Skeleton width={180} height={10} />
+                    </View>
+                  </>
+                ) : todaysDigest?.summary ? (
+                  <>
+                    <Text className="text-xs font-bold text-foreground mb-0.5">
+                      Dr. Eka says...
                     </Text>
-                  </TouchableOpacity>
-                </>
+                    <Text
+                      className="text-[10px] text-muted-foreground leading-relaxed"
+                      numberOfLines={2}
+                    >
+                      {todaysDigest.summary}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text className="text-xs font-bold text-foreground mb-0.5">Dr. Eka</Text>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        generateDigestMutation.mutate();
+                      }}
+                      disabled={generateDigestMutation.isPending}
+                      className="flex-row items-center gap-1"
+                    >
+                      {generateDigestMutation.isPending ? (
+                        <ActivityIndicator size={10} color={colors.primary} />
+                      ) : null}
+                      <Text className="text-[10px] font-semibold text-primary">
+                        {generateDigestMutation.isPending
+                          ? 'Generating...'
+                          : "Generate today's digest"}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+
+              {todaysDigest?.summary && (
+                <View className="flex-row items-center gap-0.5">
+                  <Text className="text-[10px] font-semibold text-primary">View</Text>
+                  <ChevronRight size={14} color={colors.primary} />
+                </View>
               )}
             </View>
-
-            {todaysDigest?.summary && (
-              <View className="flex-row items-center gap-0.5">
-                <Text className="text-[10px] font-semibold text-primary">View</Text>
-                <ChevronRight size={14} color={colors.primary} />
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </GlassCard>
 
         {/* ---- Quick Stats Row ---- */}
         <View className="flex-row mx-5 mt-4 gap-3">

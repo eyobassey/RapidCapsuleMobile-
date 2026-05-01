@@ -63,14 +63,12 @@ jest.mock('react-native-keyboard-controller', () => {
   };
 });
 
-// Mock react-native-keychain
-jest.mock('react-native-keychain', () => ({
-  setGenericPassword: jest.fn(() => Promise.resolve(true)),
-  getGenericPassword: jest.fn(() => Promise.resolve({password: 'mock-token'})),
-  resetGenericPassword: jest.fn(() => Promise.resolve(true)),
-  ACCESSIBLE: {
-    WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'WhenUnlockedThisDeviceOnly',
-  },
+// Mock expo-secure-store (replaces react-native-keychain)
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn(() => Promise.resolve('mock-token')),
+  setItemAsync: jest.fn(() => Promise.resolve()),
+  deleteItemAsync: jest.fn(() => Promise.resolve()),
+  WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'WhenUnlockedThisDeviceOnly',
 }));
 
 // Mock react-native-onesignal
@@ -138,10 +136,13 @@ jest.mock('react-native-webview', () => ({
   WebView: () => null,
 }));
 
-// Mock react-native-device-info (native dependency)
-jest.mock('react-native-device-info', () => ({
-  getVersion: jest.fn(() => '0.0.0'),
-  getBuildNumber: jest.fn(() => '0'),
+// Mock expo-constants (replaces react-native-device-info for version info)
+jest.mock('expo-constants', () => ({
+  default: {
+    expoConfig: { version: '0.0.0' },
+    nativeAppVersion: '0.0.0',
+    nativeBuildVersion: '0',
+  },
 }));
 
 // Mock expo-image-picker (native)
