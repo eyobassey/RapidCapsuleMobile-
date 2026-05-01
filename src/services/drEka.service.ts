@@ -1,4 +1,4 @@
-import api from './api';
+import api, { unwrapResponse } from './api';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -51,7 +51,7 @@ export interface WeeklyReport {
 export const drEkaService = {
   async getTodaysDigest(): Promise<DailyDigest | null> {
     const res = await api.get('/dr-eka/daily');
-    const data = res.data.data || res.data.result || res.data;
+    const data = unwrapResponse(res);
     return data || null;
   },
 
@@ -59,7 +59,7 @@ export const drEkaService = {
     const res = await api.get('/dr-eka/daily/history', {
       params: { page, limit },
     });
-    const data = res.data.data || res.data.result || res.data;
+    const data = unwrapResponse(res);
     return {
       digests: data?.digests || data?.items || (Array.isArray(data) ? data : []),
       total: data?.total ?? 0,
@@ -68,12 +68,12 @@ export const drEkaService = {
 
   async generateDigest(): Promise<DailyDigest> {
     const res = await api.post('/dr-eka/daily/generate');
-    return res.data.data || res.data.result || res.data;
+    return unwrapResponse(res);
   },
 
   async getLatestWeeklyReport(): Promise<WeeklyReport | null> {
     const res = await api.get('/dr-eka/weekly');
-    const data = res.data.data || res.data.result || res.data;
+    const data = unwrapResponse(res);
     return data || null;
   },
 
@@ -84,7 +84,7 @@ export const drEkaService = {
     const res = await api.get('/dr-eka/weekly/history', {
       params: { page, limit },
     });
-    const data = res.data.data || res.data.result || res.data;
+    const data = unwrapResponse(res);
     return {
       reports: data?.reports || data?.items || (Array.isArray(data) ? data : []),
       total: data?.total ?? 0,
@@ -93,6 +93,6 @@ export const drEkaService = {
 
   async generateWeeklyReport(): Promise<WeeklyReport> {
     const res = await api.post('/dr-eka/weekly/generate');
-    return res.data.data || res.data.result || res.data;
+    return unwrapResponse(res);
   },
 };

@@ -16,8 +16,8 @@ jest.mock('../../services/recovery.service', () => ({
   },
 }));
 
-import {useRecoveryStore} from '../recovery';
-import {recoveryService} from '../../services/recovery.service';
+import { useRecoveryStore } from '../recovery';
+import { recoveryService } from '../../services/recovery.service';
 
 const svc = recoveryService as jest.Mocked<typeof recoveryService>;
 
@@ -75,7 +75,7 @@ describe('useRecoveryStore', () => {
     });
 
     it('handles 404 (not enrolled) gracefully', async () => {
-      const err = {response: {status: 404}};
+      const err = { response: { status: 404 } };
       svc.getProfile.mockRejectedValue(err);
 
       await useRecoveryStore.getState().fetchProfile();
@@ -92,13 +92,13 @@ describe('useRecoveryStore', () => {
 
       await useRecoveryStore.getState().fetchProfile();
 
-      expect(useRecoveryStore.getState().error).toBe('Failed to load recovery profile');
+      expect(useRecoveryStore.getState().error).toBe('Server error');
     });
   });
 
   describe('fetchDashboard', () => {
     it('loads dashboard data', async () => {
-      const dashData = {sobriety_days: 45, risk_level: 'low'};
+      const dashData = { sobriety_days: 45, risk_level: 'low' };
       svc.getDashboard.mockResolvedValue(dashData as any);
 
       await useRecoveryStore.getState().fetchDashboard();
@@ -117,7 +117,7 @@ describe('useRecoveryStore', () => {
 
   describe('fetchStats', () => {
     it('loads sobriety stats', async () => {
-      const stats = {total_sober_days: 100, longest_streak: 50};
+      const stats = { total_sober_days: 100, longest_streak: 50 };
       svc.getStats.mockResolvedValue(stats as any);
 
       await useRecoveryStore.getState().fetchStats();
@@ -129,8 +129,8 @@ describe('useRecoveryStore', () => {
   describe('fetchMilestones', () => {
     it('loads milestones array', async () => {
       svc.getMilestones.mockResolvedValue([
-        {_id: 'm1', name: '7 Days Sober', achieved: true},
-        {_id: 'm2', name: '30 Days Sober', achieved: false},
+        { _id: 'm1', name: '7 Days Sober', achieved: true },
+        { _id: 'm2', name: '30 Days Sober', achieved: false },
       ] as any);
 
       await useRecoveryStore.getState().fetchMilestones();
@@ -139,7 +139,7 @@ describe('useRecoveryStore', () => {
     });
 
     it('handles non-array response', async () => {
-      svc.getMilestones.mockResolvedValue({not: 'array'} as any);
+      svc.getMilestones.mockResolvedValue({ not: 'array' } as any);
 
       await useRecoveryStore.getState().fetchMilestones();
 
@@ -158,13 +158,13 @@ describe('useRecoveryStore', () => {
   describe('fetchScreeningHistory', () => {
     it('loads screening history', async () => {
       svc.getScreeningHistory.mockResolvedValue([
-        {_id: 's1', instrument: 'AUDIT', total_score: 5},
+        { _id: 's1', instrument: 'AUDIT', total_score: 5 },
       ] as any);
 
       await useRecoveryStore.getState().fetchScreeningHistory();
 
       expect(useRecoveryStore.getState().screeningHistory).toHaveLength(1);
-      expect(svc.getScreeningHistory).toHaveBeenCalledWith({limit: 20});
+      expect(svc.getScreeningHistory).toHaveBeenCalledWith({ limit: 20 });
     });
   });
 
@@ -214,7 +214,7 @@ describe('useRecoveryStore', () => {
   describe('fetchRiskHistory', () => {
     it('loads risk history with optional period', async () => {
       svc.getRiskHistory.mockResolvedValue([
-        {_id: 'r1', risk_score: 30, risk_level: 'low'},
+        { _id: 'r1', risk_score: 30, risk_level: 'low' },
       ] as any);
 
       await useRecoveryStore.getState().fetchRiskHistory('30d');
@@ -226,9 +226,7 @@ describe('useRecoveryStore', () => {
 
   describe('fetchGroupSessions', () => {
     it('loads group sessions', async () => {
-      svc.getMyGroupSessions.mockResolvedValue([
-        {_id: 'gs1', title: 'Weekly Check-in'},
-      ] as any);
+      svc.getMyGroupSessions.mockResolvedValue([{ _id: 'gs1', title: 'Weekly Check-in' }] as any);
 
       await useRecoveryStore.getState().fetchGroupSessions();
 
@@ -239,8 +237,8 @@ describe('useRecoveryStore', () => {
   describe('fetchPeerAssignment', () => {
     it('finds active peer assignment', async () => {
       svc.getPeerAssignments.mockResolvedValue([
-        {_id: 'pa1', status: 'completed'},
-        {_id: 'pa2', status: 'active', peer: {name: 'John'}},
+        { _id: 'pa1', status: 'completed' },
+        { _id: 'pa2', status: 'active', peer: { name: 'John' } },
       ] as any);
 
       await useRecoveryStore.getState().fetchPeerAssignment();
@@ -249,9 +247,7 @@ describe('useRecoveryStore', () => {
     });
 
     it('sets null when no active assignment', async () => {
-      svc.getPeerAssignments.mockResolvedValue([
-        {_id: 'pa1', status: 'completed'},
-      ] as any);
+      svc.getPeerAssignments.mockResolvedValue([{ _id: 'pa1', status: 'completed' }] as any);
 
       await useRecoveryStore.getState().fetchPeerAssignment();
 
@@ -274,9 +270,7 @@ describe('useRecoveryStore', () => {
 
   describe('fetchRecentConversations', () => {
     it('loads recent companion sessions', async () => {
-      svc.getRecentSessions.mockResolvedValue([
-        {_id: 'cs1', context: 'check-in'},
-      ] as any);
+      svc.getRecentSessions.mockResolvedValue([{ _id: 'cs1', context: 'check-in' }] as any);
 
       await useRecoveryStore.getState().fetchRecentConversations();
 
@@ -287,8 +281,8 @@ describe('useRecoveryStore', () => {
   describe('fetchChartData', () => {
     it('loads chart data with defaults', async () => {
       svc.getChartData.mockResolvedValue([
-        {date: '2025-01-01', value: 7},
-        {date: '2025-01-02', value: 8},
+        { date: '2025-01-01', value: 7 },
+        { date: '2025-01-02', value: 8 },
       ] as any);
 
       await useRecoveryStore.getState().fetchChartData();
@@ -309,9 +303,9 @@ describe('useRecoveryStore', () => {
   describe('reset', () => {
     it('resets all state to initial values', () => {
       useRecoveryStore.setState({
-        profile: {_id: 'rp-1'} as any,
+        profile: { _id: 'rp-1' } as any,
         isEnrolled: true,
-        milestones: [{_id: 'm1'}] as any,
+        milestones: [{ _id: 'm1' }] as any,
         error: 'some error',
       });
 

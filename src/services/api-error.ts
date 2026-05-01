@@ -39,3 +39,11 @@ export function parseApiError(error: any): ApiError | NetworkError {
   }
   return new NetworkError(error?.message || 'An unexpected error occurred');
 }
+
+export function unwrapResponse<T = any>(res: { data: { data?: T; result?: T } }): T {
+  return (res.data.data ?? res.data.result ?? (res.data as unknown)) as T;
+}
+
+export function getErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message || fallback : fallback;
+}

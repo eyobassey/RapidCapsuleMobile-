@@ -148,3 +148,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+export { unwrapResponse, getErrorMessage } from './api-error';

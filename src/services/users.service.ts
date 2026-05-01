@@ -1,21 +1,21 @@
-import api from './api';
+import api, { unwrapResponse } from './api';
 
 export const usersService = {
   async getMe() {
     const res = await api.get('/users/me');
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async updateProfile(data: any) {
     // Uses PATCH /users/ which updates the current authenticated user via JWT
     const res = await api.patch('/users', data);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async getPresignedUrl(filename: string, contentType: string) {
     const res = await api.get('/users/file/presigned-url', {
       params: { filename, content_type: contentType },
     });
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 };

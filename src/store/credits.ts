@@ -1,6 +1,7 @@
-import {create} from 'zustand';
-import {creditsService} from '../services/credits.service';
-import {useWalletStore} from './wallet';
+import { create } from 'zustand';
+import { creditsService } from '../services/credits.service';
+import { useWalletStore } from './wallet';
+import { getErrorMessage } from '../services/api-error';
 
 export interface CreditPlan {
   _id: string;
@@ -8,7 +9,7 @@ export interface CreditPlan {
   type: 'bundle' | 'unlimited_monthly' | 'unlimited_yearly';
   credits: number | null;
   price: number;
-  prices: Record<string, {price: number}>;
+  prices: Record<string, { price: number }>;
   currency: string;
   duration_days: number | null;
   is_active: boolean;
@@ -53,16 +54,19 @@ interface CreditsState {
   purchasing: boolean;
   purchaseError: string | null;
 
-  sharingSettings: {enabled: boolean; min_amount: number; max_amount: number} | null;
+  sharingSettings: { enabled: boolean; min_amount: number; max_amount: number } | null;
   transferring: boolean;
   transferError: string | null;
 
   fetchCredits: () => Promise<void>;
   fetchPlans: () => Promise<void>;
-  fetchTransactions: (params?: {page?: number; limit?: number}) => Promise<void>;
+  fetchTransactions: (params?: { page?: number; limit?: number }) => Promise<void>;
   purchasePlan: (planId: string) => Promise<boolean>;
   fetchSharingSettings: () => Promise<void>;
-  transferCredits: (recipientId: string, credits: number) => Promise<{success: boolean; sender_remaining?: number; message?: string}>;
+  transferCredits: (
+    recipientId: string,
+    credits: number
+  ) => Promise<{ success: boolean; sender_remaining?: number; message?: string }>;
 }
 
 export const useCreditsStore = create<CreditsState>((set, get) => ({
@@ -90,7 +94,7 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
   transferError: null,
 
   fetchCredits: async () => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       const data = await creditsService.getCredits();
       set({
@@ -104,14 +108,14 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
       });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch credits',
+        error: getErrorMessage(err, 'Failed to fetch credits'),
         isLoading: false,
       });
     }
   },
 
   fetchPlans: async () => {
-    set({plansLoading: true});
+    set({ plansLoading: true });
     try {
       const data = await creditsService.getPlans();
       const plans = Array.isArray(data) ? data : data?.plans || [];
@@ -121,37 +125,34 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
         if (a.type !== 'bundle' && b.type === 'bundle') return 1;
         return (a.sort_order || 0) - (b.sort_order || 0) || a.price - b.price;
       });
-      set({plans, plansLoading: false});
+      set({ plans, plansLoading: false });
     } catch {
-      set({plansLoading: false});
+      set({ plansLoading: false });
     }
   },
 
   fetchTransactions: async (params) => {
-    set({transactionsLoading: true});
+    set({ transactionsLoading: true });
     try {
-      const data = await creditsService.getTransactions(params || {limit: 50});
-      const txList = Array.isArray(data)
-        ? data
-        : data?.transactions || data?.data || [];
-      set({transactions: txList, transactionsLoading: false});
+      const data = await creditsService.getTransactions(params || { limit: 50 });
+      const txList = Array.isArray(data) ? data : data?.transactions || data?.data || [];
+      set({ transactions: txList, transactionsLoading: false });
     } catch {
-      set({transactionsLoading: false});
+      set({ transactionsLoading: false });
     }
   },
 
   purchasePlan: async (planId: string) => {
-    set({purchasing: true, purchaseError: null});
+    set({ purchasing: true, purchaseError: null });
     try {
       await creditsService.purchasePlan(planId);
       await get().fetchCredits();
       await useWalletStore.getState().fetchBalance();
-      set({purchasing: false});
+      set({ purchasing: false });
       return true;
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message || err?.message || 'Purchase failed';
-      set({purchasing: false, purchaseError: msg});
+      const msg = getErrorMessage(err, 'Purchase failed');
+      set({ purchasing: false, purchaseError: msg });
       return false;
     }
   },
@@ -159,24 +160,24 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
   fetchSharingSettings: async () => {
     try {
       const data = await creditsService.getSharingSettings();
-      set({sharingSettings: data});
+      set({ sharingSettings: data });
     } catch {
       // Settings fetch failed — sharing will be hidden
     }
   },
 
   transferCredits: async (recipientId: string, credits: number) => {
-    set({transferring: true, transferError: null});
+    set({ transferring: true, transferError: null });
     try {
       const data = await creditsService.transferCredits(recipientId, credits);
       await get().fetchCredits();
       await get().fetchTransactions();
-      set({transferring: false});
-      return {success: true, sender_remaining: data?.sender_remaining, message: data?.message};
+      set({ transferring: false });
+      return { success: true, sender_remaining: data?.sender_remaining, message: data?.message };
     } catch (err: any) {
-      const msg = err?.response?.data?.message || err?.message || 'Transfer failed';
-      set({transferring: false, transferError: msg});
-      return {success: false, message: msg};
+      const msg = getErrorMessage(err, 'Transfer failed');
+      set({ transferring: false, transferError: msg });
+      return { success: false, message: msg };
     }
   },
 }));

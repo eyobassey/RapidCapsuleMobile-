@@ -1,4 +1,4 @@
-import api from './api';
+import api, { unwrapResponse } from './api';
 
 // ─── Channel flags shared by every category ───────────────────────────────────
 
@@ -93,40 +93,40 @@ export const DEFAULT_PREFS: NotificationPreferences = {
 export const notificationsService = {
   async list(params?: { page?: number; limit?: number }) {
     const res = await api.get('/notifications', { params });
-    const data = res.data.data || res.data.result;
+    const data = unwrapResponse(res);
     // Backend may return { notifications, pagination } or a flat array
     return Array.isArray(data) ? data : data?.notifications || [];
   },
 
   async getUnreadCount() {
     const res = await api.get('/notifications/unread-count');
-    const data = res.data.data || res.data.result;
+    const data = unwrapResponse(res);
     return data?.unread_count ?? (typeof data === 'number' ? data : 0);
   },
 
   async markAsRead(id: string) {
     const res = await api.patch(`/notifications/${id}/read`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async markAllRead() {
     const res = await api.patch('/notifications/read-all');
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async remove(id: string) {
     const res = await api.delete(`/notifications/${id}`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async getStats(): Promise<NotificationStats> {
     const res = await api.get('/notifications/stats');
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async getPreferences(): Promise<NotificationPreferences> {
     const res = await api.get('/notifications/preferences');
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   // Patch any subset: a single channel on one category, quiet_hours, messaging_timing, etc.

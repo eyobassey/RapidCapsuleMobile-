@@ -1,5 +1,6 @@
-import {create} from 'zustand';
-import {recoveryService} from '../services/recovery.service';
+import { create } from 'zustand';
+import { recoveryService } from '../services/recovery.service';
+import { getErrorMessage } from '../services/api-error';
 import type {
   RecoveryProfile,
   DashboardData,
@@ -28,7 +29,7 @@ interface RecoveryState {
   peerAssignment: PeerAssignment | null;
   matCompliance: MATCompliance | null;
   recentConversations: CompanionSessionSummary[];
-  chartData: Array<{date: string; value: number}>;
+  chartData: Array<{ date: string; value: number }>;
   isLoading: boolean;
   isEnrolled: boolean;
   error: string | null;
@@ -68,7 +69,7 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
   error: null,
 
   fetchProfile: async () => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       const profile = await recoveryService.getProfile();
       set({
@@ -78,10 +79,10 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
       });
     } catch (err: any) {
       if (err?.response?.status === 404) {
-        set({profile: null, isEnrolled: false, isLoading: false});
+        set({ profile: null, isEnrolled: false, isLoading: false });
       } else {
         set({
-          error: err?.response?.data?.message || 'Failed to load recovery profile',
+          error: getErrorMessage(err, 'Failed to load recovery profile'),
           isLoading: false,
         });
       }
@@ -91,7 +92,7 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
   fetchDashboard: async () => {
     try {
       const dashboard = await recoveryService.getDashboard();
-      set({dashboard});
+      set({ dashboard });
     } catch {
       // silently fail
     }
@@ -100,7 +101,7 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
   fetchStats: async () => {
     try {
       const stats = await recoveryService.getStats();
-      set({stats});
+      set({ stats });
     } catch {
       // silently fail
     }
@@ -109,7 +110,7 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
   fetchMilestones: async () => {
     try {
       const milestones = await recoveryService.getMilestones();
-      set({milestones: Array.isArray(milestones) ? milestones : []});
+      set({ milestones: Array.isArray(milestones) ? milestones : [] });
     } catch {
       // silently fail
     }
@@ -117,8 +118,8 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
 
   fetchScreeningHistory: async () => {
     try {
-      const history = await recoveryService.getScreeningHistory({limit: 20});
-      set({screeningHistory: history});
+      const history = await recoveryService.getScreeningHistory({ limit: 20 });
+      set({ screeningHistory: history });
     } catch {
       // silently fail
     }
@@ -127,25 +128,25 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
   fetchActivePlan: async () => {
     try {
       const plan = await recoveryService.getActivePlan();
-      set({activePlan: plan || null});
+      set({ activePlan: plan || null });
     } catch {
-      set({activePlan: null});
+      set({ activePlan: null });
     }
   },
 
   fetchExerciseStats: async () => {
     try {
       const stats = await recoveryService.getExerciseStats();
-      set({exerciseStats: stats || null});
+      set({ exerciseStats: stats || null });
     } catch {
-      set({exerciseStats: null});
+      set({ exerciseStats: null });
     }
   },
 
   fetchRiskHistory: async (period?: string) => {
     try {
       const history = await recoveryService.getRiskHistory(period);
-      set({riskHistory: Array.isArray(history) ? history : []});
+      set({ riskHistory: Array.isArray(history) ? history : [] });
     } catch {
       // silently fail
     }
@@ -154,7 +155,7 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
   fetchGroupSessions: async () => {
     try {
       const sessions = await recoveryService.getMyGroupSessions();
-      set({groupSessions: Array.isArray(sessions) ? sessions : []});
+      set({ groupSessions: Array.isArray(sessions) ? sessions : [] });
     } catch {
       // silently fail
     }
@@ -164,27 +165,27 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
     try {
       const assignments = await recoveryService.getPeerAssignments();
       const active = Array.isArray(assignments)
-        ? assignments.find(a => a.status === 'active') || null
+        ? assignments.find((a) => a.status === 'active') || null
         : null;
-      set({peerAssignment: active});
+      set({ peerAssignment: active });
     } catch {
-      set({peerAssignment: null});
+      set({ peerAssignment: null });
     }
   },
 
   fetchMATCompliance: async () => {
     try {
       const compliance = await recoveryService.getMATCompliance();
-      set({matCompliance: compliance || null});
+      set({ matCompliance: compliance || null });
     } catch {
-      set({matCompliance: null});
+      set({ matCompliance: null });
     }
   },
 
   fetchRecentConversations: async () => {
     try {
       const sessions = await recoveryService.getRecentSessions();
-      set({recentConversations: Array.isArray(sessions) ? sessions : []});
+      set({ recentConversations: Array.isArray(sessions) ? sessions : [] });
     } catch {
       // silently fail
     }
@@ -193,9 +194,9 @@ export const useRecoveryStore = create<RecoveryState>((set) => ({
   fetchChartData: async (metric = 'mood_score', days = 14) => {
     try {
       const data = await recoveryService.getChartData(metric, days);
-      set({chartData: Array.isArray(data) ? data : []});
+      set({ chartData: Array.isArray(data) ? data : [] });
     } catch {
-      set({chartData: []});
+      set({ chartData: [] });
     }
   },
 

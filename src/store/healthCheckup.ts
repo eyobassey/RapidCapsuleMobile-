@@ -1,5 +1,6 @@
-import {create} from 'zustand';
-import {healthCheckupService, Evidence} from '../services/healthCheckup.service';
+import { create } from 'zustand';
+import { healthCheckupService, Evidence } from '../services/healthCheckup.service';
+import { getErrorMessage } from '../services/api-error';
 
 interface ClaudeSummaryContent {
   overview: string;
@@ -55,12 +56,12 @@ interface HealthCheckupState {
   error: string | null;
 
   // Actions
-  beginCheckup: (data: {health_check_for: string; checkup_owner_id: string}) => Promise<void>;
+  beginCheckup: (data: { health_check_for: string; checkup_owner_id: string }) => Promise<void>;
   fetchRiskFactors: (age: number) => Promise<void>;
   searchSymptoms: (phrase: string) => Promise<any[]>;
   addEvidence: (items: Evidence[]) => void;
   submitDiagnosis: (shouldStop?: boolean) => Promise<void>;
-  fetchHistory: (params?: {page?: number; limit?: number}) => Promise<void>;
+  fetchHistory: (params?: { page?: number; limit?: number }) => Promise<void>;
   fetchDetail: (id: string) => Promise<void>;
   setPatientInfo: (sex: string, age: number) => void;
   fetchClaudeSummary: (checkupId: string) => Promise<void>;
@@ -94,7 +95,7 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
   ...initialState,
 
   beginCheckup: async (data) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       const result = await healthCheckupService.beginCheckup(data);
       set({
@@ -104,7 +105,7 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
       });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to start checkup',
+        error: getErrorMessage(err, 'Failed to start checkup'),
         isLoading: false,
       });
       throw err;
@@ -112,14 +113,17 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
   },
 
   fetchRiskFactors: async (age: number) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
-      const data = await healthCheckupService.getRiskFactors(age, get().interviewToken || undefined);
+      const data = await healthCheckupService.getRiskFactors(
+        age,
+        get().interviewToken || undefined
+      );
       const factors = Array.isArray(data) ? data : data?.risk_factors || data?.data || [];
-      set({riskFactors: factors, isLoading: false});
+      set({ riskFactors: factors, isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch risk factors',
+        error: getErrorMessage(err, 'Failed to fetch risk factors'),
         isLoading: false,
       });
     }
@@ -140,25 +144,25 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
   },
 
   addEvidence: (items: Evidence[]) => {
-    set(state => ({
+    set((state) => ({
       evidence: [...state.evidence, ...items],
     }));
   },
 
   submitDiagnosis: async (shouldStop = false) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
-      const {sex, age, evidence, interviewToken} = get();
+      const { sex, age, evidence, interviewToken } = get();
       const result = await healthCheckupService.diagnosis({
         sex: sex || undefined,
-        age: {value: age},
+        age: { value: age },
         evidence,
         should_stop: shouldStop,
         interview_token: interviewToken || undefined,
-        extras: {enable_symptom_duration: false},
+        extras: { enable_symptom_duration: false },
       });
 
-      const updates: Partial<HealthCheckupState> = {isLoading: false};
+      const updates: Partial<HealthCheckupState> = { isLoading: false };
 
       // Update interview token if returned
       if (result?.interview_token) {
@@ -185,7 +189,7 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
       set(updates as any);
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to process diagnosis',
+        error: getErrorMessage(err, 'Failed to process diagnosis'),
         isLoading: false,
       });
       throw err;
@@ -193,24 +197,24 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
   },
 
   fetchHistory: async (params) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       const data = await healthCheckupService.getHistory(params);
       const list = Array.isArray(data) ? data : data?.data || data?.checkups || [];
-      set({history: Array.isArray(list) ? list : [], isLoading: false});
+      set({ history: Array.isArray(list) ? list : [], isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch history',
+        error: getErrorMessage(err, 'Failed to fetch history'),
         isLoading: false,
       });
     }
   },
 
   fetchDetail: async (id: string) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       const data = await healthCheckupService.getById(id);
-      const updates: any = {currentDetail: data, isLoading: false};
+      const updates: any = { currentDetail: data, isLoading: false };
       // If the detail already has a claude_summary embedded, use it
       if (data?.claude_summary?.content) {
         updates.claudeSummary = data.claude_summary;
@@ -218,14 +222,14 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
       set(updates);
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch checkup detail',
+        error: getErrorMessage(err, 'Failed to fetch checkup detail'),
         isLoading: false,
       });
     }
   },
 
   setPatientInfo: (sex: string, age: number) => {
-    set({sex, age});
+    set({ sex, age });
   },
 
   fetchSummaryStatus: async () => {
@@ -250,42 +254,42 @@ export const useHealthCheckupStore = create<HealthCheckupState>((set, get) => ({
     // Don't clear existing summary (may have been set from fetchDetail)
     const existing = get().claudeSummary;
     if (!existing?.content) {
-      set({summaryLoading: true});
+      set({ summaryLoading: true });
     }
     try {
       const data = await healthCheckupService.getClaudeSummary(checkupId);
       // Backend returns { checkup_id, has_summary, claude_summary: { content, ... }, credits }
       const summary = data?.claude_summary;
       if (summary?.content) {
-        set({claudeSummary: summary, summaryLoading: false});
+        set({ claudeSummary: summary, summaryLoading: false });
       } else {
-        set({summaryLoading: false});
+        set({ summaryLoading: false });
       }
     } catch {
-      set({summaryLoading: false});
+      set({ summaryLoading: false });
     }
   },
 
   generateClaudeSummary: async (checkupId: string) => {
-    set({summaryLoading: true});
+    set({ summaryLoading: true });
     try {
       const data = await healthCheckupService.generateClaudeSummary(checkupId);
       // Backend returns { enabled, generated, claude_summary: { content, ... }, credit_used, credits }
       const summary = data?.claude_summary;
       if (summary) {
-        set({claudeSummary: summary, summaryLoading: false});
+        set({ claudeSummary: summary, summaryLoading: false });
       } else if (data?.purchase_required) {
         set({
           summaryLoading: false,
-          claudeSummary: {error: data.message || 'No credits available'},
+          claudeSummary: { error: data.message || 'No credits available' },
         });
       } else {
-        set({summaryLoading: false});
+        set({ summaryLoading: false });
       }
     } catch (err: any) {
       set({
         summaryLoading: false,
-        error: err?.response?.data?.message || 'Failed to generate AI summary',
+        error: getErrorMessage(err, 'Failed to generate AI summary'),
       });
       throw err;
     }

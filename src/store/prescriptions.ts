@@ -1,5 +1,6 @@
-import {create} from 'zustand';
-import {prescriptionsService} from '../services/prescriptions.service';
+import { create } from 'zustand';
+import { prescriptionsService } from '../services/prescriptions.service';
+import { getErrorMessage } from '../services/api-error';
 
 interface PrescriptionsState {
   prescriptions: any[];
@@ -16,7 +17,7 @@ interface PrescriptionsState {
   acceptPrescription: (id: string) => Promise<void>;
   declinePrescription: (id: string) => Promise<void>;
   requestRefill: (id: string) => Promise<void>;
-  initializePayment: (id: string) => Promise<{authorization_url: string; reference: string}>;
+  initializePayment: (id: string) => Promise<{ authorization_url: string; reference: string }>;
   payWithWallet: (id: string) => Promise<void>;
   verifyPayment: (id: string, reference: string) => Promise<void>;
   ratePrescription: (id: string, rating: number, review?: string) => Promise<void>;
@@ -31,50 +32,50 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
   searchQuery: '',
 
   fetchPrescriptions: async () => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       const data = await prescriptionsService.fetchAll();
-      set({prescriptions: Array.isArray(data) ? data : [], isLoading: false});
+      set({ prescriptions: Array.isArray(data) ? data : [], isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch prescriptions',
+        error: getErrorMessage(err, 'Failed to fetch prescriptions'),
         isLoading: false,
       });
     }
   },
 
   fetchPrescriptionById: async (id: string) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       const data = await prescriptionsService.getById(id);
-      set({currentPrescription: data, isLoading: false});
+      set({ currentPrescription: data, isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch prescription',
+        error: getErrorMessage(err, 'Failed to fetch prescription'),
         isLoading: false,
       });
     }
   },
 
   setFilter: (filter: string) => {
-    set({filter});
+    set({ filter });
   },
 
   setSearchQuery: (query: string) => {
-    set({searchQuery: query});
+    set({ searchQuery: query });
   },
 
   acceptPrescription: async (id: string) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       await prescriptionsService.accept(id);
       const prescriptions = get().prescriptions.map((p: any) =>
-        p._id === id ? {...p, status: 'accepted'} : p,
+        p._id === id ? { ...p, status: 'accepted' } : p
       );
-      set({prescriptions, isLoading: false});
+      set({ prescriptions, isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to accept prescription',
+        error: getErrorMessage(err, 'Failed to accept prescription'),
         isLoading: false,
       });
       throw err;
@@ -82,16 +83,16 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
   },
 
   declinePrescription: async (id: string) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       await prescriptionsService.decline(id);
       const prescriptions = get().prescriptions.map((p: any) =>
-        p._id === id ? {...p, status: 'declined'} : p,
+        p._id === id ? { ...p, status: 'declined' } : p
       );
-      set({prescriptions, isLoading: false});
+      set({ prescriptions, isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to decline prescription',
+        error: getErrorMessage(err, 'Failed to decline prescription'),
         isLoading: false,
       });
       throw err;
@@ -99,13 +100,13 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
   },
 
   requestRefill: async (id: string) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       await prescriptionsService.requestRefill(id);
-      set({isLoading: false});
+      set({ isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to request refill',
+        error: getErrorMessage(err, 'Failed to request refill'),
         isLoading: false,
       });
       throw err;
@@ -120,18 +121,18 @@ export const usePrescriptionsStore = create<PrescriptionsState>((set, get) => ({
   payWithWallet: async (id: string) => {
     await prescriptionsService.payWithWallet(id);
     const data = await prescriptionsService.getById(id);
-    set({currentPrescription: data});
+    set({ currentPrescription: data });
   },
 
   verifyPayment: async (id: string, reference: string) => {
     await prescriptionsService.verifyCardPayment(id, reference);
     const data = await prescriptionsService.getById(id);
-    set({currentPrescription: data});
+    set({ currentPrescription: data });
   },
 
   ratePrescription: async (id: string, rating: number, review?: string) => {
-    await prescriptionsService.ratePrescription(id, {rating, review});
+    await prescriptionsService.ratePrescription(id, { rating, review });
     const data = await prescriptionsService.getById(id);
-    set({currentPrescription: data});
+    set({ currentPrescription: data });
   },
 }));

@@ -1,19 +1,19 @@
-import api from './api';
+import api, { unwrapResponse } from './api';
 
 export const healthIntegrationsService = {
   async getIntegrations() {
     const res = await api.get('/health-integrations');
-    return res.data.data || res.data.result || [];
+    return unwrapResponse(res) ?? [];
   },
 
   async getProviders() {
     const res = await api.get('/health-integrations/providers');
-    return res.data.data || res.data.result || [];
+    return unwrapResponse(res) ?? [];
   },
 
   async getStatus(provider: string) {
     const res = await api.get(`/health-integrations/status/${provider}`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async connect(payload: {
@@ -23,27 +23,27 @@ export const healthIntegrationsService = {
     syncDirection?: 'push' | 'pull' | 'bidirectional';
   }) {
     const res = await api.post('/health-integrations/connect', payload);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async handleCallback(provider: string, payload: { code?: string; data?: any }) {
     const res = await api.post(`/health-integrations/callback/${provider}`, payload);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async pushAppleHealthData(data: any) {
     const res = await api.post('/health-integrations/apple-health/callback', data);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async sync(provider: string, params?: { startDate?: string; endDate?: string }) {
     const res = await api.post(`/health-integrations/sync/${provider}`, params || {});
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async disconnect(provider: string) {
     const res = await api.delete(`/health-integrations/${provider}`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async updateSettings(
@@ -51,12 +51,12 @@ export const healthIntegrationsService = {
     settings: { autoSync?: boolean; syncDirection?: string; dataTypes?: string[] }
   ) {
     const res = await api.patch(`/health-integrations/${provider}/settings`, settings);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async getSyncLogs() {
     const res = await api.get('/health-integrations/sync-logs');
-    return res.data.data || res.data.result || [];
+    return unwrapResponse(res) ?? [];
   },
 
   async getData(params?: {
@@ -66,6 +66,6 @@ export const healthIntegrationsService = {
     endDate?: string;
   }) {
     const res = await api.get('/health-integrations/data', { params });
-    return res.data.data || res.data.result || [];
+    return unwrapResponse(res) ?? [];
   },
 };

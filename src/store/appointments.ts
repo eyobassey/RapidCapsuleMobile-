@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { appointmentsService } from '../services/appointments.service';
 import { healthCheckupService } from '../services/healthCheckup.service';
+import { getErrorMessage } from '../services/api-error';
 
 interface BookingData {
   // Step 1 — service type screen
@@ -79,7 +80,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
       set({ appointments: Array.isArray(list) ? list : [], isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch appointments',
+        error: getErrorMessage(err, 'Failed to fetch appointments'),
         isLoading: false,
       });
     }
@@ -92,7 +93,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
       set({ currentAppointment: data, isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch appointment',
+        error: getErrorMessage(err, 'Failed to fetch appointment'),
         isLoading: false,
       });
     }
@@ -111,7 +112,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
       set({ categories: Array.isArray(cats) ? cats : [], isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch categories',
+        error: getErrorMessage(err, 'Failed to fetch categories'),
         isLoading: false,
       });
     }
@@ -124,7 +125,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
       set({ specialists: data || [], isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch specialists',
+        error: getErrorMessage(err, 'Failed to fetch specialists'),
         isLoading: false,
       });
     }
@@ -155,7 +156,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
       set({ availableTimes: times, isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch available times',
+        error: getErrorMessage(err, 'Failed to fetch available times'),
         isLoading: false,
       });
     }
@@ -187,7 +188,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
       return data;
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to book appointment',
+        error: getErrorMessage(err, 'Failed to book appointment'),
         isLoading: false,
       });
       throw err;
@@ -204,7 +205,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
       set({ appointments, isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to cancel appointment',
+        error: getErrorMessage(err, 'Failed to cancel appointment'),
         isLoading: false,
       });
       throw err;
@@ -218,7 +219,7 @@ export const useAppointmentsStore = create<AppointmentsState>((set, get) => ({
       set({ isLoading: false });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to rate appointment',
+        error: getErrorMessage(err, 'Failed to rate appointment'),
         isLoading: false,
       });
     }

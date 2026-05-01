@@ -1,4 +1,4 @@
-import api from './api';
+import api, { unwrapResponse } from './api';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -44,20 +44,20 @@ export interface HealthTipsSummary {
 export const healthTipsService = {
   async getFeatured(limit = 3): Promise<HealthTip[]> {
     const res = await api.get('/health-tips/featured', { params: { limit } });
-    const data = res.data.data || res.data.result || res.data;
+    const data = unwrapResponse(res);
     return data?.tips || (Array.isArray(data) ? data : []);
   },
 
   async getAll(params?: HealthTipsParams): Promise<{ tips: HealthTip[]; total?: number }> {
     const res = await api.get('/health-tips', { params });
-    const data = res.data.data || res.data.result || res.data;
+    const data = unwrapResponse(res);
     if (Array.isArray(data)) return { tips: data };
     return { tips: data?.tips || [], total: data?.total };
   },
 
   async generate(): Promise<HealthTip[]> {
     const res = await api.post('/health-tips/generate');
-    const data = res.data.data || res.data.result || res.data;
+    const data = unwrapResponse(res);
     return data?.tips || (Array.isArray(data) ? data : []);
   },
 
@@ -75,6 +75,6 @@ export const healthTipsService = {
 
   async getSummary(): Promise<HealthTipsSummary> {
     const res = await api.get('/health-tips/summary');
-    return res.data.data || res.data.result || res.data;
+    return unwrapResponse(res);
   },
 };

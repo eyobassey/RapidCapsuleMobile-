@@ -1,4 +1,4 @@
-import api from './api';
+import api, { unwrapResponse } from './api';
 
 export const prescriptionsService = {
   // ── Unified fetch: all 6 sources, merged & deduped ──
@@ -13,21 +13,21 @@ export const prescriptionsService = {
     ]);
 
     const extract = (r: PromiseSettledResult<any>) =>
-      r.status === 'fulfilled' ? (r.value.data.data || r.value.data.result || []) : [];
+      r.status === 'fulfilled' ? unwrapResponse(r.value) ?? [] : [];
 
     // Specialist prescriptions
     const specialistData = (Array.isArray(extract(results[0])) ? extract(results[0]) : []).map(
-      (p: any) => ({...p, type: 'INTERNAL', prescription_source: 'specialist'}),
+      (p: any) => ({ ...p, type: 'INTERNAL', prescription_source: 'specialist' })
     );
 
     // Internal (old format)
     const internalData = (Array.isArray(extract(results[1])) ? extract(results[1]) : []).map(
-      (p: any) => ({...p, type: 'INTERNAL', prescription_source: 'internal'}),
+      (p: any) => ({ ...p, type: 'INTERNAL', prescription_source: 'internal' })
     );
 
     // External prescriptions
     const externalData = (Array.isArray(extract(results[2])) ? extract(results[2]) : []).map(
-      (p: any) => ({...p, type: 'EXTERNAL', prescription_source: 'external'}),
+      (p: any) => ({ ...p, type: 'EXTERNAL', prescription_source: 'external' })
     );
 
     // Pharmacy orders
@@ -60,9 +60,7 @@ export const prescriptionsService = {
 
     // Patient uploads (verification system)
     const uploadsRaw = extract(results[5]);
-    const uploadsList = Array.isArray(uploadsRaw)
-      ? uploadsRaw
-      : uploadsRaw?.uploads || [];
+    const uploadsList = Array.isArray(uploadsRaw) ? uploadsRaw : uploadsRaw?.uploads || [];
     const VSTATUS_MAP: Record<string, string> = {
       PENDING: 'pending',
       TIER1_PROCESSING: 'verifying',
@@ -77,12 +75,17 @@ export const prescriptionsService = {
       EXPIRED: 'expired',
     };
     const uploadsData = uploadsList.map((p: any) => {
-      const displayStatus = VSTATUS_MAP[p.verification_status] || p.verification_status?.toLowerCase() || 'pending';
+      const displayStatus =
+        VSTATUS_MAP[p.verification_status] || p.verification_status?.toLowerCase() || 'pending';
       const usedInOrders = p.used_in_orders || [];
       const prescriptionNumber =
         p.prescription_number ||
         p.digital_signature?.reference_number ||
-        `RX-${(p.created_at ? new Date(p.created_at).toISOString().slice(0, 10).replace(/-/g, '') : '00000000')}-${(p._id?.slice(-4) || '0000').toUpperCase()}`;
+        `RX-${
+          p.created_at
+            ? new Date(p.created_at).toISOString().slice(0, 10).replace(/-/g, '')
+            : '00000000'
+        }-${(p._id?.slice(-4) || '0000').toUpperCase()}`;
       return {
         ...p,
         type: 'EXTERNAL',
@@ -117,69 +120,69 @@ export const prescriptionsService = {
     });
     unique.sort(
       (a: any, b: any) =>
-        new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime(),
+        new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
     );
     return unique;
   },
 
   // Single-source list (legacy, for status filtering)
   async list(params?: Record<string, any>) {
-    const res = await api.get('/patient/prescriptions', {params});
-    return res.data.data || res.data.result;
+    const res = await api.get('/patient/prescriptions', { params });
+    return unwrapResponse(res);
   },
 
   async getById(id: string) {
     const res = await api.get(`/patient/prescriptions/${id}`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async accept(id: string) {
     const res = await api.post(`/patient/prescriptions/${id}/accept`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async decline(id: string) {
     const res = await api.post(`/patient/prescriptions/${id}/decline`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async requestRefill(id: string) {
     const res = await api.post(`/patient/prescriptions/${id}/refill`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async initializeCardPayment(id: string) {
     const res = await api.post(`/patient/prescriptions/${id}/pay/card/initialize`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async verifyCardPayment(id: string, reference: string) {
-    const res = await api.post(`/patient/prescriptions/${id}/pay/card/verify`, {reference});
-    return res.data.data || res.data.result;
+    const res = await api.post(`/patient/prescriptions/${id}/pay/card/verify`, { reference });
+    return unwrapResponse(res);
   },
 
   async payWithWallet(id: string) {
     const res = await api.post(`/patient/prescriptions/${id}/pay/wallet`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
-  async ratePrescription(id: string, payload: {rating: number; review?: string}) {
+  async ratePrescription(id: string, payload: { rating: number; review?: string }) {
     const res = await api.post(`/patient/prescriptions/${id}/rate`, payload);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async getPdf(id: string) {
     const res = await api.get(`/patient/prescriptions/${id}/pdf`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async getRefillEligibility(id: string) {
     const res = await api.get(`/patient/prescriptions/${id}/refill/eligibility`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 
   async getRefillHistory(id: string) {
     const res = await api.get(`/patient/prescriptions/${id}/refill/history`);
-    return res.data.data || res.data.result;
+    return unwrapResponse(res);
   },
 };

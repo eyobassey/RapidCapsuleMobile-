@@ -1,5 +1,6 @@
-import {create} from 'zustand';
-import {healthScoreService} from '../services/healthScore.service';
+import { create } from 'zustand';
+import { healthScoreService } from '../services/healthScore.service';
+import { getErrorMessage } from '../services/api-error';
 
 interface HealthScoreState {
   score: number | null;
@@ -17,7 +18,7 @@ export const useHealthScoreStore = create<HealthScoreState>((set) => ({
   error: null,
 
   fetchScore: async () => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
       const data = await healthScoreService.getBasicScore();
       set({
@@ -27,7 +28,7 @@ export const useHealthScoreStore = create<HealthScoreState>((set) => ({
       });
     } catch (err: any) {
       set({
-        error: err?.response?.data?.message || err?.message || 'Failed to fetch health score',
+        error: getErrorMessage(err, 'Failed to fetch health score'),
         isLoading: false,
       });
     }
