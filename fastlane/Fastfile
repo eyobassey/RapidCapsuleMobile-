@@ -142,6 +142,20 @@ def generate_release_changelog(max_length: nil)
   max_length ? truncate_at_line(result, max_length) : result
 end
 
+# Bumps runtimeVersion in app.config.js to match the new binary version, then
+# re-syncs both native files (Expo.plist on iOS, strings.xml on Android) so
+# expo-updates rejects OTA updates built for a different native binary.
+def bump_eas_runtime_version(version:)
+  config_path = File.expand_path("../app.config.js", __dir__)
+  contents    = File.read(config_path)
+  updated     = contents.sub(/runtimeVersion:\s*'[^']*'/, "runtimeVersion: '#{version}'")
+  UI.user_error!("runtimeVersion not found in app.config.js") if contents == updated
+  File.write(config_path, updated)
+  sh "cd .. && npx expo-updates configuration:syncnative --platform ios --workflow generic", log: false
+  sh "cd .. && npx expo-updates configuration:syncnative --platform android --workflow generic", log: false
+  UI.success "EAS runtimeVersion → #{version}"
+end
+
 # ─── Shared lanes (platform-independent) ──────────────────────────────────────
 
 desc "Lint → type-check → test → audit. Run before any build."
@@ -213,8 +227,15 @@ platform :ios do
 
     new_version = increment_version_number(xcodeproj: IOS_PROJECT, bump_type: type)
     sh "cd .. && npm version #{new_version} --no-git-tag-version", log: false
+    bump_eas_runtime_version(version: new_version)
     git_commit(
-      path:    ["../ios/RapidCapsules.xcodeproj/project.pbxproj", "../package.json"],
+      path:    [
+        "../ios/RapidCapsules.xcodeproj/project.pbxproj",
+        "../package.json",
+        "../app.config.js",
+        "../ios/RapidCapsules/Supporting/Expo.plist",
+        "../android/app/src/main/res/values/strings.xml",
+      ],
       message: "chore(ios): bump version to #{new_version}"
     )
     push_to_git_remote
@@ -342,7 +363,17 @@ platform :android do
 
     File.write(gradle_path, contents.sub(/versionName\s+"[^"]+"/, "versionName \"#{new_version}\""))
     sh "cd .. && npm version #{new_version} --no-git-tag-version", log: false
-    git_commit(path: [gradle_path, "../package.json"], message: "chore(android): bump version to #{new_version}")
+    bump_eas_runtime_version(version: new_version)
+    git_commit(
+      path: [
+        gradle_path,
+        "../package.json",
+        "../app.config.js",
+        "../ios/RapidCapsules/Supporting/Expo.plist",
+        "../android/app/src/main/res/values/strings.xml",
+      ],
+      message: "chore(android): bump version to #{new_version}"
+    )
     push_to_git_remote
     UI.success "Android version bumped to #{new_version}"
   end

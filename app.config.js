@@ -25,9 +25,7 @@ module.exports = {
   updates: {
     url: 'https://u.expo.dev/029a2460-8f33-43fc-90b4-e6f3cdcc1543',
   },
-  runtimeVersion: {
-    policy: 'appVersion',
-  },
+  runtimeVersion: '1.0.0',
 
   extra: {
     paystackPublicKey: process.env.PAYSTACK_PUBLIC_KEY ?? '',
