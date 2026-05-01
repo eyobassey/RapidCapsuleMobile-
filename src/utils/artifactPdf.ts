@@ -1,6 +1,6 @@
-import { generatePDF } from 'react-native-html-to-pdf';
+import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { Platform, Alert } from 'react-native';
+import { Alert } from 'react-native';
 
 // ── Shared helpers ──
 
@@ -166,20 +166,10 @@ function buildFooter(): string {
 
 async function generateAndShare(html: string, fileName: string): Promise<void> {
   try {
-    const file = await generatePDF({
-      html,
-      fileName,
-      directory: Platform.OS === 'ios' ? 'Documents' : 'Downloads',
-      base64: false,
-    });
+    const { uri } = await Print.printToFileAsync({ html });
 
-    if (!file.filePath) {
-      throw new Error('PDF generation failed');
-    }
-
-    const fileUrl = Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`;
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(fileUrl, {
+      await Sharing.shareAsync(uri, {
         mimeType: 'application/pdf',
         dialogTitle: fileName.replace(/_/g, ' '),
       });

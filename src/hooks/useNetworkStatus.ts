@@ -1,18 +1,28 @@
-import {useEffect, useState} from 'react';
-import NetInfo, {NetInfoState} from '@react-native-community/netinfo';
+import * as Network from 'expo-network';
+import { useEffect, useState } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 
 export function useNetworkStatus() {
   const [isConnected, setIsConnected] = useState<boolean>(true);
   const [connectionType, setConnectionType] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
+    const checkNetwork = async () => {
+      const state = await Network.getNetworkStateAsync();
       setIsConnected(state.isConnected ?? true);
-      setConnectionType(state.type);
+      setConnectionType(state.type ?? null);
+    };
+
+    void checkNetwork();
+
+    const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        void checkNetwork();
+      }
     });
 
-    return () => unsubscribe();
+    return () => subscription.remove();
   }, []);
 
-  return {isConnected, connectionType};
+  return { isConnected, connectionType };
 }

@@ -1,17 +1,9 @@
 import { Download, X } from 'lucide-react-native';
 import React, { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Platform,
-  ScrollView,
-  Share,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Modal, ScrollView, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { generatePDF } from 'react-native-html-to-pdf';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { colors } from '../../theme/colors';
 import { buildReceiptHtml } from '../../utils/appointmentReceiptHtml';
 import { Text } from '../ui';
@@ -91,26 +83,16 @@ export default function ReceiptSheet({ visible, onClose, data }: ReceiptSheetPro
         receiptNumber,
       });
 
-      const result = await generatePDF({
-        html,
-        fileName: `receipt_${data.appointmentId}`,
-        directory: Platform.OS === 'android' ? 'Downloads' : 'Documents',
-      });
+      const { uri } = await Print.printToFileAsync({ html });
 
-      if (!result.filePath) throw new Error('PDF generation failed');
-
-      await Share.share(
-        Platform.OS === 'ios'
-          ? { url: `file://${result.filePath}` }
-          : { title: `Receipt ${receiptNumber}`, message: `Receipt ${receiptNumber}` },
-        Platform.OS === 'android' ? { dialogTitle: 'Share Receipt' } : undefined
-      );
-      // Note: On Android, file sharing via Share.share is limited.
-      // For full file sharing support, consider react-native-share.
-    } catch (err: any) {
-      if (err?.message !== 'The user did not share') {
-        Alert.alert('Download Failed', 'Could not generate the receipt PDF. Please try again.');
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, {
+          mimeType: 'application/pdf',
+          dialogTitle: `Receipt ${receiptNumber}`,
+        });
       }
+    } catch {
+      Alert.alert('Download Failed', 'Could not generate the receipt PDF. Please try again.');
     } finally {
       setIsDownloading(false);
     }

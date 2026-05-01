@@ -13,6 +13,9 @@ module.exports = {
     '^expo-image-picker$': '<rootDir>/__mocks__/expo-image-picker.js',
     '^expo-web-browser$': '<rootDir>/__mocks__/expo-web-browser.js',
     '^expo-sharing$': '<rootDir>/__mocks__/expo-sharing.js',
+    '^expo-print$': '<rootDir>/__mocks__/expo-print.js',
+    '^expo-network$': '<rootDir>/__mocks__/expo-network.js',
+    '^expo-audio$': '<rootDir>/__mocks__/expo-audio.js',
     '^react-native-config$': '<rootDir>/__mocks__/react-native-config.js',
   },
   transformIgnorePatterns: [

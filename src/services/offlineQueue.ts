@@ -1,5 +1,6 @@
 import { createMMKV } from 'react-native-mmkv';
-import NetInfo from '@react-native-community/netinfo';
+import * as Network from 'expo-network';
+import { AppState } from 'react-native';
 import api from './api';
 
 const store = createMMKV({ id: 'rc-offline-queue' });
@@ -87,13 +88,16 @@ export const offlineQueue = {
   },
 };
 
-// Auto-flush when coming back online
-NetInfo.addEventListener((state) => {
-  if (state.isConnected) {
-    offlineQueue.flush().then((result) => {
-      if (result.succeeded > 0) {
-        console.log(`[OfflineQueue] Synced ${result.succeeded} pending requests`);
-      }
-    });
+// Auto-flush when app becomes active and network is available
+AppState.addEventListener('change', async (nextState) => {
+  if (nextState === 'active') {
+    const state = await Network.getNetworkStateAsync();
+    if (state.isConnected) {
+      offlineQueue.flush().then((result) => {
+        if (result.succeeded > 0) {
+          console.log(`[OfflineQueue] Synced ${result.succeeded} pending requests`);
+        }
+      });
+    }
   }
 });

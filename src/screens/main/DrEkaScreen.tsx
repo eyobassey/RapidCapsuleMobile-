@@ -775,41 +775,46 @@ function ReportsTab() {
             : safeFormatDate(item.created_at) || 'Recent';
 
         return (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setSelectedReport(item)}
-            className="mx-5 mb-3 bg-card border border-border rounded-2xl p-4"
-          >
-            <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-xs font-medium text-muted-foreground">{dateRange}</Text>
-              {extractScore(item.health_score) != null && (
-                <View
-                  className="rounded-full px-3 py-1 flex-row items-center gap-1.5"
-                  style={{ backgroundColor: `${scoreColor}1A` }}
-                >
-                  <View className="w-2 h-2 rounded-full" style={{ backgroundColor: scoreColor }} />
-                  <Text className="text-xs font-bold" style={{ color: scoreColor }}>
-                    {extractScore(item.health_score)}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            <Text className="text-sm font-bold text-foreground mb-1">Weekly Health Report</Text>
-            <Text className="text-xs text-muted-foreground leading-relaxed" numberOfLines={3}>
-              {item.summary}
-            </Text>
-
-            <View className="flex-row items-center justify-between mt-3">
-              <Text className="text-[10px] text-muted-foreground/60">
-                {timeAgo(item.created_at)}
-              </Text>
-              <View className="flex-row items-center gap-1">
-                <Text className="text-[10px] font-semibold text-primary">View Report</Text>
-                <ChevronRight size={12} color={colors.primary} />
+          <GlassCard className="mx-5 mb-3" padding="p-0">
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setSelectedReport(item)}
+              className="p-4 overflow-hidden rounded-2xl"
+            >
+              <View className="flex-row items-center justify-between mb-2">
+                <Text className="text-xs font-medium text-muted-foreground">{dateRange}</Text>
+                {extractScore(item.health_score) != null && (
+                  <View
+                    className="rounded-full px-3 py-1 flex-row items-center gap-1.5"
+                    style={{ backgroundColor: `${scoreColor}1A` }}
+                  >
+                    <View
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: scoreColor }}
+                    />
+                    <Text className="text-xs font-bold" style={{ color: scoreColor }}>
+                      {extractScore(item.health_score)}
+                    </Text>
+                  </View>
+                )}
               </View>
-            </View>
-          </TouchableOpacity>
+
+              <Text className="text-sm font-bold text-foreground mb-1">Weekly Health Report</Text>
+              <Text className="text-xs text-muted-foreground leading-relaxed" numberOfLines={3}>
+                {item.summary}
+              </Text>
+
+              <View className="flex-row items-center justify-between mt-3">
+                <Text className="text-[10px] text-muted-foreground/60">
+                  {timeAgo(item.created_at)}
+                </Text>
+                <View className="flex-row items-center gap-1">
+                  <Text className="text-[10px] font-semibold text-primary">View Report</Text>
+                  <ChevronRight size={12} color={colors.primary} />
+                </View>
+              </View>
+            </TouchableOpacity>
+          </GlassCard>
         );
       }}
     />

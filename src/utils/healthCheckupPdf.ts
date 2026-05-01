@@ -1,6 +1,6 @@
-import { generatePDF } from 'react-native-html-to-pdf';
+import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { Platform, Alert } from 'react-native';
+import { Alert } from 'react-native';
 
 // ── Data interface ──
 
@@ -541,22 +541,10 @@ function capitalize(str: string): string {
 export async function generateHealthCheckupPDF(data: HealthCheckupPDFData): Promise<void> {
   try {
     const html = buildHealthCheckupHTML(data);
-    const dateStr = new Date(data.date).toISOString().split('T')[0];
+    const { uri } = await Print.printToFileAsync({ html });
 
-    const file = await generatePDF({
-      html,
-      fileName: `RapidCapsule_Checkup_${dateStr}`,
-      directory: Platform.OS === 'ios' ? 'Documents' : 'Downloads',
-      base64: false,
-    });
-
-    if (!file.filePath) {
-      throw new Error('PDF generation failed');
-    }
-
-    const fileUrl = Platform.OS === 'ios' ? file.filePath : `file://${file.filePath}`;
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(fileUrl, {
+      await Sharing.shareAsync(uri, {
         mimeType: 'application/pdf',
         dialogTitle: 'Health Checkup Report',
       });

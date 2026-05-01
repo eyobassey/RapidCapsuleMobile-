@@ -14,6 +14,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Platform, TouchableOpacity, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useAudioRecorder, useAudioRecorderState, AudioModule, RecordingPresets } from 'expo-audio';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -33,20 +34,6 @@ import type {
   PresenceStatus,
   UserSnippet,
 } from '../../types/messaging.types';
-
-// Lazy-init to avoid crash if native module isn't linked
-let audioRecorderPlayer: any = null;
-function getRecorder() {
-  if (!audioRecorderPlayer) {
-    try {
-      const ARP = require('react-native-audio-recorder-player').default;
-      audioRecorderPlayer = new ARP();
-    } catch {
-      return null;
-    }
-  }
-  return audioRecorderPlayer;
-}
 
 export default function ChatScreen() {
   const navigation = useNavigation<any>();
@@ -78,11 +65,11 @@ export default function ChatScreen() {
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [recordDuration, setRecordDuration] = useState(0);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(recorder);
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTypingRef = useRef(false);
   const flatListRef = useRef<FlashList<Message>>(null);
-  const recordingPathRef = useRef<string | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   // Get partner info
@@ -293,49 +280,38 @@ export default function ChatScreen() {
 
   // ── Voice recording ──
   const handleStartRecording = async () => {
-    const recorder = getRecorder();
-    if (!recorder) {
-      Alert.alert('Unavailable', 'Voice recording is not available on this device.');
-      return;
-    }
     try {
-      const path = Platform.select({
-        ios: `voice_${Date.now()}.m4a`,
-        android: `${
-          Platform.OS === 'android' ? '/data/user/0/com.rapidcapsulemobile/cache/' : ''
-        }voice_${Date.now()}.mp4`,
-      });
-      const result = await recorder.startRecorder(path);
-      recordingPathRef.current = result;
+      const { granted } = await AudioModule.requestRecordingPermissionsAsync();
+      if (!granted) {
+        Alert.alert('Permission Required', 'Microphone access is needed to record voice messages.');
+        return;
+      }
+      await recorder.prepareToRecordAsync();
+      recorder.record();
       setIsRecording(true);
-      setRecordDuration(0);
-
-      recorder.addRecordBackListener((e: any) => {
-        setRecordDuration(Math.floor(e.currentPosition / 1000));
-      });
     } catch {
       Alert.alert('Error', 'Could not start recording. Please check microphone permissions.');
     }
   };
 
   const handleStopAndSend = async () => {
+    const durationSecs = Math.floor(recorderState.durationMillis / 1000);
     try {
-      const recorder = getRecorder();
-      const filePath = await recorder?.stopRecorder();
-      recorder?.removeRecordBackListener();
+      await recorder.stop();
       setIsRecording(false);
 
-      if (!filePath || recordDuration < 1) {
-        setRecordDuration(0);
+      const filePath = recorder.uri;
+      if (!filePath || durationSecs < 1) {
         return;
       }
 
+      const ext = filePath.split('.').pop() || 'm4a';
       const formData = new FormData();
       formData.append('type', 'voice_note');
       formData.append('file', {
-        uri: Platform.OS === 'android' ? `file:// === 'm4a'${filePath}` : filePath,
-        type: filePath.split('.').pop() === 'm4a' ? 'audio/m4a' : 'audio/mp4',
-        name: `voice_${Date.now()}.${filePath.split('.').pop() || 'm4a'}`,
+        uri: filePath,
+        type: ext === 'm4a' ? 'audio/m4a' : 'audio/mp4',
+        name: `voice_${Date.now()}.${ext}`,
       } as any);
 
       setSending(true);
@@ -348,25 +324,19 @@ export default function ChatScreen() {
         Alert.alert('Error', 'Failed to send voice message.');
       } finally {
         setSending(false);
-        setRecordDuration(0);
       }
     } catch {
       setIsRecording(false);
-      setRecordDuration(0);
     }
   };
 
   const handleCancelRecording = async () => {
     try {
-      const recorder = getRecorder();
-      await recorder?.stopRecorder();
-      recorder?.removeRecordBackListener();
+      await recorder.stop();
     } catch {
       // ignore
     }
     setIsRecording(false);
-    setRecordDuration(0);
-    recordingPathRef.current = null;
   };
 
   const formatRecordTime = (secs: number) => {
@@ -698,7 +668,7 @@ export default function ChatScreen() {
                 }}
               />
               <Text style={{ fontSize: 14, fontWeight: '600', color: colors.foreground }}>
-                {formatRecordTime(recordDuration)}
+                {formatRecordTime(Math.floor(recorderState.durationMillis / 1000))}
               </Text>
               <Text style={{ fontSize: 12, color: colors.mutedForeground }}>Recording...</Text>
             </View>

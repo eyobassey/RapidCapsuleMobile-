@@ -125,12 +125,6 @@ jest.mock('react-native-mmkv', () => {
   };
 });
 
-// Mock @react-native-community/netinfo
-jest.mock('@react-native-community/netinfo', () => ({
-  addEventListener: jest.fn(() => jest.fn()),
-  fetch: jest.fn(() => Promise.resolve({isConnected: true, type: 'wifi'})),
-}));
-
 // Mock react-native-webview (native dependency)
 jest.mock('react-native-webview', () => ({
   WebView: () => null,
@@ -152,11 +146,6 @@ jest.mock('expo-image-picker', () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
   launchCameraAsync: jest.fn(() => Promise.resolve({ canceled: true, assets: [] })),
   launchImageLibraryAsync: jest.fn(() => Promise.resolve({ canceled: true, assets: [] })),
-}));
-
-// Mock react-native-html-to-pdf (native + ESM)
-jest.mock('react-native-html-to-pdf', () => ({
-  generatePDF: jest.fn(() => Promise.resolve({ filePath: '/tmp/mock.pdf' })),
 }));
 
 // Mock expo-sharing (native)
