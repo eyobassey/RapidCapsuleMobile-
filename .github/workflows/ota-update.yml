@@ -5,6 +5,10 @@ on:
     branches:
       - main
       - staging
+    paths:
+      - 'src/**'
+      - 'assets/**'
+      - 'app.config.js'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
